@@ -5,11 +5,11 @@ use std::io::prelude::*;
 fn main() {
 	let args: Vec<String> = env::args().collect();
 
-	let (query, filename) = parse_argument(&args);
-	println!("searching for {}", query);
-	println!("In file {}", filename);
+	let args = parse_argument(&args);
+	println!("searching for {}", args.query);
+	println!("In file {}", args.filename);
 
-	let mut f = File::open(filename).expect("file not found");
+	let mut f = File::open(args.filename).expect("file not found");
 
 	let mut contents = String::new();
 	f.read_to_string(&mut contents)
@@ -17,9 +17,14 @@ fn main() {
 	println!("With text:\n {}", contents);
 }
 
-fn parse_argument(args: &[String]) -> (&str, &str) {
-	let query = &args[1];
-	let filename = &args[2];
+struct Arguments{
+	query: String,
+	filename: String,
+}
 
-	(query, filename)
+fn parse_argument(args: &[String]) -> Arguments {
+	let query = args[1].clone();
+	let filename = args[2].clone();
+
+	Arguments{query, filename}
 }
