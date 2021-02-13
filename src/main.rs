@@ -1,6 +1,7 @@
 use std::env;
 use std::process;
 use std::fs::File;
+use std::error::Error;
 use std::io::prelude::*;
 
 fn main() {
@@ -14,13 +15,18 @@ fn main() {
 	println!("searching for {}", args.query);
 	println!("In file {}", args.filename);
 
-	let mut f = File::open(args.filename)
-		.expect("file not found");
+	read_file(args);
+}
+
+fn read_file(args: Arguments) -> Result<(), Box<Error>>{
+	let mut f = File::open(args.filename)?;
 
 	let mut contents = String::new();
 	f.read_to_string(&mut contents)
 		.expect("something went wrong reading the file");
 	println!("With text:\n {}", contents);
+
+	Ok(())
 }
 
 struct Arguments{
