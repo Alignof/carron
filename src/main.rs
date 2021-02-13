@@ -15,15 +15,19 @@ fn main() {
 	println!("searching for {}", args.query);
 	println!("In file {}", args.filename);
 
-	read_file(args);
+	if let Err(e) = read_file(args) {
+		println!("Application error: {}", e);
+		process::exit(1);
+	}
+
 }
 
-fn read_file(args: Arguments) -> Result<(), Box<Error>>{
+fn read_file(args: Arguments) -> Result<(), Box<dyn Error>> {
 	let mut f = File::open(args.filename)?;
 
 	let mut contents = String::new();
-	f.read_to_string(&mut contents)
-		.expect("something went wrong reading the file");
+	f.read_to_string(&mut contents)?;
+
 	println!("With text:\n {}", contents);
 
 	Ok(())
