@@ -5,7 +5,7 @@ use std::io::prelude::*;
 fn main() {
 	let args: Vec<String> = env::args().collect();
 
-	let args = parse_argument(&args);
+	let args = Arguments::new(&args);
 	println!("searching for {}", args.query);
 	println!("In file {}", args.filename);
 
@@ -22,9 +22,12 @@ struct Arguments{
 	filename: String,
 }
 
-fn parse_argument(args: &[String]) -> Arguments {
-	let query = args[1].clone();
-	let filename = args[2].clone();
+impl Arguments{
+	fn new(args: &[String]) -> Arguments {
+		let query = args[1].clone();
+		let filename = args[2].clone();
 
-	Arguments{query, filename}
+		Arguments{query, filename}
+	}
 }
+
