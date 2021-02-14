@@ -1,8 +1,8 @@
+extern crate rv32im_sim;
+
 use std::env;
 use std::process;
-use std::fs::File;
-use std::error::Error;
-use std::io::prelude::*;
+use rv32im_sim::Arguments;
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
@@ -15,39 +15,10 @@ fn main() {
 	println!("searching for {}", args.query);
 	println!("In file {}", args.filename);
 
-	if let Err(e) = read_file(args) {
+	if let Err(e) = rv32im_sim::read_file(args) {
 		println!("Application error: {}", e);
 		process::exit(1);
 	}
 
-}
-
-fn read_file(args: Arguments) -> Result<(), Box<dyn Error>> {
-	let mut f = File::open(args.filename)?;
-
-	let mut contents = String::new();
-	f.read_to_string(&mut contents)?;
-
-	println!("With text:\n {}", contents);
-
-	Ok(())
-}
-
-struct Arguments{
-	query: String,
-	filename: String,
-}
-
-impl Arguments{
-	fn new(args: &[String]) -> Result<Arguments, &'static str> {
-		if args.len() < 3{
-			return Err("not enough arguments");
-		} 
-
-		let query = args[1].clone();
-		let filename = args[2].clone();
-
-		Ok(Arguments{query, filename})
-	}
 }
 
