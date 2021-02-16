@@ -8,14 +8,14 @@ pub struct ElfLoader {
 }
 
 impl ElfLoader {
-	pub fn try_new(args: super::Arguments) -> std::io::Result<ElfLoader>{
-		let file = File::open(args.filename)?;
+	pub fn try_new(filename: &str) -> std::io::Result<ElfLoader>{
+		let file = File::open(filename)?;
 		Ok(ElfLoader{
 			mapped_file: unsafe{Mmap::map(&file)?},
 		})
 	}
 
-	fn is_elf(&self) -> bool {
+	pub fn is_elf(&self) -> bool {
 		self.mapped_file[0..4] == HEADER_MAGIC
 	}
 }

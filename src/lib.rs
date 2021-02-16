@@ -5,20 +5,18 @@ use std::io::prelude::*;
 pub mod elfload;
 
 pub struct Arguments {
-	pub query: String,
 	pub filename: String,
 }
 
 impl Arguments {
 	pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
-		if args.len() < 3 {
+		if args.len() < 2 {
 			return Err("not enough arguments");
 		}
 
-		let query = args[1].clone();
-		let filename = args[2].clone();
+		let filename = args[1].clone();
 
-		Ok(Arguments { query, filename })
+		Ok(Arguments { filename })
 	}
 }
 
