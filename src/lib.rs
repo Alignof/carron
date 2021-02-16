@@ -19,14 +19,3 @@ impl Arguments {
 		Ok(Arguments { filename })
 	}
 }
-
-pub fn read_file(args: Arguments) -> Result<(), Box<dyn Error>> {
-	let mut f = File::open(args.filename)?;
-
-	let mut contents = String::new();
-	f.read_to_string(&mut contents)?;
-
-	println!("With text:\n {}", contents);
-
-	Ok(())
-}
