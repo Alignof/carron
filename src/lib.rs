@@ -2,6 +2,8 @@ use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 
+pub mod elfload;
+
 pub struct Arguments {
 	pub query: String,
 	pub filename: String,
