@@ -1,8 +1,8 @@
 extern crate rv32im_sim;
 
+use rv32im_sim::Arguments;
 use std::env;
 use std::process;
-use rv32im_sim::Arguments;
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
@@ -19,6 +19,4 @@ fn main() {
 		println!("Application error: {}", e);
 		process::exit(1);
 	}
-
 }
-

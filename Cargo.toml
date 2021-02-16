@@ -1,5 +1,5 @@
 [package]
-name = "rv32im-sim"
+name = "rv32im_sim"
 version = "0.1.0"
 authors = ["Alignof <neuromancer_wg@outlook.jp>"]
 edition = "2018"
