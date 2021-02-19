@@ -1,0 +1,10 @@
+[package]
+name = "rv32im_sim"
+version = "0.1.0"
+authors = ["Alignof <neuromancer_wg@outlook.jp>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+memmap = "0.7.0"
