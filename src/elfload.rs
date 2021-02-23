@@ -52,7 +52,7 @@ impl ElfLoader {
 	}
 
 	pub fn is_elf(&self) -> bool {
-		self.mem_mapped[0..4] == HEADER_MAGIC
+		self.elf_ident.magic[0..4] == HEADER_MAGIC
 	}
 
 	pub fn ident_show(&self){
