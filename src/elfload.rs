@@ -33,21 +33,22 @@ impl ElfIdentification {
 }
 
 pub struct ElfLoader {
-	mapped_file: Mmap,
 	elf_ident: ElfIdentification,
+	mem_mapped: Mmap,
 }
 
 impl ElfLoader {
 	pub fn try_new(filename: &str) -> std::io::Result<ElfLoader>{
 		let file = File::open(filename)?;
+		let mapped_data = unsafe{Mmap::map(&file)?};
 		Ok(ElfLoader{
-			mapped_file: unsafe{Mmap::map(&file)?},
-			elf_ident:   elf_ident.new(),
+			elf_ident:  ElfIdentification::new(&mapped_data),
+			mem_mapped: mapped_data,
 		})
 	}
 
 	pub fn is_elf(&self) -> bool {
-		self.mapped_file[0..4] == HEADER_MAGIC
+		self.mem_mapped[0..4] == HEADER_MAGIC
 	}
 }
 
