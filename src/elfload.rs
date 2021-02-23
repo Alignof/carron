@@ -13,6 +13,25 @@ struct ElfIdentification {
 	reserved: [u8; 7],
 }
 
+impl ElfIdentification {
+	fn new(mmap: &[u8]) -> ElfIdentification {
+		let mut magic: [u8; 4] = [0; 4];
+		for (i, m) in mmap[0..4].iter().enumerate() {
+			magic[i] = *m;
+		}
+
+		ElfIdentification {
+			magic,
+			class: mmap[4],
+			endian: mmap[5],
+			version: mmap[6],
+			os_abi: mmap[7],
+			os_abi_ver: mmap[8],
+			reserved: [0; 7],
+		}
+	}
+}
+
 pub struct ElfLoader {
 	mapped_file: Mmap,
 	elf_ident: ElfIdentification,
@@ -23,6 +42,7 @@ impl ElfLoader {
 		let file = File::open(filename)?;
 		Ok(ElfLoader{
 			mapped_file: unsafe{Mmap::map(&file)?},
+			elf_ident:   elf_ident.new(),
 		})
 	}
 
