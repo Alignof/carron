@@ -30,6 +30,10 @@ impl ElfIdentification {
 			reserved: [0; 7],
 		}
 	}
+
+	fn show(&self){
+		println!("magic: {:?}", self.magic)
+	}
 }
 
 pub struct ElfLoader {
@@ -49,6 +53,10 @@ impl ElfLoader {
 
 	pub fn is_elf(&self) -> bool {
 		self.mem_mapped[0..4] == HEADER_MAGIC
+	}
+
+	pub fn ident_show(&self){
+		self.elf_ident.show();
 	}
 }
 

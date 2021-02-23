@@ -25,4 +25,6 @@ fn main() {
 	if loader.is_elf(){
 		println!("OK");
 	}
+
+	loader.ident_show();
 }
