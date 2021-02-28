@@ -1,9 +1,9 @@
 extern crate rv32im_sim;
 
-use rv32im_sim::Arguments;
-use rv32im_sim::elfload;
 use std::env;
 use std::process;
+use rv32im_sim::Arguments;
+use rv32im_sim::elfload;
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
@@ -25,4 +25,6 @@ fn main() {
 	if loader.is_elf(){
 		println!("OK");
 	}
+
+	loader.ident_show();
 }
