@@ -32,7 +32,12 @@ impl ElfIdentification {
 	}
 
 	fn show(&self){
-		println!("magic: {:?}", self.magic)
+		println!("magic: {:x?}", self.magic);
+		println!("class: {:?}", self.class);
+		println!("endian: {:?}", self.endian);
+		println!("version: {:?}", self.version);
+		println!("os_abi: {:?}", self.os_abi);
+		println!("os_abi_ver: {:?}", self.os_abi_ver);
 	}
 }
 
