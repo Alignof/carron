@@ -63,11 +63,15 @@ struct ElfHeader {
 
 impl ElfHeader {
 	fn get_u16(mmap: &[u8], index: usize) -> u16 {
-		(mmap[index] << 8 + mmap[index + 1]) as u16
+		(mmap[index + 0] as u16) << 8 |
+		(mmap[index + 1] as u16)
 	}
 
 	fn get_u32(mmap: &[u8], index: usize) -> u32 {
-		(mmap[index] << 24 + mmap[index + 1] << 16 + mmap[index + 2] << 8 + mmap[index + 3]) as u32
+		(mmap[index + 0] as u32) << 24 |
+		(mmap[index + 1] as u32) << 16 |
+		(mmap[index + 2] as u32) <<  8 |
+		(mmap[index + 3] as u32)
 	}
 
 	fn new(mmap: &[u8]) -> ElfHeader {
@@ -109,11 +113,11 @@ impl ElfLoader {
 	}
 
 	pub fn is_elf(&self) -> bool {
-		self.elf_ident.magic[0..4] == HEADER_MAGIC
+		self.elf_header.e_ident.magic[0..4] == HEADER_MAGIC
 	}
 
 	pub fn ident_show(&self){
-		self.elf_ident.show();
+		self.elf_header.e_ident.show();
 	}
 }
 
