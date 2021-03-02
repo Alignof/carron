@@ -99,7 +99,6 @@ impl ElfHeader {
 
 pub struct ElfLoader {
 	elf_header: ElfHeader,
-	mem_mapped: Mmap,
 }
 
 impl ElfLoader {
@@ -107,8 +106,7 @@ impl ElfLoader {
 		let file = File::open(filename)?;
 		let mapped_data = unsafe{Mmap::map(&file)?};
 		Ok(ElfLoader{
-			elf_header:  ElfHeader::new(&mapped_data),
-			mem_mapped: mapped_data,
+			elf_header: ElfHeader::new(&mapped_data),
 		})
 	}
 
