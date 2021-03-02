@@ -73,29 +73,28 @@ impl ElfHeader {
 	fn new(mmap: &[u8]) -> ElfHeader {
 		ElfHeader {
 			e_ident: ElfIdentification::new(&mmap),
-			e_type: get_u16(mmap, 16),
-			e_machine: get_u16(mmap, ),
-			e_version: get_u32(mmap, ),
-			e_entry: get_u32(mmap, ),
-			e_phoff: get_u32(mmap, ),
-			e_shoff: get_u32(mmap, ),
-			e_flags: get_u32(mmap, ),
-			e_ehsize: get_u16(mmap, ),
-			e_phentsize: get_u16(mmap, ),
-			e_phnum: get_u16(mmap, ),
-			e_shentsize: get_u16(mmap, ),
-			e_shnum: get_u16(mmap, ),
-			e_shstrndx: get_u16(mmap, ),
+			e_type: ElfHeader::get_u16(mmap, 16),
+			e_machine: ElfHeader::get_u16(mmap, 18),
+			e_version: ElfHeader::get_u32(mmap, 20),
+			e_entry: ElfHeader::get_u32(mmap, 24),
+			e_phoff: ElfHeader::get_u32(mmap, 28),
+			e_shoff: ElfHeader::get_u32(mmap, 32),
+			e_flags: ElfHeader::get_u32(mmap, 36),
+			e_ehsize: ElfHeader::get_u16(mmap, 40),
+			e_phentsize: ElfHeader::get_u16(mmap, 42),
+			e_phnum: ElfHeader::get_u16(mmap, 44),
+			e_shentsize: ElfHeader::get_u16(mmap, 46),
+			e_shnum: ElfHeader::get_u16(mmap, 48),
+			e_shstrndx: ElfHeader::get_u16(mmap, 50),
 		}
 	}
-
 }
 
 
 
 
 pub struct ElfLoader {
-	elf_ident: ElfIdentification,
+	elf_header: ElfHeader,
 	mem_mapped: Mmap,
 }
 
@@ -104,7 +103,7 @@ impl ElfLoader {
 		let file = File::open(filename)?;
 		let mapped_data = unsafe{Mmap::map(&file)?};
 		Ok(ElfLoader{
-			elf_ident:  ElfIdentification::new(&mapped_data),
+			elf_header:  ElfHeader::new(&mapped_data),
 			mem_mapped: mapped_data,
 		})
 	}
