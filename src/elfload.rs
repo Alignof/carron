@@ -92,6 +92,14 @@ impl ElfHeader {
 			e_shstrndx: ElfHeader::get_u16(mmap, 50),
 		}
 	}
+
+	fn show(&self){
+		self.e_ident.show()
+	}
+
+	fn ident_show(&self){
+		self.e_ident.show()
+	}
 }
 
 
@@ -115,7 +123,7 @@ impl ElfLoader {
 	}
 
 	pub fn ident_show(&self){
-		self.elf_header.e_ident.show();
+		self.elf_header.ident_show();
 	}
 }
 
