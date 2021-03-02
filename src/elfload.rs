@@ -62,6 +62,32 @@ struct ElfHeader {
 }
 
 impl ElfHeader {
+	fn get_u16(mmap: &[u8], index: usize) -> u16 {
+		(mmap[index] << 8 + mmap[index + 1]) as u16
+	}
+
+	fn get_u32(mmap: &[u8], index: usize) -> u32 {
+		(mmap[index] << 24 + mmap[index + 1] << 16 + mmap[index + 2] << 8 + mmap[index + 3]) as u32
+	}
+
+	fn new(mmap: &[u8]) -> ElfHeader {
+		ElfHeader {
+			e_ident: ElfIdentification::new(&mmap),
+			e_type: get_u16(mmap, 16),
+			e_machine: get_u16(mmap, ),
+			e_version: get_u32(mmap, ),
+			e_entry: get_u32(mmap, ),
+			e_phoff: get_u32(mmap, ),
+			e_shoff: get_u32(mmap, ),
+			e_flags: get_u32(mmap, ),
+			e_ehsize: get_u16(mmap, ),
+			e_phentsize: get_u16(mmap, ),
+			e_phnum: get_u16(mmap, ),
+			e_shentsize: get_u16(mmap, ),
+			e_shnum: get_u16(mmap, ),
+			e_shstrndx: get_u16(mmap, ),
+		}
+	}
 
 }
 
