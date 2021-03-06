@@ -23,7 +23,7 @@ fn main() {
 	};
 
 	if loader.is_elf(){
-		println!("OK");
+		println!("elfcheck: OK");
 	}
 
 	loader.ident_show();
