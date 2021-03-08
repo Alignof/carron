@@ -74,7 +74,7 @@ impl ElfHeader {
 
 	fn new(mmap: &[u8]) -> ElfHeader {
 		ElfHeader {
-			e_ident: ElfIdentification::new(&mmap),
+			e_ident: ElfIdentification::new(mmap),
 			e_type: ElfHeader::get_u16(mmap, 16),
 			e_machine: ElfHeader::get_u16(mmap, 18),
 			e_version: ElfHeader::get_u32(mmap, 20),
