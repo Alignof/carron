@@ -30,12 +30,16 @@ impl ElfIdentification {
 	}
 
 	fn show(&self){
-		println!("magic: {:x?}", self.magic);
-		println!("class: {:?}", self.class);
-		println!("endian: {:?}", self.endian);
-		println!("version: {:?}", self.version);
-		println!("os_abi: {:?}", self.os_abi);
-		println!("os_abi_ver: {:?}", self.os_abi_ver);
+		//println!("magic:\t\t{:x?}", self.magic);
+		for byte in self.magic.iter() {
+			print!("{} ", byte);
+		}
+		println!();
+		println!("class:\t\t{:?}", self.class);
+		println!("endian:\t\t{:?}", self.endian);
+		println!("version:\t{:?}", self.version);
+		println!("os_abi:\t\t{:?}", self.os_abi);
+		println!("os_abi_ver:\t{:?}", self.os_abi_ver);
 	}
 }
 
@@ -91,19 +95,19 @@ impl ElfHeader {
 			
 	fn show(&self){
 		self.e_ident.show();
-		println!("e_type: {:?}", self.e_type);
-		println!("e_machine: {:?}", self.e_machine);
-		println!("e_version: 0x{:x?}", self.e_version);
-		println!("e_entry: 0x{:x?}", self.e_entry);
-		println!("e_phoff: {:?}", self.e_phoff);
-		println!("e_shoff: {:?}", self.e_shoff);
-		println!("e_flags: 0x{:x?}", self.e_flags);
-		println!("e_ehsize: {:?}", self.e_ehsize);
-		println!("e_phentsize: {:?}", self.e_phentsize);
-		println!("e_phnum: {:?}", self.e_phnum);
-		println!("e_shentsize: {:?}", self.e_shentsize);
-		println!("e_shnum: {:?}", self.e_shnum);
-		println!("e_shstrndx: {:?}", self.e_shstrndx);
+		println!("e_type:\t\t{:?}", self.e_type);
+		println!("e_machine:\t{:?}", self.e_machine);
+		println!("e_version:\t0x{:x?}", self.e_version);
+		println!("e_entry:\t0x{:x?}", self.e_entry);
+		println!("e_phoff:\t{:?} (bytes into file)", self.e_phoff);
+		println!("e_shoff:\t{:?} (bytes into file)", self.e_shoff);
+		println!("e_flags:\t0x{:x?}", self.e_flags);
+		println!("e_ehsize:\t{:?} (bytes)", self.e_ehsize);
+		println!("e_phentsize:\t{:?} (bytes)", self.e_phentsize);
+		println!("e_phnum:\t{:?}", self.e_phnum);
+		println!("e_shentsize:\t{:?} (bytes)", self.e_shentsize);
+		println!("e_shnum:\t{:?}", self.e_shnum);
+		println!("e_shstrndx:\t{:?}", self.e_shstrndx);
 	}
 
 	fn ident_show(&self){
