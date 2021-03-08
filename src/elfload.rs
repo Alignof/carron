@@ -92,13 +92,26 @@ impl ElfHeader {
 			e_shstrndx: ElfHeader::get_u16(mmap, 50),
 		}
 	}
-
+			
 	fn show(&self){
-		self.e_ident.show()
+		self.e_ident.show();
+		println!("e_type:{:?}", self.e_type);
+		println!("e_machine:{:?}", self.e_machine);
+		println!("e_version:{:?}", self.e_version);
+		println!("e_entry:{:?}", self.e_entry);
+		println!("e_phoff:{:?}", self.e_phoff);
+		println!("e_shoff:{:?}", self.e_shoff);
+		println!("e_flags:{:?}", self.e_flags);
+		println!("e_ehsize:{:?}", self.e_ehsize);
+		println!("e_phentsize:{:?}", self.e_phentsize);
+		println!("e_phnum:{:?}", self.e_phnum);
+		println!("e_shentsize:{:?}", self.e_shentsize);
+		println!("e_shnum:{:?}", self.e_shnum);
+		println!("e_shstrndx:{:?}", self.e_shstrndx);
 	}
 
 	fn ident_show(&self){
-		self.e_ident.show()
+		self.e_ident.show();
 	}
 }
 
@@ -124,6 +137,10 @@ impl ElfLoader {
 
 	pub fn ident_show(&self){
 		self.elf_header.ident_show();
+	}
+
+	pub fn show(&self){
+		self.elf_header.show();
 	}
 }
 
