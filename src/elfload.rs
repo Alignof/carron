@@ -2,18 +2,17 @@ use std::fs::File;
 use memmap::Mmap;
 
 struct ElfIdentification {
-	magic: [u8;4],
+	magic: [u8; 16],
 	class: u8,
 	endian: u8,
 	version: u8,
 	os_abi: u8,
 	os_abi_ver: u8,
-	reserved: [u8; 7],
 }
 
 impl ElfIdentification {
 	fn new(mmap: &[u8]) -> ElfIdentification {
-		let mut magic: [u8; 4] = [0; 4];
+		let mut magic: [u8; 16] = [0; 16];
 		for (i, m) in mmap[0..4].iter().enumerate() {
 			magic[i] = *m;
 		}
@@ -25,14 +24,13 @@ impl ElfIdentification {
 			version: mmap[6],
 			os_abi: mmap[7],
 			os_abi_ver: mmap[8],
-			reserved: [0; 7],
 		}
 	}
 
 	fn show(&self){
-		//println!("magic:\t\t{:x?}", self.magic);
+		print!("magic:\t");
 		for byte in self.magic.iter() {
-			print!("{} ", byte);
+			print!("{:02x} ", byte);
 		}
 		println!();
 		println!("class:\t\t{:?}", self.class);
