@@ -13,7 +13,7 @@ struct ElfIdentification {
 impl ElfIdentification {
 	fn new(mmap: &[u8]) -> ElfIdentification {
 		let mut magic: [u8; 16] = [0; 16];
-		for (i, m) in mmap[0..4].iter().enumerate() {
+		for (i, m) in mmap[0..16].iter().enumerate() {
 			magic[i] = *m;
 		}
 
