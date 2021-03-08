@@ -1,8 +1,6 @@
 use std::fs::File;
 use memmap::Mmap;
 
-const HEADER_MAGIC: [u8; 4] = [0x7f, 0x45, 0x4c, 0x46];
-
 struct ElfIdentification {
 	magic: [u8;4],
 	class: u8,
@@ -40,8 +38,6 @@ impl ElfIdentification {
 		println!("os_abi_ver: {:?}", self.os_abi_ver);
 	}
 }
-
-
 
 
 struct ElfHeader {
@@ -116,8 +112,6 @@ impl ElfHeader {
 }
 
 
-
-
 pub struct ElfLoader {
 	elf_header: ElfHeader,
 }
@@ -132,6 +126,7 @@ impl ElfLoader {
 	}
 
 	pub fn is_elf(&self) -> bool {
+		const HEADER_MAGIC: [u8; 4] = [0x7f, 0x45, 0x4c, 0x46];
 		self.elf_header.e_ident.magic[0..4] == HEADER_MAGIC
 	}
 
