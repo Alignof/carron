@@ -114,6 +114,18 @@ impl ElfHeader {
 }
 
 
+struct ProgramHeader {
+	p_type: u32,
+	p_offset: u32,
+	p_vaddr: u32,
+	p_paddr: u32,
+	p_filesz: u32,
+	p_memsz: u32,
+	p_flags: u32,
+	p_align: u32,
+}
+
+
 pub struct ElfLoader {
 	elf_header: ElfHeader,
 }
