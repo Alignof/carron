@@ -126,8 +126,35 @@ struct ProgramHeader {
 }
 
 
+impl ProgramHeader {
+	fn get_u32(mmap: &[u8], index: usize) -> u32 {
+		(mmap[index + 3] as u32) << 24 |
+		(mmap[index + 2] as u32) << 16 |
+		(mmap[index + 1] as u32) <<  8 |
+		(mmap[index + 0] as u32)
+	}
+
+	fn new(mmap: &[u8]) -> ProgramHeader {
+		ProgramHeader {
+			p_type: ProgramHeader::get_u32(mmap, 53),
+			p_offset: ProgramHeader::get_u32(mmap, 53),
+			p_vaddr: ProgramHeader::get_u32(mmap, 53),
+			p_paddr: ProgramHeader::get_u32(mmap, 53),
+			p_filesz: ProgramHeader::get_u32(mmap, 53),
+			p_memsz: ProgramHeader::get_u32(mmap, 53),
+			p_flags: ProgramHeader::get_u32(mmap, 53),
+			p_align: ProgramHeader::get_u32(mmap, 53),
+		}
+	}
+}
+
+
+
+
+
 pub struct ElfLoader {
 	elf_header: ElfHeader,
+	prog_header: ProgramHeader,
 }
 
 impl ElfLoader {
@@ -136,6 +163,7 @@ impl ElfLoader {
 		let mapped_data = unsafe{Mmap::map(&file)?};
 		Ok(ElfLoader{
 			elf_header: ElfHeader::new(&mapped_data),
+			prog_header: ProgramHeader::new(&mapped_data),
 		})
 	}
 
