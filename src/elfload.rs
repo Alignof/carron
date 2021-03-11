@@ -93,19 +93,19 @@ impl ElfHeader {
 			
 	fn show(&self){
 		self.e_ident.show();
-		println!("e_type:\t\t{:?}", self.e_type);
-		println!("e_machine:\t{:?}", self.e_machine);
-		println!("e_version:\t0x{:x?}", self.e_version);
-		println!("e_entry:\t0x{:x?}", self.e_entry);
-		println!("e_phoff:\t{:?} (bytes into file)", self.e_phoff);
-		println!("e_shoff:\t{:?} (bytes into file)", self.e_shoff);
-		println!("e_flags:\t0x{:x?}", self.e_flags);
-		println!("e_ehsize:\t{:?} (bytes)", self.e_ehsize);
-		println!("e_phentsize:\t{:?} (bytes)", self.e_phentsize);
-		println!("e_phnum:\t{:?}", self.e_phnum);
-		println!("e_shentsize:\t{:?} (bytes)", self.e_shentsize);
-		println!("e_shnum:\t{:?}", self.e_shnum);
-		println!("e_shstrndx:\t{:?}", self.e_shstrndx);
+		println!("e_type:\t\t{:?}",			self.e_type);
+		println!("e_machine:\t{:?}",			self.e_machine);
+		println!("e_version:\t0x{:x?}",			self.e_version);
+		println!("e_entry:\t0x{:x?}",			self.e_entry);
+		println!("e_phoff:\t{:?} (bytes into file)",	self.e_phoff);
+		println!("e_shoff:\t{:?} (bytes into file)",	self.e_shoff);
+		println!("e_flags:\t0x{:x?}",			self.e_flags);
+		println!("e_ehsize:\t{:?} (bytes)",		self.e_ehsize);
+		println!("e_phentsize:\t{:?} (bytes)",		self.e_phentsize);
+		println!("e_phnum:\t{:?}",			self.e_phnum);
+		println!("e_shentsize:\t{:?} (bytes)",		self.e_shentsize);
+		println!("e_shnum:\t{:?}",			self.e_shnum);
+		println!("e_shstrndx:\t{:?}",			self.e_shstrndx);
 	}
 
 	fn ident_show(&self){
@@ -135,15 +135,16 @@ impl ProgramHeader {
 	}
 
 	fn new(mmap: &[u8]) -> ProgramHeader {
+		const PROGRAM_HEADER_START = 54;
 		ProgramHeader {
-			p_type: ProgramHeader::get_u32(mmap, 53),
-			p_offset: ProgramHeader::get_u32(mmap, 53),
-			p_vaddr: ProgramHeader::get_u32(mmap, 53),
-			p_paddr: ProgramHeader::get_u32(mmap, 53),
-			p_filesz: ProgramHeader::get_u32(mmap, 53),
-			p_memsz: ProgramHeader::get_u32(mmap, 53),
-			p_flags: ProgramHeader::get_u32(mmap, 53),
-			p_align: ProgramHeader::get_u32(mmap, 53),
+			p_type:   ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  0),
+			p_offset: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  4),
+			p_vaddr:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  8),
+			p_paddr:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 12),
+			p_filesz: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 16),
+			p_memsz:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 20),
+			p_flags:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 24),
+			p_align:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 28),
 		}
 	}
 }
