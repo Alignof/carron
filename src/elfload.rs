@@ -150,7 +150,7 @@ impl ProgramHeader {
 	}
 
 	fn show(&self){
-		println!("p_type:\t{}",		self.p_type);
+		println!("p_type:\t\t{}",	self.p_type);
 		println!("p_offset:\t{}",	self.p_offset);
 		println!("p_vaddr:\t{}",	self.p_vaddr);
 		println!("p_paddr:\t{}",	self.p_paddr);
@@ -191,7 +191,9 @@ impl ElfLoader {
 	}
 
 	pub fn show(&self){
+		println!("================ elf header ================");
 		self.elf_header.show();
+		println!("============== program header ==============");
 		self.prog_header.show();
 	}
 }
