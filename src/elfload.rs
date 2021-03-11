@@ -148,6 +148,18 @@ impl ProgramHeader {
 			p_align:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 28),
 		}
 	}
+
+	fn show(&self){
+		println!("p_type:\t{}",		self.p_type);
+		println!("p_offset:\t{}",	self.p_offset);
+		println!("p_vaddr:\t{}",	self.p_vaddr);
+		println!("p_paddr:\t{}",	self.p_paddr);
+		println!("p_filesz:\t{}",	self.p_filesz);
+		println!("p_memsz:\t{}",	self.p_memsz);
+		println!("p_flags:\t{}",	self.p_flags);
+		println!("p_align:\t{}",	self.p_align);
+	}
+
 }
 
 
@@ -180,6 +192,7 @@ impl ElfLoader {
 
 	pub fn show(&self){
 		self.elf_header.show();
+		self.prog_header.show();
 	}
 }
 
