@@ -136,7 +136,7 @@ impl ProgramHeader {
 	}
 
 	fn new(mmap: &[u8]) -> ProgramHeader {
-		const PROGRAM_HEADER_START:usize = 54;
+		const PROGRAM_HEADER_START:usize = 52;
 		ProgramHeader {
 			p_type:   ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  0),
 			p_offset: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  4),
