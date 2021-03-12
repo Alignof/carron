@@ -151,13 +151,13 @@ impl ProgramHeader {
 
 	fn show(&self){
 		println!("p_type:\t\t{}",	self.p_type);
-		println!("p_offset:\t{}",	self.p_offset);
-		println!("p_vaddr:\t{}",	self.p_vaddr);
-		println!("p_paddr:\t{}",	self.p_paddr);
-		println!("p_filesz:\t{}",	self.p_filesz);
-		println!("p_memsz:\t{}",	self.p_memsz);
+		println!("p_offset:\t0x{:x}",	self.p_offset);
+		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
+		println!("p_paddr:\t0x{:x}",	self.p_paddr);
+		println!("p_filesz:\t0x{:x}",	self.p_filesz);
+		println!("p_memsz:\t0x{:x}",	self.p_memsz);
 		println!("p_flags:\t{}",	self.p_flags);
-		println!("p_align:\t{}",	self.p_align);
+		println!("p_align:\t0x{:x}",	self.p_align);
 	}
 
 }
