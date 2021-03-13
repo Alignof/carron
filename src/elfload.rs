@@ -115,6 +115,7 @@ impl ElfHeader {
 }
 
 
+
 struct ProgramHeader {
 	p_type: u32,
 	p_offset: u32,
@@ -125,7 +126,6 @@ struct ProgramHeader {
 	p_flags: u32,
 	p_align: u32,
 }
-
 
 impl ProgramHeader {
 	fn get_u32(mmap: &[u8], index: usize) -> u32 {
@@ -198,3 +198,20 @@ impl ElfLoader {
 	}
 }
 
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn elfheader_test() {
+		let loader = match ElfLoader::try_new("./src/example_elf") {
+			Ok(loader) => loader,
+			Err(error) => {
+				panic!("There was a problem opening the file: {:?}", error);
+			}
+		};
+
+		assert!(loader.is_elf());
+		assert_eq!(loader.elf_header.e_version, 1);
+	}
+}
