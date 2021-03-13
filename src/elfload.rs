@@ -203,7 +203,7 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn elfheader_test() {
+	fn elf_header_test() {
 		let loader = match ElfLoader::try_new("./src/example_elf") {
 			Ok(loader) => loader,
 			Err(error) => {
@@ -212,6 +212,22 @@ mod tests {
 		};
 
 		assert!(loader.is_elf());
+		assert_eq!(loader.elf_header.e_type, 2);
+		assert_eq!(loader.elf_header.e_flags, 5);
 		assert_eq!(loader.elf_header.e_version, 1);
+		assert_eq!(loader.elf_header.e_machine, 243);
+	}
+
+	#[test]
+	fn program_header_test() {
+		let loader = match ElfLoader::try_new("./src/example_elf") {
+			Ok(loader) => loader,
+			Err(error) => {
+				panic!("There was a problem opening the file: {:?}", error);
+			}
+		};
+
+		assert_eq!(loader.prog_header.p_type, 1);
+		assert_eq!(loader.prog_header.p_flags, 5);
 	}
 }

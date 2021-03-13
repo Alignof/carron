@@ -15,3 +15,4 @@ impl Arguments {
 		Ok(Arguments { filename })
 	}
 }
+
