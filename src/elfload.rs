@@ -13,7 +13,7 @@ struct ElfIdentification {
 impl ElfIdentification {
 	fn new(mmap: &[u8]) -> ElfIdentification {
 		let mut magic: [u8; 16] = [0; 16];
-		for (i, m) in mmap[0..4].iter().enumerate() {
+		for (i, m) in mmap[0..16].iter().enumerate() {
 			magic[i] = *m;
 		}
 
@@ -73,39 +73,40 @@ impl ElfHeader {
 	}
 
 	fn new(mmap: &[u8]) -> ElfHeader {
+		const ELF_HEADER_START: usize = 16;
 		ElfHeader {
-			e_ident: ElfIdentification::new(mmap),
-			e_type: ElfHeader::get_u16(mmap, 16),
-			e_machine: ElfHeader::get_u16(mmap, 18),
-			e_version: ElfHeader::get_u32(mmap, 20),
-			e_entry: ElfHeader::get_u32(mmap, 24),
-			e_phoff: ElfHeader::get_u32(mmap, 28),
-			e_shoff: ElfHeader::get_u32(mmap, 32),
-			e_flags: ElfHeader::get_u32(mmap, 36),
-			e_ehsize: ElfHeader::get_u16(mmap, 40),
-			e_phentsize: ElfHeader::get_u16(mmap, 42),
-			e_phnum: ElfHeader::get_u16(mmap, 44),
-			e_shentsize: ElfHeader::get_u16(mmap, 46),
-			e_shnum: ElfHeader::get_u16(mmap, 48),
-			e_shstrndx: ElfHeader::get_u16(mmap, 50),
+			e_ident:	ElfIdentification::new(mmap),
+			e_type:		ElfHeader::get_u16(mmap, ELF_HEADER_START +  0),
+			e_machine:	ElfHeader::get_u16(mmap, ELF_HEADER_START +  2),
+			e_version:	ElfHeader::get_u32(mmap, ELF_HEADER_START +  4),
+			e_entry:	ElfHeader::get_u32(mmap, ELF_HEADER_START +  8),
+			e_phoff:	ElfHeader::get_u32(mmap, ELF_HEADER_START + 12),
+			e_shoff:	ElfHeader::get_u32(mmap, ELF_HEADER_START + 16),
+			e_flags:	ElfHeader::get_u32(mmap, ELF_HEADER_START + 20),
+			e_ehsize:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 24),
+			e_phentsize:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 26),
+			e_phnum:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 28),
+			e_shentsize:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 30),
+			e_shnum:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 32),
+			e_shstrndx:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 34),
 		}
 	}
 			
 	fn show(&self){
 		self.e_ident.show();
-		println!("e_type:\t\t{:?}", self.e_type);
-		println!("e_machine:\t{:?}", self.e_machine);
-		println!("e_version:\t0x{:x?}", self.e_version);
-		println!("e_entry:\t0x{:x?}", self.e_entry);
-		println!("e_phoff:\t{:?} (bytes into file)", self.e_phoff);
-		println!("e_shoff:\t{:?} (bytes into file)", self.e_shoff);
-		println!("e_flags:\t0x{:x?}", self.e_flags);
-		println!("e_ehsize:\t{:?} (bytes)", self.e_ehsize);
-		println!("e_phentsize:\t{:?} (bytes)", self.e_phentsize);
-		println!("e_phnum:\t{:?}", self.e_phnum);
-		println!("e_shentsize:\t{:?} (bytes)", self.e_shentsize);
-		println!("e_shnum:\t{:?}", self.e_shnum);
-		println!("e_shstrndx:\t{:?}", self.e_shstrndx);
+		println!("e_type:\t\t{:?}",			self.e_type);
+		println!("e_machine:\t{:?}",			self.e_machine);
+		println!("e_version:\t0x{:x?}",			self.e_version);
+		println!("e_entry:\t0x{:x?}",			self.e_entry);
+		println!("e_phoff:\t{:?} (bytes into file)",	self.e_phoff);
+		println!("e_shoff:\t{:?} (bytes into file)",	self.e_shoff);
+		println!("e_flags:\t0x{:x?}",			self.e_flags);
+		println!("e_ehsize:\t{:?} (bytes)",		self.e_ehsize);
+		println!("e_phentsize:\t{:?} (bytes)",		self.e_phentsize);
+		println!("e_phnum:\t{:?}",			self.e_phnum);
+		println!("e_shentsize:\t{:?} (bytes)",		self.e_shentsize);
+		println!("e_shnum:\t{:?}",			self.e_shnum);
+		println!("e_shstrndx:\t{:?}",			self.e_shstrndx);
 	}
 
 	fn ident_show(&self){
@@ -114,8 +115,60 @@ impl ElfHeader {
 }
 
 
+
+struct ProgramHeader {
+	p_type: u32,
+	p_offset: u32,
+	p_vaddr: u32,
+	p_paddr: u32,
+	p_filesz: u32,
+	p_memsz: u32,
+	p_flags: u32,
+	p_align: u32,
+}
+
+impl ProgramHeader {
+	fn get_u32(mmap: &[u8], index: usize) -> u32 {
+		(mmap[index + 3] as u32) << 24 |
+		(mmap[index + 2] as u32) << 16 |
+		(mmap[index + 1] as u32) <<  8 |
+		(mmap[index + 0] as u32)
+	}
+
+	fn new(mmap: &[u8]) -> ProgramHeader {
+		const PROGRAM_HEADER_START:usize = 52;
+		ProgramHeader {
+			p_type:   ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  0),
+			p_offset: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  4),
+			p_vaddr:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  8),
+			p_paddr:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 12),
+			p_filesz: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 16),
+			p_memsz:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 20),
+			p_flags:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 24),
+			p_align:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 28),
+		}
+	}
+
+	fn show(&self){
+		println!("p_type:\t\t{}",	self.p_type);
+		println!("p_offset:\t0x{:x}",	self.p_offset);
+		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
+		println!("p_paddr:\t0x{:x}",	self.p_paddr);
+		println!("p_filesz:\t0x{:x}",	self.p_filesz);
+		println!("p_memsz:\t0x{:x}",	self.p_memsz);
+		println!("p_flags:\t{}",	self.p_flags);
+		println!("p_align:\t0x{:x}",	self.p_align);
+	}
+
+}
+
+
+
+
+
 pub struct ElfLoader {
 	elf_header: ElfHeader,
+	prog_header: ProgramHeader,
 }
 
 impl ElfLoader {
@@ -124,6 +177,7 @@ impl ElfLoader {
 		let mapped_data = unsafe{Mmap::map(&file)?};
 		Ok(ElfLoader{
 			elf_header: ElfHeader::new(&mapped_data),
+			prog_header: ProgramHeader::new(&mapped_data),
 		})
 	}
 
@@ -137,7 +191,43 @@ impl ElfLoader {
 	}
 
 	pub fn show(&self){
+		println!("================ elf header ================");
 		self.elf_header.show();
+		println!("============== program header ==============");
+		self.prog_header.show();
 	}
 }
 
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn elf_header_test() {
+		let loader = match ElfLoader::try_new("./src/example_elf") {
+			Ok(loader) => loader,
+			Err(error) => {
+				panic!("There was a problem opening the file: {:?}", error);
+			}
+		};
+
+		assert!(loader.is_elf());
+		assert_eq!(loader.elf_header.e_type, 2);
+		assert_eq!(loader.elf_header.e_flags, 5);
+		assert_eq!(loader.elf_header.e_version, 1);
+		assert_eq!(loader.elf_header.e_machine, 243);
+	}
+
+	#[test]
+	fn program_header_test() {
+		let loader = match ElfLoader::try_new("./src/example_elf") {
+			Ok(loader) => loader,
+			Err(error) => {
+				panic!("There was a problem opening the file: {:?}", error);
+			}
+		};
+
+		assert_eq!(loader.prog_header.p_type, 1);
+		assert_eq!(loader.prog_header.p_flags, 5);
+	}
+}
