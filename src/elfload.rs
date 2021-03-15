@@ -176,6 +176,32 @@ struct SectionHeader {
 	sh_addralign: u32,
 	sh_entsize: u32,
 }
+	
+
+impl SectionHeader {
+	fn get_u32(mmap: &[u8], index: usize) -> u32 {
+		(mmap[index + 3] as u32) << 24 |
+		(mmap[index + 2] as u32) << 16 |
+		(mmap[index + 1] as u32) <<  8 |
+		(mmap[index + 0] as u32)
+	}
+
+	fn new(mmap: &[u8]) -> SectionHeader {
+		const SECTION_HEADER_START:usize = 84;
+		SectionHeader {
+			sh_name:      SectionHeader::get_u32(mmap, SECTION_HEADER_START +  0),
+			sh_type:      SectionHeader::get_u32(mmap, SECTION_HEADER_START +  4),
+			sh_flags:     SectionHeader::get_u32(mmap, SECTION_HEADER_START +  8),
+			sh_addr:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 12),
+			sh_offset:    SectionHeader::get_u32(mmap, SECTION_HEADER_START + 16),
+			sh_size:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 20),
+			sh_link:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 24),
+			sh_info:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 28),
+			sh_addralign: SectionHeader::get_u32(mmap, SECTION_HEADER_START + 32),
+			sh_entsize:   SectionHeader::get_u32(mmap, SECTION_HEADER_START + 34),
+		}       
+	}       
+}       
 
 
 
