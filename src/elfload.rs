@@ -164,6 +164,21 @@ impl ProgramHeader {
 
 
 
+struct SectionHeader {
+	sh_name: u32,
+	sh_type: u32,
+	sh_flags: u32,
+	sh_addr: u32,
+	sh_offset: u32,
+	sh_size: u32,
+	sh_link: u32,
+	sh_info: u32,
+	sh_addralign: u32,
+	sh_entsize: u32,
+}
+
+
+
 
 
 pub struct ElfLoader {
@@ -231,3 +246,4 @@ mod tests {
 		assert_eq!(loader.prog_header.p_flags, 5);
 	}
 }
+
