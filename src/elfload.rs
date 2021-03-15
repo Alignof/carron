@@ -210,6 +210,7 @@ impl SectionHeader {
 pub struct ElfLoader {
 	elf_header: ElfHeader,
 	prog_header: ProgramHeader,
+	sect_header: SectionHeader,
 }
 
 impl ElfLoader {
@@ -219,6 +220,7 @@ impl ElfLoader {
 		Ok(ElfLoader{
 			elf_header: ElfHeader::new(&mapped_data),
 			prog_header: ProgramHeader::new(&mapped_data),
+			sect_header: SectionHeader::new(&mapped_data),
 		})
 	}
 
