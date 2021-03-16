@@ -159,7 +159,6 @@ impl ProgramHeader {
 		println!("p_flags:\t{}",	self.p_flags);
 		println!("p_align:\t0x{:x}",	self.p_align);
 	}
-
 }
 
 
@@ -201,6 +200,19 @@ impl SectionHeader {
 			sh_entsize:   SectionHeader::get_u32(mmap, SECTION_HEADER_START + 34),
 		}       
 	}       
+
+	fn show(&self){
+		println!("sh_name:\t{}",	self.sh_name);
+		println!("sh_type:\t{}",	self.sh_type);
+		println!("sh_flags:\t{}",	self.sh_flags);
+		println!("sh_addr:\t{}",	self.sh_addr);
+		println!("sh_offset:\t{}",	self.sh_offset);
+		println!("sh_size:\t{}",	self.sh_size);
+		println!("sh_link:\t{}",	self.sh_link);
+		println!("sh_info:\t{}",	self.sh_info);
+		println!("sh_addralign:\t{}",	self.sh_addralign);
+		println!("sh_entsize:\t{}",	self.sh_entsize);
+	}
 }       
 
 
@@ -238,6 +250,8 @@ impl ElfLoader {
 		self.elf_header.show();
 		println!("============== program header ==============");
 		self.prog_header.show();
+		println!("============== section header ==============");
+		self.sect_header.show();
 	}
 }
 
