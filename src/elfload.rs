@@ -159,8 +159,61 @@ impl ProgramHeader {
 		println!("p_flags:\t{}",	self.p_flags);
 		println!("p_align:\t0x{:x}",	self.p_align);
 	}
-
 }
+
+
+
+struct SectionHeader {
+	sh_name: u32,
+	sh_type: u32,
+	sh_flags: u32,
+	sh_addr: u32,
+	sh_offset: u32,
+	sh_size: u32,
+	sh_link: u32,
+	sh_info: u32,
+	sh_addralign: u32,
+	sh_entsize: u32,
+}
+	
+
+impl SectionHeader {
+	fn get_u32(mmap: &[u8], index: usize) -> u32 {
+		(mmap[index + 3] as u32) << 24 |
+		(mmap[index + 2] as u32) << 16 |
+		(mmap[index + 1] as u32) <<  8 |
+		(mmap[index + 0] as u32)
+	}
+
+	fn new(mmap: &[u8]) -> SectionHeader {
+		const SECTION_HEADER_START:usize = 84;
+		SectionHeader {
+			sh_name:      SectionHeader::get_u32(mmap, SECTION_HEADER_START +  0),
+			sh_type:      SectionHeader::get_u32(mmap, SECTION_HEADER_START +  4),
+			sh_flags:     SectionHeader::get_u32(mmap, SECTION_HEADER_START +  8),
+			sh_addr:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 12),
+			sh_offset:    SectionHeader::get_u32(mmap, SECTION_HEADER_START + 16),
+			sh_size:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 20),
+			sh_link:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 24),
+			sh_info:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 28),
+			sh_addralign: SectionHeader::get_u32(mmap, SECTION_HEADER_START + 32),
+			sh_entsize:   SectionHeader::get_u32(mmap, SECTION_HEADER_START + 34),
+		}       
+	}       
+
+	fn show(&self){
+		println!("sh_name:\t{}",	self.sh_name);
+		println!("sh_type:\t{}",	self.sh_type);
+		println!("sh_flags:\t{}",	self.sh_flags);
+		println!("sh_addr:\t{}",	self.sh_addr);
+		println!("sh_offset:\t{}",	self.sh_offset);
+		println!("sh_size:\t{}",	self.sh_size);
+		println!("sh_link:\t{}",	self.sh_link);
+		println!("sh_info:\t{}",	self.sh_info);
+		println!("sh_addralign:\t{}",	self.sh_addralign);
+		println!("sh_entsize:\t{}",	self.sh_entsize);
+	}
+}       
 
 
 
@@ -169,6 +222,7 @@ impl ProgramHeader {
 pub struct ElfLoader {
 	elf_header: ElfHeader,
 	prog_header: ProgramHeader,
+	sect_header: SectionHeader,
 }
 
 impl ElfLoader {
@@ -178,6 +232,7 @@ impl ElfLoader {
 		Ok(ElfLoader{
 			elf_header: ElfHeader::new(&mapped_data),
 			prog_header: ProgramHeader::new(&mapped_data),
+			sect_header: SectionHeader::new(&mapped_data),
 		})
 	}
 
@@ -195,6 +250,8 @@ impl ElfLoader {
 		self.elf_header.show();
 		println!("============== program header ==============");
 		self.prog_header.show();
+		println!("============== section header ==============");
+		self.sect_header.show();
 	}
 }
 
@@ -231,3 +288,4 @@ mod tests {
 		assert_eq!(loader.prog_header.p_flags, 5);
 	}
 }
+
