@@ -93,6 +93,7 @@ impl ElfHeader {
 	}
 			
 	fn show(&self){
+		println!("================ elf header ================");
 		self.e_ident.show();
 		println!("e_type:\t\t{:?}",			self.e_type);
 		println!("e_machine:\t{:?}",			self.e_machine);
@@ -136,7 +137,7 @@ impl ProgramHeader {
 	}
 
 	fn new(mmap: &[u8]) -> ProgramHeader {
-		const PROGRAM_HEADER_START:usize = 52;
+		const PROGRAM_HEADER_START: usize = 52;
 		ProgramHeader {
 			p_type:   ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  0),
 			p_offset: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  4),
@@ -150,6 +151,7 @@ impl ProgramHeader {
 	}
 
 	fn show(&self){
+		println!("============== program header ==============");
 		println!("p_type:\t\t{}",	self.p_type);
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
@@ -202,11 +204,12 @@ impl SectionHeader {
 	}       
 
 	fn show(&self){
+		println!("============== section header ==============");
 		println!("sh_name:\t{}",	self.sh_name);
 		println!("sh_type:\t{}",	self.sh_type);
 		println!("sh_flags:\t{}",	self.sh_flags);
-		println!("sh_addr:\t{}",	self.sh_addr);
-		println!("sh_offset:\t{}",	self.sh_offset);
+		println!("sh_addr:\t0x{:x}",	self.sh_addr);
+		println!("sh_offset:\t0x{:x}",	self.sh_offset);
 		println!("sh_size:\t{}",	self.sh_size);
 		println!("sh_link:\t{}",	self.sh_link);
 		println!("sh_info:\t{}",	self.sh_info);
@@ -246,11 +249,8 @@ impl ElfLoader {
 	}
 
 	pub fn show(&self){
-		println!("================ elf header ================");
 		self.elf_header.show();
-		println!("============== program header ==============");
 		self.prog_header.show();
-		println!("============== section header ==============");
 		self.sect_header.show();
 	}
 }
