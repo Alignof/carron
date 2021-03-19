@@ -27,4 +27,5 @@ fn main() {
 	}
 
 	loader.show();
+	loader.proc_header.section_dump();
 }

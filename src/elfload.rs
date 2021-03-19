@@ -113,6 +113,7 @@ impl ElfHeader {
 	fn ident_show(&self){
 		self.e_ident.show();
 	}
+
 }
 
 
@@ -160,6 +161,12 @@ impl ProgramHeader {
 		println!("p_memsz:\t0x{:x}",	self.p_memsz);
 		println!("p_flags:\t{}",	self.p_flags);
 		println!("p_align:\t0x{:x}",	self.p_align);
+	}
+
+	fn section_dump(&self, mmap: &[u8]){
+		for dump_part in (self.p_offset .. self.p_memsz).step_by(4){
+			print!("{:x} ", ProgramHeader::get_u32(mmap, dump_part));
+		}
 	}
 }
 
@@ -253,6 +260,7 @@ impl ElfLoader {
 		self.prog_header.show();
 		self.sect_header.show();
 	}
+
 }
 
 #[cfg(test)]
