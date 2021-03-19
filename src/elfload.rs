@@ -165,8 +165,10 @@ impl ProgramHeader {
 
 	fn section_dump(&self, mmap: &[u8]){
 		for dump_part in (self.p_offset .. self.p_memsz).step_by(4){
-			print!("{:x} ", ProgramHeader::get_u32(mmap, dump_part));
+			print!("{:08x} ", ProgramHeader::get_u32(mmap, dump_part as usize));
+			if dump_part % 64 == 0 { println!() }
 		}
+		println!();
 	}
 }
 
@@ -233,6 +235,8 @@ pub struct ElfLoader {
 	elf_header: ElfHeader,
 	prog_header: ProgramHeader,
 	sect_header: SectionHeader,
+	mem_data: Mmap,
+	
 }
 
 impl ElfLoader {
@@ -243,6 +247,7 @@ impl ElfLoader {
 			elf_header: ElfHeader::new(&mapped_data),
 			prog_header: ProgramHeader::new(&mapped_data),
 			sect_header: SectionHeader::new(&mapped_data),
+			mem_data: mapped_data,
 		})
 	}
 
@@ -261,6 +266,9 @@ impl ElfLoader {
 		self.sect_header.show();
 	}
 
+	pub fn dump(&self){
+		self.prog_header.section_dump(&self.mem_data);
+	}
 }
 
 #[cfg(test)]
