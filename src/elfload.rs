@@ -166,7 +166,7 @@ impl ProgramHeader {
 	fn section_dump(&self, mmap: &[u8]){
 		for dump_part in (self.p_offset .. self.p_memsz).step_by(4){
 			print!("{:08x} ", ProgramHeader::get_u32(mmap, dump_part as usize));
-			if dump_part % 64 == 0 { println!() }
+			if dump_part % 64 == 64 - 4 { println!() }
 		}
 		println!();
 	}
