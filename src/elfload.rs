@@ -137,6 +137,13 @@ impl ProgramHeader {
 		(mmap[index + 0] as u32)
 	}
 
+	fn get_u32_dump(mmap: &[u8], index: usize) -> u32 {
+		(mmap[index + 0] as u32) << 24 |
+		(mmap[index + 1] as u32) << 16 |
+		(mmap[index + 2] as u32) <<  8 |
+		(mmap[index + 3] as u32)
+	}
+
 	fn new(mmap: &[u8]) -> ProgramHeader {
 		const PROGRAM_HEADER_START: usize = 52;
 		ProgramHeader {
@@ -163,9 +170,9 @@ impl ProgramHeader {
 		println!("p_align:\t0x{:x}",	self.p_align);
 	}
 
-	fn section_dump(&self, mmap: &[u8]){
-		for dump_part in (self.p_offset .. self.p_memsz).step_by(4){
-			print!("{:08x} ", ProgramHeader::get_u32(mmap, dump_part as usize));
+	fn section_dump(&self, ph_start:u32, mmap: &[u8]){
+		for dump_part in (ph_start .. self.p_memsz).step_by(4){
+			print!("{:08x} ", ProgramHeader::get_u32_dump(mmap, dump_part as usize));
 			if dump_part % 64 == 64 - 4 { println!() }
 		}
 		println!();
@@ -267,7 +274,7 @@ impl ElfLoader {
 	}
 
 	pub fn dump(&self){
-		self.prog_header.section_dump(&self.mem_data);
+		self.prog_header.section_dump(self.elf_header.e_phoff, &self.mem_data);
 	}
 }
 
