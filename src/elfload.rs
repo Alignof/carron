@@ -173,7 +173,7 @@ impl ProgramHeader {
 	fn section_dump(&self, ph_start:u32, mmap: &[u8]){
 		for dump_part in (ph_start .. self.p_memsz).step_by(4){
 			print!("{:08x} ", ProgramHeader::get_u32_dump(mmap, dump_part as usize));
-			if dump_part % 64 == 64 - 4 { println!() }
+			if dump_part % 64 == 64 - 16 { println!() }
 		}
 		println!();
 	}
@@ -274,6 +274,7 @@ impl ElfLoader {
 	}
 
 	pub fn dump(&self){
+		println!("=================   dump   =================");
 		self.prog_header.section_dump(self.elf_header.e_phoff, &self.mem_data);
 	}
 }
