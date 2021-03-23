@@ -217,6 +217,17 @@ impl SectionHeader {
 		println!("sh_addralign:\t{}",	self.sh_addralign);
 		println!("sh_entsize:\t{}",	self.sh_entsize);
 	}
+
+	fn section_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
+		for section_num in 0 .. elf_header.e_shnum {
+			let section_start = elf_header.e_shoff + (self.sh_size * section_num as u32);
+			for dump_part in (section_start .. section_start + self.sh_size).step_by(4){
+				print!("{:08x} ", ProgramHeader::get_u32_dump(mmap, dump_part as usize));
+				if dump_part % 64 == 64 - 16 { println!() }
+			}
+		}
+		println!();
+	}
 }       
 
 
@@ -260,7 +271,8 @@ impl ElfLoader {
 
 	pub fn dump(&self){
 		println!("=================   dump   =================");
-		self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
+		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
+		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
