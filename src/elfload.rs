@@ -227,7 +227,7 @@ impl SectionHeader {
 			println!("==== section {} ====", section_num);
 			let section_start = elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32;
 			for (block, dump_part) in (section_start .. section_start + elf_header.e_shentsize as u32).step_by(4).enumerate(){
-				print!("{:08x} ", ProgramHeader::get_u32_dump(mmap, dump_part as usize));
+				print!("{:08x} ", get_u32(mmap, dump_part as usize));
 				if block % 8 == 4 { println!() }
 			}
 			println!();
@@ -276,8 +276,8 @@ impl ElfLoader {
 
 	pub fn dump(&self){
 		println!("=================   dump   =================");
-		self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
-		//self.sect_header.section_dump(&self.elf_header, &self.mem_data);
+		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
+		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
