@@ -163,11 +163,15 @@ impl ProgramHeader {
 	}
 
 	fn segment_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
-		for dump_part in (elf_header.e_phoff .. self.p_memsz).step_by(4){
-			print!("{:08x} ", ProgramHeader::get_u32_dump(mmap, dump_part as usize));
-			if dump_part % 64 == 64 - 16 { println!() }
+		for segment_num in 0 .. elf_header.e_phnum {
+			println!("==== segment {} ====", segment_num);
+			let segment_start = elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32;
+			for (block, dump_part) in (segment_start .. segment_start + elf_header.e_phentsize as u32).step_by(4).enumerate(){
+				print!("{:08x} ", get_u32(mmap, dump_part as usize));
+				if block % 8 == 4 { println!() }
+			}
+			println!();
 		}
-		println!();
 	}
 }
 
@@ -272,8 +276,8 @@ impl ElfLoader {
 
 	pub fn dump(&self){
 		println!("=================   dump   =================");
-		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
-		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
+		self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
+		//self.sect_header.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
