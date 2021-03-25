@@ -27,4 +27,5 @@ fn main() {
 	}
 
 	loader.show();
+	loader.dump();
 }

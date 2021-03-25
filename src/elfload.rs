@@ -1,6 +1,18 @@
 use std::fs::File;
 use memmap::Mmap;
 
+fn get_u16(mmap: &[u8], index: usize) -> u16 {
+	(mmap[index + 1] as u16) << 8 |
+	(mmap[index + 0] as u16)
+}
+
+fn get_u32(mmap: &[u8], index: usize) -> u32 {
+	(mmap[index + 3] as u32) << 24 |
+	(mmap[index + 2] as u32) << 16 |
+	(mmap[index + 1] as u32) <<  8 |
+	(mmap[index + 0] as u32)
+}
+
 struct ElfIdentification {
 	magic: [u8; 16],
 	class: u8,
@@ -60,39 +72,28 @@ struct ElfHeader {
 }
 
 impl ElfHeader {
-	fn get_u16(mmap: &[u8], index: usize) -> u16 {
-		(mmap[index + 1] as u16) << 8 |
-		(mmap[index + 0] as u16)
-	}
-
-	fn get_u32(mmap: &[u8], index: usize) -> u32 {
-		(mmap[index + 3] as u32) << 24 |
-		(mmap[index + 2] as u32) << 16 |
-		(mmap[index + 1] as u32) <<  8 |
-		(mmap[index + 0] as u32)
-	}
-
 	fn new(mmap: &[u8]) -> ElfHeader {
 		const ELF_HEADER_START: usize = 16;
 		ElfHeader {
 			e_ident:	ElfIdentification::new(mmap),
-			e_type:		ElfHeader::get_u16(mmap, ELF_HEADER_START +  0),
-			e_machine:	ElfHeader::get_u16(mmap, ELF_HEADER_START +  2),
-			e_version:	ElfHeader::get_u32(mmap, ELF_HEADER_START +  4),
-			e_entry:	ElfHeader::get_u32(mmap, ELF_HEADER_START +  8),
-			e_phoff:	ElfHeader::get_u32(mmap, ELF_HEADER_START + 12),
-			e_shoff:	ElfHeader::get_u32(mmap, ELF_HEADER_START + 16),
-			e_flags:	ElfHeader::get_u32(mmap, ELF_HEADER_START + 20),
-			e_ehsize:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 24),
-			e_phentsize:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 26),
-			e_phnum:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 28),
-			e_shentsize:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 30),
-			e_shnum:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 32),
-			e_shstrndx:	ElfHeader::get_u16(mmap, ELF_HEADER_START + 34),
+			e_type:		get_u16(mmap, ELF_HEADER_START +  0),
+			e_machine:	get_u16(mmap, ELF_HEADER_START +  2),
+			e_version:	get_u32(mmap, ELF_HEADER_START +  4),
+			e_entry:	get_u32(mmap, ELF_HEADER_START +  8),
+			e_phoff:	get_u32(mmap, ELF_HEADER_START + 12),
+			e_shoff:	get_u32(mmap, ELF_HEADER_START + 16),
+			e_flags:	get_u32(mmap, ELF_HEADER_START + 20),
+			e_ehsize:	get_u16(mmap, ELF_HEADER_START + 24),
+			e_phentsize:	get_u16(mmap, ELF_HEADER_START + 26),
+			e_phnum:	get_u16(mmap, ELF_HEADER_START + 28),
+			e_shentsize:	get_u16(mmap, ELF_HEADER_START + 30),
+			e_shnum:	get_u16(mmap, ELF_HEADER_START + 32),
+			e_shstrndx:	get_u16(mmap, ELF_HEADER_START + 34),
 		}
 	}
 			
 	fn show(&self){
+		println!("================ elf header ================");
 		self.e_ident.show();
 		println!("e_type:\t\t{:?}",			self.e_type);
 		println!("e_machine:\t{:?}",			self.e_machine);
@@ -128,28 +129,22 @@ struct ProgramHeader {
 }
 
 impl ProgramHeader {
-	fn get_u32(mmap: &[u8], index: usize) -> u32 {
-		(mmap[index + 3] as u32) << 24 |
-		(mmap[index + 2] as u32) << 16 |
-		(mmap[index + 1] as u32) <<  8 |
-		(mmap[index + 0] as u32)
-	}
-
 	fn new(mmap: &[u8]) -> ProgramHeader {
-		const PROGRAM_HEADER_START:usize = 52;
+		const PROGRAM_HEADER_START: usize = 52;
 		ProgramHeader {
-			p_type:   ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  0),
-			p_offset: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  4),
-			p_vaddr:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START +  8),
-			p_paddr:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 12),
-			p_filesz: ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 16),
-			p_memsz:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 20),
-			p_flags:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 24),
-			p_align:  ProgramHeader::get_u32(mmap, PROGRAM_HEADER_START + 28),
+			p_type:   get_u32(mmap, PROGRAM_HEADER_START +  0),
+			p_offset: get_u32(mmap, PROGRAM_HEADER_START +  4),
+			p_vaddr:  get_u32(mmap, PROGRAM_HEADER_START +  8),
+			p_paddr:  get_u32(mmap, PROGRAM_HEADER_START + 12),
+			p_filesz: get_u32(mmap, PROGRAM_HEADER_START + 16),
+			p_memsz:  get_u32(mmap, PROGRAM_HEADER_START + 20),
+			p_flags:  get_u32(mmap, PROGRAM_HEADER_START + 24),
+			p_align:  get_u32(mmap, PROGRAM_HEADER_START + 28),
 		}
 	}
 
 	fn show(&self){
+		println!("============== program header ==============");
 		println!("p_type:\t\t{}",	self.p_type);
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
@@ -158,6 +153,18 @@ impl ProgramHeader {
 		println!("p_memsz:\t0x{:x}",	self.p_memsz);
 		println!("p_flags:\t{}",	self.p_flags);
 		println!("p_align:\t0x{:x}",	self.p_align);
+	}
+
+	fn segment_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
+		for segment_num in 0 .. elf_header.e_phnum {
+			println!("==== segment {} ====", segment_num);
+			let segment_start = elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32;
+			for (block, dump_part) in (segment_start .. segment_start + elf_header.e_phentsize as u32).step_by(4).enumerate(){
+				print!("{:08x} ", get_u32(mmap, dump_part as usize));
+				if block % 8 == 4 { println!() }
+			}
+			println!();
+		}
 	}
 }
 
@@ -178,40 +185,46 @@ struct SectionHeader {
 	
 
 impl SectionHeader {
-	fn get_u32(mmap: &[u8], index: usize) -> u32 {
-		(mmap[index + 3] as u32) << 24 |
-		(mmap[index + 2] as u32) << 16 |
-		(mmap[index + 1] as u32) <<  8 |
-		(mmap[index + 0] as u32)
-	}
-
 	fn new(mmap: &[u8]) -> SectionHeader {
 		const SECTION_HEADER_START:usize = 84;
 		SectionHeader {
-			sh_name:      SectionHeader::get_u32(mmap, SECTION_HEADER_START +  0),
-			sh_type:      SectionHeader::get_u32(mmap, SECTION_HEADER_START +  4),
-			sh_flags:     SectionHeader::get_u32(mmap, SECTION_HEADER_START +  8),
-			sh_addr:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 12),
-			sh_offset:    SectionHeader::get_u32(mmap, SECTION_HEADER_START + 16),
-			sh_size:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 20),
-			sh_link:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 24),
-			sh_info:      SectionHeader::get_u32(mmap, SECTION_HEADER_START + 28),
-			sh_addralign: SectionHeader::get_u32(mmap, SECTION_HEADER_START + 32),
-			sh_entsize:   SectionHeader::get_u32(mmap, SECTION_HEADER_START + 34),
+			sh_name:      get_u32(mmap, SECTION_HEADER_START +  0),
+			sh_type:      get_u32(mmap, SECTION_HEADER_START +  4),
+			sh_flags:     get_u32(mmap, SECTION_HEADER_START +  8),
+			sh_addr:      get_u32(mmap, SECTION_HEADER_START + 12),
+			sh_offset:    get_u32(mmap, SECTION_HEADER_START + 16),
+			sh_size:      get_u32(mmap, SECTION_HEADER_START + 20),
+			sh_link:      get_u32(mmap, SECTION_HEADER_START + 24),
+			sh_info:      get_u32(mmap, SECTION_HEADER_START + 28),
+			sh_addralign: get_u32(mmap, SECTION_HEADER_START + 32),
+			sh_entsize:   get_u32(mmap, SECTION_HEADER_START + 34),
 		}       
 	}       
 
 	fn show(&self){
+		println!("============== section header ==============");
 		println!("sh_name:\t{}",	self.sh_name);
 		println!("sh_type:\t{}",	self.sh_type);
 		println!("sh_flags:\t{}",	self.sh_flags);
-		println!("sh_addr:\t{}",	self.sh_addr);
-		println!("sh_offset:\t{}",	self.sh_offset);
+		println!("sh_addr:\t0x{:x}",	self.sh_addr);
+		println!("sh_offset:\t0x{:x}",	self.sh_offset);
 		println!("sh_size:\t{}",	self.sh_size);
 		println!("sh_link:\t{}",	self.sh_link);
 		println!("sh_info:\t{}",	self.sh_info);
 		println!("sh_addralign:\t{}",	self.sh_addralign);
 		println!("sh_entsize:\t{}",	self.sh_entsize);
+	}
+
+	fn section_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
+		for section_num in 0 .. elf_header.e_shnum {
+			println!("==== section {} ====", section_num);
+			let section_start = elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32;
+			for (block, dump_part) in (section_start .. section_start + elf_header.e_shentsize as u32).step_by(4).enumerate(){
+				print!("{:08x} ", get_u32(mmap, dump_part as usize));
+				if block % 8 == 4 { println!() }
+			}
+			println!();
+		}
 	}
 }       
 
@@ -223,6 +236,8 @@ pub struct ElfLoader {
 	elf_header: ElfHeader,
 	prog_header: ProgramHeader,
 	sect_header: SectionHeader,
+	mem_data: Mmap,
+	
 }
 
 impl ElfLoader {
@@ -233,6 +248,7 @@ impl ElfLoader {
 			elf_header: ElfHeader::new(&mapped_data),
 			prog_header: ProgramHeader::new(&mapped_data),
 			sect_header: SectionHeader::new(&mapped_data),
+			mem_data: mapped_data,
 		})
 	}
 
@@ -246,12 +262,15 @@ impl ElfLoader {
 	}
 
 	pub fn show(&self){
-		println!("================ elf header ================");
 		self.elf_header.show();
-		println!("============== program header ==============");
 		self.prog_header.show();
-		println!("============== section header ==============");
 		self.sect_header.show();
+	}
+
+	pub fn dump(&self){
+		println!("=================   dump   =================");
+		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
+		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
