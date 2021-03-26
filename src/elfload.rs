@@ -129,7 +129,7 @@ struct ProgramHeader {
 }
 
 impl ProgramHeader {
-	fn new(mmap: &[u8]) -> ProgramHeader {
+	fn new(mmap: &[u8], elf_header:&ElfHeader) -> ProgramHeader {
 		const PROGRAM_HEADER_START: usize = 52;
 		ProgramHeader {
 			p_type:   get_u32(mmap, PROGRAM_HEADER_START +  0),
@@ -185,7 +185,7 @@ struct SectionHeader {
 	
 
 impl SectionHeader {
-	fn new(mmap: &[u8]) -> SectionHeader {
+	fn new(mmap: &[u8], elf_header:&ElfHeader) -> SectionHeader {
 		const SECTION_HEADER_START:usize = 84;
 		SectionHeader {
 			sh_name:      get_u32(mmap, SECTION_HEADER_START +  0),
@@ -245,11 +245,13 @@ impl ElfLoader {
 		let file = File::open(filename)?;
 		let mapped_data = unsafe{Mmap::map(&file)?};
 		let new_elf = ElfHeader::new(&mapped_data);
+		let new_prog = ProgramHeader::new(&mapped_data, &new_elf);
+		let new_sect = SectionHeader::new(&mapped_data, &new_elf);
 
 		Ok(ElfLoader{
 			elf_header: new_elf,
-			prog_header: ProgramHeader::new(&mapped_data),
-			sect_header: SectionHeader::new(&mapped_data),
+			prog_header: new_prog,
+			sect_header: new_sect,
 			mem_data: mapped_data,
 		})
 	}
