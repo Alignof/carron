@@ -244,8 +244,10 @@ impl ElfLoader {
 	pub fn try_new(filename: &str) -> std::io::Result<ElfLoader>{
 		let file = File::open(filename)?;
 		let mapped_data = unsafe{Mmap::map(&file)?};
+		let new_elf = ElfHeader::new(&mapped_data);
+
 		Ok(ElfLoader{
-			elf_header: ElfHeader::new(&mapped_data),
+			elf_header: new_elf,
 			prog_header: ProgramHeader::new(&mapped_data),
 			sect_header: SectionHeader::new(&mapped_data),
 			mem_data: mapped_data,
@@ -269,8 +271,8 @@ impl ElfLoader {
 
 	pub fn dump(&self){
 		println!("=================   dump   =================");
-		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
-		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
+		self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
+		//self.sect_header.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
