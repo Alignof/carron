@@ -129,8 +129,10 @@ struct ProgramHeader {
 }
 
 impl ProgramHeader {
-	fn new(mmap: &[u8], elf_header:&ElfHeader) -> ProgramHeader {
-		const PROGRAM_HEADER_START: usize = 52;
+	fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<ProgramHeader> {
+		let mut new_prog = Vec::new();
+		let PROGRAM_HEADER_START: usize = 52;
+
 		ProgramHeader {
 			p_type:   get_u32(mmap, PROGRAM_HEADER_START +  0),
 			p_offset: get_u32(mmap, PROGRAM_HEADER_START +  4),
@@ -234,7 +236,7 @@ impl SectionHeader {
 
 pub struct ElfLoader {
 	elf_header: ElfHeader,
-	prog_header: ProgramHeader,
+	prog_header: Vec<ProgramHeader>,
 	sect_header: SectionHeader,
 	mem_data: Mmap,
 	
