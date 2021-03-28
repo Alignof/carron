@@ -133,16 +133,23 @@ impl ProgramHeader {
 		let mut new_prog = Vec::new();
 		let PROGRAM_HEADER_START: usize = 52;
 
-		ProgramHeader {
-			p_type:   get_u32(mmap, PROGRAM_HEADER_START +  0),
-			p_offset: get_u32(mmap, PROGRAM_HEADER_START +  4),
-			p_vaddr:  get_u32(mmap, PROGRAM_HEADER_START +  8),
-			p_paddr:  get_u32(mmap, PROGRAM_HEADER_START + 12),
-			p_filesz: get_u32(mmap, PROGRAM_HEADER_START + 16),
-			p_memsz:  get_u32(mmap, PROGRAM_HEADER_START + 20),
-			p_flags:  get_u32(mmap, PROGRAM_HEADER_START + 24),
-			p_align:  get_u32(mmap, PROGRAM_HEADER_START + 28),
+		for segment_num in 0 .. elf_header.e_phnum {
+			let segment_start = elf_header.e_phoff + (elf_header.e_phentsize * segment_num);
+			new_prog.push(
+				ProgramHeader {
+					p_type:   get_u32(mmap, segment_start +  0),
+					p_offset: get_u32(mmap, segment_start +  4),
+					p_vaddr:  get_u32(mmap, segment_start +  8),
+					p_paddr:  get_u32(mmap, segment_start + 12),
+					p_filesz: get_u32(mmap, segment_start + 16),
+					p_memsz:  get_u32(mmap, segment_start + 20),
+					p_flags:  get_u32(mmap, segment_start + 24),
+					p_align:  get_u32(mmap, segment_start + 28),
+				}
+			);
 		}
+
+		new_prog
 	}
 
 	fn show(&self){
