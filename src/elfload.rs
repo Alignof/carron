@@ -131,7 +131,6 @@ struct ProgramHeader {
 impl ProgramHeader {
 	fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<ProgramHeader> {
 		let mut new_prog = Vec::new();
-		let PROGRAM_HEADER_START: usize = 52;
 
 		for segment_num in 0 .. elf_header.e_phnum {
 			let segment_start:usize = (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
@@ -149,7 +148,7 @@ impl ProgramHeader {
 			);
 		}
 
-		new_prog
+		return new_prog;
 	}
 
 	fn show(&self){
@@ -214,7 +213,7 @@ impl SectionHeader {
 			);
 		}
 
-		new_sect
+		return new_sect;
 	}
 
 
