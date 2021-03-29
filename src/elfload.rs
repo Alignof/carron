@@ -331,8 +331,8 @@ mod tests {
 			}
 		};
 
-		assert_eq!(loader.prog_headers.p_type, 1);
-		assert_eq!(loader.prog_headers.p_flags, 5);
+		assert_eq!(loader.prog_headers[0].p_type, 1);
+		assert_eq!(loader.prog_headers[0].p_flags, 5);
 	}
 }
 
