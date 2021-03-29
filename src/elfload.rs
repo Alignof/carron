@@ -134,7 +134,7 @@ impl ProgramHeader {
 		let PROGRAM_HEADER_START: usize = 52;
 
 		for segment_num in 0 .. elf_header.e_phnum {
-			let segment_start = elf_header.e_phoff + (elf_header.e_phentsize * segment_num);
+			let segment_start:usize = (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
 			new_prog.push(
 				ProgramHeader {
 					p_type:   get_u32(mmap, segment_start +  0),
@@ -153,7 +153,6 @@ impl ProgramHeader {
 	}
 
 	fn show(&self){
-		println!("============== program header ==============");
 		println!("p_type:\t\t{}",	self.p_type);
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
@@ -276,14 +275,19 @@ impl ElfLoader {
 
 	pub fn show(&self){
 		self.elf_header.show();
-		self.prog_header.show();
+
+		for (id, prog) in self.prog_header.iter().enumerate(){
+			println!("============== program header {}==============", id + 1);
+			prog.show();
+		}
+
 		self.sect_header.show();
 	}
 
 	pub fn dump(&self){
 		println!("=================   dump   =================");
-		self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
-		//self.sect_header.section_dump(&self.elf_header, &self.mem_data);
+		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
+		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
