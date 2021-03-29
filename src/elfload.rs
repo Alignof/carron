@@ -242,8 +242,8 @@ impl SectionHeader {
 
 pub struct ElfLoader {
 	elf_header: ElfHeader,
-	prog_header: Vec<ProgramHeader>,
-	sect_header: SectionHeader,
+	prog_headers: Vec<ProgramHeader>,
+	sect_headers: SectionHeader,
 	mem_data: Mmap,
 	
 }
@@ -258,8 +258,8 @@ impl ElfLoader {
 
 		Ok(ElfLoader{
 			elf_header: new_elf,
-			prog_header: new_prog,
-			sect_header: new_sect,
+			prog_headers: new_prog,
+			sect_headers: new_sect,
 			mem_data: mapped_data,
 		})
 	}
@@ -276,18 +276,18 @@ impl ElfLoader {
 	pub fn show(&self){
 		self.elf_header.show();
 
-		for (id, prog) in self.prog_header.iter().enumerate(){
+		for (id, prog) in self.prog_headers.iter().enumerate(){
 			println!("============== program header {}==============", id + 1);
 			prog.show();
 		}
 
-		self.sect_header.show();
+		self.sect_headers.show();
 	}
 
 	pub fn dump(&self){
 		println!("=================   dump   =================");
-		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
-		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
+		//self.prog_headers.segment_dump(&self.elf_header, &self.mem_data);
+		self.sect_headers.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
@@ -320,8 +320,8 @@ mod tests {
 			}
 		};
 
-		assert_eq!(loader.prog_header.p_type, 1);
-		assert_eq!(loader.prog_header.p_flags, 5);
+		assert_eq!(loader.prog_headers.p_type, 1);
+		assert_eq!(loader.prog_headers.p_flags, 5);
 	}
 }
 
