@@ -271,7 +271,7 @@ impl ElfLoader {
 		self.elf_header.ident_show();
 	}
 
-	pub fn show(&self){
+	pub fn show_all_header(&self){
 		self.elf_header.show();
 
 		for (id, prog) in self.prog_headers.iter().enumerate(){
@@ -286,8 +286,7 @@ impl ElfLoader {
 
 	}
 
-	pub fn dump(&self){
-		/*
+	pub fn dump_segment(&self){
 		println!("=================   dump   =================");
 		for (id, prog) in self.prog_headers.iter().enumerate(){
 			println!("============== program header {}==============", id + 1);
@@ -295,8 +294,9 @@ impl ElfLoader {
 			prog.segment_dump(&self.elf_header, &self.mem_data);
 			println!("\n\n");
 		}
-		*/
+	}
 
+	pub fn dump_section(&self){
 		for (id, sect) in self.sect_headers.iter().enumerate(){
 			println!("============== section header {}==============", id + 1);
 			sect.show();
