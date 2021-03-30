@@ -26,6 +26,6 @@ fn main() {
 		println!("elfcheck: OK");
 	}
 
-	loader.show();
+	//loader.show();
 	loader.dump();
 }

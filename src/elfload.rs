@@ -163,14 +163,9 @@ impl ProgramHeader {
 	}
 
 	fn segment_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
-		for segment_num in 0 .. elf_header.e_phnum {
-			println!("==== segment {} ====", segment_num);
-			let segment_start = elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32;
-			for (block, dump_part) in (segment_start .. segment_start + elf_header.e_phentsize as u32).step_by(4).enumerate(){
-				print!("{:08x} ", get_u32(mmap, dump_part as usize));
-				if block % 8 == 4 { println!() }
-			}
-			println!();
+		for (block, dump_part) in (self.p_offset .. self.p_offset + self.p_memsz as u32).step_by(4).enumerate(){
+			print!("{:08x} ", get_u32(mmap, dump_part as usize));
+			if block % 8 == 4 { println!() }
 		}
 	}
 }
@@ -231,15 +226,11 @@ impl SectionHeader {
 	}
 
 	fn section_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
-		for section_num in 0 .. elf_header.e_shnum {
-			println!("==== section {} ====", section_num);
-			let section_start = elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32;
-			for (block, dump_part) in (section_start .. section_start + elf_header.e_shentsize as u32).step_by(4).enumerate(){
-				print!("{:08x} ", get_u32(mmap, dump_part as usize));
-				if block % 8 == 4 { println!() }
-			}
-			println!();
+		for (block, dump_part) in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4).enumerate(){
+			print!("{:08x} ", get_u32(mmap, dump_part as usize));
+			if block % 8 == 4 { println!() }
 		}
+		println!();
 	}
 }       
 
@@ -296,9 +287,22 @@ impl ElfLoader {
 	}
 
 	pub fn dump(&self){
+		/*
 		println!("=================   dump   =================");
-		//self.prog_headers.segment_dump(&self.elf_header, &self.mem_data);
-		//self.sect_headers.section_dump(&self.elf_header, &self.mem_data);
+		for (id, prog) in self.prog_headers.iter().enumerate(){
+			println!("============== program header {}==============", id + 1);
+			prog.show();
+			prog.segment_dump(&self.elf_header, &self.mem_data);
+			println!("\n\n");
+		}
+		*/
+
+		for (id, sect) in self.sect_headers.iter().enumerate(){
+			println!("============== section header {}==============", id + 1);
+			sect.show();
+			sect.section_dump(&self.elf_header, &self.mem_data);
+			println!("\n\n");
+		}
 	}
 }
 
