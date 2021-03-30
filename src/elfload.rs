@@ -129,22 +129,29 @@ struct ProgramHeader {
 }
 
 impl ProgramHeader {
-	fn new(mmap: &[u8]) -> ProgramHeader {
-		const PROGRAM_HEADER_START: usize = 52;
-		ProgramHeader {
-			p_type:   get_u32(mmap, PROGRAM_HEADER_START +  0),
-			p_offset: get_u32(mmap, PROGRAM_HEADER_START +  4),
-			p_vaddr:  get_u32(mmap, PROGRAM_HEADER_START +  8),
-			p_paddr:  get_u32(mmap, PROGRAM_HEADER_START + 12),
-			p_filesz: get_u32(mmap, PROGRAM_HEADER_START + 16),
-			p_memsz:  get_u32(mmap, PROGRAM_HEADER_START + 20),
-			p_flags:  get_u32(mmap, PROGRAM_HEADER_START + 24),
-			p_align:  get_u32(mmap, PROGRAM_HEADER_START + 28),
+	fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<ProgramHeader> {
+		let mut new_prog = Vec::new();
+
+		for segment_num in 0 .. elf_header.e_phnum {
+			let segment_start:usize = (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
+			new_prog.push(
+				ProgramHeader {
+					p_type:   get_u32(mmap, segment_start +  0),
+					p_offset: get_u32(mmap, segment_start +  4),
+					p_vaddr:  get_u32(mmap, segment_start +  8),
+					p_paddr:  get_u32(mmap, segment_start + 12),
+					p_filesz: get_u32(mmap, segment_start + 16),
+					p_memsz:  get_u32(mmap, segment_start + 20),
+					p_flags:  get_u32(mmap, segment_start + 24),
+					p_align:  get_u32(mmap, segment_start + 28),
+				}
+			);
 		}
+
+		return new_prog;
 	}
 
 	fn show(&self){
-		println!("============== program header ==============");
 		println!("p_type:\t\t{}",	self.p_type);
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
@@ -185,24 +192,32 @@ struct SectionHeader {
 	
 
 impl SectionHeader {
-	fn new(mmap: &[u8]) -> SectionHeader {
-		const SECTION_HEADER_START:usize = 84;
-		SectionHeader {
-			sh_name:      get_u32(mmap, SECTION_HEADER_START +  0),
-			sh_type:      get_u32(mmap, SECTION_HEADER_START +  4),
-			sh_flags:     get_u32(mmap, SECTION_HEADER_START +  8),
-			sh_addr:      get_u32(mmap, SECTION_HEADER_START + 12),
-			sh_offset:    get_u32(mmap, SECTION_HEADER_START + 16),
-			sh_size:      get_u32(mmap, SECTION_HEADER_START + 20),
-			sh_link:      get_u32(mmap, SECTION_HEADER_START + 24),
-			sh_info:      get_u32(mmap, SECTION_HEADER_START + 28),
-			sh_addralign: get_u32(mmap, SECTION_HEADER_START + 32),
-			sh_entsize:   get_u32(mmap, SECTION_HEADER_START + 34),
-		}       
-	}       
+	fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
+		let mut new_sect = Vec::new();
+
+		for section_num in 0 .. elf_header.e_shnum {
+			let section_start:usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
+			new_sect.push(
+				SectionHeader {
+					sh_name:      get_u32(mmap, section_start +  0),
+					sh_type:      get_u32(mmap, section_start +  4),
+					sh_flags:     get_u32(mmap, section_start +  8),
+					sh_addr:      get_u32(mmap, section_start + 12),
+					sh_offset:    get_u32(mmap, section_start + 16),
+					sh_size:      get_u32(mmap, section_start + 20),
+					sh_link:      get_u32(mmap, section_start + 24),
+					sh_info:      get_u32(mmap, section_start + 28),
+					sh_addralign: get_u32(mmap, section_start + 32),
+					sh_entsize:   get_u32(mmap, section_start + 34),
+				}       
+			);
+		}
+
+		return new_sect;
+	}
+
 
 	fn show(&self){
-		println!("============== section header ==============");
 		println!("sh_name:\t{}",	self.sh_name);
 		println!("sh_type:\t{}",	self.sh_type);
 		println!("sh_flags:\t{}",	self.sh_flags);
@@ -234,8 +249,8 @@ impl SectionHeader {
 
 pub struct ElfLoader {
 	elf_header: ElfHeader,
-	prog_header: ProgramHeader,
-	sect_header: SectionHeader,
+	prog_headers: Vec<ProgramHeader>,
+	sect_headers: Vec<SectionHeader>,
 	mem_data: Mmap,
 	
 }
@@ -244,10 +259,14 @@ impl ElfLoader {
 	pub fn try_new(filename: &str) -> std::io::Result<ElfLoader>{
 		let file = File::open(filename)?;
 		let mapped_data = unsafe{Mmap::map(&file)?};
+		let new_elf = ElfHeader::new(&mapped_data);
+		let new_prog = ProgramHeader::new(&mapped_data, &new_elf);
+		let new_sect = SectionHeader::new(&mapped_data, &new_elf);
+
 		Ok(ElfLoader{
-			elf_header: ElfHeader::new(&mapped_data),
-			prog_header: ProgramHeader::new(&mapped_data),
-			sect_header: SectionHeader::new(&mapped_data),
+			elf_header: new_elf,
+			prog_headers: new_prog,
+			sect_headers: new_sect,
 			mem_data: mapped_data,
 		})
 	}
@@ -263,14 +282,23 @@ impl ElfLoader {
 
 	pub fn show(&self){
 		self.elf_header.show();
-		self.prog_header.show();
-		self.sect_header.show();
+
+		for (id, prog) in self.prog_headers.iter().enumerate(){
+			println!("============== program header {}==============", id + 1);
+			prog.show();
+		}
+
+		for (id, sect) in self.sect_headers.iter().enumerate(){
+			println!("============== section header {}==============", id + 1);
+			sect.show();
+		}
+
 	}
 
 	pub fn dump(&self){
 		println!("=================   dump   =================");
-		//self.prog_header.segment_dump(&self.elf_header, &self.mem_data);
-		self.sect_header.section_dump(&self.elf_header, &self.mem_data);
+		//self.prog_headers.segment_dump(&self.elf_header, &self.mem_data);
+		//self.sect_headers.section_dump(&self.elf_header, &self.mem_data);
 	}
 }
 
@@ -303,8 +331,8 @@ mod tests {
 			}
 		};
 
-		assert_eq!(loader.prog_header.p_type, 1);
-		assert_eq!(loader.prog_header.p_flags, 5);
+		assert_eq!(loader.prog_headers[0].p_type, 1);
+		assert_eq!(loader.prog_headers[0].p_flags, 5);
 	}
 }
 
