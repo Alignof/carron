@@ -13,8 +13,8 @@ fn get_u32(mmap: &[u8], index: usize) -> u32 {
 	(mmap[index + 0] as u32)
 }
 
-fn sh_type_to_str(section_type:u32) -> &'static str {
-	match section_type {
+fn get_segment_type_name(segment_type:u32) -> &'static str {
+	match segment_type {
 		0 => "PT_NULL",
 		1 => "PT_LOAD",
 		2 => "PT_DYNAMIC",
@@ -24,7 +24,29 @@ fn sh_type_to_str(section_type:u32) -> &'static str {
 		6 => "PT_PHDR",
 		7 => "PT_LOPROC",
 		8 => "PT_HIPROC",
-		_ => "unknown type"
+		_ => "unknown type",
+	}
+}
+
+fn get_section_type_name(section_type:u32) -> &'static str {
+	match section_type {
+		0  => "SHT_NULL",
+		1  => "SHT_PROGBITS",
+		2  => "SHT_SYMTAB",
+		3  => "SHT_STRTAB",
+		4  => "SHT_RELA",
+		5  => "SHT_HASH",
+		6  => "SHT_DYNAMIC",
+		7  => "SHT_NOTE",
+		8  => "SHT_NOBITS",
+		9  => "SHT_REL",
+		10 => "SHT_SHLIB",
+		11 => "SHT_DYNSYM",
+		12 => "SHT_LOPROC",
+		13 => "SHT_HIPROC",
+		14 => "SHT_LOUSER",
+		15 => "SHT_HIUSER",
+		_  => "unknown type",
 	}
 }
 
@@ -167,7 +189,7 @@ impl ProgramHeader {
 	}
 
 	fn show(&self){
-		println!("p_type:\t\t{}",	self.p_type);
+		println!("p_type:\t\t{}",	get_segment_type_name(self.p_type));
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
 		println!("p_paddr:\t0x{:x}",	self.p_paddr);
@@ -229,7 +251,7 @@ impl SectionHeader {
 
 	fn show(&self){
 		println!("sh_name:\t{}",	self.sh_name);
-		println!("sh_type:\t{}",	sh_type_to_str(self.sh_type));
+		println!("sh_type:\t{}",	get_section_type_name(self.sh_type));
 		println!("sh_flags:\t{}",	self.sh_flags);
 		println!("sh_addr:\t0x{:x}",	self.sh_addr);
 		println!("sh_offset:\t0x{:x}",	self.sh_offset);

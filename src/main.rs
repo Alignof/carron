@@ -27,5 +27,6 @@ fn main() {
 	}
 
 	//loader.show_all_header();
-	loader.dump_section();
+	//loader.dump_section();
+	loader.dump_segment();
 }
