@@ -164,8 +164,8 @@ impl ProgramHeader {
 
 	fn segment_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
 		for (block, dump_part) in (self.p_offset .. self.p_offset + self.p_memsz as u32).step_by(4).enumerate(){
+			if block % 8 == 0 { println!() }
 			print!("{:08x} ", get_u32(mmap, dump_part as usize));
-			if block % 8 == 4 { println!() }
 		}
 	}
 }
@@ -227,8 +227,8 @@ impl SectionHeader {
 
 	fn section_dump(&self, elf_header:&ElfHeader, mmap: &[u8]){
 		for (block, dump_part) in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4).enumerate(){
+			if block % 8 == 0 { println!() }
 			print!("{:08x} ", get_u32(mmap, dump_part as usize));
-			if block % 8 == 4 { println!() }
 		}
 		println!();
 	}
