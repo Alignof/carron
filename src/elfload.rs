@@ -13,6 +13,21 @@ fn get_u32(mmap: &[u8], index: usize) -> u32 {
 	(mmap[index + 0] as u32)
 }
 
+fn sh_type_to_str(section_type:u32) -> &'static str {
+	match section_type {
+		0 => "PT_NULL",
+		1 => "PT_LOAD",
+		2 => "PT_DYNAMIC",
+		3 => "PT_INTERP",
+		4 => "PT_NOTE",
+		5 => "PT_SHLIB",
+		6 => "PT_PHDR",
+		7 => "PT_LOPROC",
+		8 => "PT_HIPROC",
+		_ => "unknown type"
+	}
+}
+
 struct ElfIdentification {
 	magic: [u8; 16],
 	class: u8,
@@ -214,7 +229,7 @@ impl SectionHeader {
 
 	fn show(&self){
 		println!("sh_name:\t{}",	self.sh_name);
-		println!("sh_type:\t{}",	self.sh_type);
+		println!("sh_type:\t{}",	sh_type_to_str(self.sh_type));
 		println!("sh_flags:\t{}",	self.sh_flags);
 		println!("sh_addr:\t0x{:x}",	self.sh_addr);
 		println!("sh_offset:\t0x{:x}",	self.sh_offset);
