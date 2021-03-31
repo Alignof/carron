@@ -13,6 +13,17 @@ fn get_u32(mmap: &[u8], index: usize) -> u32 {
 	(mmap[index + 0] as u32)
 }
 
+fn get_elf_type_name(elf_type:u16) -> &'static str {
+	match elf_type {
+		0 => "ET_NONE",
+		1 => "ET_REL",
+		2 => "ET_EXEC",
+		3 => "ET_DYN",
+		4 => "ET_CORE",
+		_ => "unknown type",
+	}
+}
+
 fn get_segment_type_name(segment_type:u32) -> &'static str {
 	match segment_type {
 		0 => "PT_NULL",
@@ -132,19 +143,19 @@ impl ElfHeader {
 	fn show(&self){
 		println!("================ elf header ================");
 		self.e_ident.show();
-		println!("e_type:\t\t{:?}",			self.e_type);
-		println!("e_machine:\t{:?}",			self.e_machine);
-		println!("e_version:\t0x{:x?}",			self.e_version);
+		println!("e_type:\t\t{}",			get_elf_type_name(self.e_type));
+		println!("e_machine:\t{}",			self.e_machine);
+		println!("e_version:\t0x{:x}",			self.e_version);
 		println!("e_entry:\t0x{:x?}",			self.e_entry);
-		println!("e_phoff:\t{:?} (bytes into file)",	self.e_phoff);
-		println!("e_shoff:\t{:?} (bytes into file)",	self.e_shoff);
-		println!("e_flags:\t0x{:x?}",			self.e_flags);
-		println!("e_ehsize:\t{:?} (bytes)",		self.e_ehsize);
-		println!("e_phentsize:\t{:?} (bytes)",		self.e_phentsize);
-		println!("e_phnum:\t{:?}",			self.e_phnum);
-		println!("e_shentsize:\t{:?} (bytes)",		self.e_shentsize);
-		println!("e_shnum:\t{:?}",			self.e_shnum);
-		println!("e_shstrndx:\t{:?}",			self.e_shstrndx);
+		println!("e_phoff:\t{} (bytes into file)",	self.e_phoff);
+		println!("e_shoff:\t{} (bytes into file)",	self.e_shoff);
+		println!("e_flags:\t0x{:x}",			self.e_flags);
+		println!("e_ehsize:\t{} (bytes)",		self.e_ehsize);
+		println!("e_phentsize:\t{} (bytes)",		self.e_phentsize);
+		println!("e_phnum:\t{}",			self.e_phnum);
+		println!("e_shentsize:\t{} (bytes)",		self.e_shentsize);
+		println!("e_shnum:\t{}",			self.e_shnum);
+		println!("e_shstrndx:\t{}",			self.e_shstrndx);
 	}
 
 	fn ident_show(&self){
