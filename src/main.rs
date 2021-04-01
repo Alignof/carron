@@ -1,7 +1,7 @@
 extern crate rv32im_sim;
 
 use rv32im_sim::Arguments;
-use rv32im_sim::ElfLoader;
+use rv32im_sim::elfload;
 use std::env;
 use std::process;
 
@@ -15,7 +15,7 @@ fn main() {
 
 	println!("In file {}", args.filename);
 
-	let loader = match ElfLoader::try_new(&args.filename) {
+	let loader = match elfload::ElfLoader::try_new(&args.filename) {
 		Ok(loader) => loader,
 		Err(error) => {
 			panic!("There was a problem opening the file: {:?}", error);
