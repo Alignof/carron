@@ -47,8 +47,7 @@ impl ElfLoader {
 	}
 
 	pub fn is_elf(&self) -> bool {
-		const HEADER_MAGIC: [u8; 4] = [0x7f, 0x45, 0x4c, 0x46];
-		self.elf_header.e_ident.magic[0..4] == HEADER_MAGIC
+		self.elf_header.is_elf()
 	}
 
 	pub fn ident_show(&self){

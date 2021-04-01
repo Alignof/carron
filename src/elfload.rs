@@ -158,6 +158,11 @@ impl ElfHeader {
 	pub fn ident_show(&self){
 		self.e_ident.show();
 	}
+
+	pub fn is_elf(&self) -> bool{
+		const HEADER_MAGIC: [u8; 4] = [0x7f, 0x45, 0x4c, 0x46];
+		self.e_ident.magic[0..4] == HEADER_MAGIC
+	}
 }
 
 
