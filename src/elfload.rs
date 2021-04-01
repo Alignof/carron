@@ -1,6 +1,3 @@
-use std::fs::File;
-use memmap::Mmap;
-
 fn get_u16(mmap: &[u8], index: usize) -> u16 {
 	(mmap[index + 1] as u16) << 8 |
 	(mmap[index + 0] as u16)
@@ -102,7 +99,7 @@ impl ElfIdentification {
 }
 
 
-struct ElfHeader {
+pub struct ElfHeader {
 	e_ident: ElfIdentification,
 	e_type: u16,
 	e_machine: u16,
@@ -120,7 +117,7 @@ struct ElfHeader {
 }
 
 impl ElfHeader {
-	fn new(mmap: &[u8]) -> ElfHeader {
+	pub fn new(mmap: &[u8]) -> ElfHeader {
 		const ELF_HEADER_START: usize = 16;
 		ElfHeader {
 			e_ident:	ElfIdentification::new(mmap),
@@ -140,7 +137,7 @@ impl ElfHeader {
 		}
 	}
 			
-	fn show(&self){
+	pub fn show(&self){
 		println!("================ elf header ================");
 		self.e_ident.show();
 		println!("e_type:\t\t{}",			get_elf_type_name(self.e_type));
@@ -158,14 +155,14 @@ impl ElfHeader {
 		println!("e_shstrndx:\t{}",			self.e_shstrndx);
 	}
 
-	fn ident_show(&self){
+	pub fn ident_show(&self){
 		self.e_ident.show();
 	}
 }
 
 
 
-struct ProgramHeader {
+pub struct ProgramHeader {
 	p_type: u32,
 	p_offset: u32,
 	p_vaddr: u32,
@@ -177,7 +174,7 @@ struct ProgramHeader {
 }
 
 impl ProgramHeader {
-	fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<ProgramHeader> {
+	pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<ProgramHeader> {
 		let mut new_prog = Vec::new();
 
 		for segment_num in 0 .. elf_header.e_phnum {
@@ -199,7 +196,7 @@ impl ProgramHeader {
 		return new_prog;
 	}
 
-	fn show(&self){
+	pub fn show(&self){
 		println!("p_type:\t\t{}",	get_segment_type_name(self.p_type));
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
@@ -210,7 +207,7 @@ impl ProgramHeader {
 		println!("p_align:\t0x{:x}",	self.p_align);
 	}
 
-	fn segment_dump(&self, mmap: &[u8]){
+	pub fn segment_dump(&self, mmap: &[u8]){
 		for (block, dump_part) in (self.p_offset .. self.p_offset + self.p_memsz as u32).step_by(4).enumerate(){
 			if block % 16 == 0 { println!() }
 			print!("{:08x} ", get_u32(mmap, dump_part as usize));
@@ -220,7 +217,7 @@ impl ProgramHeader {
 
 
 
-struct SectionHeader {
+pub struct SectionHeader {
 	sh_name: u32,
 	sh_type: u32,
 	sh_flags: u32,
@@ -235,7 +232,7 @@ struct SectionHeader {
 	
 
 impl SectionHeader {
-	fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
+	pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
 		let mut new_sect = Vec::new();
 
 		for section_num in 0 .. elf_header.e_shnum {
@@ -260,7 +257,7 @@ impl SectionHeader {
 	}
 
 
-	fn show(&self){
+	pub fn show(&self){
 		println!("sh_name:\t{}",	self.sh_name);
 		println!("sh_type:\t{}",	get_section_type_name(self.sh_type));
 		println!("sh_flags:\t{}",	self.sh_flags);
@@ -273,7 +270,7 @@ impl SectionHeader {
 		println!("sh_entsize:\t{}",	self.sh_entsize);
 	}
 
-	fn section_dump(&self, mmap: &[u8]){
+	pub fn section_dump(&self, mmap: &[u8]){
 		for (block, dump_part) in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4).enumerate(){
 			if block % 16 == 0 { println!() }
 			print!("{:08x} ", get_u32(mmap, dump_part as usize));
@@ -282,108 +279,4 @@ impl SectionHeader {
 	}
 }       
 
-
-
-
-
-pub struct ElfLoader {
-	elf_header: ElfHeader,
-	prog_headers: Vec<ProgramHeader>,
-	sect_headers: Vec<SectionHeader>,
-	mem_data: Mmap,
-	
-}
-
-impl ElfLoader {
-	pub fn try_new(filename: &str) -> std::io::Result<ElfLoader>{
-		let file = File::open(filename)?;
-		let mapped_data = unsafe{Mmap::map(&file)?};
-		let new_elf = ElfHeader::new(&mapped_data);
-		let new_prog = ProgramHeader::new(&mapped_data, &new_elf);
-		let new_sect = SectionHeader::new(&mapped_data, &new_elf);
-
-		Ok(ElfLoader{
-			elf_header: new_elf,
-			prog_headers: new_prog,
-			sect_headers: new_sect,
-			mem_data: mapped_data,
-		})
-	}
-
-	pub fn is_elf(&self) -> bool {
-		const HEADER_MAGIC: [u8; 4] = [0x7f, 0x45, 0x4c, 0x46];
-		self.elf_header.e_ident.magic[0..4] == HEADER_MAGIC
-	}
-
-	pub fn ident_show(&self){
-		self.elf_header.ident_show();
-	}
-
-	pub fn show_all_header(&self){
-		self.elf_header.show();
-
-		for (id, prog) in self.prog_headers.iter().enumerate(){
-			println!("============== program header {}==============", id + 1);
-			prog.show();
-		}
-
-		for (id, sect) in self.sect_headers.iter().enumerate(){
-			println!("============== section header {}==============", id + 1);
-			sect.show();
-		}
-
-	}
-
-	pub fn dump_segment(&self){
-		for (id, prog) in self.prog_headers.iter().enumerate(){
-			println!("============== program header {}==============", id + 1);
-			prog.show();
-			prog.segment_dump(&self.mem_data);
-			println!("\n\n");
-		}
-	}
-
-	pub fn dump_section(&self){
-		for (id, sect) in self.sect_headers.iter().enumerate(){
-			println!("============== section header {}==============", id + 1);
-			sect.show();
-			sect.section_dump(&self.mem_data);
-			println!("\n\n");
-		}
-	}
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn elf_header_test() {
-		let loader = match ElfLoader::try_new("./src/example_elf") {
-			Ok(loader) => loader,
-			Err(error) => {
-				panic!("There was a problem opening the file: {:?}", error);
-			}
-		};
-
-		assert!(loader.is_elf());
-		assert_eq!(loader.elf_header.e_type, 2);
-		assert_eq!(loader.elf_header.e_flags, 5);
-		assert_eq!(loader.elf_header.e_version, 1);
-		assert_eq!(loader.elf_header.e_machine, 243);
-	}
-
-	#[test]
-	fn program_header_test() {
-		let loader = match ElfLoader::try_new("./src/example_elf") {
-			Ok(loader) => loader,
-			Err(error) => {
-				panic!("There was a problem opening the file: {:?}", error);
-			}
-		};
-
-		assert_eq!(loader.prog_headers[0].p_type, 1);
-		assert_eq!(loader.prog_headers[0].p_flags, 5);
-	}
-}
 
