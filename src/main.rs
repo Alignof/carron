@@ -1,7 +1,7 @@
 extern crate rv32im_sim;
 
-use rv32im_sim::elfload;
 use rv32im_sim::Arguments;
+use rv32im_sim::elfload;
 use std::env;
 use std::process;
 
@@ -26,6 +26,7 @@ fn main() {
 		println!("elfcheck: OK");
 	}
 
-	loader.show();
-	loader.dump();
+	loader.show_all_header();
+	//loader.dump_section();
+	//loader.dump_segment();
 }
