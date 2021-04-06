@@ -93,12 +93,26 @@ fn parse_opecode(mmap: &[u8], index: usize) -> OpecodeKind {
         },
         0b0010011 => match funct3 {
             0b000 => OP_ADDI,
+            0b001 => OP_SLLI,
             0b010 => OP_SLTI,
             0b011 => OP_SLTIU,
             0b100 => OP_XORI,
+            0b101 => OP_SRLI,//OP_SRAI,
             0b110 => OP_ORI,
             0b111 => OP_ANDI,
         },
+        0b0110011 => match funct3 {
+            0b000 => OP_ADD,//OP_SUB,
+            0b001 => OP_SLL,
+            0b010 => OP_SLT,
+            0b011 => OP_SLTU,
+            0b100 => OP_XOR,
+            0b101 => OP_SRL,//OP_SRA,
+            0b110 => OP_OR,
+            0b111 => OP_ANI,
+        },
+        0b0001111 => OP_FENCE,
+        0b1110011 => OP_FCALL,//OP_EBREAK,
     }
 }
 
