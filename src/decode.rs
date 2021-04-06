@@ -1,3 +1,5 @@
+use crate::elfload::{get_u32};
+
 // riscv-spec-20191213-1.pdf page=130
 enum OpecodeKind{
 	OP_LUI,
@@ -59,6 +61,18 @@ enum OpecodeKind{
 	OP_SRLW,
 	OP_SRAW,
 };
+
+fn parse_opecode(mmap: &[u8], index: usize) -> OpecodeKind {
+    inst: u32 = get_u32(mmap, index);
+    opmap: u8 = inst & 0x3F;
+    funct3: u8 = inst & 0x300;
+
+    match opmap {
+        0b0000011 => match funct3 {
+            0b000 => OP_LB,
+        },
+    }
+}
 
 
 struct Instruction {
