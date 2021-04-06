@@ -71,13 +71,25 @@ fn parse_opecode(mmap: &[u8], index: usize) -> OpecodeKind {
         0b0110111 => OP_LUI,
         0b0010111 => OP_AUIPC,
         0b1101111 => OP_JAL,
-        0b1100111 => OP_JALR,
+        0b1100011 => match funct3 {
+            0b000 => OP_BEQ,
+            0b001 => OP_BNE,
+            0b100 => OP_BLT,
+            0b101 => OP_BGE,
+            0b110 => OP_BLTU,
+            0b111 => OP_BGEU,
+        },
         0b0000011 => match funct3 {
             0b000 => OP_LB,
             0b001 => OP_LH,
             0b010 => OP_LW,
             0b100 => OP_LBU,
             0b101 => OP_LHU,
+        },
+        0b0100011 => match funct3 {
+            0b000 => OP_SB,
+            0b001 => OP_SH,
+            0b010 => OP_SW,
         },
     }
 }
