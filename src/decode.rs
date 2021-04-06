@@ -62,9 +62,15 @@ enum OpecodeKind{
 
 
 struct Instruction {
-	op: OpecodeKind,
+	opc: OpecodeKind,
 }
 
 pub trait Decode {
-	fn decode(&self, mmap: &[u8]) -> Instruction;
+	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
+        let new_op: OpecodeKind = parse_opecode();
+
+        Instruction {
+            new_op,
+        }
+    }
 }
