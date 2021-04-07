@@ -43,56 +43,62 @@ pub enum OpecodeKind{
 	OP_EBREAK,
 }
 
-fn parse_opecode(mmap: &[u8], inst:&u32) -> OpecodeKind {
+fn parse_opecode(mmap: &[u8], inst:&u32) -> Result<OpecodeKind, &'static str> {
     let opmap: u8  = (inst & 0x3F) as u8;
     let funct3: u8 = (inst & 0x300) as u8;
 
     match opmap {
-        0b00110111 => OpecodeKind::OP_LUI,
-        0b00010111 => OpecodeKind::OP_AUIPC,
-        0b01101111 => OpecodeKind::OP_JAL,
-        0b01100011 => match funct3 {
-            0b00000000 => OpecodeKind::OP_BEQ,
-            0b00000001 => OpecodeKind::OP_BNE,
-            0b00000100 => OpecodeKind::OP_BLT,
-            0b00000101 => OpecodeKind::OP_BGE,
-            0b00000110 => OpecodeKind::OP_BLTU,
-            0b00000111 => OpecodeKind::OP_BGEU,
+        0b0110111 => Ok(OpecodeKind::OP_LUI),
+        0b0010111 => Ok(OpecodeKind::OP_AUIPC),
+        0b1101111 => Ok(OpecodeKind::OP_JAL),
+        0b1100011 => match funct3 {
+            0b000 => Ok(OpecodeKind::OP_BEQ),
+            0b001 => Ok(OpecodeKind::OP_BNE),
+            0b100 => Ok(OpecodeKind::OP_BLT),
+            0b101 => Ok(OpecodeKind::OP_BGE),
+            0b110 => Ok(OpecodeKind::OP_BLTU),
+            0b111 => Ok(OpecodeKind::OP_BGEU),
+            _     => Err("opecode decoding failed"),
         },
-        0b00000011 => match funct3 {
-            0b00000000 => OpecodeKind::OP_LB,
-            0b00000001 => OpecodeKind::OP_LH,
-            0b00000010 => OpecodeKind::OP_LW,
-            0b00000100 => OpecodeKind::OP_LBU,
-            0b00000101 => OpecodeKind::OP_LHU,
+        0b0000011 => match funct3 {
+            0b000 => Ok(OpecodeKind::OP_LB),
+            0b001 => Ok(OpecodeKind::OP_LH),
+            0b010 => Ok(OpecodeKind::OP_LW),
+            0b100 => Ok(OpecodeKind::OP_LBU),
+            0b101 => Ok(OpecodeKind::OP_LHU),
+            _     => Err("opecode decoding failed"),
         },
-        0b00100011 => match funct3 {
-            0b00000000 => OpecodeKind::OP_SB,
-            0b00000001 => OpecodeKind::OP_SH,
-            0b00000010 => OpecodeKind::OP_SW,
+        0b0100011 => match funct3 {
+            0b000 => Ok(OpecodeKind::OP_SB),
+            0b001 => Ok(OpecodeKind::OP_SH),
+            0b010 => Ok(OpecodeKind::OP_SW),
+            _     => Err("opecode decoding failed"),
         },
-        0b00010011 => match funct3 {
-            0b00000000 => OpecodeKind::OP_ADDI,
-            0b00000001 => OpecodeKind::OP_SLLI,
-            0b00000010 => OpecodeKind::OP_SLTI,
-            0b00000011 => OpecodeKind::OP_SLTIU,
-            0b00000100 => OpecodeKind::OP_XORI,
-            0b00000101 => OpecodeKind::OP_SRLI,//OP_SRAI,
-            0b00000110 => OpecodeKind::OP_ORI,
-            0b00000111 => OpecodeKind::OP_ANDI,
+        0b0010011 => match funct3 {
+            0b000 => Ok(OpecodeKind::OP_ADDI),
+            0b001 => Ok(OpecodeKind::OP_SLLI),
+            0b010 => Ok(OpecodeKind::OP_SLTI),
+            0b011 => Ok(OpecodeKind::OP_SLTIU),
+            0b100 => Ok(OpecodeKind::OP_XORI),
+            0b101 => Ok(OpecodeKind::OP_SRLI),//OP_SRAI,
+            0b110 => Ok(OpecodeKind::OP_ORI),
+            0b111 => Ok(OpecodeKind::OP_ANDI),
+            _     => Err("opecode decoding failed"),
         },
-        0b00110011 => match funct3 {
-            0b00000000 => OpecodeKind::OP_ADD,//OP_SUB,
-            0b00000001 => OpecodeKind::OP_SLL,
-            0b00000010 => OpecodeKind::OP_SLT,
-            0b00000011 => OpecodeKind::OP_SLTU,
-            0b00000100 => OpecodeKind::OP_XOR,
-            0b00000101 => OpecodeKind::OP_SRL,//OP_SRA,
-            0b00000110 => OpecodeKind::OP_OR,
-            0b00000111 => OpecodeKind::OP_AND,
+        0b0110011 => match funct3 {
+            0b000 => Ok(OpecodeKind::OP_ADD),//OP_SUB,
+            0b001 => Ok(OpecodeKind::OP_SLL),
+            0b010 => Ok(OpecodeKind::OP_SLT),
+            0b011 => Ok(OpecodeKind::OP_SLTU),
+            0b100 => Ok(OpecodeKind::OP_XOR),
+            0b101 => Ok(OpecodeKind::OP_SRL),//OP_SRA,
+            0b110 => Ok(OpecodeKind::OP_OR),
+            0b111 => Ok(OpecodeKind::OP_AND),
+            _     => Err("opecode decoding failed"),
         },
-        0b00001111 => OpecodeKind::OP_FENCE,
-        0b01110011 => OpecodeKind::OP_ECALL,//OP_EBREAK,
+        0b0001111 => Ok(OpecodeKind::OP_FENCE),
+        0b1110011 => Ok(OpecodeKind::OP_ECALL),//OP_EBREAK,
+        _         => Err("opecode decoding failed"),
     }
 }
 
