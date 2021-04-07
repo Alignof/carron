@@ -43,7 +43,7 @@ pub enum OpecodeKind{
 	OP_EBREAK,
 }
 
-fn parse_opecode(mmap: &[u8], inst:&u32) -> Result<OpecodeKind, &'static str> {
+fn parse_opecode(inst:&u32) -> Result<OpecodeKind, &'static str> {
     let opmap: u8  = (inst & 0x3F) as u8;
     let funct3: u8 = (inst & 0x300) as u8;
 
@@ -110,7 +110,7 @@ pub struct Instruction {
 pub trait Decode {
 	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
         let inst: u32 = get_u32(mmap, index);
-        let new_opc: OpecodeKind = match parse_opecode(&mmap, &inst){
+        let new_opc: OpecodeKind = match parse_opecode(&inst){
             Ok(opc) => opc,
             Err(msg) => panic!("{}", msg),
         };
@@ -123,9 +123,11 @@ pub trait Decode {
 
 #[cfg(test)]
 mod tests {
+	use super::*;
+
 	#[test]
 	fn opecode_parsing_test() {
-		assert_eq!(parse_opecode(0b00000000000000000000000000010111), OP_LUI);
+		assert_eq!(parse_opecode(0b00000000000000000000000000010111).unwrap(), OpecodeKind::OP_LUI);
 	}
 }
 
