@@ -110,7 +110,10 @@ pub struct Instruction {
 pub trait Decode {
 	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
         let inst: u32 = get_u32(mmap, index);
-        let new_opc: OpecodeKind = parse_opecode(&mmap, &inst);
+        let new_opc: OpecodeKind = match parse_opecode(&mmap, &inst){
+            Ok(opc) => opc,
+            Err(msg) => panic!("{}", msg),
+        };
 
         Instruction {
             opc: new_opc,
@@ -122,7 +125,7 @@ pub trait Decode {
 mod tests {
 	#[test]
 	fn opecode_parsing_test() {
-		assert_eq!(0b00000000000000000000000000010111, OP_LUI);
+		assert_eq!(parse_opecode(0b00000000000000000000000000010111), OP_LUI);
 	}
 }
 
