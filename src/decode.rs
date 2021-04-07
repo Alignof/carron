@@ -45,7 +45,7 @@ pub enum OpecodeKind{
 
 fn parse_opecode(inst:&u32) -> Result<OpecodeKind, &'static str> {
     let opmap: u8  = (inst & 0x3F) as u8;
-    let funct3: u8 = (inst & 0x300) as u8;
+    let funct3: u8 = ((inst >> 12) & 0x7) as u8;
 
     match opmap {
         0b0110111 => Ok(OpecodeKind::OP_LUI),
@@ -127,8 +127,13 @@ mod tests {
 
 	#[test]
 	fn opecode_parsing_test() {
-        let test_inst: u32 = 0b00000000000000000000000000110111;
+        let mut test_inst: u32 = 0b00000000000000000000000000110111;
         assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LUI));
+
+        test_inst = 0b00000000000000000000000000000011;
+        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LB));
+        test_inst = 0b00000000000000000001000000000011;
+        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LH));
 	}
 }
 
