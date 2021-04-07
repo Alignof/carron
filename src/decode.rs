@@ -41,25 +41,6 @@ pub enum OpecodeKind{
 	OP_FENCE,
 	OP_ECALL,
 	OP_EBREAK,
-	OP_CSRRW,
-	OP_CSRRS,
-	OP_CSRRC,
-	OP_CSRRWI,
-	OP_CSRRSI,
-	OP_CSRRCI,
-	OP_LWU,
-	OP_LD,
-	OP_SD,
-	OP_SRAI,
-	OP_ADDIW,
-	OP_SLLIW,
-	OP_SRLIW,
-	OP_SRAIW,
-	OP_ADDW,
-	OP_SUBW,
-	OP_SLLW,
-	OP_SRLW,
-	OP_SRAW,
 }
 
 fn parse_opecode(mmap: &[u8], inst:&u32) -> OpecodeKind {
@@ -111,7 +92,7 @@ fn parse_opecode(mmap: &[u8], inst:&u32) -> OpecodeKind {
             0b111 => OP_AND,
         },
         0b0001111 => OP_FENCE,
-        0b1110011 => OP_FCALL,//OP_EBREAK,
+        0b1110011 => OP_ECALL,//OP_EBREAK,
     }
 }
 
@@ -126,7 +107,7 @@ pub trait Decode {
         let new_opc: OpecodeKind = parse_opecode(&mmap, &inst);
 
         Instruction {
-            new_opc,
+            opc: new_opc,
         }
     }
 }
