@@ -127,7 +127,8 @@ mod tests {
 
 	#[test]
 	fn opecode_parsing_test() {
-		assert_eq!(parse_opecode(0b00000000000000000000000000010111).unwrap(), OpecodeKind::OP_LUI);
+        let test_inst: u32 = 0b00000000000000000000000000110111;
+        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LUI));
 	}
 }
 
