@@ -62,8 +62,7 @@ enum OpecodeKind{
 	OP_SRAW,
 };
 
-fn parse_opecode(mmap: &[u8], index: usize) -> OpecodeKind {
-    inst: u32 = get_u32(mmap, index);
+fn parse_opecode(mmap: &[u8], inst:&u32) -> OpecodeKind {
     opmap: u8 = inst & 0x3F;
     funct3: u8 = inst & 0x300;
 
@@ -109,7 +108,7 @@ fn parse_opecode(mmap: &[u8], index: usize) -> OpecodeKind {
             0b100 => OP_XOR,
             0b101 => OP_SRL,//OP_SRA,
             0b110 => OP_OR,
-            0b111 => OP_ANI,
+            0b111 => OP_AND,
         },
         0b0001111 => OP_FENCE,
         0b1110011 => OP_FCALL,//OP_EBREAK,
@@ -123,7 +122,8 @@ struct Instruction {
 
 pub trait Decode {
 	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
-        let new_op: OpecodeKind = parse_opecode();
+        let inst: u32 = get_u32(mmap, index);
+        let new_op: OpecodeKind = parse_opecode(&inst);
 
         Instruction {
             new_op,
