@@ -1,4 +1,5 @@
 pub mod elfload;
+pub mod decode;
 
 pub struct Arguments {
 	pub arg_num: usize,

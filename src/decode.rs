@@ -1,7 +1,7 @@
 use crate::elfload::{get_u32};
 
 // riscv-spec-20191213-1.pdf page=130
-enum OpecodeKind{
+pub enum OpecodeKind{
 	OP_LUI,
 	OP_AUIPC,
 	OP_JAL,
@@ -60,11 +60,11 @@ enum OpecodeKind{
 	OP_SLLW,
 	OP_SRLW,
 	OP_SRAW,
-};
+}
 
 fn parse_opecode(mmap: &[u8], inst:&u32) -> OpecodeKind {
-    opmap: u8 = inst & 0x3F;
-    funct3: u8 = inst & 0x300;
+    let opmap: u8  = (inst & 0x3F) as u8;
+    let funct3: u8 = (inst & 0x300) as u8;
 
     match opmap {
         0b0110111 => OP_LUI,
@@ -116,17 +116,26 @@ fn parse_opecode(mmap: &[u8], inst:&u32) -> OpecodeKind {
 }
 
 
-struct Instruction {
+pub struct Instruction {
 	opc: OpecodeKind,
 }
 
 pub trait Decode {
 	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
         let inst: u32 = get_u32(mmap, index);
-        let new_op: OpecodeKind = parse_opecode(&inst);
+        let new_opc: OpecodeKind = parse_opecode(&mmap, &inst);
 
         Instruction {
-            new_op,
+            new_opc,
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn opecode_parsing_test() {
+		assert_eq!(0b00000000000000000000000000010111, OP_LUI);
+	}
+}
+
