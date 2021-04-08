@@ -102,9 +102,23 @@ fn parse_opecode(inst:&u32) -> Result<OpecodeKind, &'static str> {
     }
 }
 
+fn parse_rd(inst: &u32, opc: OpecodeKind) -> u8 {
+    if  OpecodeKind::OP_BEQ <= OpecodeKind::OP_BGEU ||
+        OpecodeKind::OP_SB <= OpecodeKind::OP_SW ||
+        OpecodeKind::OP_ECALL {
+            return 0;
+    }
+
+    ((inst >> 7) & 0x1F) as u8
+}
+
 
 pub struct Instruction {
 	opc: OpecodeKind,
+    rd: u8,
+    rs1: u8,
+    rs2: u8,
+    imm: u16,
 }
 
 pub trait Decode {
@@ -142,4 +156,3 @@ mod tests {
         assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_AND));
 	}
 }
-
