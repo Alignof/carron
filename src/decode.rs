@@ -134,6 +134,12 @@ mod tests {
         assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LB));
         test_inst = 0b00000000000000000001000000000011;
         assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LH));
+        test_inst = 0b00000000000000000000000000010011;
+        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_ADDI));
+        test_inst = 0b00000000000000000100000000110011;
+        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_XOR));
+        test_inst = 0b00000000000000000111000000110011;
+        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_AND));
 	}
 }
 
