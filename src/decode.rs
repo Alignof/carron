@@ -106,6 +106,7 @@ fn parse_rd(inst: &u32) -> u8 {
     let opmap: u8  = (inst & 0x3F) as u8;
     let rd: u8 = ((inst >> 7) & 0x1F) as u8;
 
+    // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
     if  opmap == 0b01100011 || opmap == 0b00100011 || 
         opmap == 0b01110011 { 
             return 0;
@@ -118,6 +119,7 @@ fn parse_rs1(inst: &u32) -> u8 {
     let opmap: u8  = (inst & 0x3F) as u8;
     let rs1: u8 = ((inst >> 15) & 0x1F) as u8;
 
+    // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
     if  opmap == 0b01010111 || opmap == 0b00010111 || 
         opmap == 0b01101111 || opmap == 0b01110011 { 
             return 0;
@@ -130,6 +132,9 @@ fn parse_rs2(inst: &u32) -> u8 {
     let opmap: u8  = (inst & 0x3F) as u8;
     let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
 
+    // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
+    // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
+    // FENCE, ECALL, EBREAK
     if  opmap == 0b01010111 || opmap == 0b00010111 || opmap == 0b01101111 ||
         opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 || 
         opmap == 0b00001111 || opmap == 0b01110011 { 
