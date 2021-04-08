@@ -104,7 +104,7 @@ fn parse_opecode(inst:&u32) -> Result<OpecodeKind, &'static str> {
 
 fn parse_rd(inst: &u32) -> u8 {
     let opmap: u8  = (inst & 0x3F) as u8;
-    let rd: u8 = ((inst >> 7) & 0x1F) as u8
+    let rd: u8 = ((inst >> 7) & 0x1F) as u8;
 
     if  opmap == 0b01100011 || opmap == 0b00100011 || 
         opmap == 0b01110011 { 
@@ -114,13 +114,38 @@ fn parse_rd(inst: &u32) -> u8 {
     return rd;
 }
 
+fn parse_rs1(inst: &u32) -> u8 {
+    let opmap: u8  = (inst & 0x3F) as u8;
+    let rs1: u8 = ((inst >> 15) & 0x1F) as u8;
+
+    if  opmap == 0b01010111 || opmap == 0b00010111 || 
+        opmap == 0b01101111 || opmap == 0b01110011 { 
+            return 0;
+    }
+
+    return rs1;
+}
+
+fn parse_rs2(inst: &u32) -> u8 {
+    let opmap: u8  = (inst & 0x3F) as u8;
+    let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
+
+    if  opmap == 0b01010111 || opmap == 0b00010111 || opmap == 0b01101111 ||
+        opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 || 
+        opmap == 0b00001111 || opmap == 0b01110011 { 
+            return 0;
+    }
+
+    return rs2;
+}
+
 
 pub struct Instruction {
 	opc: OpecodeKind,
     rd: u8,
     rs1: u8,
     rs2: u8,
-    imm: u16,
+    //imm: u16,
 }
 
 pub trait Decode {
@@ -130,9 +155,15 @@ pub trait Decode {
             Ok(opc) => opc,
             Err(msg) => panic!("{}", msg),
         };
+        let new_rd: u8 = parse_rd(&inst);
+        let new_rs1: u8 = parse_rs1(&inst);
+        let new_rs2: u8 = parse_rs2(&inst);
 
         Instruction {
             opc: new_opc,
+            rd: new_rd,
+            rs1: new_rs1,
+            rs2: new_rs2,
         }
     }
 }
