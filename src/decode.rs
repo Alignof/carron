@@ -102,14 +102,16 @@ fn parse_opecode(inst:&u32) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-fn parse_rd(inst: &u32, opc: OpecodeKind) -> u8 {
-    if  OpecodeKind::OP_BEQ <= OpecodeKind::OP_BGEU ||
-        OpecodeKind::OP_SB <= OpecodeKind::OP_SW ||
-        OpecodeKind::OP_ECALL {
+fn parse_rd(inst: &u32) -> u8 {
+    let opmap: u8  = (inst & 0x3F) as u8;
+    let rd: u8 = ((inst >> 7) & 0x1F) as u8
+
+    if  opmap == 0b01100011 || opmap == 0b00100011 || 
+        opmap == 0b01110011 { 
             return 0;
     }
 
-    ((inst >> 7) & 0x1F) as u8
+    return rd;
 }
 
 
