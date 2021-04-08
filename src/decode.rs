@@ -3,6 +3,7 @@ use mmap_parse::*;
 use crate::elfload::{get_u32};
 
 // riscv-spec-20191213-1.pdf page=130
+#[allow(non_camel_case_types)]
 pub enum OpecodeKind{
 	OP_LUI,
 	OP_AUIPC,
