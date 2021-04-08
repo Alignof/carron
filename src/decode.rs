@@ -140,12 +140,45 @@ fn parse_rs2(inst: &u32) -> u8 {
 }
 
 
+fn parse_imm(inst: &u32) -> u32 {
+    let opmap: u8  = (inst & 0x3F) as u8;
+
+    // LUI, AUIPC
+    if opmap == 0b00110111 || opmap == 0b00010111 {
+        return ((inst >> 12) & 0xFFFFF) as u32;
+    }
+
+    // JAL
+    if opmap == 0b01101111 {
+        return ((inst >> 12) & 0xFFFFF) as u32;
+    }
+
+    // JALR, L(B|H|W), ADDI, SLTI, SLTIU, XORI, ORI, ANDI
+    if opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 {
+        return ((inst >> 20) & 0xFFF) as u32;
+    }
+
+    // S(B|H|W)
+    if opmap == 0b00100011 {
+        return (((inst >> 25) & 0x1F) << 5 + (inst >> 7) & 0x1F) as u32;
+    }
+
+    // B(EQ|NE|LT|GE|LTU|GEU)
+    if opmap == 0b01100011 {
+        return (((inst >> 27) & 0x1) << 11 + ((inst >> 7) & 0x1) << 10 +
+                ((inst >> 25) & 0x1F) << 4 + (inst >> 8) & 0xF) as u32;
+    }
+
+    return 0;
+}
+
+
 pub struct Instruction {
 	opc: OpecodeKind,
     rd: u8,
     rs1: u8,
     rs2: u8,
-    //imm: u16,
+    imm: u32,
 }
 
 pub trait Decode {
@@ -158,12 +191,14 @@ pub trait Decode {
         let new_rd: u8 = parse_rd(&inst);
         let new_rs1: u8 = parse_rs1(&inst);
         let new_rs2: u8 = parse_rs2(&inst);
+        let new_imm: u32 = parse_imm(&inst);
 
         Instruction {
             opc: new_opc,
-            rd: new_rd,
+            rd:  new_rd,
             rs1: new_rs1,
             rs2: new_rs2,
+            imm: new_imm,
         }
     }
 }
