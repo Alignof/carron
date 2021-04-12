@@ -47,15 +47,15 @@ pub enum OpecodeKind{
 }
 
 pub struct Instruction {
-	opc: OpecodeKind,
-    rd: u8,
-    rs1: u8,
-    rs2: u8,
-    imm: u32,
+	pub opc: OpecodeKind,
+    pub rd: u8,
+    pub rs1: u8,
+    pub rs2: u8,
+    pub imm: u32,
 }
 
 impl Instruction {
-    fn opc_to_string(&self) -> &'static str {
+    pub fn opc_to_string(&self) -> &'static str {
         match self.opc {
             OP_LUI		=> "lui",
             OP_AUIPC	=> "auipc",
