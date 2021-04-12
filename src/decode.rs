@@ -56,6 +56,7 @@ pub struct Instruction {
 
 impl Instruction {
     pub fn opc_to_string(&self) -> &'static str {
+        use OpecodeKind::*;
         match self.opc {
             OP_LUI		=> "lui",
             OP_AUIPC	=> "auipc",

@@ -84,6 +84,10 @@ impl SectionHeader {
             println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 		}
 	}
+
+    pub fn is_dumpable(&self) -> bool {
+        self.sh_type == 1
+    }
 }       
 
 impl Decode for SectionHeader {}
