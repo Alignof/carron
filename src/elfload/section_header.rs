@@ -1,4 +1,5 @@
 use super::ElfHeader;
+use crate::decode::{Decode};
 use crate::elfload::{get_u32};
 
 fn get_section_type_name(section_type:u32) -> &'static str {
@@ -79,10 +80,11 @@ impl SectionHeader {
 
 	pub fn section_dump(&self, mmap: &[u8]){
 		for (block, dump_part) in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4).enumerate(){
-			if block % 16 == 0 { println!() }
-			print!("{:08x} ", get_u32(mmap, dump_part as usize));
+            let inst = self.decode(mmap, block);
+            println!("{}    {},{},{}", inst.opc, inst.rd, inst.rs1, inst.rs2);
 		}
-		println!();
 	}
 }       
+
+impl Decode for SectionHeader {}
 
