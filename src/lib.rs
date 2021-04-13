@@ -6,13 +6,17 @@ pub enum ExeOption {
     OPT_ELFHEAD,
     OPT_PROG,
     OPT_SECT,
+    OPT_SHOWALL,
     OPT_DISASEM,
-    OPT_DEFAULT,
 }
 
 fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
     match option {
         "-h" => Ok(ExeOption::OPT_ELFHEAD),
+        "-p" => Ok(ExeOption::OPT_PROG),
+        "-s" => Ok(ExeOption::OPT_SECT),
+        "-a" => Ok(ExeOption::OPT_SHOWALL),
+        "-d" => Ok(ExeOption::OPT_DISASEM),
         _    => Err("invalid option"),
     }
 }
