@@ -31,7 +31,12 @@ fn main() {
 		println!("option -h");
     }
 
-	//loader.show_all_header();
-	loader.dump_section();
-	//loader.dump_segment();
+    match args.exe_option {
+        ExeOption::OPT_ELFHEAD	=> loader.ident_show(),
+        ExeOption::OPT_PROG	    => loader.dump_segment(),
+        ExeOption::OPT_SECT	    => loader.dump_section(),
+        ExeOption::OPT_SHOWALL	=> loader.show_all_header(),
+        ExeOption::OPT_DISASEM	=> loader.ident_show(),
+        ExeOption::OPT_DEFAULT	=> loader.ident_show(),
+    }
 }

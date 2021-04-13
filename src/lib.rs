@@ -8,6 +8,7 @@ pub enum ExeOption {
     OPT_SECT,
     OPT_SHOWALL,
     OPT_DISASEM,
+    OPT_DEFAULT,
 }
 
 fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
