@@ -1,7 +1,8 @@
 extern crate rv32im_sim;
 
-use rv32im_sim::Arguments;
 use rv32im_sim::elfload;
+use rv32im_sim::ExeOption;
+use rv32im_sim::Arguments;
 use std::env;
 use std::process;
 
@@ -25,6 +26,10 @@ fn main() {
 	if loader.is_elf() {
 		println!("elfcheck: OK");
 	}
+
+    if matches!(args.exe_option, ExeOption::OPT_ELFHEAD) {
+		println!("option -h");
+    }
 
 	//loader.show_all_header();
 	loader.dump_section();
