@@ -47,11 +47,58 @@ pub enum OpecodeKind{
 }
 
 pub struct Instruction {
-	opc: OpecodeKind,
-    rd: u8,
-    rs1: u8,
-    rs2: u8,
-    imm: u32,
+	pub opc: OpecodeKind,
+    pub rd: u8,
+    pub rs1: u8,
+    pub rs2: u8,
+    pub imm: u32,
+}
+
+impl Instruction {
+    pub fn opc_to_string(&self) -> &'static str {
+        use OpecodeKind::*;
+        match self.opc {
+            OP_LUI		=> "lui",
+            OP_AUIPC	=> "auipc",
+            OP_JAL		=> "jal",
+            OP_JALR		=> "jalr",
+            OP_BEQ		=> "beq",
+            OP_BNE		=> "bne",
+            OP_BLT		=> "blt",
+            OP_BGE		=> "bge",
+            OP_BLTU		=> "bltu",
+            OP_BGEU		=> "bgeu",
+            OP_LB		=> "lb",
+            OP_LH		=> "lh",
+            OP_LW		=> "lw",
+            OP_LBU		=> "lbu",
+            OP_LHU		=> "lhu",
+            OP_SB		=> "sb",
+            OP_SH		=> "sh",
+            OP_SW		=> "sw",
+            OP_ADDI		=> "addi",
+            OP_SLTI		=> "slti",
+            OP_SLTIU	=> "sltiu",
+            OP_XORI		=> "xori",
+            OP_ORI		=> "ori",
+            OP_ANDI		=> "andi",
+            OP_SLLI		=> "slli",
+            OP_SRLI		=> "srli",
+            OP_ADD		=> "add",
+            OP_SUB		=> "sub",
+            OP_SLL		=> "sll",
+            OP_SLT		=> "slt",
+            OP_SLTU		=> "sltu",
+            OP_XOR		=> "xor",
+            OP_SRL		=> "srl",
+            OP_SRA		=> "sra",
+            OP_OR		=> "or",
+            OP_AND		=> "and",
+            OP_FENCE	=> "fence",
+            OP_ECALL	=> "ecall",
+            OP_EBREAK	=> "ebreak",
+        }
+    }
 }
 
 pub trait Decode {

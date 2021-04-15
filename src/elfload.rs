@@ -80,9 +80,11 @@ impl ElfLoader {
 	pub fn dump_section(&self){
 		for (id, sect) in self.sect_headers.iter().enumerate(){
 			println!("============== section header {}==============", id + 1);
-			sect.show();
-			sect.section_dump(&self.mem_data);
-			println!("\n\n");
+            if sect.is_dumpable() {
+                sect.show();
+                sect.section_dump(&self.mem_data);
+                println!("\n\n");
+            }
 		}
 	}
 }
