@@ -16,8 +16,6 @@ fn get_segment_type_name(segment_type:u32) -> &'static str {
 	}
 }
 
-
-
 pub struct ProgramHeader {
 	p_type: u32,
 	p_offset: u32,
@@ -70,8 +68,6 @@ impl ProgramHeader {
 		}
 	}
 }
-
-
 
 #[cfg(test)]
 mod tests {

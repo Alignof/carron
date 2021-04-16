@@ -48,7 +48,7 @@ pub enum OpecodeKind{
 
 pub struct Instruction {
 	pub opc: OpecodeKind,
-    pub rd: u8,
+    pub rd:  u8,
     pub rs1: u8,
     pub rs2: u8,
     pub imm: u32,
@@ -105,10 +105,10 @@ pub trait Decode {
 	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
         let inst: u32 = get_u32(mmap, index);
         let new_opc: OpecodeKind = match parse_opecode(&inst){
-            Ok(opc) => opc,
+            Ok(opc)  => opc,
             Err(msg) => panic!("{}", msg),
         };
-        let new_rd: u8 = parse_rd(&inst);
+        let new_rd:  u8 = parse_rd(&inst);
         let new_rs1: u8 = parse_rs1(&inst);
         let new_rs2: u8 = parse_rs2(&inst);
         let new_imm: u32 = parse_imm(&inst);

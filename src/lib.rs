@@ -44,7 +44,7 @@ impl Arguments {
             filename = args[1].clone();
         } else {
             exe_option = match parse_option(&args[1]) {
-                Ok(opt) => opt,
+                Ok(opt)  => opt,
                 Err(msg) => panic!("{}", msg),
             };
             filename = args[2].clone();
