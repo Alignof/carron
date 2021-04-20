@@ -1,5 +1,5 @@
-mod mmap_parse;
-use mmap_parse::*;
+mod mmap_parse_32;
+use mmap_parse_32::*;
 use crate::elfload::{get_u32};
 
 // riscv-spec-20191213-1.pdf page=130
@@ -168,45 +168,6 @@ impl Instruction {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 pub trait Decode {
