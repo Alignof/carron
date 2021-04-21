@@ -1,5 +1,17 @@
 use super::{OpecodeKind};
 
+fn quadrant0(inst: &u32, opmap: &u8) -> OpecodeKind {
+    match opmap {
+        0b000 => Ok(OpecodeKind::OP_C_ADDI4SPN),
+        0b001 => Ok(OpecodeKind::OP_C_FLD),
+        0b010 => Ok(OpecodeKind::OP_C_LW),
+        0b011 => Ok(OpecodeKind::OP_C_FLW),
+        0b100 => Ok(OpecodeKind::OP_C_FSD),
+        0b110 => Ok(OpecodeKind::OP_C_SW),
+        0b111 => Ok(OpecodeKind::OP_C_FSW),
+    }
+}
+
 pub fn parse_opecode_16(inst:&u32) -> Result<OpecodeKind, &'static str> {
     let opmap: u8 = ((inst >> 12) & 0x7) as u8;
     let sr_flag: u8 = ((inst >> 9) & 0x3) as u8;
@@ -7,15 +19,7 @@ pub fn parse_opecode_16(inst:&u32) -> Result<OpecodeKind, &'static str> {
     let quadrant: u8  = (inst & 0x3) as u8;
 
     match quadrant {
-        0b00 => match opmap {
-            0b000 => Ok(OpecodeKind::OP_C_ADDI4SPN),
-            0b001 => Ok(OpecodeKind::OP_C_FLD),
-            0b010 => Ok(OpecodeKind::OP_C_LW),
-            0b011 => Ok(OpecodeKind::OP_C_FLW),
-            0b100 => Ok(OpecodeKind::OP_C_FSD),
-            0b110 => Ok(OpecodeKind::OP_C_SW),
-            0b111 => Ok(OpecodeKind::OP_C_FSW),
-        },
+        0b00 => quadrant0(inst, &opmap),
         0b01 => match opmap {
             0b000 => Ok(OpecodeKind::OP_C_ADDI),
             0b001 => Ok(OpecodeKind::OP_C_JAL),
@@ -34,6 +38,16 @@ pub fn parse_opecode_16(inst:&u32) -> Result<OpecodeKind, &'static str> {
             },
             0b110 => Ok(OpecodeKind::OP_C_BEQZ),
             0b111 => Ok(OpecodeKind::OP_C_BNEZ),
+        },
+        0b10 => match opmap {
+            0b000 => Ok(OpecodeKind::OP_C_SLLI),
+            0b001 => Ok(OpecodeKind::OP_C_FLDSP),
+            0b010 => Ok(OpecodeKind::OP_C_LWSP),
+            0b011 => Ok(OpecodeKind::OP_C_FLWSP),
+            0b100 => Ok(OpecodeKind::OP_C_FSD),
+            0b101 => Ok(OpecodeKind::OP_C_FSDSP),
+            0b110 => Ok(OpecodeKind::OP_C_SWSP),
+            0b111 => Ok(OpecodeKind::OP_C_FSWSP),
         },
         _         => Err("opecode decoding failed"),
     }
