@@ -39,12 +39,28 @@ fn quadrant1(inst: &u32, opmap: &u8) -> OpecodeKind {
 
 
 fn quadrant2(inst: &u32, opmap: &u8) -> OpecodeKind {
-    0b10 => match opmap {
+    let lo_flag: u8 = ((inst >> 2) & 0x1F) as u8;
+    let mi_flag: u8 = ((inst >> 7) & 0x1F) as u8;
+    let hi_flag: u8 = ((inst >> 12) & 0x1) as u8;
+
+    match opmap {
         0b000 => Ok(OpecodeKind::OP_C_SLLI),
         0b001 => Ok(OpecodeKind::OP_C_FLDSP),
         0b010 => Ok(OpecodeKind::OP_C_LWSP),
         0b011 => Ok(OpecodeKind::OP_C_FLWSP),
-        0b100 => Ok(OpecodeKind::OP_C_FSD),
+        0b100 => match hi_flag {
+            0b0 => match lo_flag {
+                0b0 => Ok(OpecodeKind::OP_C_JR),
+                _   => Ok(OpecodeKind::OP_C_MV),
+            }, 
+            0b1 => match mi_flag {
+                0b0 => Ok(OpecodeKind::OP_C_EBREAK),
+                _   => match lo_flag {
+                    0b0 => Ok(OpecodeKind::OP_C_JALR),
+                    _   => Ok(OpecodeKind::OP_C_ADD),
+                },
+            },
+        },
         0b101 => Ok(OpecodeKind::OP_C_FSDSP),
         0b110 => Ok(OpecodeKind::OP_C_SWSP),
         0b111 => Ok(OpecodeKind::OP_C_FSWSP),
