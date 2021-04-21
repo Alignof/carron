@@ -12,44 +12,54 @@ fn quadrant0(inst: &u32, opmap: &u8) -> OpecodeKind {
     }
 }
 
-pub fn parse_opecode_16(inst:&u32) -> Result<OpecodeKind, &'static str> {
-    let opmap: u8 = ((inst >> 12) & 0x7) as u8;
+fn quadrant1(inst: &u32, opmap: &u8) -> OpecodeKind {
     let sr_flag: u8 = ((inst >> 9) & 0x3) as u8;
     let lo_flag: u8 = ((inst >> 4) & 0x3) as u8;
+
+    match opmap {
+        0b000 => Ok(OpecodeKind::OP_C_ADDI),
+        0b001 => Ok(OpecodeKind::OP_C_JAL),
+        0b010 => Ok(OpecodeKind::OP_C_LI),
+        0b011 => Ok(OpecodeKind::OP_C_ADDI16SP),
+        0b100 => match sr_flag {
+            0b00 => Ok(OpecodeKind::OP_C_SRLI),
+            0b01 => Ok(OpecodeKind::OP_C_SRAI),
+            0b10 => Ok(OpecodeKind::OP_C_ANDI),
+            0b11 => match lo_flag {
+                0b00 => Ok(OpecodeKind::OP_C_SUB),
+                0b01 => Ok(OpecodeKind::OP_C_XOR),
+                0b10 => Ok(OpecodeKind::OP_C_OR),
+                0b11 => Ok(OpecodeKind::OP_C_AND),
+            },
+        },
+        0b110 => Ok(OpecodeKind::OP_C_BEQZ),
+        0b111 => Ok(OpecodeKind::OP_C_BNEZ),
+    },
+}
+
+
+fn quadrant2(inst: &u32, opmap: &u8) -> OpecodeKind {
+    0b10 => match opmap {
+        0b000 => Ok(OpecodeKind::OP_C_SLLI),
+        0b001 => Ok(OpecodeKind::OP_C_FLDSP),
+        0b010 => Ok(OpecodeKind::OP_C_LWSP),
+        0b011 => Ok(OpecodeKind::OP_C_FLWSP),
+        0b100 => Ok(OpecodeKind::OP_C_FSD),
+        0b101 => Ok(OpecodeKind::OP_C_FSDSP),
+        0b110 => Ok(OpecodeKind::OP_C_SWSP),
+        0b111 => Ok(OpecodeKind::OP_C_FSWSP),
+    },
+}
+
+pub fn parse_opecode_16(inst:&u32) -> Result<OpecodeKind, &'static str> {
+    let opmap: u8 = ((inst >> 12) & 0x7) as u8;
     let quadrant: u8  = (inst & 0x3) as u8;
 
     match quadrant {
         0b00 => quadrant0(inst, &opmap),
-        0b01 => match opmap {
-            0b000 => Ok(OpecodeKind::OP_C_ADDI),
-            0b001 => Ok(OpecodeKind::OP_C_JAL),
-            0b010 => Ok(OpecodeKind::OP_C_LI),
-            0b011 => Ok(OpecodeKind::OP_C_ADDI16SP),
-            0b100 => match sr_flag {
-                0b00 => Ok(OpecodeKind::OP_C_SRLI),
-                0b01 => Ok(OpecodeKind::OP_C_SRAI),
-                0b10 => Ok(OpecodeKind::OP_C_ANDI),
-                0b11 => match lo_flag {
-                    0b00 => Ok(OpecodeKind::OP_C_SUB),
-                    0b01 => Ok(OpecodeKind::OP_C_XOR),
-                    0b10 => Ok(OpecodeKind::OP_C_OR),
-                    0b11 => Ok(OpecodeKind::OP_C_AND),
-                },
-            },
-            0b110 => Ok(OpecodeKind::OP_C_BEQZ),
-            0b111 => Ok(OpecodeKind::OP_C_BNEZ),
-        },
-        0b10 => match opmap {
-            0b000 => Ok(OpecodeKind::OP_C_SLLI),
-            0b001 => Ok(OpecodeKind::OP_C_FLDSP),
-            0b010 => Ok(OpecodeKind::OP_C_LWSP),
-            0b011 => Ok(OpecodeKind::OP_C_FLWSP),
-            0b100 => Ok(OpecodeKind::OP_C_FSD),
-            0b101 => Ok(OpecodeKind::OP_C_FSDSP),
-            0b110 => Ok(OpecodeKind::OP_C_SWSP),
-            0b111 => Ok(OpecodeKind::OP_C_FSWSP),
-        },
-        _         => Err("opecode decoding failed"),
+        0b01 => quadrant1(inst, &opmap),
+        0b10 => quadrant2(inst, &opmap),
+        _    => Err("opecode decoding failed"),
     }
 }
 
