@@ -171,27 +171,13 @@ impl Instruction {
 
 
 pub trait Decode {
-	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
-        let inst: u32 = get_u32(mmap, index);
-        let new_opc: OpecodeKind = match parse_opecode(&inst){
-            Ok(opc)  => opc,
-            Err(msg) => panic!("{}", msg),
-        };
-        let new_rd:  u8 = parse_rd(&inst);
-        let new_rs1: u8 = parse_rs1(&inst);
-        let new_rs2: u8 = parse_rs2(&inst);
-        let new_imm: u32 = parse_imm(&inst);
-
-        Instruction {
-            opc: new_opc,
-            rd:  new_rd,
-            rs1: new_rs1,
-            rs2: new_rs2,
-            imm: new_imm,
-            is_compressed: true,
-        }
-    }
+	fn decode(&self, mmap: &[u8], index: usize) -> Instruction;
+	fn parse_rd(&self, inst: &u32, opkind: OpecodeKind)  -> u8;
+	fn parse_rs1(&self, inst: &u32, opkind: OpecodeKind) -> u8;
+	fn parse_rs2(&self, inst: &u32, opkind: OpecodeKind) -> u8;
+	fn parse_imm(&self, inst: &u32, opkind: OpecodeKind) -> u8;
 }
+
 
 #[cfg(test)]
 mod tests {
