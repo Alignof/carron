@@ -34,7 +34,7 @@ fn quadrant1(inst: &u32, opmap: &u8) -> OpecodeKind {
         },
         0b110 => Ok(OpecodeKind::OP_C_BEQZ),
         0b111 => Ok(OpecodeKind::OP_C_BNEZ),
-    },
+    }
 }
 
 
@@ -64,10 +64,10 @@ fn quadrant2(inst: &u32, opmap: &u8) -> OpecodeKind {
         0b101 => Ok(OpecodeKind::OP_C_FSDSP),
         0b110 => Ok(OpecodeKind::OP_C_SWSP),
         0b111 => Ok(OpecodeKind::OP_C_FSWSP),
-    },
+    }
 }
 
-pub fn parse_opecode_16(inst:&u32) -> Result<OpecodeKind, &'static str> {
+pub fn parse_opecode(inst:&u32) -> Result<OpecodeKind, &'static str> {
     let opmap: u8 = ((inst >> 12) & 0x7) as u8;
     let quadrant: u8  = (inst & 0x3) as u8;
 
@@ -79,17 +79,34 @@ pub fn parse_opecode_16(inst:&u32) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-pub fn parse_rd(inst: &u32) -> u8 {
-    let opmap: u8  = (inst & 0x3F) as u8;
-    let rd: u8 = ((inst >> 7) & 0x1F) as u8;
+pub fn parse_rd(inst: &u32, optype: OpecodeKind) -> u8 {
+    let q0_rd: u8 = ((inst >> 2) & 0x7) as u8;
+    let q1_rd: u8 = ((inst >> 7) & 0x7) as u8;
+    let q2_rd: u8 = ((inst >> 7) & 0x1F) as u8;
 
-    // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
-    if  opmap == 0b01100011 || opmap == 0b00100011 || 
-        opmap == 0b01110011 { 
-            return 0;
+    match optype {
+        OpecodeKind::OP_C_ADDI4SPN  => q0_rd,
+        OpecodeKind::OP_C_FLD       => q0_rd,
+        OpecodeKind::OP_C_FW        => q0_rd,
+        OpecodeKind::OP_C_FLW       => q0_rd,
+        OpecodeKind::OP_C_SRLI	    => q1_rd,
+        OpecodeKind::OP_C_SRAI	    => q1_rd,
+        OpecodeKind::OP_C_ANDI	    => q1_rd,
+        OpecodeKind::OP_C_SUB	    => q1_rd,
+        OpecodeKind::OP_C_XOR	    => q1_rd,
+        OpecodeKind::OP_C_OR	    => q1_rd,
+        OpecodeKind::OP_C_AND	    => q1_rd,
+        OpecodeKind::OP_C_SLLI	    => q2_rd,
+        OpecodeKind::OP_C_FLDSP	    => q2_rd,
+        OpecodeKind::OP_C_LWSP	    => q2_rd,
+        OpecodeKind::OP_C_FLWSP	    => q2_rd,
+        OpecodeKind::OP_C_JR	    => q2_rd,
+        OpecodeKind::OP_C_MV	    => q2_rd,
+        OpecodeKind::OP_C_EBREAK   	=> q2_rd,
+        OpecodeKind::OP_C_JALR	    => q2_rd,
+        OpecodeKind::OP_C_ADD	    => q2_rd,
+        _ => 0,
     }
-
-    return rd;
 }
 
 pub fn parse_rs1(inst: &u32) -> u8 {
