@@ -147,20 +147,29 @@ pub fn parse_rs1(inst: &u32, opkind:OpecodeKind) -> u8 {
     }
 }
 
-pub fn parse_rs2(inst: &u32) -> u8 {
-    let opmap: u8  = (inst & 0x3F) as u8;
-    let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
+pub fn parse_rs2(inst: &u32, opkind: OpecodeKind) -> u8 {
+    let q0_rs2: u8 = ((inst >> 2) & 0x7) as u8;
+    let q1_rs2: u8 = ((inst >> 2) & 0x7) as u8;
+    let q2_rs2: u8 = ((inst >> 2) & 0x1F) as u8;
 
-    // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
-    // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
-    // FENCE, ECALL, EBREAK
-    if  opmap == 0b01010111 || opmap == 0b00010111 || opmap == 0b01101111 ||
-        opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 || 
-        opmap == 0b00001111 || opmap == 0b01110011 { 
-            return 0;
+    match opkind {
+        // Quadrant 0
+        OpecodeKind::OP_C_FSD   => q0_rs2,
+        OpecodeKind::OP_C_SW    => q0_rs2,
+        OpecodeKind::OP_C_FSW   => q0_rs2,
+        // Quadrant 1
+        OpecodeKind::OP_C_SUB	=> q1_rs2,
+        OpecodeKind::OP_C_XOR	=> q1_rs2,
+        OpecodeKind::OP_C_OR	=> q1_rs2,
+        OpecodeKind::OP_C_AND	=> q1_rs2,
+        // Quadrant 2
+        OpecodeKind::OP_C_MV	=> q2_rs2,
+        OpecodeKind::OP_C_ADD	=> q2_rs2,
+        OpecodeKind::OP_C_FWDSP	=> q2_rs2,
+        OpecodeKind::OP_C_SWSP	=> q2_rs2,
+        OpecodeKind::OP_C_FSWSP	=> q2_rs2,
+        _ => 0,
     }
-
-    return rs2;
 }
 
 
