@@ -80,7 +80,8 @@ impl SectionHeader {
 
 	pub fn section_dump(&self, mmap: &[u8]){
 		for dump_part in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4) {
-            let inst = self.decode(mmap, dump_part as usize);
+            let inst_dump = get_u32(mmap, index);
+            let inst = inst_dump.decode(inst_dump);
             println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 		}
 	}
@@ -89,6 +90,4 @@ impl SectionHeader {
         self.sh_type == 1
     }
 }       
-
-impl Decode for SectionHeader {}
 

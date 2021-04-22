@@ -1,16 +1,16 @@
+use crate::elfload::{get_u32};
 use super::{OpecodeKind, Instruction, Decode};
 
-impl Decode for u32 {
-	fn decode(&self, mmap: &[u8], index: usize) -> Instruction {
-        let inst: u32 = get_u32(mmap, index);
-        let new_opc: OpecodeKind = match parse_opecode(&inst){
+pub impl Decode for u32 {
+	fn decode(&self) -> Instruction {
+        let new_opc: OpecodeKind = match self.parse_opecode(&inst){
             Ok(opc)  => opc,
             Err(msg) => panic!("{}", msg),
         };
-        let new_rd:  u8  = self.parse_rd(&inst);
-        let new_rs1: u8  = self.parse_rs1(&inst);
-        let new_rs2: u8  = self.parse_rs2(&inst);
-        let new_imm: u32 = self.parse_imm(&inst);
+        let new_rd:  u8  = self.parse_rd(&inst, new_opc);
+        let new_rs1: u8  = self.parse_rs1(&inst, new_opc);
+        let new_rs2: u8  = self.parse_rs2(&inst, new_opc);
+        let new_imm: u32 = self.parse_imm(&inst, new_opc);
 
         Instruction {
             opc: new_opc,

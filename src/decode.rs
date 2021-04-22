@@ -1,6 +1,3 @@
-mod mmap_parse_32;
-use mmap_parse_32::*;
-use crate::elfload::{get_u32};
 
 // riscv-spec-20191213-1.pdf page=130
 #[allow(non_camel_case_types)]
@@ -171,7 +168,7 @@ impl Instruction {
 
 
 pub trait Decode {
-	fn decode(&self, mmap: &[u8], index: usize) -> Instruction;
+	fn decode(&self, inst: &u32) -> Instruction;
 	fn parse_rd(&self, inst: &u32, opkind: OpecodeKind)  -> u8;
 	fn parse_rs1(&self, inst: &u32, opkind: OpecodeKind) -> u8;
 	fn parse_rs2(&self, inst: &u32, opkind: OpecodeKind) -> u8;
