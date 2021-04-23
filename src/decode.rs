@@ -1,4 +1,3 @@
-
 // riscv-spec-20191213-1.pdf page=130
 #[allow(non_camel_case_types)]
 pub enum OpecodeKind{
