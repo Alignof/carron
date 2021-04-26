@@ -1,7 +1,7 @@
 use crate::elfload::{get_u32};
 use super::{OpecodeKind, Instruction, Decode};
 
-pub impl Decode for u32 {
+impl Decode for u32 {
 	fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode(&inst){
             Ok(opc)  => opc,
