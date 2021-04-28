@@ -169,12 +169,12 @@ impl Instruction {
 
 
 pub trait Decode {
-	fn decode(&self, inst: &u32) -> Instruction;
+	fn decode(&self, inst: u32) -> Instruction;
     fn parse_opecode(&self, inst:&u32) -> Result<OpecodeKind, &'static str>;
-	fn parse_rd(&self, inst: &u32, opkind: OpecodeKind)  -> u8;
-	fn parse_rs1(&self, inst: &u32, opkind: OpecodeKind) -> u8;
-	fn parse_rs2(&self, inst: &u32, opkind: OpecodeKind) -> u8;
-	fn parse_imm(&self, inst: &u32, opkind: OpecodeKind) -> u32;
+	fn parse_rd(&self, inst: &u32,  opkind: &OpecodeKind) -> u8;
+	fn parse_rs1(&self, inst: &u32, opkind: &OpecodeKind) -> u8;
+	fn parse_rs2(&self, inst: &u32, opkind: &OpecodeKind) -> u8;
+	fn parse_imm(&self, inst: &u32, opkind: &OpecodeKind) -> u32;
 }
 
 

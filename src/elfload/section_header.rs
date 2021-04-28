@@ -1,5 +1,5 @@
 use super::ElfHeader;
-use crate::decode;
+use crate::decode::Decode;
 use crate::elfload::get_u32;
 
 fn get_section_type_name(section_type:u32) -> &'static str {
