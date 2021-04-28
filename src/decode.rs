@@ -1,3 +1,5 @@
+mod mmap_parse_32;
+
 // riscv-spec-20191213-1.pdf page=130
 #[allow(non_camel_case_types)]
 pub enum OpecodeKind{
@@ -168,6 +170,7 @@ impl Instruction {
 
 pub trait Decode {
 	fn decode(&self, inst: &u32) -> Instruction;
+    fn parse_opecode(inst:&u32) -> Result<OpecodeKind, &'static str>;
 	fn parse_rd(&self, inst: &u32, opkind: OpecodeKind)  -> u8;
 	fn parse_rs1(&self, inst: &u32, opkind: OpecodeKind) -> u8;
 	fn parse_rs2(&self, inst: &u32, opkind: OpecodeKind) -> u8;

@@ -1,4 +1,3 @@
-use crate::elfload::{get_u32};
 use super::{OpecodeKind, Instruction, Decode};
 
 impl Decode for u32 {
