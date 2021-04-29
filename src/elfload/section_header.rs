@@ -84,7 +84,7 @@ impl SectionHeader {
             if true {
                 inst = get_u32(mmap, dump_part as usize).decode();
             }else{
-                inst = get_u32(mmap, dump_part as usize).decode();
+                inst = get_u16(mmap, dump_part as usize).decode();
             }
             println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 		}

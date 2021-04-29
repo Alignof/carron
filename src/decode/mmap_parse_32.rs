@@ -2,8 +2,7 @@ use super::{OpecodeKind, Instruction, Decode};
 
 impl Decode for u32 {
 	fn decode(&self) -> Instruction {
-        let inst:&u32 = self;
-        let new_opc: OpecodeKind = match self.parse_opecode(&inst){
+        let new_opc: OpecodeKind = match self.parse_opecode(){
             Ok(opc)  => opc,
             Err(msg) => panic!("{}", msg),
         };
@@ -23,7 +22,7 @@ impl Decode for u32 {
     }
 
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
-        let inst:&u32 = self;
+        let inst: &u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let funct3: u8 = ((inst >> 12) & 0x7) as u8;
 
