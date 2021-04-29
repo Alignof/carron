@@ -1,6 +1,6 @@
 use super::{OpecodeKind, Instruction, Decode};
 
-fn quadrant0(inst: &u32, opmap: &u8) -> OpecodeKind {
+fn quadrant0(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
     match opmap {
         0b000 => Ok(OpecodeKind::OP_C_ADDI4SPN),
         0b001 => Ok(OpecodeKind::OP_C_FLD),
@@ -12,7 +12,7 @@ fn quadrant0(inst: &u32, opmap: &u8) -> OpecodeKind {
     }
 }
 
-fn quadrant1(inst: &u32, opmap: &u8) -> OpecodeKind {
+fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
     let sr_flag: u8 = ((inst >> 9) & 0x3) as u8;
     let lo_flag: u8 = ((inst >> 4) & 0x3) as u8;
 
@@ -38,7 +38,7 @@ fn quadrant1(inst: &u32, opmap: &u8) -> OpecodeKind {
 }
 
 
-fn quadrant2(inst: &u32, opmap: &u8) -> OpecodeKind {
+fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> { 
     let lo_flag: u8 = ((inst >> 2) & 0x1F) as u8;
     let mi_flag: u8 = ((inst >> 7) & 0x1F) as u8;
     let hi_flag: u8 = ((inst >> 12) & 0x1) as u8;
