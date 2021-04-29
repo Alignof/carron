@@ -59,7 +59,7 @@ impl SectionHeader {
 					sh_entsize:   get_u32(mmap, section_start + 34),
 				}       
 			);
-		}
+	    }
 
 		return new_sect;
 	}
@@ -80,8 +80,12 @@ impl SectionHeader {
 
 	pub fn section_dump(&self, mmap: &[u8]){
 		for dump_part in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4) {
-            let inst_dump = get_u32(mmap, dump_part as usize);
-            let inst = inst_dump.decode(inst_dump);
+            let inst;
+            if is_32() {
+                inst = get_u32(mmap, dump_part as usize).decode();
+            }else{
+                inst = get_u32(mmap, dump_part as usize).decode();
+            }
             println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 		}
 	}
