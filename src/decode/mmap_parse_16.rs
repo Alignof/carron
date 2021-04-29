@@ -1,4 +1,4 @@
-use super::{OpecodeKind};
+use super::{OpecodeKind, Instruction, Decode};
 
 fn quadrant0(inst: &u32, opmap: &u8) -> OpecodeKind {
     match opmap {
@@ -88,7 +88,7 @@ impl Decode for u16 {
         }
     }
 
-    pub fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
+    fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
         let inst: &u16 = self;
         let opmap: u8 = ((inst >> 12) & 0x7) as u8;
         let quadrant: u8  = (inst & 0x3) as u8;
@@ -101,7 +101,7 @@ impl Decode for u16 {
         }
     }
 
-    pub fn parse_rd(&self, opkind: OpecodeKind) -> u8 {
+    fn parse_rd(&self, opkind: &OpecodeKind) -> u8 {
         let inst: &u16 = self;
         let q0_rd: u8 = ((inst >> 2) & 0x7) as u8;
         let q1_rd: u8 = ((inst >> 7) & 0x7) as u8;
@@ -135,7 +135,7 @@ impl Decode for u16 {
         }
     }
 
-    pub fn parse_rs1(&self, opkind:OpecodeKind) -> u8 {
+    fn parse_rs1(&self, opkind: &OpecodeKind) -> u8 {
         let inst: &u16 = self;
         let q0_rs1: u8 = ((inst >> 7) & 0x3) as u8;
         let q1_rs1: u8 = ((inst >> 7) & 0x3) as u8;
@@ -171,7 +171,7 @@ impl Decode for u16 {
         }
     }
 
-    pub fn parse_rs2(&self, opkind: OpecodeKind) -> u8 {
+    fn parse_rs2(&self, opkind: &OpecodeKind) -> u8 {
         let inst: &u16 = self;
         let q0_rs2: u8 = ((inst >> 2) & 0x7) as u8;
         let q1_rs2: u8 = ((inst >> 2) & 0x7) as u8;
@@ -197,7 +197,7 @@ impl Decode for u16 {
         }
     }
 
-    pub fn parse_imm(&self, opkind: OpecodeKind) -> u32 {
+    fn parse_imm(&self, opkind: &OpecodeKind) -> u32 {
         return 0;
     }
 }

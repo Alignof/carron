@@ -1,3 +1,4 @@
+mod mmap_parse_16;
 mod mmap_parse_32;
 
 // riscv-spec-20191213-1.pdf page=130
