@@ -1,6 +1,6 @@
 use super::ElfHeader;
 use crate::decode::Decode;
-use crate::elfload::get_u32;
+use crate::elfload::{get_u32, get_u16};
 
 fn get_section_type_name(section_type:u32) -> &'static str {
 	match section_type {
@@ -81,7 +81,7 @@ impl SectionHeader {
 	pub fn section_dump(&self, mmap: &[u8]){
 		for dump_part in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4) {
             let inst;
-            if is_32() {
+            if true {
                 inst = get_u32(mmap, dump_part as usize).decode();
             }else{
                 inst = get_u32(mmap, dump_part as usize).decode();

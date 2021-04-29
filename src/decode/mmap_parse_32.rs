@@ -1,15 +1,16 @@
 use super::{OpecodeKind, Instruction, Decode};
 
 impl Decode for u32 {
-	fn decode(&self, inst:u32) -> Instruction {
+	fn decode(&self) -> Instruction {
+        let inst:&u32 = self;
         let new_opc: OpecodeKind = match self.parse_opecode(&inst){
             Ok(opc)  => opc,
             Err(msg) => panic!("{}", msg),
         };
-        let new_rd:  u8  = self.parse_rd(&inst,  &new_opc);
-        let new_rs1: u8  = self.parse_rs1(&inst, &new_opc);
-        let new_rs2: u8  = self.parse_rs2(&inst, &new_opc);
-        let new_imm: u32 = self.parse_imm(&inst, &new_opc);
+        let new_rd:  u8  = self.parse_rd(&new_opc);
+        let new_rs1: u8  = self.parse_rs1(&new_opc);
+        let new_rs2: u8  = self.parse_rs2(&new_opc);
+        let new_imm: u32 = self.parse_imm(&new_opc);
 
         Instruction {
             opc: new_opc,
@@ -21,7 +22,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_opecode(&self, inst:&u32) -> Result<OpecodeKind, &'static str> {
+    fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
+        let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let funct3: u8 = ((inst >> 12) & 0x7) as u8;
 
@@ -80,7 +82,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(&self, inst: &u32, opkind: &OpecodeKind) -> u8 {
+    fn parse_rd(&self, opkind: &OpecodeKind) -> u8 {
+        let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let rd: u8 = ((inst >> 7) & 0x1F) as u8;
 
@@ -93,7 +96,8 @@ impl Decode for u32 {
         return rd;
     }
 
-    fn parse_rs1(&self, inst: &u32, opkind: &OpecodeKind) -> u8 {
+    fn parse_rs1(&self, opkind: &OpecodeKind) -> u8 {
+        let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let rs1: u8 = ((inst >> 15) & 0x1F) as u8;
 
@@ -106,7 +110,8 @@ impl Decode for u32 {
         return rs1;
     }
 
-    fn parse_rs2(&self, inst: &u32, opkind: &OpecodeKind) -> u8 {
+    fn parse_rs2(&self, opkind: &OpecodeKind) -> u8 {
+        let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
 
@@ -122,7 +127,8 @@ impl Decode for u32 {
         return rs2;
     }
 
-    fn parse_imm(&self, inst: &u32, opkind: &OpecodeKind) -> u32 {
+    fn parse_imm(&self, opkind: &OpecodeKind) -> u32 {
+        let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
 
         // LUI, AUIPC
