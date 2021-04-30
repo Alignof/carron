@@ -111,7 +111,7 @@ impl Decode for u16 {
             // Quadrant 0
             OpecodeKind::OP_C_ADDI4SPN  => q0_rd,
             OpecodeKind::OP_C_FLD       => q0_rd,
-            OpecodeKind::OP_C_FW        => q0_rd,
+            OpecodeKind::OP_C_LW        => q0_rd,
             OpecodeKind::OP_C_FLW       => q0_rd,
             // Quadrant 1
             OpecodeKind::OP_C_SRLI	    => q1_rd,
@@ -145,7 +145,7 @@ impl Decode for u16 {
         match opkind {
             // Quadrant 0
             OpecodeKind::OP_C_FLD       => q0_rs1,
-            OpecodeKind::OP_C_FW        => q0_rs1,
+            OpecodeKind::OP_C_LW        => q0_rs1,
             OpecodeKind::OP_C_FLW       => q0_rs1,
             OpecodeKind::OP_C_FSD       => q0_rs1,
             OpecodeKind::OP_C_SW        => q0_rs1,
@@ -190,7 +190,7 @@ impl Decode for u16 {
             // Quadrant 2
             OpecodeKind::OP_C_MV	=> q2_rs2,
             OpecodeKind::OP_C_ADD	=> q2_rs2,
-            OpecodeKind::OP_C_FWDSP	=> q2_rs2,
+            OpecodeKind::OP_C_FSDSP	=> q2_rs2,
             OpecodeKind::OP_C_SWSP	=> q2_rs2,
             OpecodeKind::OP_C_FSWSP	=> q2_rs2,
             _ => 0,
