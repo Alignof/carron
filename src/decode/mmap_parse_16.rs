@@ -9,6 +9,7 @@ fn quadrant0(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
         0b100 => Ok(OpecodeKind::OP_C_FSD),
         0b110 => Ok(OpecodeKind::OP_C_SW),
         0b111 => Ok(OpecodeKind::OP_C_FSW),
+        _     => Err("opecode decoding failed"),
     }
 }
 
@@ -30,10 +31,13 @@ fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
                 0b01 => Ok(OpecodeKind::OP_C_XOR),
                 0b10 => Ok(OpecodeKind::OP_C_OR),
                 0b11 => Ok(OpecodeKind::OP_C_AND),
+		_    => Err("opecode decoding failed"),
             },
+	    _    => Err("opecode decoding failed"),
         },
         0b110 => Ok(OpecodeKind::OP_C_BEQZ),
         0b111 => Ok(OpecodeKind::OP_C_BNEZ),
+        _     => Err("opecode decoding failed"),
     }
 }
 
@@ -60,10 +64,12 @@ fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
                     _   => Ok(OpecodeKind::OP_C_ADD),
                 },
             },
+	    _   => Err("opecode decoding failed"),
         },
         0b101 => Ok(OpecodeKind::OP_C_FSDSP),
         0b110 => Ok(OpecodeKind::OP_C_SWSP),
         0b111 => Ok(OpecodeKind::OP_C_FSWSP),
+        _     => Err("opecode decoding failed"),
     }
 }
 
