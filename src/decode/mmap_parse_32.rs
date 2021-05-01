@@ -81,7 +81,7 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(&self, opkind: &OpecodeKind) -> u8 {
+    fn parse_rd(&self, _opkind: &OpecodeKind) -> u8 {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let rd: u8 = ((inst >> 7) & 0x1F) as u8;
@@ -95,7 +95,7 @@ impl Decode for u32 {
         return rd;
     }
 
-    fn parse_rs1(&self, opkind: &OpecodeKind) -> u8 {
+    fn parse_rs1(&self, _opkind: &OpecodeKind) -> u8 {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let rs1: u8 = ((inst >> 15) & 0x1F) as u8;
@@ -109,7 +109,7 @@ impl Decode for u32 {
         return rs1;
     }
 
-    fn parse_rs2(&self, opkind: &OpecodeKind) -> u8 {
+    fn parse_rs2(&self, _opkind: &OpecodeKind) -> u8 {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
         let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
@@ -126,7 +126,7 @@ impl Decode for u32 {
         return rs2;
     }
 
-    fn parse_imm(&self, opkind: &OpecodeKind) -> u32 {
+    fn parse_imm(&self, _opkind: &OpecodeKind) -> u32 {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x3F) as u8;
 

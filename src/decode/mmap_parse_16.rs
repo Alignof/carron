@@ -1,6 +1,6 @@
 use super::{OpecodeKind, Instruction, Decode};
 
-fn quadrant0(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
+fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
     match opmap {
         0b000 => Ok(OpecodeKind::OP_C_ADDI4SPN),
         0b001 => Ok(OpecodeKind::OP_C_FLD),
@@ -100,7 +100,7 @@ impl Decode for u16 {
         let quadrant: u8  = (inst & 0x3) as u8;
 
         match quadrant {
-            0b00 => quadrant0(inst, &opmap),
+            0b00 => quadrant0(&opmap),
             0b01 => quadrant1(inst, &opmap),
             0b10 => quadrant2(inst, &opmap),
             _    => Err("opecode decoding failed"),
@@ -109,9 +109,9 @@ impl Decode for u16 {
 
     fn parse_rd(&self, opkind: &OpecodeKind) -> u8 {
         let inst: &u16 = self;
-        let q0_rd: u8 = ((inst >> 2) & 0x7) as u8;
-        let q1_rd: u8 = ((inst >> 7) & 0x7) as u8;
-        let q2_rd: u8 = ((inst >> 7) & 0x1F) as u8;
+        let q0_rd: u8  = ((inst >> 2) & 0x7) as u8;
+        let q1_rd: u8  = ((inst >> 7) & 0x7) as u8;
+        let q2_rd: u8  = ((inst >> 7) & 0x1F) as u8;
 
         match opkind {
             // Quadrant 0
