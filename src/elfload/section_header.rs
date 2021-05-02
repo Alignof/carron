@@ -78,16 +78,16 @@ impl SectionHeader {
 	}
 
 	pub fn section_dump(&self, mmap: &[u8]){
-        use crate::decode::Decode;
+		use crate::decode::Decode;
 
 		for dump_part in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4) {
-            let inst;
-            if true {
-                inst = get_u32(mmap, dump_part as usize).decode();
-            }else{
-                inst = get_u16(mmap, dump_part as usize).decode();
-            }
-            println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
+			if true {
+				let inst = get_u32(mmap, dump_part as usize).decode();
+				println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
+			}else{
+				let inst = get_u16(mmap, dump_part as usize).decode();
+				println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
+			}
 		}
 	}
 
