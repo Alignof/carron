@@ -1,5 +1,5 @@
 use super::ElfHeader;
-use crate::elfload::{get_u32, get_u16};
+use crate::elfload::{get_u32, get_u16, is_cinst};
 
 fn get_section_type_name(section_type:u32) -> &'static str {
 	match section_type {
@@ -81,11 +81,11 @@ impl SectionHeader {
 		use crate::decode::Decode;
 
 		for dump_part in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4) {
-			if true {
-				let inst = get_u32(mmap, dump_part as usize).decode();
+			if is_cinst(mmap, dump_part as usize) {
+				let inst = get_u16(mmap, dump_part as usize).decode();
 				println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 			}else{
-				let inst = get_u16(mmap, dump_part as usize).decode();
+				let inst = get_u32(mmap, dump_part as usize).decode();
 				println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 			}
 		}
