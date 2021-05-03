@@ -92,7 +92,7 @@ impl SectionHeader {
 	}
 
     pub fn is_dumpable(&self) -> bool {
-        self.sh_type == 1
+        self.sh_flags >> 2 & 1 == 1
     }
 }       
 

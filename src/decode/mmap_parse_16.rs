@@ -77,7 +77,7 @@ impl Decode for u16 {
 	fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode(){
             Ok(opc)  => opc,
-            Err(msg) => panic!("{}", msg),
+            Err(msg) => panic!("{}, {:x}", msg, self),
         };
         let new_rd:  u8  = self.parse_rd(&new_opc);
         let new_rs1: u8  = self.parse_rs1(&new_opc);

@@ -21,7 +21,7 @@ fn get_u32(mmap: &[u8], index: usize) -> u32 {
 }
 
 fn is_cinst(mmap: &[u8], index: usize) -> bool {
-    mmap[index] & 0x3 == 0x3
+    mmap[index] & 0x3 != 0x3
 }
 
 
