@@ -65,28 +65,31 @@ impl SectionHeader {
 
 
 	pub fn show(&self){
-		println!("sh_name:\t{}",	self.sh_name);
-		println!("sh_type:\t{}",	get_section_type_name(self.sh_type));
-		println!("sh_flags:\t{}",	self.sh_flags);
+		println!("sh_name:\t{}",	    self.sh_name);
+		println!("sh_type:\t{}",	    get_section_type_name(self.sh_type));
+		println!("sh_flags:\t{}",	    self.sh_flags);
 		println!("sh_addr:\t0x{:x}",	self.sh_addr);
 		println!("sh_offset:\t0x{:x}",	self.sh_offset);
-		println!("sh_size:\t{}",	self.sh_size);
-		println!("sh_link:\t{}",	self.sh_link);
-		println!("sh_info:\t{}",	self.sh_info);
+		println!("sh_size:\t{}",	    self.sh_size);
+		println!("sh_link:\t{}",	    self.sh_link);
+		println!("sh_info:\t{}",	    self.sh_info);
 		println!("sh_addralign:\t{}",	self.sh_addralign);
-		println!("sh_entsize:\t{}",	self.sh_entsize);
+		println!("sh_entsize:\t{}",	    self.sh_entsize);
 	}
 
 	pub fn section_dump(&self, mmap: &[u8]){
 		use crate::decode::Decode;
 
+		println!("--------------------------------");
 		for dump_part in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4) {
 			if is_cinst(mmap, dump_part as usize) {
-				let inst = get_u16(mmap, dump_part as usize).decode();
-				println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
+                let mdump = get_u16(mmap, dump_part as usize);
+				let inst  = mdump.decode();
+				println!("{:<8x}\t{}\t{},{},{}", mdump,inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 			}else{
-				let inst = get_u32(mmap, dump_part as usize).decode();
-				println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
+                let mdump = get_u32(mmap, dump_part as usize);
+				let inst  = mdump.decode();
+				println!("{:<8x}\t{}\t{},{},{}", mdump,inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 			}
 		}
 	}
