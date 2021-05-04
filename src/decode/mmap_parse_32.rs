@@ -4,7 +4,7 @@ impl Decode for u32 {
 	fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode(){
             Ok(opc)  => opc,
-            Err(msg) => panic!("{}, {:x}", msg, self),
+            Err(msg) => panic!("{}, {:b}", msg, self),
         };
         let new_rd:  u8  = self.parse_rd(&new_opc);
         let new_rs1: u8  = self.parse_rs1(&new_opc);
@@ -23,13 +23,14 @@ impl Decode for u32 {
 
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
         let inst: &u32 = self;
-        let opmap: u8  = (inst & 0x3F) as u8;
+        let opmap: u8  = (inst & 0x7F) as u8;
         let funct3: u8 = ((inst >> 12) & 0x7) as u8;
 
         match opmap {
             0b0110111 => Ok(OpecodeKind::OP_LUI),
             0b0010111 => Ok(OpecodeKind::OP_AUIPC),
             0b1101111 => Ok(OpecodeKind::OP_JAL),
+            0b1100111 => Ok(OpecodeKind::OP_JALR),
             0b1100011 => match funct3 {
                 0b000 => Ok(OpecodeKind::OP_BEQ),
                 0b001 => Ok(OpecodeKind::OP_BNE),
@@ -83,7 +84,7 @@ impl Decode for u32 {
 
     fn parse_rd(&self, _opkind: &OpecodeKind) -> u8 {
         let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x3F) as u8;
+        let opmap: u8  = (inst & 0x7F) as u8;
         let rd: u8 = ((inst >> 7) & 0x1F) as u8;
 
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
@@ -97,7 +98,7 @@ impl Decode for u32 {
 
     fn parse_rs1(&self, _opkind: &OpecodeKind) -> u8 {
         let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x3F) as u8;
+        let opmap: u8  = (inst & 0x7F) as u8;
         let rs1: u8 = ((inst >> 15) & 0x1F) as u8;
 
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
@@ -111,7 +112,7 @@ impl Decode for u32 {
 
     fn parse_rs2(&self, _opkind: &OpecodeKind) -> u8 {
         let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x3F) as u8;
+        let opmap: u8  = (inst & 0x7F) as u8;
         let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
 
         // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
@@ -128,7 +129,7 @@ impl Decode for u32 {
 
     fn parse_imm(&self, _opkind: &OpecodeKind) -> u32 {
         let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x3F) as u8;
+        let opmap: u8  = (inst & 0x7F) as u8;
 
         // LUI, AUIPC
         if opmap == 0b00110111 || opmap == 0b00010111 {

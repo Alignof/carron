@@ -89,7 +89,7 @@ impl SectionHeader {
 			}else{
                 let mdump = get_u32(mmap, dump_part as usize);
 				let inst  = mdump.decode();
-				println!("{:<8x}\t{}\t{},{},{}", mdump,inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
+				println!("{:<08x}\t{}\t{},{},{}", mdump,inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
 			}
 		}
 	}
