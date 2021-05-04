@@ -148,13 +148,13 @@ impl Decode for u32 {
 
         // S(B|H|W)
         if opmap == 0b00100011 {
-            return (((inst >> 25) & 0x1F) << 5 + (inst >> 7) & 0x1F) as u32;
+            return ((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as u32;
         }
 
         // B(EQ|NE|LT|GE|LTU|GEU)
         if opmap == 0b01100011 {
-            return (((inst >> 27) & 0x1) << 11 + ((inst >> 7) & 0x1) << 10 +
-                    ((inst >> 25) & 0x1F) << 4 + (inst >> 8) & 0xF) as u32;
+            return ((((inst >> 27) & 0x1) << 11) + (((inst >> 7) & 0x1) << 10) +
+                    (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as u32;
         }
 
         return 0;
