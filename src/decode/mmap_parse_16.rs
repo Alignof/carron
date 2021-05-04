@@ -96,7 +96,7 @@ impl Decode for u16 {
 
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
         let inst: &u16 = self;
-        let opmap: u8 = ((inst >> 12) & 0x7) as u8;
+        let opmap: u8 = ((inst >> 13) & 0x7) as u8;
         let quadrant: u8  = (inst & 0x3) as u8;
 
         match quadrant {
