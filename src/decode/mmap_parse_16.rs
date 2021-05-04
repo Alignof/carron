@@ -35,6 +35,7 @@ fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
             },
 	    _    => Err("opecode decoding failed"),
         },
+        0b101 => Ok(OpecodeKind::OP_C_J),
         0b110 => Ok(OpecodeKind::OP_C_BEQZ),
         0b111 => Ok(OpecodeKind::OP_C_BNEZ),
         _     => Err("opecode decoding failed"),
@@ -77,7 +78,7 @@ impl Decode for u16 {
 	fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode(){
             Ok(opc)  => opc,
-            Err(msg) => panic!("{}, {:x}", msg, self),
+            Err(msg) => panic!("{}, {:b}", msg, self),
         };
         let new_rd:  u8  = self.parse_rd(&new_opc);
         let new_rs1: u8  = self.parse_rs1(&new_opc);
