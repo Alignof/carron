@@ -214,10 +214,10 @@ impl Instruction {
 pub trait Decode {
 	fn decode(&self) -> Instruction;
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str>;
-	fn parse_rd(&self,  opkind: &OpecodeKind) -> u8;
-	fn parse_rs1(&self, opkind: &OpecodeKind) -> u8;
-	fn parse_rs2(&self, opkind: &OpecodeKind) -> u8;
-	fn parse_imm(&self, opkind: &OpecodeKind) -> u32;
+	fn parse_rd(&self,  opkind: &OpecodeKind) -> Option(u8);
+	fn parse_rs1(&self, opkind: &OpecodeKind) -> Option(u8);
+	fn parse_rs2(&self, opkind: &OpecodeKind) -> Option(u8);
+	fn parse_imm(&self, opkind: &OpecodeKind) -> Option(u32);
 }
 
 

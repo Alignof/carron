@@ -108,7 +108,7 @@ impl Decode for u16 {
         }
     }
 
-    fn parse_rd(&self, opkind: &OpecodeKind) -> u8 {
+    fn parse_rd(&self, opkind: &OpecodeKind) -> Option<u8> {
         let inst: &u16 = self;
         let q0_rd: u8  = ((inst >> 2) & 0x7) as u8;
         let q1_rd: u8  = ((inst >> 7) & 0x7) as u8;
@@ -116,33 +116,33 @@ impl Decode for u16 {
 
         match opkind {
             // Quadrant 0
-            OpecodeKind::OP_C_ADDI4SPN  => q0_rd,
-            OpecodeKind::OP_C_FLD       => q0_rd,
-            OpecodeKind::OP_C_LW        => q0_rd,
-            OpecodeKind::OP_C_FLW       => q0_rd,
+            OpecodeKind::OP_C_ADDI4SPN  => Some(q0_rd),
+            OpecodeKind::OP_C_FLD       => Some(q0_rd),
+            OpecodeKind::OP_C_LW        => Some(q0_rd),
+            OpecodeKind::OP_C_FLW       => Some(q0_rd),
             // Quadrant 1
-            OpecodeKind::OP_C_SRLI	    => q1_rd,
-            OpecodeKind::OP_C_SRAI	    => q1_rd,
-            OpecodeKind::OP_C_ANDI	    => q1_rd,
-            OpecodeKind::OP_C_SUB	    => q1_rd,
-            OpecodeKind::OP_C_XOR	    => q1_rd,
-            OpecodeKind::OP_C_OR	    => q1_rd,
-            OpecodeKind::OP_C_AND	    => q1_rd,
+            OpecodeKind::OP_C_SRLI	    => Some(q1_rd),
+            OpecodeKind::OP_C_SRAI	    => Some(q1_rd),
+            OpecodeKind::OP_C_ANDI	    => Some(q1_rd),
+            OpecodeKind::OP_C_SUB	    => Some(q1_rd),
+            OpecodeKind::OP_C_XOR	    => Some(q1_rd),
+            OpecodeKind::OP_C_OR	    => Some(q1_rd),
+            OpecodeKind::OP_C_AND	    => Some(q1_rd),
             // Quadrant 2
-            OpecodeKind::OP_C_SLLI	    => q2_rd,
-            OpecodeKind::OP_C_FLDSP	    => q2_rd,
-            OpecodeKind::OP_C_LWSP	    => q2_rd,
-            OpecodeKind::OP_C_FLWSP	    => q2_rd,
-            OpecodeKind::OP_C_JR	    => q2_rd,
-            OpecodeKind::OP_C_MV	    => q2_rd,
-            OpecodeKind::OP_C_EBREAK   	=> q2_rd,
-            OpecodeKind::OP_C_JALR	    => q2_rd,
-            OpecodeKind::OP_C_ADD	    => q2_rd,
-            _ => 0,
+            OpecodeKind::OP_C_SLLI	    => Some(q2_rd),
+            OpecodeKind::OP_C_FLDSP	    => Some(q2_rd),
+            OpecodeKind::OP_C_LWSP	    => Some(q2_rd),
+            OpecodeKind::OP_C_FLWSP	    => Some(q2_rd),
+            OpecodeKind::OP_C_JR	    => Some(q2_rd),
+            OpecodeKind::OP_C_MV	    => Some(q2_rd),
+            OpecodeKind::OP_C_EBREAK   	=> Some(q2_rd),
+            OpecodeKind::OP_C_JALR	    => Some(q2_rd),
+            OpecodeKind::OP_C_ADD	    => Some(q2_rd),
+            _ => None,
         }
     }
 
-    fn parse_rs1(&self, opkind: &OpecodeKind) -> u8 {
+    fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<u8> {
         let inst: &u16 = self;
         let q0_rs1: u8 = ((inst >> 7) & 0x3) as u8;
         let q1_rs1: u8 = ((inst >> 7) & 0x3) as u8;
@@ -151,34 +151,34 @@ impl Decode for u16 {
 
         match opkind {
             // Quadrant 0
-            OpecodeKind::OP_C_FLD       => q0_rs1,
-            OpecodeKind::OP_C_LW        => q0_rs1,
-            OpecodeKind::OP_C_FLW       => q0_rs1,
-            OpecodeKind::OP_C_FSD       => q0_rs1,
-            OpecodeKind::OP_C_SW        => q0_rs1,
-            OpecodeKind::OP_C_FSW       => q0_rs1,
+            OpecodeKind::OP_C_FLD       => Some(q0_rs1),
+            OpecodeKind::OP_C_LW        => Some(q0_rs1),
+            OpecodeKind::OP_C_FLW       => Some(q0_rs1),
+            OpecodeKind::OP_C_FSD       => Some(q0_rs1),
+            OpecodeKind::OP_C_SW        => Some(q0_rs1),
+            OpecodeKind::OP_C_FSW       => Some(q0_rs1),
             // Quadrant 1
-            OpecodeKind::OP_C_ADDI		=> addi_rs1,
-            OpecodeKind::OP_C_ADDI16SP	=> addi_rs1,
-            OpecodeKind::OP_C_SRLI		=> q1_rs1,
-            OpecodeKind::OP_C_SRAI		=> q1_rs1,
-            OpecodeKind::OP_C_ANDI		=> q1_rs1,
-            OpecodeKind::OP_C_SUB		=> q1_rs1,
-            OpecodeKind::OP_C_XOR		=> q1_rs1,
-            OpecodeKind::OP_C_OR		=> q1_rs1,
-            OpecodeKind::OP_C_AND		=> q1_rs1,
-            OpecodeKind::OP_C_BEQZ		=> q1_rs1,
-            OpecodeKind::OP_C_BNEZ		=> q1_rs1,
+            OpecodeKind::OP_C_ADDI		=> Some(addi_rs1),
+            OpecodeKind::OP_C_ADDI16SP	=> Some(addi_rs1),
+            OpecodeKind::OP_C_SRLI		=> Some(q1_rs1),
+            OpecodeKind::OP_C_SRAI		=> Some(q1_rs1),
+            OpecodeKind::OP_C_ANDI		=> Some(q1_rs1),
+            OpecodeKind::OP_C_SUB		=> Some(q1_rs1),
+            OpecodeKind::OP_C_XOR		=> Some(q1_rs1),
+            OpecodeKind::OP_C_OR		=> Some(q1_rs1),
+            OpecodeKind::OP_C_AND		=> Some(q1_rs1),
+            OpecodeKind::OP_C_BEQZ		=> Some(q1_rs1),
+            OpecodeKind::OP_C_BNEZ		=> Some(q1_rs1),
             // Quadrant 2
-            OpecodeKind::OP_C_SLLI	    => q2_rs1,
-            OpecodeKind::OP_C_JR	    => q2_rs1,
-            OpecodeKind::OP_C_JALR	    => q2_rs1,
-            OpecodeKind::OP_C_ADD	    => q2_rs1,
-            _ => 0,
+            OpecodeKind::OP_C_SLLI	    => Some(q2_rs1),
+            OpecodeKind::OP_C_JR	    => Some(q2_rs1),
+            OpecodeKind::OP_C_JALR	    => Some(q2_rs1),
+            OpecodeKind::OP_C_ADD	    => Some(q2_rs1),
+            _ => None,
         }
     }
 
-    fn parse_rs2(&self, opkind: &OpecodeKind) -> u8 {
+    fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<u8> {
         let inst: &u16 = self;
         let q0_rs2: u8 = ((inst >> 2) & 0x7) as u8;
         let q1_rs2: u8 = ((inst >> 2) & 0x7) as u8;
@@ -186,58 +186,61 @@ impl Decode for u16 {
 
         match opkind {
             // Quadrant 0
-            OpecodeKind::OP_C_FSD   => q0_rs2,
-            OpecodeKind::OP_C_SW    => q0_rs2,
-            OpecodeKind::OP_C_FSW   => q0_rs2,
+            OpecodeKind::OP_C_FSD   => Some(q0_rs2),
+            OpecodeKind::OP_C_SW    => Some(q0_rs2),
+            OpecodeKind::OP_C_FSW   => Some(q0_rs2),
             // Quadrant 1
-            OpecodeKind::OP_C_SUB	=> q1_rs2,
-            OpecodeKind::OP_C_XOR	=> q1_rs2,
-            OpecodeKind::OP_C_OR	=> q1_rs2,
-            OpecodeKind::OP_C_AND	=> q1_rs2,
+            OpecodeKind::OP_C_SUB	=> Some(q1_rs2),
+            OpecodeKind::OP_C_XOR	=> Some(q1_rs2),
+            OpecodeKind::OP_C_OR	=> Some(q1_rs2),
+            OpecodeKind::OP_C_AND	=> Some(q1_rs2),
             // Quadrant 2
-            OpecodeKind::OP_C_MV	=> q2_rs2,
-            OpecodeKind::OP_C_ADD	=> q2_rs2,
-            OpecodeKind::OP_C_FSDSP	=> q2_rs2,
-            OpecodeKind::OP_C_SWSP	=> q2_rs2,
-            OpecodeKind::OP_C_FSWSP	=> q2_rs2,
-            _ => 0,
+            OpecodeKind::OP_C_MV	=> Some(q2_rs2),
+            OpecodeKind::OP_C_ADD	=> Some(q2_rs2),
+            OpecodeKind::OP_C_FSDSP	=> Some(q2_rs2),
+            OpecodeKind::OP_C_SWSP	=> Some(q2_rs2),
+            OpecodeKind::OP_C_FSWSP	=> Some(q2_rs2),
+            _ => None,
         }
     }
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> u32 {
-        (match opkind {
+        let q0_imm = ((self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5)) as u32;
+        let q1_imm = ((self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2)) as u32;
+        let q2_imm = ((self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2)) as u32;
+        match opkind {
             // Quadrant0
-            OpecodeKind::OP_C_ADDI4SPN	=> (self >> 5) & 0xFF,
-            OpecodeKind::OP_C_FLD	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
-            OpecodeKind::OP_C_LW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
-            OpecodeKind::OP_C_FLW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
-            OpecodeKind::OP_C_FSD	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
-            OpecodeKind::OP_C_SW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
-            OpecodeKind::OP_C_FSW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
+            OpecodeKind::OP_C_ADDI4SPN	=> Some(((self >> 5) & 0xFF) as u32),
+            OpecodeKind::OP_C_FLD	    => Some(q0_imm),
+            OpecodeKind::OP_C_LW	    => Some(q0_imm),
+            OpecodeKind::OP_C_FLW	    => Some(q0_imm),
+            OpecodeKind::OP_C_FSD	    => Some(q0_imm),
+            OpecodeKind::OP_C_SW	    => Some(q0_imm),
+            OpecodeKind::OP_C_FSW	    => Some(q0_imm),
             // Quadrant1
-            OpecodeKind::OP_C_NOP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_ADDI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_JAL		=> (self >> 2) & 0x7FF,
-            OpecodeKind::OP_C_LI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_ADDI16SP	=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_LUI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_SRLI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_SRAI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_ANDI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_J		    => (self >> 2) & 0x7FF,
-            OpecodeKind::OP_C_BEQZ		=> (self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2),
-            OpecodeKind::OP_C_BNEZ		=> (self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2),
+            OpecodeKind::OP_C_NOP		=> Some(q1_imm),
+            OpecodeKind::OP_C_ADDI		=> Some(q1_imm),
+            OpecodeKind::OP_C_JAL		=> Some(((self >> 2) & 0x7FF) as u32),
+            OpecodeKind::OP_C_LI		=> Some(q1_imm),
+            OpecodeKind::OP_C_ADDI16SP	=> Some(q1_imm),
+            OpecodeKind::OP_C_LUI		=> Some(q1_imm),
+            OpecodeKind::OP_C_SRLI		=> Some(q1_imm),
+            OpecodeKind::OP_C_SRAI		=> Some(q1_imm),
+            OpecodeKind::OP_C_ANDI		=> Some(q1_imm),
+            OpecodeKind::OP_C_J		    => Some(((self >> 2) & 0x7FF) as u32),
+            OpecodeKind::OP_C_BEQZ		=> Some(((self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2)) as u32),
+            OpecodeKind::OP_C_BNEZ		=> Some(((self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2)) as u32),
             // Quadrant2
-            OpecodeKind::OP_C_SLLI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_FLDSP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_LWSP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_FLWSP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_JR		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
-            OpecodeKind::OP_C_FSDSP		=> (self >> 7) & 0x3F,
-            OpecodeKind::OP_C_SWSP		=> (self >> 7) & 0x3F,
-            OpecodeKind::OP_C_FSWSP		=> (self >> 7) & 0x3F,
-            _ => 0,
-        }) as u32
+            OpecodeKind::OP_C_SLLI		=> Some(q2_imm),
+            OpecodeKind::OP_C_FLDSP		=> Some(q2_imm),
+            OpecodeKind::OP_C_LWSP		=> Some(q2_imm),
+            OpecodeKind::OP_C_FLWSP		=> Some(q2_imm),
+            OpecodeKind::OP_C_JR		=> Some(q2_imm),
+            OpecodeKind::OP_C_FSDSP		=> Some(((self >> 7) & 0x3F) as u32),
+            OpecodeKind::OP_C_SWSP		=> Some(((self >> 7) & 0x3F) as u32),
+            OpecodeKind::OP_C_FSWSP		=> Some(((self >> 7) & 0x3F) as u32),
+            _ => None,
+        }
     }
 }
 

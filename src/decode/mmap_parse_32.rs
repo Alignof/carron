@@ -82,7 +82,7 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(&self, _opkind: &OpecodeKind) -> u8 {
+    fn parse_rd(&self, _opkind: &OpecodeKind) -> Option<u8> {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x7F) as u8;
         let rd: u8 = ((inst >> 7) & 0x1F) as u8;
@@ -90,13 +90,13 @@ impl Decode for u32 {
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
         if  opmap == 0b01100011 || opmap == 0b00100011 || 
             opmap == 0b01110011 { 
-                return 0;
+                return None;
         }
 
-        return rd;
+        return Some(rd);
     }
 
-    fn parse_rs1(&self, _opkind: &OpecodeKind) -> u8 {
+    fn parse_rs1(&self, _opkind: &OpecodeKind) -> Option<u8> {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x7F) as u8;
         let rs1: u8 = ((inst >> 15) & 0x1F) as u8;
@@ -104,13 +104,13 @@ impl Decode for u32 {
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
         if  opmap == 0b01010111 || opmap == 0b00010111 || 
             opmap == 0b01101111 || opmap == 0b01110011 { 
-                return 0;
+                return None;
         }
 
-        return rs1;
+        return Some(rs1);
     }
 
-    fn parse_rs2(&self, _opkind: &OpecodeKind) -> u8 {
+    fn parse_rs2(&self, _opkind: &OpecodeKind) -> Option<u8> {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x7F) as u8;
         let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
@@ -121,42 +121,42 @@ impl Decode for u32 {
         if  opmap == 0b01010111 || opmap == 0b00010111 || opmap == 0b01101111 ||
             opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 || 
             opmap == 0b00001111 || opmap == 0b01110011 { 
-                return 0;
+                return None;
         }
 
-        return rs2;
+        return Some(rs2);
     }
 
-    fn parse_imm(&self, _opkind: &OpecodeKind) -> u32 {
+    fn parse_imm(&self, _opkind: &OpecodeKind) -> Option<u32> {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x7F) as u8;
 
         // LUI, AUIPC
         if opmap == 0b00110111 || opmap == 0b00010111 {
-            return ((inst >> 12) & 0xFFFFF) as u32;
+            return Some(((inst >> 12) & 0xFFFFF) as u32);
         }
 
         // JAL
         if opmap == 0b01101111 {
-            return ((inst >> 12) & 0xFFFFF) as u32;
+            return Some(((inst >> 12) & 0xFFFFF) as u32);
         }
 
         // JALR, L(B|H|W), ADDI, SLTI, SLTIU, XORI, ORI, ANDI
         if opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 {
-            return ((inst >> 20) & 0xFFF) as u32;
+            return Some(((inst >> 20) & 0xFFF) as u32);
         }
 
         // S(B|H|W)
         if opmap == 0b00100011 {
-            return ((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as u32;
+            return Some(((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as u32);
         }
 
         // B(EQ|NE|LT|GE|LTU|GEU)
         if opmap == 0b01100011 {
-            return ((((inst >> 27) & 0x1) << 11) + (((inst >> 7) & 0x1) << 10) +
-                    (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as u32;
+            return Some(((((inst >> 27) & 0x1) << 11) + (((inst >> 7) & 0x1) << 10) +
+                    (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as u32);
         }
 
-        return 0;
+        return None;
     }
 }
