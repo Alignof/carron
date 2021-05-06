@@ -87,14 +87,21 @@ impl SectionHeader {
 			if is_cinst(mmap, dump_head as usize) {
                 let mdump = get_u16(mmap, dump_head as usize);
 				let inst  = mdump.decode();
-				println!("{:<04x}\t\t{}\t\t{}, {}, {}", mdump, inst.opc_to_string(), inst.reg_to_string(), inst.rs1, inst.rs2);
                 dump_head += 2;
+
+				print!("{:<04x}\t\t{}\t\t{}", mdump, inst.opc_to_string(), inst.reg_to_string());
+                if let Some(v) = inst.rs1 { print!(",{}", v)}
+                if let Some(v) = inst.rs2 { print!(",{}", v)}
 			}else{
                 let mdump = get_u32(mmap, dump_head as usize);
 				let inst  = mdump.decode();
-				println!("{:<08x}\t{}\t\t{}, {}, {}", mdump, inst.opc_to_string(), inst.reg_to_string(), inst.rs1, inst.rs2);
                 dump_head += 4;
+
+				print!("{:<08x}\t{}\t\t{}", mdump, inst.opc_to_string(), inst.reg_to_string());
+                if let Some(v) = inst.rs1 { print!(",{}", v)}
+                if let Some(v) = inst.rs2 { print!(",{}", v)}
 			}
+            println!();
 		}
 	}
 
