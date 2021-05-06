@@ -205,7 +205,39 @@ impl Decode for u16 {
     }
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> u32 {
-        return 0;
+        (match opkind {
+            // Quadrant0
+            OpecodeKind::OP_C_ADDI4SPN	=> (self >> 5) & 0xFF,
+            OpecodeKind::OP_C_FLD	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
+            OpecodeKind::OP_C_LW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
+            OpecodeKind::OP_C_FLW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
+            OpecodeKind::OP_C_FSD	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
+            OpecodeKind::OP_C_SW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
+            OpecodeKind::OP_C_FSW	    => (self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5),
+            // Quadrant1
+            OpecodeKind::OP_C_NOP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_ADDI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_JAL		=> (self >> 2) & 0x7FF,
+            OpecodeKind::OP_C_LI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_ADDI16SP	=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_LUI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_SRLI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_SRAI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_ANDI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_J		    => (self >> 2) & 0x7FF,
+            OpecodeKind::OP_C_BEQZ		=> (self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2),
+            OpecodeKind::OP_C_BNEZ		=> (self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2),
+            // Quadrant2
+            OpecodeKind::OP_C_SLLI		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_FLDSP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_LWSP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_FLWSP		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_JR		=> (self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2),
+            OpecodeKind::OP_C_FSDSP		=> (self >> 7) & 0x3F,
+            OpecodeKind::OP_C_SWSP		=> (self >> 7) & 0x3F,
+            OpecodeKind::OP_C_FSWSP		=> (self >> 7) & 0x3F,
+            _ => 0,
+        }) as u32
     }
 }
 
