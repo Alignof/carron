@@ -83,10 +83,10 @@ pub enum OpecodeKind{
 
 pub struct Instruction {
 	pub opc: OpecodeKind,
-    pub rd:  u8,
-    pub rs1: u8,
-    pub rs2: u8,
-    pub imm: u32,
+    pub rd:  Option<u8>,
+    pub rs1: Option<u8>,
+    pub rs2: Option<u8>,
+    pub imm: Option<u32>,
     pub is_compressed: bool,
 }
 
@@ -214,10 +214,10 @@ impl Instruction {
 pub trait Decode {
 	fn decode(&self) -> Instruction;
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str>;
-	fn parse_rd(&self,  opkind: &OpecodeKind) -> Option(u8);
-	fn parse_rs1(&self, opkind: &OpecodeKind) -> Option(u8);
-	fn parse_rs2(&self, opkind: &OpecodeKind) -> Option(u8);
-	fn parse_imm(&self, opkind: &OpecodeKind) -> Option(u32);
+	fn parse_rd(&self,  opkind: &OpecodeKind) -> Option<u8>;
+	fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<u8>;
+	fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<u8>;
+	fn parse_imm(&self, opkind: &OpecodeKind) -> Option<u32>;
 }
 
 

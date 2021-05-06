@@ -6,10 +6,10 @@ impl Decode for u32 {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };
-        let new_rd:  u8  = self.parse_rd(&new_opc);
-        let new_rs1: u8  = self.parse_rs1(&new_opc);
-        let new_rs2: u8  = self.parse_rs2(&new_opc);
-        let new_imm: u32 = self.parse_imm(&new_opc);
+        let new_rd:  Option<u8>  = self.parse_rd(&new_opc);
+        let new_rs1: Option<u8>  = self.parse_rs1(&new_opc);
+        let new_rs2: Option<u8>  = self.parse_rs2(&new_opc);
+        let new_imm: Option<u32> = self.parse_imm(&new_opc);
 
         Instruction {
             opc: new_opc,

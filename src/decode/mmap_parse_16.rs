@@ -80,10 +80,10 @@ impl Decode for u16 {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };
-        let new_rd:  u8  = self.parse_rd(&new_opc);
-        let new_rs1: u8  = self.parse_rs1(&new_opc);
-        let new_rs2: u8  = self.parse_rs2(&new_opc);
-        let new_imm: u32 = self.parse_imm(&new_opc);
+        let new_rd:  Option<u8>  = self.parse_rd(&new_opc);
+        let new_rs1: Option<u8>  = self.parse_rs1(&new_opc);
+        let new_rs2: Option<u8>  = self.parse_rs2(&new_opc);
+        let new_imm: Option<u32> = self.parse_imm(&new_opc);
 
         Instruction {
             opc: new_opc,
@@ -204,7 +204,7 @@ impl Decode for u16 {
         }
     }
 
-    fn parse_imm(&self, opkind: &OpecodeKind) -> u32 {
+    fn parse_imm(&self, opkind: &OpecodeKind) -> Option<u32> {
         let q0_imm = ((self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5)) as u32;
         let q1_imm = ((self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2)) as u32;
         let q2_imm = ((self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2)) as u32;
