@@ -230,18 +230,18 @@ mod tests {
 
 	#[test]
 	fn opecode_parsing_test() {
-        let mut test_inst: u32 = 0b00000000000000000000000000110111;
-        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LUI));
+        let mut test_32: u32 = 0b00000000000000000000000000110111;
+        assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_LUI));
 
-        test_inst = 0b00000000000000000000000000000011;
-        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LB));
-        test_inst = 0b00000000000000000001000000000011;
-        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_LH));
-        test_inst = 0b00000000000000000000000000010011;
-        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_ADDI));
-        test_inst = 0b00000000000000000100000000110011;
-        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_XOR));
-        test_inst = 0b00000000000000000111000000110011;
-        assert!(matches!(parse_opecode(&test_inst).unwrap(), OpecodeKind::OP_AND));
+        test_32 = 0b00000000000000000000000000000011;
+        assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_LB));
+        test_32 = 0b00000000000000000001000000000011;
+        assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_LH));
+        test_32 = 0b00000000000000000000000000010011;
+        assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_ADDI));
+        test_32 = 0b00000000000000000100000000110011;
+        assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_XOR));
+        test_32 = 0b00000000000000000111000000110011;
+        assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_AND));
 	}
 }

@@ -90,16 +90,16 @@ impl SectionHeader {
                 dump_head += 2;
 
 				print!("{:<04x}\t\t{}\t\t{}", mdump, inst.opc_to_string(), inst.reg_to_string());
-                if let Some(v) = inst.rs1 { print!(",{}", v)}
-                if let Some(v) = inst.rs2 { print!(",{}", v)}
+                if let Some(v) = inst.rs1 {print!(" {}", v)}
+                if let Some(v) = inst.rs2 {print!(" {}", v)}
 			}else{
                 let mdump = get_u32(mmap, dump_head as usize);
 				let inst  = mdump.decode();
                 dump_head += 4;
 
 				print!("{:<08x}\t{}\t\t{}", mdump, inst.opc_to_string(), inst.reg_to_string());
-                if let Some(v) = inst.rs1 { print!(",{}", v)}
-                if let Some(v) = inst.rs2 { print!(",{}", v)}
+                if let Some(v) = inst.rs1 {print!(" {}", v)}
+                if let Some(v) = inst.rs2 {print!(" {}", v)}
 			}
             println!();
 		}
@@ -109,4 +109,3 @@ impl SectionHeader {
         self.sh_flags >> 2 & 1 == 1
     }
 }       
-
