@@ -229,7 +229,7 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn opecode_parsing_test() {
+	fn parsing_opecode_test() {
         let mut test_32: u32 = 0b00000000000000000000000000110111;
         assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_LUI));
 
@@ -244,4 +244,10 @@ mod tests {
         test_32 = 0b00000000000000000111000000110011;
         assert!(matches!(test_32.parse_opecode().unwrap(), OpecodeKind::OP_AND));
 	}
+
+	fn parsing_compressed_opecode_test() {
+        let mut test_16: u16 = 0b00000000000000000000000000110111;
+        assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_LUI));
+    }
+
 }
