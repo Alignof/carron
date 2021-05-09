@@ -16,8 +16,6 @@ fn get_segment_type_name(segment_type:u32) -> &'static str {
 	}
 }
 
-
-
 pub struct ProgramHeader {
 	p_type: u32,
 	p_offset: u32,
@@ -52,7 +50,8 @@ impl ProgramHeader {
 		return new_prog;
 	}
 
-	pub fn show(&self){
+	pub fn show(&self, id: usize){
+		println!("============== section header {}==============", id + 1);
 		println!("p_type:\t\t{}",	get_segment_type_name(self.p_type));
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
@@ -71,8 +70,6 @@ impl ProgramHeader {
 	}
 }
 
-
-
 #[cfg(test)]
 mod tests {
 	use super::super::*;
@@ -86,8 +83,8 @@ mod tests {
 			}
 		};
 
-		assert_eq!(loader.prog_headers[0].p_type, 1);
-		assert_eq!(loader.prog_headers[0].p_flags, 5);
+		assert_eq!(loader.prog_headers[0].p_type, 6);
+		assert_eq!(loader.prog_headers[0].p_flags, 4);
 	}
 }
 

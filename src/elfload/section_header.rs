@@ -1,6 +1,5 @@
 use super::ElfHeader;
-use crate::decode::{Decode};
-use crate::elfload::{get_u32};
+use crate::elfload::{get_u32, get_u16, is_cinst};
 
 fn get_section_type_name(section_type:u32) -> &'static str {
 	match section_type {
@@ -59,36 +58,54 @@ impl SectionHeader {
 					sh_entsize:   get_u32(mmap, section_start + 34),
 				}       
 			);
-		}
+	    }
 
 		return new_sect;
 	}
 
 
-	pub fn show(&self){
-		println!("sh_name:\t{}",	self.sh_name);
-		println!("sh_type:\t{}",	get_section_type_name(self.sh_type));
-		println!("sh_flags:\t{}",	self.sh_flags);
+	pub fn show(&self, id: usize){
+		println!("============== program header {}==============", id + 1);
+		println!("sh_name:\t{}",	    self.sh_name);
+		println!("sh_type:\t{}",	    get_section_type_name(self.sh_type));
+		println!("sh_flags:\t{}",	    self.sh_flags);
 		println!("sh_addr:\t0x{:x}",	self.sh_addr);
 		println!("sh_offset:\t0x{:x}",	self.sh_offset);
-		println!("sh_size:\t{}",	self.sh_size);
-		println!("sh_link:\t{}",	self.sh_link);
-		println!("sh_info:\t{}",	self.sh_info);
+		println!("sh_size:\t{}",	    self.sh_size);
+		println!("sh_link:\t{}",	    self.sh_link);
+		println!("sh_info:\t{}",	    self.sh_info);
 		println!("sh_addralign:\t{}",	self.sh_addralign);
-		println!("sh_entsize:\t{}",	self.sh_entsize);
+		println!("sh_entsize:\t{}",	    self.sh_entsize);
 	}
 
 	pub fn section_dump(&self, mmap: &[u8]){
-		for dump_part in (self.sh_offset .. self.sh_offset + self.sh_size as u32).step_by(4) {
-            let inst = self.decode(mmap, dump_part as usize);
-            println!("{}    {},{},{}", inst.opc_to_string(), inst.rd, inst.rs1, inst.rs2);
+		use crate::decode::Decode;
+
+		println!("--------------------------------");
+        let mut dump_head = self.sh_offset;
+        while dump_head != self.sh_offset + self.sh_size {
+			if is_cinst(mmap, dump_head as usize) {
+                let mdump = get_u16(mmap, dump_head as usize);
+				let inst  = mdump.decode();
+                dump_head += 2;
+
+				print!("{:<04x}\t\t{}\t\t{}", mdump, inst.opc_to_string(), inst.reg_to_string());
+                if let Some(v) = inst.rs1 {print!(" {}", v)}
+                if let Some(v) = inst.rs2 {print!(" {}", v)}
+			}else{
+                let mdump = get_u32(mmap, dump_head as usize);
+				let inst  = mdump.decode();
+                dump_head += 4;
+
+				print!("{:<08x}\t{}\t\t{}", mdump, inst.opc_to_string(), inst.reg_to_string());
+                if let Some(v) = inst.rs1 {print!(" {}", v)}
+                if let Some(v) = inst.rs2 {print!(" {}", v)}
+			}
+            println!();
 		}
 	}
 
     pub fn is_dumpable(&self) -> bool {
-        self.sh_type == 1
+        self.sh_flags >> 2 & 1 == 1
     }
 }       
-
-impl Decode for SectionHeader {}
-

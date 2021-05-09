@@ -23,20 +23,16 @@ fn main() {
 		}
 	};
 
-	if loader.is_elf() {
+    if loader.is_elf() {
 		println!("elfcheck: OK");
 	}
 
-    if matches!(args.exe_option, ExeOption::OPT_ELFHEAD) {
-		println!("option -h");
-    }
-
     match args.exe_option {
+        ExeOption::OPT_NONE 	=> loader.dump_section(),
         ExeOption::OPT_ELFHEAD	=> loader.ident_show(),
         ExeOption::OPT_PROG	    => loader.dump_segment(),
         ExeOption::OPT_SECT	    => loader.dump_section(),
         ExeOption::OPT_SHOWALL	=> loader.show_all_header(),
         ExeOption::OPT_DISASEM	=> loader.ident_show(),
-        ExeOption::OPT_DEFAULT	=> loader.ident_show(),
     }
 }

@@ -3,12 +3,12 @@ pub mod decode;
 
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
+    OPT_NONE,
     OPT_ELFHEAD,
     OPT_PROG,
     OPT_SECT,
     OPT_SHOWALL,
     OPT_DISASEM,
-    OPT_DEFAULT,
 }
 
 fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
@@ -23,7 +23,6 @@ fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
 }
 
 pub struct Arguments {
-	pub arg_num: usize,
 	pub filename: String,
     pub exe_option: ExeOption,
 }
@@ -34,17 +33,16 @@ impl Arguments {
 			return Err("not enough arguments");
 		}
 
-        let arg_num  = args.len();
         let filename: String;
         let exe_option: ExeOption;
 
         // no option
         if args.len() == 2 {
-            exe_option = ExeOption::OPT_DEFAULT;
+            exe_option = ExeOption::OPT_NONE;
             filename = args[1].clone();
         } else {
             exe_option = match parse_option(&args[1]) {
-                Ok(opt) => opt,
+                Ok(opt)  => opt,
                 Err(msg) => panic!("{}", msg),
             };
             filename = args[2].clone();
@@ -52,9 +50,7 @@ impl Arguments {
 
 		Ok(Arguments {
             filename,
-            arg_num,
             exe_option,
         })
 	}
 }
-

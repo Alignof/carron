@@ -82,9 +82,9 @@ impl ElfHeader {
 			e_shoff:	get_u32(mmap, ELF_HEADER_START + 16),
 			e_flags:	get_u32(mmap, ELF_HEADER_START + 20),
 			e_ehsize:	get_u16(mmap, ELF_HEADER_START + 24),
-			e_phentsize:	get_u16(mmap, ELF_HEADER_START + 26),
+			e_phentsize:get_u16(mmap, ELF_HEADER_START + 26),
 			e_phnum:	get_u16(mmap, ELF_HEADER_START + 28),
-			e_shentsize:	get_u16(mmap, ELF_HEADER_START + 30),
+			e_shentsize:get_u16(mmap, ELF_HEADER_START + 30),
 			e_shnum:	get_u16(mmap, ELF_HEADER_START + 32),
 			e_shstrndx:	get_u16(mmap, ELF_HEADER_START + 34),
 		}
