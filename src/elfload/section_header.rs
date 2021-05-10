@@ -65,7 +65,7 @@ impl SectionHeader {
 
 
 	pub fn show(&self, id: usize){
-		println!("============== program header {}==============", id + 1);
+		println!("============== section header {}==============", id + 1);
 		println!("sh_name:\t{}",	    self.sh_name);
 		println!("sh_type:\t{}",	    get_section_type_name(self.sh_type));
 		println!("sh_flags:\t{}",	    self.sh_flags);

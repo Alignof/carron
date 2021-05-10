@@ -59,13 +59,15 @@ impl ElfLoader {
 	pub fn show_all_header(&self){
 		self.elf_header.show();
 
+        println!("\n\n");
+
 		for (id, prog) in self.prog_headers.iter().enumerate(){
-			println!("============== program header {}==============", id + 1);
 			prog.show(id);
 		}
 
+        println!("\n\n");
+
 		for (id, sect) in self.sect_headers.iter().enumerate(){
-			println!("============== section header {}==============", id + 1);
 			sect.show(id);
 		}
 

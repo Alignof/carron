@@ -51,7 +51,7 @@ impl ProgramHeader {
 	}
 
 	pub fn show(&self, id: usize){
-		println!("============== section header {}==============", id + 1);
+		println!("============== program header {}==============", id + 1);
 		println!("p_type:\t\t{}",	get_segment_type_name(self.p_type));
 		println!("p_offset:\t0x{:x}",	self.p_offset);
 		println!("p_vaddr:\t0x{:x}",	self.p_vaddr);
