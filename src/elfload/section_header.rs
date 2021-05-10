@@ -78,6 +78,9 @@ impl SectionHeader {
 		println!("sh_entsize:\t{}",	    self.sh_entsize);
 	}
 
+    pub fn get_sh_name(&self, name_id: u8) -> &str {
+    } 
+
 	pub fn section_dump(&self, mmap: &[u8]){
 		use crate::decode::Decode;
 
