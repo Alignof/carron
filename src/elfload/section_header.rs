@@ -63,6 +63,9 @@ impl SectionHeader {
 		return new_sect;
 	}
 
+    pub fn get_sh_name(&self, name_table: &SectionHeader, name_id: u8) -> &str {
+        name_table.offset + (e_shentsize * name_id) as &str
+    } 
 
 	pub fn show(&self, id: usize){
 		println!("============== section header {}==============", id + 1);
@@ -78,8 +81,6 @@ impl SectionHeader {
 		println!("sh_entsize:\t{}",	    self.sh_entsize);
 	}
 
-    pub fn get_sh_name(&self, name_id: u8) -> &str {
-    } 
 
 	pub fn section_dump(&self, mmap: &[u8]){
 		use crate::decode::Decode;
