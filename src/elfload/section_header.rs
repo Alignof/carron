@@ -25,7 +25,7 @@ fn get_section_type_name(section_type:u32) -> &'static str {
 
 
 pub struct SectionHeader {
-	sh_name: u32,
+	sh_name: &str,
 	sh_type: u32,
 	sh_flags: u32,
 	sh_addr: u32,
@@ -46,7 +46,7 @@ impl SectionHeader {
 			let section_start:usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
 			new_sect.push(
 				SectionHeader {
-					sh_name:      get_u32(mmap, section_start +  0),
+					sh_name:      SectionHeader::get_sh_name(mmap, section_start, elf_header.e_shentsize, section_num),
 					sh_type:      get_u32(mmap, section_start +  4),
 					sh_flags:     get_u32(mmap, section_start +  8),
 					sh_addr:      get_u32(mmap, section_start + 12),
@@ -63,8 +63,8 @@ impl SectionHeader {
 		return new_sect;
 	}
 
-    pub fn get_sh_name(&self, name_table: &SectionHeader, name_id: u8) -> &str {
-        name_table.offset + (e_shentsize * name_id) as &str
+    pub fn get_sh_name(mmap: &[u8], sh_offset: usize, sh_size: u16, name_id: u16) -> &str {
+        std::str::from_utf8(&mmap[sh_offset + (sh_size * name_id) as usize]).unwrap()
     } 
 
 	pub fn show(&self, id: usize){
