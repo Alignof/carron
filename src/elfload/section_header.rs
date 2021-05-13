@@ -21,11 +21,11 @@ impl SectionHeader {
 
         for section_num in 0 .. elf_header.e_shnum {
             let section_head: usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
-            let name_table_off: usize = (elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx)) as usize;
+            let name_table_off: usize = (elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx) as u32) as usize;
 
             new_sect.push(
                 SectionHeader {
-                    sh_name:      get_sh_name(mmap, section_head, name_table_off),
+                    sh_name:      SectionHeader::get_sh_name(mmap, section_head, name_table_off),
                     sh_type:      get_u32(mmap, section_head +  4),
                     sh_flags:     get_u32(mmap, section_head +  8),
                     sh_addr:      get_u32(mmap, section_head + 12),
@@ -43,6 +43,7 @@ impl SectionHeader {
     }
 
     fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> &'static str {
+        let name_id: usize = get_u32(mmap, section_head) as usize;
     }
 
     fn type_to_str(&self) -> &'static str {
