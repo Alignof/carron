@@ -2,45 +2,45 @@ use super::ElfHeader;
 use crate::elfload::{get_u32, get_u16, is_cinst};
 
 pub struct SectionHeader {
-	sh_name: &str,
-	sh_type: u32,
-	sh_flags: u32,
-	sh_addr: u32,
-	sh_offset: u32,
-	sh_size: u32,
-	sh_link: u32,
-	sh_info: u32,
-	sh_addralign: u32,
-	sh_entsize: u32,
+    sh_name: &str,
+    sh_type: u32,
+    sh_flags: u32,
+    sh_addr: u32,
+    sh_offset: u32,
+    sh_size: u32,
+    sh_link: u32,
+    sh_info: u32,
+    sh_addralign: u32,
+    sh_entsize: u32,
 }
-	
+    
 
 impl SectionHeader {
-	pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
-		let mut new_sect = Vec::new();
+    pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
+        let mut new_sect = Vec::new();
 
-		for section_num in 0 .. elf_header.e_shnum {
-			let section_head: usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
+        for section_num in 0 .. elf_header.e_shnum {
+            let section_head: usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
             let name_table_off: usize = (elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx)) as usize;
 
-			new_sect.push(
-				SectionHeader {
-					sh_name:      get_sh_name(mmap, section_head, name_table_off),
-					sh_type:      get_u32(mmap, section_head +  4),
-					sh_flags:     get_u32(mmap, section_head +  8),
-					sh_addr:      get_u32(mmap, section_head + 12),
-					sh_offset:    get_u32(mmap, section_head + 16),
-					sh_size:      get_u32(mmap, section_head + 20),
-					sh_link:      get_u32(mmap, section_head + 24),
-					sh_info:      get_u32(mmap, section_head + 28),
-					sh_addralign: get_u32(mmap, section_head + 32),
-					sh_entsize:   get_u32(mmap, section_head + 34),
-				}       
-			);
-	    }
+            new_sect.push(
+                SectionHeader {
+                    sh_name:      get_sh_name(mmap, section_head, name_table_off),
+                    sh_type:      get_u32(mmap, section_head +  4),
+                    sh_flags:     get_u32(mmap, section_head +  8),
+                    sh_addr:      get_u32(mmap, section_head + 12),
+                    sh_offset:    get_u32(mmap, section_head + 16),
+                    sh_size:      get_u32(mmap, section_head + 20),
+                    sh_link:      get_u32(mmap, section_head + 24),
+                    sh_info:      get_u32(mmap, section_head + 28),
+                    sh_addralign: get_u32(mmap, section_head + 32),
+                    sh_entsize:   get_u32(mmap, section_head + 34),
+                }       
+            );
+        }
 
-		return new_sect;
-	}
+        return new_sect;
+    }
 
     fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> &'static str {
     }
@@ -67,47 +67,47 @@ impl SectionHeader {
         }
     }
 
-	pub fn show(&self, id: usize){
-		println!("============== section header {}==============", id + 1);
-		println!("sh_name:\t{}",	    self.sh_name);
-		println!("sh_type:\t{}",	    self.type_to_str());
-		println!("sh_flags:\t{}",	    self.sh_flags);
-		println!("sh_addr:\t0x{:x}",	self.sh_addr);
-		println!("sh_offset:\t0x{:x}",	self.sh_offset);
-		println!("sh_size:\t{}",	    self.sh_size);
-		println!("sh_link:\t{}",	    self.sh_link);
-		println!("sh_info:\t{}",	    self.sh_info);
-		println!("sh_addralign:\t{}",	self.sh_addralign);
-		println!("sh_entsize:\t{}",	    self.sh_entsize);
-	}
+    pub fn show(&self, id: usize){
+        println!("============== section header {}==============", id + 1);
+        println!("sh_name:\t{}",        self.sh_name);
+        println!("sh_type:\t{}",        self.type_to_str());
+        println!("sh_flags:\t{}",       self.sh_flags);
+        println!("sh_addr:\t0x{:x}",    self.sh_addr);
+        println!("sh_offset:\t0x{:x}",  self.sh_offset);
+        println!("sh_size:\t{}",        self.sh_size);
+        println!("sh_link:\t{}",        self.sh_link);
+        println!("sh_info:\t{}",        self.sh_info);
+        println!("sh_addralign:\t{}",   self.sh_addralign);
+        println!("sh_entsize:\t{}",     self.sh_entsize);
+    }
 
 
-	pub fn section_dump(&self, mmap: &[u8]){
-		use crate::decode::Decode;
+    pub fn section_dump(&self, mmap: &[u8]){
+        use crate::decode::Decode;
 
-		println!("--------------------------------");
+        println!("--------------------------------");
         let mut dump_head = self.sh_offset;
         while dump_head != self.sh_offset + self.sh_size {
-			if is_cinst(mmap, dump_head as usize) {
+            if is_cinst(mmap, dump_head as usize) {
                 let mdump = get_u16(mmap, dump_head as usize);
-				let inst  = mdump.decode();
+                let inst  = mdump.decode();
                 dump_head += 2;
 
-				print!("{:<04x}\t\t{:<16}{:>4}", mdump, inst.opc_to_string(), inst.reg_to_string());
+                print!("{:<04x}\t\t{:<16}{:>4}", mdump, inst.opc_to_string(), inst.reg_to_string());
                 if let Some(v) = inst.rs1 {print!(" {}", v)}
                 if let Some(v) = inst.rs2 {print!(" {}", v)}
-			}else{
+            }else{
                 let mdump = get_u32(mmap, dump_head as usize);
-				let inst  = mdump.decode();
+                let inst  = mdump.decode();
                 dump_head += 4;
 
-				print!("{:<08x}\t{:<16}{:>4}", mdump, inst.opc_to_string(), inst.reg_to_string());
+                print!("{:<08x}\t{:<16}{:>4}", mdump, inst.opc_to_string(), inst.reg_to_string());
                 if let Some(v) = inst.rs1 {print!(" {}", v)}
                 if let Some(v) = inst.rs2 {print!(" {}", v)}
-			}
+            }
             println!();
-		}
-	}
+        }
+    }
 
     pub fn is_dumpable(&self) -> bool {
         self.sh_flags >> 2 & 1 == 1
