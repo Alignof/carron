@@ -1,7 +1,7 @@
 use super::ElfHeader;
 use crate::elfload::{get_u32, get_u16, is_cinst};
 
-fn get_section_type_name(section_type:u32) -> &'static str {
+fn get_section_type_name(section_type: u32) -> &'static str {
 	match section_type {
 		0  => "SHT_NULL",
 		1  => "SHT_PROGBITS",
@@ -46,7 +46,7 @@ impl SectionHeader {
 			let section_start:usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
 			new_sect.push(
 				SectionHeader {
-					sh_name:      SectionHeader::get_sh_name(section_start, elf_header.e_shentsize, section_num),
+					sh_name:      get_u32(mmap, section_start +  0),
 					sh_type:      get_u32(mmap, section_start +  4),
 					sh_flags:     get_u32(mmap, section_start +  8),
 					sh_addr:      get_u32(mmap, section_start + 12),
@@ -63,13 +63,12 @@ impl SectionHeader {
 		return new_sect;
 	}
 
-    pub fn get_sh_name(sh_offset: usize, sh_size: u16, name_id: u16) -> usize {
-        sh_offset + (sh_size * name_id) as usize
-    } 
+    fn nameid_to_str(&self, mmap: &[u8]) -> &str {
+    }
 
 	pub fn show(&self, id: usize){
 		println!("============== section header {}==============", id + 1);
-		println!("sh_name:\t{}",	    self.sh_name);
+		println!("sh_name:\t{}",	    self.nameid_to_str());
 		println!("sh_type:\t{}",	    get_section_type_name(self.sh_type));
 		println!("sh_flags:\t{}",	    self.sh_flags);
 		println!("sh_addr:\t0x{:x}",	self.sh_addr);
