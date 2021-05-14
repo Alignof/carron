@@ -25,14 +25,14 @@ fn is_cinst(mmap: &[u8], index: usize) -> bool {
 }
 
 
-pub struct ElfLoader {
+pub struct ElfLoader<'a> {
 	elf_header: ElfHeader,
 	prog_headers: Vec<ProgramHeader>,
-	sect_headers: Vec<SectionHeader>,
+	sect_headers: Vec<SectionHeader<'a>>,
 	mem_data: Mmap,
 }
 
-impl ElfLoader {
+impl ElfLoader<'_> {
 	pub fn try_new(filename: &str) -> std::io::Result<ElfLoader>{
 		let file = File::open(filename)?;
 		let mapped_data = unsafe{Mmap::map(&file)?};
