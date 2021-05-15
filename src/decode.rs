@@ -211,6 +211,12 @@ impl Instruction {
             None => "  ",
         }
     }
+
+    pub fn print_myself(&self) {
+        print!("{:<16}{:>4}", self.opc_to_string(), self.reg_to_string());
+        if let Some(v) = self.rs1 {print!(" {}", v)}
+        if let Some(v) = self.rs2 {print!(" {}", v)}
+    }
 }
 
 
