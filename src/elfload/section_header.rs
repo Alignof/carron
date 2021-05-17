@@ -44,7 +44,8 @@ impl SectionHeader<'_> {
 
     fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> &'static str {
         let name_id: usize = get_u32(mmap, section_head) as usize;
-        std::str::from_utf8(&mmap[name_id]).unwrap();
+        //std::str::from_utf8(&mmap[name_id]).unwrap();
+        "not yet implemented"
     }
 
     fn type_to_str(&self) -> &'static str {
