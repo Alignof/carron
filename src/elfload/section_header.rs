@@ -1,8 +1,8 @@
 use super::ElfHeader;
 use crate::elfload::{get_u32, get_u16, is_cinst};
 
-pub struct SectionHeader<'a> {
-    sh_name: &'a str,
+pub struct SectionHeader {
+    sh_name: String,
     sh_type: u32,
     sh_flags: u32,
     sh_addr: u32,
@@ -15,8 +15,8 @@ pub struct SectionHeader<'a> {
 }
     
 
-impl SectionHeader<'_> {
-    pub fn new<'a>(mmap: &'a [u8], elf_header:&ElfHeader) -> Vec<SectionHeader<'a>> {
+impl SectionHeader {
+    pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
         let mut new_sect = Vec::new();
 
         for section_num in 0 .. elf_header.e_shnum {
@@ -42,10 +42,10 @@ impl SectionHeader<'_> {
         return new_sect;
     }
 
-    fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> &'static str {
+    fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> String {
         let name_id: usize = get_u32(mmap, section_head) as usize;
         //std::str::from_utf8(&mmap[name_id]).unwrap();
-        "not yet implemented"
+        "not yet implemented".to_string()
     }
 
     fn type_to_str(&self) -> &'static str {
