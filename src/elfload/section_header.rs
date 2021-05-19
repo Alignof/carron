@@ -18,10 +18,10 @@ pub struct SectionHeader {
 impl SectionHeader {
     pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
         let mut new_sect = Vec::new();
+        let name_table_off: usize = (elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx) as u32) as usize;
 
         for section_num in 0 .. elf_header.e_shnum {
             let section_head: usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
-            let name_table_off: usize = (elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx) as u32) as usize;
 
             new_sect.push(
                 SectionHeader {
@@ -44,8 +44,7 @@ impl SectionHeader {
 
     fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> String {
         let name_id: usize = get_u32(mmap, section_head) as usize;
-        //std::str::from_utf8(&mmap[name_id]).unwrap();
-        "not yet implemented".to_string()
+        name_id.to_string()
     }
 
     fn type_to_str(&self) -> &'static str {
