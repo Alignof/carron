@@ -1,7 +1,7 @@
 use super::{OpecodeKind, Instruction, Decode};
 
 impl Decode for u32 {
-	fn decode(&self) -> Instruction {
+    fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode(){
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),

@@ -23,15 +23,15 @@ fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
 }
 
 pub struct Arguments {
-	pub filename: String,
+    pub filename: String,
     pub exe_option: ExeOption,
 }
 
 impl Arguments {
-	pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
-		if args.len() < 2 {
-			return Err("not enough arguments");
-		}
+    pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
+        if args.len() < 2 {
+            return Err("not enough arguments");
+        }
 
         let filename: String;
         let exe_option: ExeOption;
@@ -48,9 +48,9 @@ impl Arguments {
             filename = args[2].clone();
         }
 
-		Ok(Arguments {
+        Ok(Arguments {
             filename,
             exe_option,
         })
-	}
+    }
 }
