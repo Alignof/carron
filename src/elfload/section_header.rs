@@ -44,8 +44,15 @@ impl SectionHeader {
 
     fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> String {
         let name_id: usize = get_u32(mmap, section_head) as usize;
-        let name_ptr: usize = name_table + name_id;
-        name_table.to_string()
+        let mut sh_name: String = String::new();
+
+        for c in mmap[section_head + name_id ..].iter() {
+            if *c as char == '\0' {
+                break;
+            }
+            sh_name.push(*c as char);
+        }
+        return sh_name;
     }
 
     fn type_to_str(&self) -> &'static str {
