@@ -19,7 +19,7 @@ impl SectionHeader {
     pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
         let mut new_sect = Vec::new();
         let name_table = elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx) as u32;
-        let name_table_off: usize = get_u32(mmap, (name_table as usize) + 20) as usize;
+        let name_table_off: usize = get_u32(mmap, (name_table as usize) + 16) as usize;
 
         for section_num in 0 .. elf_header.e_shnum {
             let section_head: usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
