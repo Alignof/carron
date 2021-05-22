@@ -18,7 +18,8 @@ pub struct SectionHeader {
 impl SectionHeader {
     pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<SectionHeader> {
         let mut new_sect = Vec::new();
-        let name_table_off: usize = (elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx) as u32) as usize;
+        let name_table = elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx) as u32;
+        let name_table_off: usize = get_u32(mmap, (name_table as usize) + 20) as usize;
 
         for section_num in 0 .. elf_header.e_shnum {
             let section_head: usize = (elf_header.e_shoff + (elf_header.e_shentsize * section_num) as u32) as usize;
@@ -42,11 +43,11 @@ impl SectionHeader {
         return new_sect;
     }
 
-    fn get_sh_name(mmap: &[u8], section_head: usize, name_table: usize) -> String {
+    fn get_sh_name(mmap: &[u8], section_head: usize, name_table_head: usize) -> String {
         let name_id: usize = get_u32(mmap, section_head) as usize;
         let mut sh_name: String = String::new();
 
-        for c in mmap[section_head + name_id ..].iter() {
+        for c in mmap[name_table_head + name_id ..].iter() {
             if *c as char == '\0' {
                 break;
             }
