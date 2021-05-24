@@ -236,41 +236,35 @@ mod tests {
 
     #[test]
     fn parsing_opecode_test() {
-        let test_32 = |inst_32: u32, e_op: OpecodeKind, e_rd| {
-            let mut op_32 = inst_32.parse_opecode().unwrap();
-            assert!(matches!(&op_32, e_op));
-            assert_eq!(inst_32.parse_rd(&op_32).unwrap(), e_rd);
+        use OpecodeKind::*;
+        let test_32 = |inst_32: u32, _e_op: OpecodeKind, _e_rd| {
+            let op_32 = inst_32.parse_opecode().unwrap();
+            assert!(matches!(&op_32, _e_op));
+            assert_eq!(inst_32.parse_rd(&op_32).unwrap(), _e_rd);
         };
-        let mut inst_32: u32 = 0b00000000000000000000000010110111;
-        let mut op_32 = inst_32.parse_opecode().unwrap();
 
-        test_32(0b00000000000000000000000010110111, OpecodeKind::OP_LUI, 1);
-        inst_32 = 0b00000000000000000000000000000011;
-        assert!(matches!(inst_32.parse_opecode().unwrap(), OpecodeKind::OP_LB));
-        inst_32 = 0b00000000000000000001000000000011;
-        assert!(matches!(inst_32.parse_opecode().unwrap(), OpecodeKind::OP_LH));
-        inst_32 = 0b00000000000000000000000000010011;
-        assert!(matches!(inst_32.parse_opecode().unwrap(), OpecodeKind::OP_ADDI));
-        inst_32 = 0b00000000000000000100000000110011;
-        assert!(matches!(inst_32.parse_opecode().unwrap(), OpecodeKind::OP_XOR));
-        inst_32 = 0b00000000000000000111000000110011;
-        assert!(matches!(inst_32.parse_opecode().unwrap(), OpecodeKind::OP_AND));
+        test_32(0b00000000000000000000000010110111, OP_LUI, 1);
+        test_32(0b00000000000000000000000000000011, OP_LB,  0);
+        test_32(0b00000000000000000001000000000011, OP_LH,  0);
+        test_32(0b00000000000000000000000000010011, OP_ADDI,0);
+        test_32(0b00000000000000000100000000110011, OP_XOR, 0);
+        test_32(0b00000000000000000111000000110011, OP_AND, 0);
     }
 
     #[test]
     fn parsing_compressed_opecode_test() {
-        let mut test_16: u16 = 0b0000000000000001;
-        assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_NOP));
+        use OpecodeKind::*;
+        let test_16 = |inst_16: u16, _e_op: OpecodeKind, _e_rd: Option<u8>| {
+            let op_16 = inst_16.parse_opecode().unwrap();
+            assert!(matches!(&op_16, _e_op));
+            assert!(matches!(inst_16.parse_rd(&op_16), _e_rd));
+        };
 
-        test_16 = 0b0000000010000001;
-        assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_ADDI));
-        test_16 = 0b0110000100000001;
-        assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_ADDI16SP));
-        test_16 = 0b0110001110000001;
-        assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_LUI));
-        test_16 = 0b1000001011000001;
-        assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_SRAI));
-        test_16 = 0b1000010011000001;
-        assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_ANDI));
+        test_16(0b0000000000000001, OP_C_NOP,       None);
+        test_16(0b0000000010000001, OP_C_ADDI,      Some(0));
+        test_16(0b0110000100000001, OP_C_ADDI16SP,  None);
+        test_16(0b0110001110000001, OP_C_LUI,       None);
+        test_16(0b1000001011000001, OP_C_SRAI,      Some(0));
+        test_16(0b1000010011000001, OP_C_ANDI,      None);
     }
 }
