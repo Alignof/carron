@@ -258,11 +258,11 @@ mod tests {
         let mut test_16: u16 = 0b0000000000000001;
         assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_NOP));
 
-        test_16 = 0b0000000001000001;
+        test_16 = 0b0000000010000001;
         assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_ADDI));
-        test_16 = 0b0110000010000001;
+        test_16 = 0b0110000100000001;
         assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_ADDI16SP));
-        test_16 = 0b0110000011000001;
+        test_16 = 0b0110001110000001;
         assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_LUI));
         test_16 = 0b1000001011000001;
         assert!(matches!(test_16.parse_opecode().unwrap(), OpecodeKind::OP_C_SRAI));

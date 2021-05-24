@@ -16,12 +16,19 @@ fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
 fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
     let sr_flag: u8 = ((inst >> 9) & 0x3) as u8;
     let lo_flag: u8 = ((inst >> 4) & 0x3) as u8;
+    let mi_flag: u8 = ((inst >> 7) & 0x1F) as u8;
 
     match opmap {
-        0b000 => Ok(OpecodeKind::OP_C_ADDI),
+        0b000 => match mi_flag {
+            0b00000 => Ok(OpecodeKind::OP_C_NOP),
+            _       => Ok(OpecodeKind::OP_C_ADDI),
+        },
         0b001 => Ok(OpecodeKind::OP_C_JAL),
         0b010 => Ok(OpecodeKind::OP_C_LI),
-        0b011 => Ok(OpecodeKind::OP_C_ADDI16SP),
+        0b011 => match mi_flag {
+            0b00010 => Ok(OpecodeKind::OP_C_ADDI16SP),
+            _       => Ok(OpecodeKind::OP_C_LUI),
+        },
         0b100 => match sr_flag {
             0b00 => Ok(OpecodeKind::OP_C_SRLI),
             0b01 => Ok(OpecodeKind::OP_C_SRAI),
@@ -31,9 +38,9 @@ fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
                 0b01 => Ok(OpecodeKind::OP_C_XOR),
                 0b10 => Ok(OpecodeKind::OP_C_OR),
                 0b11 => Ok(OpecodeKind::OP_C_AND),
-        _    => Err("opecode decoding failed"),
+                _    => Err("opecode decoding failed"),
             },
-        _    => Err("opecode decoding failed"),
+            _    => Err("opecode decoding failed"),
         },
         0b101 => Ok(OpecodeKind::OP_C_J),
         0b110 => Ok(OpecodeKind::OP_C_BEQZ),
