@@ -250,4 +250,3 @@ impl Decode for u16 {
         }
     }
 }
-

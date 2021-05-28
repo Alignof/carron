@@ -17,7 +17,7 @@ impl Decode for u32 {
             rs1: new_rs1,
             rs2: new_rs2,
             imm: new_imm,
-            is_compressed: true,
+            is_compressed: false,
         }
     }
 
