@@ -24,8 +24,8 @@ fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
 }
 
 pub struct Simulator {
-    loader: elfload::ElfLoader,
-    cpu: cpu::CPU,
+    pub loader: elfload::ElfLoader,
+    pub cpu: cpu::CPU,
 }
 
 pub struct Arguments {

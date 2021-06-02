@@ -1,4 +1,4 @@
 pub struct CPU {
-    pc: u32,
-    reg: [u32; 32],
+    pub pc: u32,
+    pub reg: [u32; 32],
 }
