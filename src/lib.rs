@@ -1,5 +1,6 @@
 pub mod elfload;
 pub mod decode;
+pub mod cpu;
 
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
@@ -20,6 +21,11 @@ fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
         "-d" => Ok(ExeOption::OPT_DISASEM),
         _    => Err("invalid option"),
     }
+}
+
+pub struct Simulator {
+    loader: elfload::ElfLoader,
+    cpu: cpu::CPU,
 }
 
 pub struct Arguments {
