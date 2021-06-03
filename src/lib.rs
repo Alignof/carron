@@ -8,3 +8,8 @@ pub struct Simulator {
     pub cpu: cpu::CPU,
 }
 
+impl Simulator {
+    pub fn simulation(&self) {
+        println!("Simulation...");
+    }
+} 

@@ -16,7 +16,7 @@ fn main() {
         process::exit(1);
     });
 
-    println!("In file {}", args.filename);
+    println!("\nIn file {}", args.filename);
 
     let loader = match elfload::ElfLoader::try_new(&args.filename) {
         Ok(loader) => loader,
@@ -26,7 +26,7 @@ fn main() {
     };
 
     if loader.is_elf() {
-        println!("elfcheck: OK");
+        println!("elfcheck: OK\n");
 
         let simulator: Simulator = Simulator {
             loader: loader,
@@ -37,7 +37,7 @@ fn main() {
         };
 
         match args.exe_option {
-            ExeOption::OPT_NONE     => simulator.loader.dump_section(),
+            ExeOption::OPT_NONE     => simulator.simulation(),
             ExeOption::OPT_ELFHEAD  => simulator.loader.ident_show(),
             ExeOption::OPT_PROG     => simulator.loader.dump_segment(),
             ExeOption::OPT_SECT     => simulator.loader.dump_section(),
