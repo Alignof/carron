@@ -5,8 +5,8 @@ use std::process;
 use rv32im_sim::elfload;
 use rv32im_sim::Simulator;
 use rv32im_sim::cpu::CPU;
-use rv32im_sim::ExeOption;
-use rv32im_sim::Arguments;
+use rv32im_sim::system::ExeOption;
+use rv32im_sim::system::Arguments;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
