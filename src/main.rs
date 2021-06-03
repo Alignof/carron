@@ -4,7 +4,7 @@ use std::env;
 use std::process;
 use rv32im_sim::elfload;
 use rv32im_sim::Simulator;
-use rv32im_sim::cpu::CPU;
+use rv32im_sim::CPU;
 use rv32im_sim::system::ExeOption;
 use rv32im_sim::system::Arguments;
 
