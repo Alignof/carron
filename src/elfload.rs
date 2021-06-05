@@ -1,11 +1,10 @@
-mod cpu;
 mod elf_header;
 mod section_header;
 mod program_header;
 
 use memmap::Mmap;
 use std::fs::File;
-use cpu::{is_cinst, get_u16, get_u32};
+use crate::cpu::{get_u16, get_u32};
 use elf_header::ElfHeader;
 use section_header::SectionHeader;
 use program_header::ProgramHeader;
