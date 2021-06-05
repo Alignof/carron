@@ -1,9 +1,10 @@
 pub mod system;
 pub mod elfload;
 pub mod decode;
+pub mod cpu;
 
-use crate::elfload::is_cinst;
-use crate::elfload::{get_u16, get_u32};
+use crate::cpu::is_cinst;
+use crate::cpu::{get_u16, get_u32};
 
 pub struct CPU {
     pub pc: u32,
