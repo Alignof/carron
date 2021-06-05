@@ -2,6 +2,9 @@ pub mod system;
 pub mod elfload;
 pub mod decode;
 
+use crate::elfload::is_cinst;
+use crate::elfload::{get_u16, get_u32};
+
 pub struct CPU {
     pub pc: u32,
     pub reg: [u32; 32],
@@ -14,7 +17,9 @@ pub struct Simulator {
 
 impl Simulator {
     pub fn simulation(&self) {
-        println!("Simulation...");
+        let mmap = self.loader.mem_data;
+        let inst_head = 0;
+
         loop {
             if is_cinst(mmap, inst_head as usize) {
                 get_u16(mmap, inst_head as usize)
