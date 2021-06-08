@@ -1,4 +1,3 @@
-
-pub trait execution {
+pub trait Execution {
     fn execution(&self, cpu:CPU);
 }
