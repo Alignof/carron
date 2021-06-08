@@ -2,8 +2,9 @@ pub mod system;
 pub mod cpu;
 pub mod elfload;
 
-use cpu::CPU;
-use cpu::{get_u16, get_u32, is_cinst};
+use cpu::{CPU, get_u16, get_u32, is_cinst};
+use cpu::decode::Decode;
+use cpu::execution::Execution;
 
 pub struct Simulator {
     pub loader: elfload::ElfLoader,

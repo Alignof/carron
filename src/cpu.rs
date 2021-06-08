@@ -1,3 +1,4 @@
+mod instruction;
 pub mod decode;
 pub mod execution;
 
