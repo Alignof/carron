@@ -94,7 +94,7 @@ impl SectionHeader {
 
 
     pub fn section_dump(&self, mmap: &[u8]){
-        use crate::decode::Decode;
+        use crate::cpu::decode::Decode;
 
         println!("--------------------------------");
         let mut dump_head = self.sh_offset;

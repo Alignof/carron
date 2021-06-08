@@ -2,12 +2,8 @@ pub mod system;
 pub mod cpu;
 pub mod elfload;
 
-use crate::cpu::{get_u16, get_u32, is_cinst};
-
-pub struct CPU {
-    pub pc: u32,
-    pub reg: [u32; 32],
-}
+use cpu::CPU;
+use cpu::{get_u16, get_u32, is_cinst};
 
 pub struct Simulator {
     pub loader: elfload::ElfLoader,
