@@ -1,4 +1,5 @@
-use super::{OpecodeKind, Instruction, Decode};
+use super::Decode;
+use crate::cpu::instruction::{OpecodeKind, Instruction};
 
 fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
     match opmap {

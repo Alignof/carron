@@ -1,4 +1,5 @@
-use super::{OpecodeKind, Instruction, Decode};
+use super::Decode;
+use crate::cpu::instruction::{OpecodeKind, Instruction};
 
 impl Decode for u32 {
     fn decode(&self) -> Instruction {

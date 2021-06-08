@@ -215,5 +215,3 @@ impl Instruction {
         if let Some(v) = self.rs2 {print!(" {}", v)}
     }
 }
-
-

@@ -1,6 +1,8 @@
 mod mmap_parse_16;
 mod mmap_parse_32;
 
+use super::instruction::{OpecodeKind, Instruction};
+
 pub trait Decode {
     fn decode(&self) -> Instruction;
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str>;
