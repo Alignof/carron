@@ -13,9 +13,9 @@ pub trait Execution {
 impl Execution for Instruction {
     fn execution(&self, cpu: &CPU) {
         if self.is_compressed {
-            exe_cinst(cpu);
+            exe_cinst(self, cpu);
         } else {
-            exe_inst(cpu);
+            exe_inst(self, cpu);
         }
     }
 }

@@ -1,3 +1,4 @@
-use crate::CPU;
+use crate::cpu::CPU;
+use crate::cpu::instruction::Instruction;
 
-pub fn exe_cinst(cpu: &CPU){}
+pub fn exe_cinst(inst: &Instruction, cpu: &CPU) {}
