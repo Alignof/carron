@@ -1,7 +1,8 @@
 use crate::cpu::CPU;
-use crate::cpu::instruction::Instruction;
+use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
+    use OpecodeKind::*;
     match inst.opc {
         OP_LUI    => {cpu.pc += 1},
         OP_AUIPC  => {cpu.pc += 1},

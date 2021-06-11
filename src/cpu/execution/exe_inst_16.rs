@@ -1,7 +1,8 @@
 use crate::cpu::CPU;
-use crate::cpu::instruction::Instruction;
+use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
+    use OpecodeKind::*;
     match inst.opc {
         OP_C_ADDI4SPN => {cpu.pc += 1},
         OP_C_FLD      => {cpu.pc += 1},
