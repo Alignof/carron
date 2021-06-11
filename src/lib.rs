@@ -20,12 +20,12 @@ impl Simulator {
             if is_cinst(mmap, inst_head as usize) {
                 get_u16(mmap, inst_head as usize)
                     .decode()
-                    .execution(&self.cpu);
+                    .execution(&mut self.cpu);
                 inst_head += 2;
             }else{
                 get_u32(mmap, inst_head as usize)
                     .decode()
-                    .execution(&self.cpu);
+                    .execution(&mut self.cpu);
                 inst_head += 4;
             }
         }
