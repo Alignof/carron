@@ -37,7 +37,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_ADD    => {
             cpu.reg[inst.rd.unwrap() as usize] += cpu.reg[inst.rs1.unwrap() as usize];
         },
-        OP_SUB    => {},
+        OP_SUB    => {
+            cpu.reg[inst.rd.unwrap() as usize] -= cpu.reg[inst.rs1.unwrap() as usize];
+        },
         OP_SLL    => {},
         OP_SLT    => {},
         OP_SLTU   => {},
