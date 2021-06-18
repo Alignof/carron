@@ -29,9 +29,15 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_SLTI   => {},
         OP_SLTIU  => {},
-        OP_XORI   => {},
-        OP_ORI    => {},
-        OP_ANDI   => {},
+        OP_XORI   => {
+            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] ^ cpu.reg[inst.rs2.unwrap() as usize];
+        },
+        OP_ORI    => {
+            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] | cpu.reg[inst.rs2.unwrap() as usize];
+        },
+        OP_ANDI   => {
+            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] & cpu.reg[inst.rs2.unwrap() as usize];
+        },
         OP_SLLI   => {},
         OP_SRLI   => {},
         OP_ADD    => {
