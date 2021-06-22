@@ -4,7 +4,6 @@ use crate::cpu::instruction::{Instruction, OpecodeKind};
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
 
-    cpu.pc += 4;
     match inst.opc {
         OP_LUI    => {},
         OP_AUIPC  => {},
@@ -30,21 +29,23 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_SLTI   => {},
         OP_SLTIU  => {},
         OP_XORI   => {
-            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] ^ cpu.reg[inst.rs2.unwrap() as usize];
+            cpu.reg[inst.rd.unwrap() as usize] ^= inst.rs1.unwrap() as u32;
         },
         OP_ORI    => {
-            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] | cpu.reg[inst.rs2.unwrap() as usize];
+            cpu.reg[inst.rd.unwrap() as usize] |= inst.rs1.unwrap() as u32;
         },
         OP_ANDI   => {
-            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] & cpu.reg[inst.rs2.unwrap() as usize];
+            cpu.reg[inst.rd.unwrap() as usize] &= inst.rs1.unwrap() as u32;
         },
         OP_SLLI   => {},
         OP_SRLI   => {},
         OP_ADD    => {
-            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] + cpu.reg[inst.rs2.unwrap() as usize];
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs1.unwrap() as usize] + cpu.reg[inst.rs2.unwrap() as usize];
         },
         OP_SUB    => {
-            cpu.reg[inst.rd.unwrap() as usize] = cpu.reg[inst.rs1.unwrap() as usize] - cpu.reg[inst.rs2.unwrap() as usize];
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs1.unwrap() as usize] - cpu.reg[inst.rs2.unwrap() as usize];
         },
         OP_SLL    => {},
         OP_SLT    => {},
@@ -59,4 +60,6 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_EBREAK => {},
         _         => panic!("not a full instruction"),
     }
+
+    cpu.pc += 4;
 }
