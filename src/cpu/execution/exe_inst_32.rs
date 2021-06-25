@@ -50,11 +50,20 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_SLL    => {},
         OP_SLT    => {},
         OP_SLTU   => {},
-        OP_XOR    => {},
+        OP_XOR    => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs1.unwrap() as usize] ^ cpu.reg[inst.rs2.unwrap() as usize];
+        },
         OP_SRL    => {},
         OP_SRA    => {},
-        OP_OR     => {},
-        OP_AND    => {},
+        OP_OR     => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs1.unwrap() as usize] | cpu.reg[inst.rs2.unwrap() as usize];
+        },
+        OP_AND    => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs1.unwrap() as usize] & cpu.reg[inst.rs2.unwrap() as usize];
+        },
         OP_FENCE  => {},
         OP_ECALL  => {},
         OP_EBREAK => {},
