@@ -12,7 +12,9 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_SW       => {},
         OP_C_FSW      => {},
         OP_C_NOP      => {/* NOP */},
-        OP_C_ADDI     => {},
+        OP_C_ADDI     => {
+            cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as u32;
+        },
         OP_C_JAL      => {},
         OP_C_LI       => {},
         OP_C_ADDI16SP => {},
