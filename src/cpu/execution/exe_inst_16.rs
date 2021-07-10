@@ -5,7 +5,8 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     match inst.opc {
         OP_C_ADDI4SPN => {
-            cpu.reg[2] = cpu.reg[2] + ((cpu.reg[inst.imm.unwrap() as usize] >> 2) & 0x1FF);
+            cpu.reg[2] = 
+                cpu.reg[2] + ((cpu.reg[inst.imm.unwrap() as usize] >> 2) & 0x1FF);
         },
         OP_C_FLD      => {},
         OP_C_LW       => {},

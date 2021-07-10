@@ -5,7 +5,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
 
     match inst.opc {
-        OP_LUI    => {},
+        OP_LUI    => {
+            cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
+        },
         OP_AUIPC  => {},
         OP_JAL    => {},
         OP_JALR   => {},
