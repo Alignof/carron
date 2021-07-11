@@ -8,7 +8,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_LUI    => {
             cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
         },
-        OP_AUIPC  => {},
+        OP_AUIPC  => {
+            cpu.pc += inst.imm.unwrap() << 12;
+        },
         OP_JAL    => {},
         OP_JALR   => {},
         OP_BEQ    => {},
