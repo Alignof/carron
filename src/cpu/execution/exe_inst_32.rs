@@ -59,7 +59,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.reg[inst.rd.unwrap() as usize] =
                 (cpu.reg[inst.rs1.unwrap() as usize] < cpu.reg[inst.rs2.unwrap() as usize]) as u32;
         },
-        OP_SLTU   => {},
+        OP_SLTU   => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                ((cpu.reg[inst.rs1.unwrap() as usize] as u32) < (cpu.reg[inst.rs2.unwrap() as usize] as u32)) as i32;
+        },
         OP_XOR    => {
             cpu.reg[inst.rd.unwrap() as usize] =
                 cpu.reg[inst.rs1.unwrap() as usize] ^ cpu.reg[inst.rs2.unwrap() as usize];
