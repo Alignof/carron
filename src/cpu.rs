@@ -4,7 +4,7 @@ pub mod execution;
 
 pub struct CPU {
     pub pc: u32,
-    pub reg: [u32; 32],
+    pub reg: [i32; 32],
 }
 
 pub fn get_u16(mmap: &[u8], index: usize) -> u16 {
