@@ -61,7 +61,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.reg[inst.rd.unwrap() as usize] =
                 cpu.reg[inst.rs1.unwrap() as usize] ^ cpu.reg[inst.rs2.unwrap() as usize];
         },
-        OP_SRL    => {},
+        OP_SRL    => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs1.unwrap() as usize] >> cpu.reg[inst.rs2.unwrap() as usize];
+        },
         OP_SRA    => {},
         OP_OR     => {
             cpu.reg[inst.rd.unwrap() as usize] =
