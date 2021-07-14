@@ -6,7 +6,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
 
     match inst.opc {
         OP_LUI    => {
-            cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
+            cpu.reg[inst.rd.unwrap() as usize] = (inst.imm.unwrap() << 12) as i32;
         },
         OP_AUIPC  => {
             cpu.pc += inst.imm.unwrap() << 12;
@@ -28,18 +28,18 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_SH     => {},
         OP_SW     => {},
         OP_ADDI   => {
-            cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as u32;
+            cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as i32;
         },
         OP_SLTI   => {},
         OP_SLTIU  => {},
         OP_XORI   => {
-            cpu.reg[inst.rd.unwrap() as usize] ^= inst.rs1.unwrap() as u32;
+            cpu.reg[inst.rd.unwrap() as usize] ^= inst.rs1.unwrap() as i32;
         },
         OP_ORI    => {
-            cpu.reg[inst.rd.unwrap() as usize] |= inst.rs1.unwrap() as u32;
+            cpu.reg[inst.rd.unwrap() as usize] |= inst.rs1.unwrap() as i32;
         },
         OP_ANDI   => {
-            cpu.reg[inst.rd.unwrap() as usize] &= inst.rs1.unwrap() as u32;
+            cpu.reg[inst.rd.unwrap() as usize] &= inst.rs1.unwrap() as i32;
         },
         OP_SLLI   => {},
         OP_SRLI   => {},
@@ -57,7 +57,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_SLT    => {
             cpu.reg[inst.rd.unwrap() as usize] =
-                (cpu.reg[inst.rs1.unwrap() as usize] < cpu.reg[inst.rs2.unwrap() as usize]) as u32;
+                (cpu.reg[inst.rs1.unwrap() as usize] < cpu.reg[inst.rs2.unwrap() as usize]) as i32;
         },
         OP_SLTU   => {
             cpu.reg[inst.rd.unwrap() as usize] =
