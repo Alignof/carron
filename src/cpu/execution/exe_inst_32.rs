@@ -41,7 +41,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_ANDI   => {
             cpu.reg[inst.rd.unwrap() as usize] &= inst.rs1.unwrap() as i32;
         },
-        OP_SLLI   => {},
+        OP_SLLI   => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs1.unwrap() as usize] << inst.imm.unwrap() as i32;
+        },
         OP_SRLI   => {},
         OP_ADD    => {
             cpu.reg[inst.rd.unwrap() as usize] =
