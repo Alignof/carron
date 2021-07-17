@@ -28,10 +28,11 @@ fn main() {
     if loader.is_elf() {
         println!("elfcheck: OK\n");
 
+        let entry_address = loader.elf_header.e_entry;
         let mut simulator: Simulator = Simulator {
             loader: loader,
             cpu: CPU {
-                pc: 0 as u32,
+                pc: entry_address as u32,
                 reg: [0; 32],
             },
         };
