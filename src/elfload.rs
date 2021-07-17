@@ -11,7 +11,7 @@ use program_header::ProgramHeader;
 
 
 pub struct ElfLoader {
-        elf_header: ElfHeader,
+    pub elf_header: ElfHeader,
         prog_headers: Vec<ProgramHeader>,
         sect_headers: Vec<SectionHeader>,
     pub mem_data: Mmap,

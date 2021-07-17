@@ -57,7 +57,7 @@ pub struct ElfHeader {
         e_type: u16,
         e_machine: u16,
         e_version: u32,
-        e_entry: u32,
+    pub e_entry: u32,
     pub e_phoff: u32,
     pub e_shoff: u32,
         e_flags: u32,
