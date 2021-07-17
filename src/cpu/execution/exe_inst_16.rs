@@ -16,7 +16,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_FSW      => {},
         OP_C_NOP      => {/* NOP */},
         OP_C_ADDI     => {
-            cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as u32;
+            cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as i32;
         },
         OP_C_JAL      => {},
         OP_C_LI       => {},
@@ -25,7 +25,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_SRLI     => {},
         OP_C_SRAI     => {},
         OP_C_ANDI     => {
-            cpu.reg[inst.rd.unwrap() as usize] &= inst.rs1.unwrap() as u32;
+            cpu.reg[inst.rd.unwrap() as usize] &= inst.rs1.unwrap() as i32;
         },
         OP_C_SUB      => {
             cpu.reg[inst.rd.unwrap() as usize] =
