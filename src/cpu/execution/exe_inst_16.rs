@@ -56,7 +56,10 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_LWSP     => {},
         OP_C_FLWSP    => {},
         OP_C_JR       => {},
-        OP_C_MV       => {},
+        OP_C_MV       => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                cpu.reg[inst.rs2.unwrap() as usize];
+        },
         OP_C_EBREAK   => {},
         OP_C_JALR     => {},
         OP_C_ADD      => {
