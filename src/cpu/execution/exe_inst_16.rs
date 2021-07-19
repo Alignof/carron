@@ -21,7 +21,9 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_JAL      => {},
         OP_C_LI       => {},
         OP_C_ADDI16SP => {},
-        OP_C_LUI      => {},
+        OP_C_LUI      => {
+            cpu.reg[inst.rd.unwrap() as usize] = (inst.imm.unwrap() << 12) as i32;
+        },
         OP_C_SRLI     => {
             cpu.reg[inst.rd.unwrap() as usize] =
                 cpu.reg[inst.rs1.unwrap() as usize] >> inst.imm.unwrap() as i32;
