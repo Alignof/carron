@@ -9,7 +9,7 @@ pub trait Decode {
     fn parse_rd(&self,  opkind: &OpecodeKind) -> Option<u8>;
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<u8>;
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<u8>;
-    fn parse_imm(&self, opkind: &OpecodeKind) -> Option<u32>;
+    fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32>;
 }
 
 

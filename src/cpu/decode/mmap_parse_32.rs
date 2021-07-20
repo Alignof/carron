@@ -10,7 +10,7 @@ impl Decode for u32 {
         let new_rd:  Option<u8>  = self.parse_rd(&new_opc);
         let new_rs1: Option<u8>  = self.parse_rs1(&new_opc);
         let new_rs2: Option<u8>  = self.parse_rs2(&new_opc);
-        let new_imm: Option<u32> = self.parse_imm(&new_opc);
+        let new_imm: Option<i32> = self.parse_imm(&new_opc);
 
         Instruction {
             opc: new_opc,
@@ -128,34 +128,34 @@ impl Decode for u32 {
         return Some(rs2);
     }
 
-    fn parse_imm(&self, _opkind: &OpecodeKind) -> Option<u32> {
+    fn parse_imm(&self, _opkind: &OpecodeKind) -> Option<i32> {
         let inst:&u32 = self;
         let opmap: u8  = (inst & 0x7F) as u8;
 
         // LUI, AUIPC
         if opmap == 0b00110111 || opmap == 0b00010111 {
-            return Some(((inst >> 12) & 0xFFFFF) as u32);
+            return Some(((inst >> 12) & 0xFFFFF) as i32);
         }
 
         // JAL
         if opmap == 0b01101111 {
-            return Some(((inst >> 12) & 0xFFFFF) as u32);
+            return Some(((inst >> 12) & 0xFFFFF) as i32);
         }
 
         // JALR, L(B|H|W), ADDI, SLTI, SLTIU, XORI, ORI, ANDI
         if opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 {
-            return Some(((inst >> 20) & 0xFFF) as u32);
+            return Some(((inst >> 20) & 0xFFF) as i32);
         }
 
         // S(B|H|W)
         if opmap == 0b00100011 {
-            return Some(((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as u32);
+            return Some(((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as i32);
         }
 
         // B(EQ|NE|LT|GE|LTU|GEU)
         if opmap == 0b01100011 {
             return Some(((((inst >> 27) & 0x1) << 11) + (((inst >> 7) & 0x1) << 10) +
-                    (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as u32);
+                    (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as i32);
         }
 
         return None;

@@ -6,10 +6,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
 
     match inst.opc {
         OP_LUI    => {
-            cpu.reg[inst.rd.unwrap() as usize] = (inst.imm.unwrap() << 12) as i32;
+            cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
         },
         OP_AUIPC  => {
-            cpu.pc += inst.imm.unwrap() << 12;
+            cpu.pc += (inst.imm.unwrap() << 12) as u32;
         },
         OP_JAL    => {},
         OP_JALR   => {},
