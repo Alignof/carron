@@ -83,7 +83,7 @@ pub struct Instruction {
     pub rd:  Option<u8>,
     pub rs1: Option<u8>,
     pub rs2: Option<u8>,
-    pub imm: Option<u32>,
+    pub imm: Option<i32>,
     pub is_compressed: bool,
 }
 
