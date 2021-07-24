@@ -12,10 +12,13 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.pc += (inst.imm.unwrap() << 12) as u32;
         },
         OP_JAL    => {
-            cpu.reg[inst.rd.unwrap() as usize] = cpu.pc + 4; 
+            cpu.reg[inst.rd.unwrap() as usize] = (cpu.pc + 4) as i32; 
             cpu.pc += inst.imm.unwrap() as u32;
         },
-        OP_JALR   => {},
+        OP_JALR   => {
+            cpu.reg[inst.rd.unwrap() as usize] = (cpu.pc + 4) as i32; 
+            cpu.pc += (cpu.reg[inst.rs1.unwrap() as usize]  + inst.imm.unwrap()) as u32;
+        },
         OP_BEQ    => {},
         OP_BNE    => {},
         OP_BLT    => {},
