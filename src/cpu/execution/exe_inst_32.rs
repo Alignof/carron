@@ -11,7 +11,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_AUIPC  => {
             cpu.pc += (inst.imm.unwrap() << 12) as u32;
         },
-        OP_JAL    => {},
+        OP_JAL    => {
+            cpu.pc = (cpu.reg[inst.rd.unwrap() as usize] + inst.imm.unwrap()) as u32;
+        },
         OP_JALR   => {},
         OP_BEQ    => {},
         OP_BNE    => {},
