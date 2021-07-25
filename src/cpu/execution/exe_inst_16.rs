@@ -20,7 +20,10 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_ADDI     => {
             cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as i32;
         },
-        OP_C_JAL      => {},
+        OP_C_JAL      => {
+            cpu.reg[inst.rd.unwrap() as usize] = (cpu.pc + INST_SIZE) as i32; 
+            cpu.pc += inst.imm.unwrap() as u32;
+        },
         OP_C_LI       => {},
         OP_C_ADDI16SP => {},
         OP_C_LUI      => {
