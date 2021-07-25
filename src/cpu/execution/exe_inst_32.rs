@@ -19,7 +19,11 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.reg[inst.rd.unwrap() as usize] = (cpu.pc + 4) as i32; 
             cpu.pc += (cpu.reg[inst.rs1.unwrap() as usize]  + inst.imm.unwrap()) as u32;
         },
-        OP_BEQ    => {},
+        OP_BEQ    => {
+            if cpu.reg[inst.rs1.unwrap() as usize] == cpu.reg[inst.rs1.unwrap() as usize] {
+                cpu.pc += inst.imm.unwrap() as u32;
+            } 
+        },
         OP_BNE    => {},
         OP_BLT    => {},
         OP_BGE    => {},
