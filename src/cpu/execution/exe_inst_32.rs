@@ -40,7 +40,11 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
                 cpu.pc += inst.imm.unwrap() as u32;
             } 
         },
-        OP_BLTU   => {},
+        OP_BLTU   => {
+            if (cpu.reg[inst.rs1.unwrap() as usize] as u32) < (cpu.reg[inst.rs1.unwrap() as usize] as u32) {
+                cpu.pc += inst.imm.unwrap() as u32;
+            } 
+        },
         OP_BGEU   => {},
         OP_LB     => {},
         OP_LH     => {},
