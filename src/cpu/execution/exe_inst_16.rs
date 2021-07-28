@@ -66,7 +66,11 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
                 cpu.pc += inst.imm.unwrap() as u32;
             } 
         },
-        OP_C_BNEZ     => {},
+        OP_C_BNEZ     => {
+            if cpu.reg[inst.rs1.unwrap() as usize] != 0 {
+                cpu.pc += inst.imm.unwrap() as u32;
+            } 
+        },
         OP_C_SLLI     => {},
         OP_C_FLDSP    => {},
         OP_C_LWSP     => {},
