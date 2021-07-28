@@ -3,8 +3,8 @@ use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
-    const REG_SP: u32 = 2;
     const INST_SIZE: u32 = 2;
+    const REG_SP: usize = 2 as usize;
 
     match inst.opc {
         OP_C_ADDI4SPN => {
