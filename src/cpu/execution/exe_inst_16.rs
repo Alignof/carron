@@ -22,7 +22,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
             cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as i32;
         },
         OP_C_JAL      => {
-            cpu.reg[inst.rd.unwrap() as usize] = (cpu.pc + INST_SIZE) as i32; 
+            cpu.reg[1] = (cpu.pc + INST_SIZE) as i32; 
             cpu.pc += inst.imm.unwrap() as u32;
         },
         OP_C_LI       => {},
