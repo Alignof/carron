@@ -5,6 +5,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 2;
     const REG_SP: usize = 2 as usize;
+    const LINK_REG: usize = 1 as usize;
 
     match inst.opc {
         OP_C_ADDI4SPN => {
@@ -87,7 +88,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_C_EBREAK   => {},
         OP_C_JALR     => {
-            cpu.reg[inst.rd.unwrap() as usize] = (cpu.pc + INST_SIZE) as i32; 
+            cpu.reg[LINK_REG] = (cpu.pc + INST_SIZE) as i32; 
             cpu.pc += (cpu.reg[inst.rs1.unwrap() as usize]  + inst.imm.unwrap()) as u32;
         },
         OP_C_ADD      => {
