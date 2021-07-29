@@ -78,7 +78,9 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_FLDSP    => {},
         OP_C_LWSP     => {},
         OP_C_FLWSP    => {},
-        OP_C_JR       => {},
+        OP_C_JR       => {
+            cpu.pc += cpu.reg[inst.rs1.unwrap() as usize] as u32;
+        },
         OP_C_MV       => {
             cpu.reg[inst.rd.unwrap() as usize] =
                 cpu.reg[inst.rs2.unwrap() as usize];
