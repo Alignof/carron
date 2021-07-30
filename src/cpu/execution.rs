@@ -1,17 +1,18 @@
 mod exe_inst_16;
 mod exe_inst_32;
 
+use memmap::Mmap;
 use super::CPU;
 use super::instruction::Instruction;
 use exe_inst_16::exe_cinst;
 use exe_inst_32::exe_inst;
 
 pub trait Execution {
-    fn execution(&self, cpu: &mut CPU);
+    fn execution(&self, cpu: &mut CPU, mmap: &mut Mmap);
 }
 
 impl Execution for Instruction {
-    fn execution(&self, cpu: &mut CPU) {
+    fn execution(&self, cpu: &mut CPU, mmap: &mut Mmap) {
         if self.is_compressed {
             exe_cinst(self, cpu);
         } else {

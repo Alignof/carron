@@ -13,17 +13,17 @@ pub struct Simulator {
 
 impl Simulator {
     pub fn simulation(&mut self) {
-        let mmap = &(self.loader.mem_data);
+        let mmap = &mut self.loader.mem_data;
 
         loop {
             if is_cinst(mmap, self.cpu.pc as usize) {
                 get_u16(mmap, self.cpu.pc as usize)
                     .decode()
-                    .execution(&mut self.cpu);
+                    .execution(&mut self.cpu, mmap);
             }else{
                 get_u32(mmap, self.cpu.pc as usize)
                     .decode()
-                    .execution(&mut self.cpu);
+                    .execution(&mut self.cpu, mmap);
             }
         }
     }
