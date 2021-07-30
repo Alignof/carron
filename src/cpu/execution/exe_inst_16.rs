@@ -34,7 +34,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
                 cpu.reg[REG_SP] + ((cpu.reg[inst.imm.unwrap() as usize] >> 4) & 0x1FF);
         },
         OP_C_LUI      => {
-            cpu.reg[inst.rd.unwrap() as usize] = (inst.imm.unwrap() << 12) as i32;
+            cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
         },
         OP_C_SRLI     => {
             cpu.reg[inst.rd.unwrap() as usize] =
