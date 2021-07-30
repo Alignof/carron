@@ -1,7 +1,8 @@
+use super::Mmap;
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 4;
 
