@@ -1,5 +1,5 @@
 use super::Mmap;
-use crate::cpu::CPU;
+use crate::cpu::{CPU, get_u16, get_u32};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
@@ -53,7 +53,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
         },
         OP_LB     => {},
         OP_LH     => {},
-        OP_LW     => {},
+        OP_LW     => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                get_u32(mmap, ((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) as usize) as i32;
+        },
         OP_LBU    => {},
         OP_LHU    => {},
         OP_SB     => {},
