@@ -51,7 +51,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
                 cpu.pc += inst.imm.unwrap() as u32;
             } 
         },
-        OP_LB     => {},
+        OP_LB     => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                get_u32(mmap, (((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) & 0xFF) as usize) as i32;
+        },
         OP_LH     => {
             cpu.reg[inst.rd.unwrap() as usize] =
                 get_u32(mmap, (((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) & 0xFFFF) as usize) as i32;
