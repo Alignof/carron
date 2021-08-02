@@ -12,6 +12,15 @@ pub struct Simulator {
 }
 
 impl Simulator {
+    pub fn new(loader: elfload::ElfLoader) -> Simulator {
+        let entry_address = loader.elf_header.e_entry;
+
+        Simulator {
+            loader: loader,
+            cpu: CPU::new(entry_address),
+        }
+    }
+
     pub fn simulation(&mut self) {
         let mmap = &mut self.loader.mem_data;
 

@@ -4,7 +4,6 @@ use std::env;
 use std::process;
 use rv32im_sim::elfload;
 use rv32im_sim::Simulator;
-use rv32im_sim::cpu::CPU;
 use rv32im_sim::system::ExeOption;
 use rv32im_sim::system::Arguments;
 
@@ -28,11 +27,8 @@ fn main() {
     if loader.is_elf() {
         println!("elfcheck: OK\n");
 
-        let entry_address = loader.elf_header.e_entry;
-        let mut simulator: Simulator = Simulator {
-            loader: loader,
-            cpu: CPU::new(entry_address),
-        };
+        // initialize a simulator
+        let mut simulator: Simulator = Simulator::new(loader); 
 
         match args.exe_option {
             ExeOption::OPT_NONE     => simulator.simulation(),
