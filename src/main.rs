@@ -31,10 +31,7 @@ fn main() {
         let entry_address = loader.elf_header.e_entry;
         let mut simulator: Simulator = Simulator {
             loader: loader,
-            cpu: CPU {
-                pc: entry_address as u32,
-                reg: [0; 32],
-            },
+            cpu: CPU::new(entry_address),
         };
 
         match args.exe_option {
