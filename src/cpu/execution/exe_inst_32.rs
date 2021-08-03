@@ -6,6 +6,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 4;
 
+    // add program counter
+    cpu.pc += 4;
+
     match inst.opc {
         OP_LUI    => {
             cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
@@ -141,6 +144,4 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
         OP_EBREAK => {},
         _         => panic!("not a full instruction"),
     }
-
-    cpu.pc += 4;
 }
