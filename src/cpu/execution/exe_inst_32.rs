@@ -2,7 +2,7 @@ use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::bus::dram::Dram;
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 4;
 
@@ -56,15 +56,15 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_LB     => {
             cpu.reg[inst.rd.unwrap() as usize] = 
-                Dram::load8((inst.rs1.unwrap() as i32) + inst.imm.unwrap());
+                Dram::load8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
         },
         OP_LH     => {
             cpu.reg[inst.rd.unwrap() as usize] =
-                Dram::load16((inst.rs1.unwrap() as i32) + inst.imm.unwrap());
+                Dram::load16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
         },
         OP_LW     => {
             cpu.reg[inst.rd.unwrap() as usize] =
-                Dram::load32((inst.rs1.unwrap() as i32) + inst.imm.unwrap());
+                Dram::load32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
         },
         OP_LBU    => {},
         OP_LHU    => {},

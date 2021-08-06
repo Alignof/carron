@@ -12,15 +12,19 @@ impl Dram {
         }
     }
     
-    pub fn load8(addr: i32) -> i32 {
-        0
+    pub fn load8(&self, addr: usize) -> i32 {
+        self.dram[addr] as i32
     }
 
-    pub fn load16(addr: i32) -> i32 {
-        0
+    pub fn load16(&self, addr: usize) -> i32 {
+        (self.dram[addr + 1] << 8 |
+         self.dram[addr + 0]) as i32
     }
 
-    pub fn load32(addr: i32) -> i32 {
-        0
+    pub fn load32(&self, addr: usize) -> i32 {
+        (self.dram[addr + 3] << 24 |
+         self.dram[addr + 2] << 16 |
+         self.dram[addr + 1] <<  8 |
+         self.dram[addr + 0]) as i32
     }
 }
