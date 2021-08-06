@@ -1,5 +1,5 @@
 pub struct Dram {
-    pub dram: Vec<u8>,
+    dram: Vec<u8>,
 }
 
 impl Dram {
