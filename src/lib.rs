@@ -32,11 +32,11 @@ impl Simulator {
             if is_cinst(mmap, self.cpu.pc as usize) {
                 get_u16(mmap, self.cpu.pc as usize)
                     .decode()
-                    .execution(&mut self.cpu, &mut self.bus.dram);
+                    .execution(&mut self.cpu);
             }else{
                 get_u32(mmap, self.cpu.pc as usize)
                     .decode()
-                    .execution(&mut self.cpu, &mut self.bus.dram);
+                    .execution(&mut self.cpu);
             }
         }
     }

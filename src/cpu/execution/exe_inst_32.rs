@@ -2,7 +2,7 @@ use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::bus::dram::Dram;
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 4;
 
