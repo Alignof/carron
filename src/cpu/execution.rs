@@ -1,10 +1,8 @@
 mod exe_inst_16;
 mod exe_inst_32;
 
-use memmap::Mmap;
 use super::CPU;
 use super::instruction::Instruction;
-use crate::bus::dram::Dram;
 use exe_inst_16::exe_cinst;
 use exe_inst_32::exe_inst;
 
