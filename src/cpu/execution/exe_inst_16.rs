@@ -2,7 +2,7 @@ use super::Mmap;
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
+pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Vec<u8>) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 2;
     const REG_SP: usize = 2 as usize;

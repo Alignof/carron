@@ -1,17 +1,17 @@
 pub mod system;
 pub mod cpu;
-pub mod dram;
+pub mod bus;
 pub mod elfload;
 
 use cpu::{CPU, get_u16, get_u32, is_cinst};
 use cpu::decode::Decode;
 use cpu::execution::Execution;
-use dram::Dram;
+use bus::Bus;
 
 pub struct Simulator {
     pub loader: elfload::ElfLoader,
     pub cpu: cpu::CPU,
-    pub dram: dram::Dram,
+    pub bus: bus::Bus,
 }
 
 impl Simulator {
@@ -32,11 +32,11 @@ impl Simulator {
             if is_cinst(mmap, self.cpu.pc as usize) {
                 get_u16(mmap, self.cpu.pc as usize)
                     .decode()
-                    .execution(&mut self.cpu, mmap);
+                    .execution(&mut self.cpu, self.dram);
             }else{
                 get_u32(mmap, self.cpu.pc as usize)
                     .decode()
-                    .execution(&mut self.cpu, mmap);
+                    .execution(&mut self.cpu, self.dram);
             }
         }
     }

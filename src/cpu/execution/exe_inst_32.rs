@@ -2,7 +2,7 @@ use super::Mmap;
 use crate::cpu::{CPU, get_u16, get_u32};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Vec<u8>) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 4;
 
@@ -56,15 +56,15 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, mmap: &mut Mmap) {
         },
         OP_LB     => {
             cpu.reg[inst.rd.unwrap() as usize] =
-                get_u32(mmap, (((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) & 0xFF) as usize) as i32;
+                get_u32(dram, (((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) & 0xFF) as usize) as i32;
         },
         OP_LH     => {
             cpu.reg[inst.rd.unwrap() as usize] =
-                get_u32(mmap, (((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) & 0xFFFF) as usize) as i32;
+                get_u32(dram, (((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) & 0xFFFF) as usize) as i32;
         },
         OP_LW     => {
             cpu.reg[inst.rd.unwrap() as usize] =
-                get_u32(mmap, ((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) as usize) as i32;
+                get_u32(dram, ((inst.rs1.unwrap() as i32) + inst.imm.unwrap()) as usize) as i32;
         },
         OP_LBU    => {},
         OP_LHU    => {},
