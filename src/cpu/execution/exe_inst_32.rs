@@ -1,5 +1,4 @@
-use super::Mmap;
-use crate::cpu::{CPU, get_u16, get_u32};
+use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::bus::dram::Dram;
 

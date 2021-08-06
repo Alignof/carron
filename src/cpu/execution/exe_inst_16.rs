@@ -1,4 +1,3 @@
-use super::Mmap;
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::bus::dram::Dram;

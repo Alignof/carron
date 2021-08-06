@@ -7,7 +7,6 @@ use cpu::{CPU, get_u16, get_u32, is_cinst};
 use cpu::decode::Decode;
 use cpu::execution::Execution;
 use bus::Bus;
-use bus::dram::Dram;
 
 pub struct Simulator {
     pub loader: elfload::ElfLoader,
