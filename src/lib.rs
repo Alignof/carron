@@ -6,11 +6,12 @@ pub mod elfload;
 use cpu::{CPU, get_u16, get_u32, is_cinst};
 use cpu::decode::Decode;
 use cpu::execution::Execution;
+use dram::Dram;
 
 pub struct Simulator {
     pub loader: elfload::ElfLoader,
-    pub cpu: CPU,
-    pub dram: Dram,
+    pub cpu: cpu::CPU,
+    pub dram: dram::Dram,
 }
 
 impl Simulator {
@@ -20,6 +21,7 @@ impl Simulator {
         Simulator {
             loader: loader,
             cpu: CPU::new(entry_address),
+            dram: Dram::new(),
         }
     }
 
