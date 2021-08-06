@@ -11,4 +11,16 @@ impl Dram {
             dram: new_dram,
         }
     }
+    
+    pub fn load8(addr: i32) -> i32 {
+        0
+    }
+
+    pub fn load16(addr: i32) -> i32 {
+        0
+    }
+
+    pub fn load32(addr: i32) -> i32 {
+        0
+    }
 }

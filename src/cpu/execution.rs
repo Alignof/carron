@@ -9,11 +9,11 @@ use exe_inst_16::exe_cinst;
 use exe_inst_32::exe_inst;
 
 pub trait Execution {
-    fn execution(&self, cpu: &mut CPU, dram: Dram);
+    fn execution(&self, cpu: &mut CPU, dram: &mut Dram);
 }
 
 impl Execution for Instruction {
-    fn execution(&self, cpu: &mut CPU, dram: Dram) {
+    fn execution(&self, cpu: &mut CPU, dram: &mut Dram) {
         if self.is_compressed {
             exe_cinst(self, cpu, dram);
         } else {
