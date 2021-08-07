@@ -18,15 +18,15 @@ impl Dram {
     }
 
     pub fn load16(&self, addr: usize) -> i32 {
-        (self.dram[addr + 1] << 8 |
-         self.dram[addr + 0]) as i32
+        ((self.dram[addr + 1] as u32) << 8 |
+         (self.dram[addr + 0] as u32)) as i32
     }
 
     pub fn load32(&self, addr: usize) -> i32 {
-        (self.dram[addr + 3] << 24 |
-         self.dram[addr + 2] << 16 |
-         self.dram[addr + 1] <<  8 |
-         self.dram[addr + 0]) as i32
+        ((self.dram[addr + 3] as u32) << 24 |
+         (self.dram[addr + 2] as u32) << 16 |
+         (self.dram[addr + 1] as u32) <<  8 |
+         (self.dram[addr + 0] as u32)) as i32
     }
 
     pub fn load_u8(&self, addr: usize) -> u32 {
@@ -34,8 +34,8 @@ impl Dram {
     }
 
     pub fn load_u16(&self, addr: usize) -> u32 {
-        (self.dram[addr + 1] << 8 |
-         self.dram[addr + 0]) as u32
+        ((self.dram[addr + 1] as u32) << 8 |
+         (self.dram[addr + 0] as u32)) as u32
     }
 
     // store
@@ -63,10 +63,13 @@ mod tests {
 
     #[test]
     fn load_store_test() {
-        let dram = Dram::new();
+        let dram = &mut Dram::new();
+        let mut test_16 = |addr: usize, data: i32| {
+            Dram::store16(dram, addr, data);
+            assert_eq!(data, Dram::load16(dram, addr));
+        };
 
-        Dram::store16(dram, 13, 157);
-        assert_eq!(157, Dram::load16(dram, 13));
-                
+        test_16(4, 157);
+        test_16(8, -42);
     }
 }
