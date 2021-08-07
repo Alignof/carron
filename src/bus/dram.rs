@@ -11,7 +11,7 @@ impl Dram {
             dram: new_dram,
         }
     }
-    
+
     pub fn load8(&self, addr: usize) -> i32 {
         self.dram[addr] as i32
     }
@@ -26,6 +26,15 @@ impl Dram {
          self.dram[addr + 2] << 16 |
          self.dram[addr + 1] <<  8 |
          self.dram[addr + 0]) as i32
+    }
+
+    pub fn load_u8(&self, addr: usize) -> u32 {
+        self.dram[addr] as u32
+    }
+
+    pub fn load_u16(&self, addr: usize) -> u32 {
+        (self.dram[addr + 1] << 8 |
+         self.dram[addr + 0]) as u32
     }
 
     pub fn store8(&mut self, addr: usize, data: i32) {
