@@ -27,4 +27,8 @@ impl Dram {
          self.dram[addr + 1] <<  8 |
          self.dram[addr + 0]) as i32
     }
+
+    pub fn store8(&mut self, addr: usize, data: i32) {
+        self.dram[addr + 0] = data as u8;
+    }
 }
