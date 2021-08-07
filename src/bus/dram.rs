@@ -64,12 +64,16 @@ mod tests {
     #[test]
     fn load_store_test() {
         let dram = &mut Dram::new();
-        let mut test_16 = |addr: usize, data: i32| {
+        let mut addr = 0;
+        let mut test_16 = |data: i32| {
             Dram::store16(dram, addr, data);
             assert_eq!(data, Dram::load16(dram, addr));
+            addr += 2;
         };
 
-        test_16(4, 157);
-        test_16(8, -42);
+        test_16(157);
+        test_16(0);
+        test_16(0b1000000010000000);
+        test_16(-42);
     }
 }
