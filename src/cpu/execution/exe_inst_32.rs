@@ -68,15 +68,24 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
         },
         OP_LBU    => {
             cpu.reg[inst.rd.unwrap() as usize] = 
-                Dram::load_u8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
+                Dram::load_u8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize) as i32;
         },
         OP_LHU    => {
             cpu.reg[inst.rd.unwrap() as usize] = 
-                Dram::load_u16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
+                Dram::load_u16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize) as i32;
         },
-        OP_SB     => {},
-        OP_SH     => {},
-        OP_SW     => {},
+        OP_SB     => {
+            Dram::store8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize,
+                         cpu.reg[inst.rs2.unwrap() as usize]);
+        },
+        OP_SH     => {
+            Dram::store16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize,
+                         cpu.reg[inst.rs2.unwrap() as usize]);
+        },
+        OP_SW     => {
+            Dram::store32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize,
+                         cpu.reg[inst.rs2.unwrap() as usize]);
+        },
         OP_ADDI   => {
             cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as i32;
         },
