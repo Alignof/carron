@@ -66,7 +66,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
             cpu.reg[inst.rd.unwrap() as usize] =
                 Dram::load32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
         },
-        OP_LBU    => {},
+        OP_LBU    => {
+            cpu.reg[inst.rd.unwrap() as usize] = 
+                Dram::load8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
+        },
         OP_LHU    => {},
         OP_SB     => {},
         OP_SH     => {},
