@@ -29,6 +29,18 @@ impl Dram {
     }
 
     pub fn store8(&mut self, addr: usize, data: i32) {
-        self.dram[addr + 0] = data as u8;
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
+    }
+
+    pub fn store16(&mut self, addr: usize, data: i32) {
+        self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
+    }
+
+    pub fn store32(&mut self, addr: usize, data: i32) {
+        self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
     }
 }
