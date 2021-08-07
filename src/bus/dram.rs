@@ -12,6 +12,7 @@ impl Dram {
         }
     }
 
+    // load
     pub fn load8(&self, addr: usize) -> i32 {
         self.dram[addr] as i32
     }
@@ -37,6 +38,7 @@ impl Dram {
          self.dram[addr + 0]) as u32
     }
 
+    // store
     pub fn store8(&mut self, addr: usize, data: i32) {
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
     }
@@ -51,5 +53,20 @@ impl Dram {
         self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
         self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
         self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn load_store_test() {
+        let dram = Dram::new();
+
+        Dram::store16(dram, 13, 157);
+        assert_eq!(157, Dram::load16(dram, 13));
+                
     }
 }
