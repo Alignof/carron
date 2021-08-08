@@ -64,6 +64,45 @@ mod tests {
     use super::*;
 
     #[test]
+    fn load_store_u8_test() {
+        let dram = &mut Dram::new();
+        let mut addr = 0;
+        let mut test_8 = |data: i32| {
+            Dram::store8(dram, addr, data);
+            assert_eq!(data, Dram::load_u8(dram, addr));
+            addr += 2;
+        };
+
+        test_8(0);
+        test_8(17);
+        test_8(0b01111111);
+
+        Dram::store8(dram, addr, -42);
+        assert_ne!(-42, Dram::load_u8(dram, addr));
+        Dram::store16(dram, addr, -42);
+        assert_eq!(214, Dram::load_u8(dram, addr));
+    }
+
+    #[test]
+    fn load_store_8_test() {
+        let dram = &mut Dram::new();
+        let mut addr = 0;
+        let mut test_8 = |data: i32| {
+            Dram::store8(dram, addr, data);
+            assert_eq!(data, Dram::load8(dram, addr));
+            addr += 2;
+        };
+
+        test_8(0);
+        test_8(17);
+        test_8(0b01111111);
+        test_8(-42);
+
+        Dram::store8(dram, addr, 0b10000000);
+        assert_ne!(0b10000000, Dram::load8(dram, addr));
+    }
+
+    #[test]
     fn load_store_16_test() {
         let dram = &mut Dram::new();
         let mut addr = 0;
@@ -81,6 +120,27 @@ mod tests {
 
         Dram::store16(dram, addr, 0b1000000010000000);
         assert_ne!(0b1000000010000000, Dram::load16(dram, addr));
+    }
+
+    #[test]
+    fn load_store_u16_test() {
+        let dram = &mut Dram::new();
+        let mut addr = 0;
+        let mut test_u16 = |data: i32| {
+            Dram::store16(dram, addr, data);
+            assert_eq!(data, Dram::load_u16(dram, addr));
+            addr += 2;
+        };
+
+        test_u16(0);
+        test_u16(157);
+        test_u16(255);
+        test_u16(0b0111111111111111);
+
+        Dram::store16(dram, addr, -42);
+        assert_ne!(-42, Dram::load_u16(dram, addr));
+        Dram::store16(dram, addr, -42);
+        assert_eq!(65494, Dram::load_u16(dram, addr));
     }
 
     #[test]
