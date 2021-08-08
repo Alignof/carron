@@ -33,12 +33,12 @@ impl Dram {
 
     // load
     pub fn load8(&self, addr: usize) -> i32 {
-        self.dram[addr] as i32
+        self.dram[addr] as i8 as i32
     }
 
     pub fn load16(&self, addr: usize) -> i32 {
-        ((self.dram[addr + 1] as u32) << 8 |
-         (self.dram[addr + 0] as u32)) as i32
+        ((self.dram[addr + 1] as u16) << 8 |
+         (self.dram[addr + 0] as u16)) as i16 as i32
     }
 
     pub fn load32(&self, addr: usize) -> i32 {
@@ -48,11 +48,11 @@ impl Dram {
          (self.dram[addr + 0] as u32)) as i32
     }
 
-    pub fn load_u8(&self, addr: usize) -> u32 {
+    pub fn load_u8(&self, addr: usize) -> i32 {
         self.dram[addr] as i32
     }
 
-    pub fn load_u16(&self, addr: usize) -> u32 {
+    pub fn load_u16(&self, addr: usize) -> i32 {
         ((self.dram[addr + 1] as u32) << 8 |
          (self.dram[addr + 0] as u32)) as i32
     }
@@ -64,7 +64,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn load_store_test() {
+    fn load_store_16_test() {
         let dram = &mut Dram::new();
         let mut addr = 0;
         let mut test_16 = |data: i32| {
@@ -73,10 +73,32 @@ mod tests {
             addr += 2;
         };
 
-        println!("-42:\t{:b}\n65494:\t{:b}", -42, 65494);
-        test_16(157);
         test_16(0);
-        test_16(0b1000000010000000);
+        test_16(157);
+        test_16(255);
         test_16(-42);
+        test_16(0b0111111111111111);
+
+        Dram::store16(dram, addr, 0b1000000010000000);
+        assert_ne!(0b1000000010000000, Dram::load16(dram, addr));
+    }
+
+    #[test]
+    #[allow(overflowing_literals)]
+    fn load_store_32_test() {
+        let dram = &mut Dram::new();
+        let mut addr = 0;
+        let mut test_32 = |data: i32| {
+            Dram::store32(dram, addr, data);
+            assert_eq!(data, Dram::load32(dram, addr));
+            addr += 2;
+        };
+
+        test_32(0);
+        test_32(157);
+        test_32(255);
+        test_32(-42);
+        test_32(0b1000000010000000);
+        test_32(0b10000000100000001000000010000000);
     }
 }
