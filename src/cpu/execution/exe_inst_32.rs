@@ -154,9 +154,15 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
             cpu.reg[inst.rd.unwrap() as usize] =
                 cpu.reg[inst.rs1.unwrap() as usize] & cpu.reg[inst.rs2.unwrap() as usize];
         },
-        OP_FENCE  => {},
-        OP_ECALL  => {},
-        OP_EBREAK => {},
+        OP_FENCE  => {
+            panic!("not yet implemented: OP_FENCE");
+        },
+        OP_ECALL  => {
+            panic!("not yet implemented: OP_ECALL");
+        },
+        OP_EBREAK => {
+            panic!("not yet implemented: OP_EBREAK");
+        },
         _         => panic!("not a full instruction"),
     }
 }
