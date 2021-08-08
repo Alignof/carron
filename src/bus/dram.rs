@@ -12,6 +12,25 @@ impl Dram {
         }
     }
 
+
+    // store
+    pub fn store8(&mut self, addr: usize, data: i32) {
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
+    }
+
+    pub fn store16(&mut self, addr: usize, data: i32) {
+        self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
+    }
+
+    pub fn store32(&mut self, addr: usize, data: i32) {
+        self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
+    }
+
+
     // load
     pub fn load8(&self, addr: usize) -> i32 {
         self.dram[addr] as i32
@@ -30,29 +49,12 @@ impl Dram {
     }
 
     pub fn load_u8(&self, addr: usize) -> u32 {
-        self.dram[addr] as u32
+        self.dram[addr] as i32
     }
 
     pub fn load_u16(&self, addr: usize) -> u32 {
         ((self.dram[addr + 1] as u32) << 8 |
-         (self.dram[addr + 0] as u32)) as u32
-    }
-
-    // store
-    pub fn store8(&mut self, addr: usize, data: i32) {
-        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
-    }
-
-    pub fn store16(&mut self, addr: usize, data: i32) {
-        self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
-        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
-    }
-
-    pub fn store32(&mut self, addr: usize, data: i32) {
-        self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
-        self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
-        self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
-        self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
+         (self.dram[addr + 0] as u32)) as i32
     }
 }
 
@@ -71,6 +73,7 @@ mod tests {
             addr += 2;
         };
 
+        println!("-42:\t{:b}\n65494:\t{:b}", -42, 65494);
         test_16(157);
         test_16(0);
         test_16(0b1000000010000000);

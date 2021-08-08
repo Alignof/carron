@@ -68,11 +68,11 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
         },
         OP_LBU    => {
             cpu.reg[inst.rd.unwrap() as usize] = 
-                Dram::load_u8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize) as i32;
+                Dram::load_u8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
         },
         OP_LHU    => {
             cpu.reg[inst.rd.unwrap() as usize] = 
-                Dram::load_u16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize) as i32;
+                Dram::load_u16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
         },
         OP_SB     => {
             Dram::store8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize,
