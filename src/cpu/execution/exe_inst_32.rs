@@ -98,13 +98,13 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
                 ((cpu.reg[inst.rs1.unwrap()] as u32) < inst.imm.unwrap() as u32) as i32;
         },
         OP_XORI => {
-            cpu.reg[inst.rd.unwrap()] ^= inst.rs1.unwrap() as i32;
+            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] ^ inst.imm.unwrap();
         },
         OP_ORI => {
-            cpu.reg[inst.rd.unwrap()] |= inst.rs1.unwrap() as i32;
+            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] | inst.imm.unwrap();
         },
         OP_ANDI => {
-            cpu.reg[inst.rd.unwrap()] &= inst.rs1.unwrap() as i32;
+            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] & inst.imm.unwrap();
         },
         OP_SLLI => {
             cpu.reg[inst.rd.unwrap()] =
