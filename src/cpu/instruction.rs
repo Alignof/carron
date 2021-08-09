@@ -80,9 +80,9 @@ pub enum OpecodeKind{
 
 pub struct Instruction {
     pub opc: OpecodeKind,
-    pub rd:  Option<u8>,
-    pub rs1: Option<u8>,
-    pub rs2: Option<u8>,
+    pub rd:  Option<usize>,
+    pub rs1: Option<usize>,
+    pub rs2: Option<usize>,
     pub imm: Option<i32>,
     pub is_compressed: bool,
 }
