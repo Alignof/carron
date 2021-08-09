@@ -7,9 +7,9 @@ impl Decode for u32 {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };
-        let new_rd:  Option<u8>  = self.parse_rd(&new_opc);
-        let new_rs1: Option<u8>  = self.parse_rs1(&new_opc);
-        let new_rs2: Option<u8>  = self.parse_rs2(&new_opc);
+        let new_rd:  Option<usize>  = self.parse_rd(&new_opc);
+        let new_rs1: Option<usize>  = self.parse_rs1(&new_opc);
+        let new_rs2: Option<usize>  = self.parse_rs2(&new_opc);
         let new_imm: Option<i32> = self.parse_imm(&new_opc);
 
         Instruction {
@@ -83,10 +83,10 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(&self, _opkind: &OpecodeKind) -> Option<u8> {
+    fn parse_rd(&self, _opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x7F) as u8;
-        let rd: u8 = ((inst >> 7) & 0x1F) as u8;
+        let opmap: usize  = (inst & 0x7F) as usize;
+        let rd: usize = ((inst >> 7) & 0x1F) as usize;
 
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
         if  opmap == 0b01100011 || opmap == 0b00100011 || 
@@ -97,10 +97,10 @@ impl Decode for u32 {
         return Some(rd);
     }
 
-    fn parse_rs1(&self, _opkind: &OpecodeKind) -> Option<u8> {
+    fn parse_rs1(&self, _opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x7F) as u8;
-        let rs1: u8 = ((inst >> 15) & 0x1F) as u8;
+        let opmap: usize  = (inst & 0x7F) as usize;
+        let rs1: usize = ((inst >> 15) & 0x1F) as usize;
 
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
         if  opmap == 0b01010111 || opmap == 0b00010111 || 
@@ -111,10 +111,10 @@ impl Decode for u32 {
         return Some(rs1);
     }
 
-    fn parse_rs2(&self, _opkind: &OpecodeKind) -> Option<u8> {
+    fn parse_rs2(&self, _opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x7F) as u8;
-        let rs2: u8 = ((inst >> 20) & 0x1F) as u8;
+        let opmap: usize  = (inst & 0x7F) as usize;
+        let rs2: usize = ((inst >> 20) & 0x1F) as usize;
 
         // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
         // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,

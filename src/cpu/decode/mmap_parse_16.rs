@@ -88,9 +88,9 @@ impl Decode for u16 {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };
-        let new_rd:  Option<u8>  = self.parse_rd(&new_opc);
-        let new_rs1: Option<u8>  = self.parse_rs1(&new_opc);
-        let new_rs2: Option<u8>  = self.parse_rs2(&new_opc);
+        let new_rd:  Option<usize>  = self.parse_rd(&new_opc);
+        let new_rs1: Option<usize>  = self.parse_rs1(&new_opc);
+        let new_rs2: Option<usize>  = self.parse_rs2(&new_opc);
         let new_imm: Option<i32> = self.parse_imm(&new_opc);
 
         Instruction {
@@ -116,11 +116,11 @@ impl Decode for u16 {
         }
     }
 
-    fn parse_rd(&self, opkind: &OpecodeKind) -> Option<u8> {
+    fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: &u16 = self;
-        let q0_rd: u8  = ((inst >> 2) & 0x7) as u8;
-        let q1_rd: u8  = ((inst >> 7) & 0x7) as u8;
-        let q2_rd: u8  = ((inst >> 7) & 0x1F) as u8;
+        let q0_rd: usize  = ((inst >> 2) & 0x7) as usize;
+        let q1_rd: usize  = ((inst >> 7) & 0x7) as usize;
+        let q2_rd: usize  = ((inst >> 7) & 0x1F) as usize;
 
         match opkind {
             // Quadrant 0
@@ -150,12 +150,12 @@ impl Decode for u16 {
         }
     }
 
-    fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<u8> {
+    fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: &u16 = self;
-        let q0_rs1: u8 = ((inst >> 7) & 0x3) as u8;
-        let q1_rs1: u8 = ((inst >> 7) & 0x3) as u8;
-        let q2_rs1: u8 = ((inst >> 7) & 0x3) as u8;
-        let addi_rs1: u8 = ((inst >> 7) & 0x1F) as u8;
+        let q0_rs1: usize = ((inst >> 7) & 0x3) as usize;
+        let q1_rs1: usize = ((inst >> 7) & 0x3) as usize;
+        let q2_rs1: usize = ((inst >> 7) & 0x3) as usize;
+        let addi_rs1: usize = ((inst >> 7) & 0x1F) as usize;
 
         match opkind {
             // Quadrant 0
@@ -186,11 +186,11 @@ impl Decode for u16 {
         }
     }
 
-    fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<u8> {
+    fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: &u16 = self;
-        let q0_rs2: u8 = ((inst >> 2) & 0x7) as u8;
-        let q1_rs2: u8 = ((inst >> 2) & 0x7) as u8;
-        let q2_rs2: u8 = ((inst >> 2) & 0x1F) as u8;
+        let q0_rs2: usize = ((inst >> 2) & 0x7) as usize;
+        let q1_rs2: usize = ((inst >> 2) & 0x7) as usize;
+        let q2_rs2: usize = ((inst >> 2) & 0x1F) as usize;
 
         match opkind {
             // Quadrant 0
