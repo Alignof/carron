@@ -56,38 +56,38 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
         },
         OP_LB => {
             cpu.reg[inst.rd.unwrap()] = 
-                Dram::load8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()));
+                Dram::load8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
         },
         OP_LH => {
             cpu.reg[inst.rd.unwrap()] =
-                Dram::load16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()));
+                Dram::load16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
         },
         OP_LW => {
             cpu.reg[inst.rd.unwrap()] =
-                Dram::load32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()));
+                Dram::load32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
         },
         OP_LBU => {
             cpu.reg[inst.rd.unwrap()] = 
-                Dram::load_u8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()));
+                Dram::load_u8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
         },
         OP_LHU => {
             cpu.reg[inst.rd.unwrap()] = 
-                Dram::load_u16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()));
+                Dram::load_u16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
         },
         OP_SB => {
-            Dram::store8(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()),
+            Dram::store8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
                          cpu.reg[inst.rs2.unwrap()]);
         },
         OP_SH => {
-            Dram::store16(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()),
+            Dram::store16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
                          cpu.reg[inst.rs2.unwrap()]);
         },
         OP_SW => {
-            Dram::store32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()),
+            Dram::store32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
                          cpu.reg[inst.rs2.unwrap()]);
         },
         OP_ADDI => {
-            cpu.reg[inst.rd.unwrap()] += inst.rs1.unwrap() as i32;
+            cpu.reg[inst.rd.unwrap()] += cpu.reg[inst.rs1.unwrap()] as i32;
         },
         OP_SLTI => {
             cpu.reg[inst.rd.unwrap()] =

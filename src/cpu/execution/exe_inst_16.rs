@@ -17,11 +17,11 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
         },
         OP_C_LW => {
             cpu.reg[inst.rd.unwrap()] =
-                Dram::load32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()));
+                Dram::load32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
         },
         OP_C_LWSP => {
             cpu.reg[inst.rd.unwrap()] =
-                Dram::load32(dram, (cpu.reg[REG_SP] as i32 + inst.imm.unwrap()));
+                Dram::load32(dram, (cpu.reg[REG_SP] + inst.imm.unwrap()) as usize);
         },
         OP_C_LUI => {
             cpu.reg[inst.rd.unwrap()] = inst.imm.unwrap() << 12;
