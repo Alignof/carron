@@ -16,12 +16,8 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, _dram: &mut Dram) {
             cpu.reg[REG_SP] = 
                 cpu.reg[REG_SP] + ((cpu.reg[inst.imm.unwrap() as usize] >> 2) & 0x1FF);
         },
-        OP_C_FLD => {},
         OP_C_LW => {},
-        OP_C_FLW => {},
-        OP_C_FSD => {},
         OP_C_SW => {},
-        OP_C_FSW => {},
         OP_C_NOP => {/* NOP */},
         OP_C_ADDI => {
             cpu.reg[inst.rd.unwrap() as usize] += inst.rs1.unwrap() as i32;
@@ -81,9 +77,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, _dram: &mut Dram) {
             } 
         },
         OP_C_SLLI => {},
-        OP_C_FLDSP => {},
         OP_C_LWSP => {},
-        OP_C_FLWSP => {},
         OP_C_JR => {
             cpu.pc += cpu.reg[inst.rs1.unwrap() as usize] as u32;
         },
@@ -100,9 +94,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, _dram: &mut Dram) {
             cpu.reg[inst.rd.unwrap() as usize] =
                 cpu.reg[inst.rs1.unwrap() as usize] + cpu.reg[inst.rs2.unwrap() as usize];
         },
-        OP_C_FSDSP => {},
         OP_C_SWSP => {},
-        OP_C_FSWSP => {},
         _ => panic!("not a compressed Instruction"),
     }
 }
