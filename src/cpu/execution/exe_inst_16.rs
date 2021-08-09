@@ -31,11 +31,11 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
         OP_C_SWSP => {},
         OP_C_SRLI => {
             cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] >> inst.imm.unwrap() as i32;
+                cpu.reg[inst.rs1.unwrap()] >> inst.imm.unwrap();
         },
         OP_C_SRAI => {
             cpu.reg[inst.rd.unwrap()] =
-                (cpu.reg[inst.rs1.unwrap()] as i32) >> inst.imm.unwrap() as i32;
+                cpu.reg[inst.rs1.unwrap()] >> inst.imm.unwrap();
         },
         OP_C_ADD => {
             cpu.reg[inst.rd.unwrap()] =

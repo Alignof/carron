@@ -87,7 +87,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
                          cpu.reg[inst.rs2.unwrap()]);
         },
         OP_ADDI => {
-            cpu.reg[inst.rd.unwrap()] += cpu.reg[inst.rs1.unwrap()] as i32;
+            cpu.reg[inst.rd.unwrap()] += cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap();
         },
         OP_SLTI => {
             cpu.reg[inst.rd.unwrap()] =
