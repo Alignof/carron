@@ -42,15 +42,13 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
                 cpu.reg[inst.rs1.unwrap()] + cpu.reg[inst.rs2.unwrap()];
         },
         OP_C_ADDI4SPN => {
-            cpu.reg[REG_SP] = 
-                cpu.reg[REG_SP] + ((cpu.reg[inst.imm.unwrap()] >> 2) & 0x1FF);
+            cpu.reg[inst.rd.unwrap()] += inst.imm.unwrap();
         },
         OP_C_ADDI => {
             cpu.reg[inst.rd.unwrap()] += inst.rs1.unwrap() as i32;
         },
         OP_C_ADDI16SP => {
-            cpu.reg[REG_SP] = 
-                cpu.reg[REG_SP] + ((cpu.reg[inst.imm.unwrap()] >> 4) & 0x1FF);
+            cpu.reg[REG_SP] += inst.imm.unwrap();
         },
         OP_C_ANDI => {
             cpu.reg[inst.rd.unwrap()] &= inst.rs1.unwrap() as i32;
