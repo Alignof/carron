@@ -2,7 +2,7 @@ use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::bus::dram::Dram;
 
-pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, _dram: &mut Dram) {
+pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
     use OpecodeKind::*;
     const INST_SIZE: u32 = 2;
     const REG_SP: usize = 2 as usize;
@@ -19,7 +19,10 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, _dram: &mut Dram) {
             cpu.reg[inst.rd.unwrap() as usize] =
                 Dram::load32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
         },
-        OP_C_LWSP => {},
+        OP_C_LWSP => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                Dram::load32(dram, (cpu.reg[REG_SP] as i32 + inst.imm.unwrap()) as usize);
+        },
         OP_C_LUI => {
             cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
         },
