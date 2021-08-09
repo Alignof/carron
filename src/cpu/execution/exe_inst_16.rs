@@ -15,7 +15,10 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, _dram: &mut Dram) {
         OP_C_LI => {
             cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap();
         },
-        OP_C_LW => {},
+        OP_C_LW => {
+            cpu.reg[inst.rd.unwrap() as usize] =
+                Dram::load32(dram, (inst.rs1.unwrap() as i32 + inst.imm.unwrap()) as usize);
+        },
         OP_C_LWSP => {},
         OP_C_LUI => {
             cpu.reg[inst.rd.unwrap() as usize] = inst.imm.unwrap() << 12;
