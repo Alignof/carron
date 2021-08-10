@@ -106,7 +106,9 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
             cpu.reg[inst.rd.unwrap()] =
                 cpu.reg[inst.rs2.unwrap()];
         },
-        OP_C_EBREAK => {},
+        OP_C_EBREAK => {
+            panic!("not yet implemented: OP_C_EBREAK");
+        },
         OP_C_NOP => {/* NOP */},
         _ => panic!("not a compressed Instruction"),
     }
