@@ -30,7 +30,10 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
             Dram::store32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
                          cpu.reg[inst.rs2.unwrap()]);
         },
-        OP_C_SLLI => {},
+        OP_C_SLLI => {
+            cpu.reg[inst.rd.unwrap()] =
+                ((cpu.reg[inst.rs1.unwrap()] as u32) << inst.imm.unwrap()) as i32;
+        },
         OP_C_SWSP => {
             Dram::store32(dram, (cpu.reg[REG_SP] + inst.imm.unwrap()) as usize,
                          cpu.reg[inst.rs2.unwrap()]);
