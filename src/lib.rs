@@ -19,7 +19,7 @@ impl Simulator {
 
         Simulator {
             cpu: CPU::new(entry_address),
-            bus: Bus::new(),
+            bus: Bus::new(loader),
         }
     }
 
