@@ -3,7 +3,7 @@ pub mod cpu;
 pub mod bus;
 pub mod elfload;
 
-use cpu::{CPU, get_u16, get_u32, is_cinst};
+use cpu::{CPU, get_u16, get_u32};
 use cpu::decode::Decode;
 use cpu::execution::Execution;
 use bus::Bus;
@@ -24,8 +24,6 @@ impl Simulator {
     }
 
     pub fn simulation(&mut self) {
-        let mmap = &mut self.loader.mem_data;
-
         loop {
             if is_cinst(mmap, self.cpu.pc as usize) {
                 get_u16(mmap, self.cpu.pc as usize)
