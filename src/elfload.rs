@@ -14,7 +14,6 @@ pub struct ElfLoader {
     pub elf_header: ElfHeader,
         prog_headers: Vec<ProgramHeader>,
         sect_headers: Vec<SectionHeader>,
-    pub mem_data: Mmap,
 }
 
 impl ElfLoader {
@@ -27,7 +26,6 @@ impl ElfLoader {
             elf_header: new_elf,
             prog_headers: new_prog,
             sect_headers: new_sect,
-            mem_data: mapped_data,
         })
     }
 
