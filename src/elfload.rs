@@ -18,7 +18,7 @@ pub struct ElfLoader {
 }
 
 impl ElfLoader {
-    pub fn try_new() -> std::io::Result<ElfLoader>{
+    pub fn new() -> std::io::Result<ElfLoader>{
         let new_elf  = ElfHeader::new(&mapped_data);
         let new_prog = ProgramHeader::new(&mapped_data, &new_elf);
         let new_sect = SectionHeader::new(&mapped_data, &new_elf);
