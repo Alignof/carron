@@ -27,16 +27,16 @@ fn main() {
     if loader.is_elf() {
         println!("elfcheck: OK\n");
 
-        // initialize a simulator
-        let mut simulator: Simulator = Simulator::new(loader); 
-
         match args.exe_option {
-            ExeOption::OPT_NONE     => simulator.simulation(),
-            ExeOption::OPT_ELFHEAD  => simulator.loader.ident_show(),
-            ExeOption::OPT_PROG     => simulator.loader.dump_segment(),
-            ExeOption::OPT_SECT     => simulator.loader.dump_section(),
-            ExeOption::OPT_SHOWALL  => simulator.loader.show_all_header(),
-            ExeOption::OPT_DISASEM  => simulator.loader.ident_show(),
+            ExeOption::OPT_NONE     => {
+                let mut simulator: Simulator = Simulator::new(loader); 
+                simulator.simulation();
+            },
+            ExeOption::OPT_ELFHEAD  => loader.ident_show(),
+            ExeOption::OPT_PROG     => loader.dump_segment(),
+            ExeOption::OPT_SECT     => loader.dump_section(),
+            ExeOption::OPT_SHOWALL  => loader.show_all_header(),
+            ExeOption::OPT_DISASEM  => loader.ident_show(),
         }
     } else {
         panic!("This file is not an ELF.");

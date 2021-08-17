@@ -9,7 +9,6 @@ use cpu::execution::Execution;
 use bus::Bus;
 
 pub struct Simulator {
-    pub loader: elfload::ElfLoader,
     pub cpu: cpu::CPU,
     pub bus: bus::Bus,
 }
@@ -19,7 +18,6 @@ impl Simulator {
         let entry_address = loader.elf_header.e_entry;
 
         Simulator {
-            loader: loader,
             cpu: CPU::new(entry_address),
             bus: Bus::new(),
         }
