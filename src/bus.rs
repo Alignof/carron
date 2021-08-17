@@ -6,9 +6,9 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new() -> Bus {
+    pub fn new(new_dram: dram::Dram) -> Bus {
         Bus {
-            dram: Dram::new(),
+            dram: new_dram,
         }
     }
 }

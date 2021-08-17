@@ -21,13 +21,13 @@ impl Simulator {
         let mapped_data = unsafe{Mmap::map(&file)?};
         let new_dram = Dram::new(mapped_data);
 
-        let loader = match elfload::ElfLoader::new(&args.filename);
+        let loader = match elfload::ElfLoader::new(&new_dram);
         let entry_address = loader.elf_header.e_entry;
 
         Simulator {
             loader: loader,
             cpu: CPU::new(entry_address),
-            bus: Bus::new(),
+            bus: Bus::new(new_dram),
         }
     }
 
