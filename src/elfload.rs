@@ -18,7 +18,9 @@ pub struct ElfLoader {
 }
 
 impl ElfLoader {
-    pub fn try_new() -> std::io::Result<ElfLoader>{
+    pub fn try_new(filename: &str) -> std::io::Result<ElfLoader>{
+        let file = File::open(filename)?;
+        let mapped_data = unsafe{Mmap::map(&file)?};
         let new_elf  = ElfHeader::new(&mapped_data);
         let new_prog = ProgramHeader::new(&mapped_data, &new_elf);
         let new_sect = SectionHeader::new(&mapped_data, &new_elf);

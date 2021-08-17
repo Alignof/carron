@@ -15,16 +15,7 @@ pub struct Simulator {
 }
 
 impl Simulator {
-    pub fn try_new(filename: &str) -> Simulator {
-        let file = File::open(filename)?;
-        let mapped_data = unsafe{Mmap::map(&file)?};
-
-        let loader = match elfload::ElfLoader::try_new(&args.filename) {
-            Ok(loader) => loader,
-            Err(error) => {
-                panic!("There was a problem opening the file: {:?}", error);
-            }
-        };
+    pub fn new(loader: elfload::ElfLoader) -> Simulator {
         let entry_address = loader.elf_header.e_entry;
 
         Simulator {

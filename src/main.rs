@@ -17,16 +17,18 @@ fn main() {
 
     println!("\nIn file {}", args.filename);
 
-    // initialize a simulator
-    let mut simulator: Simulator = match Simulator::try_new(&args.filename) {
-        Ok(simulator) => simulator,
+    let loader = match elfload::ElfLoader::try_new(&args.filename) {
+        Ok(loader) => loader,
         Err(error) => {
             panic!("There was a problem opening the file: {:?}", error);
         }
-    }; 
+    };
 
-    if simulator.loader.is_elf() {
+    if loader.is_elf() {
         println!("elfcheck: OK\n");
+
+        // initialize a simulator
+        let mut simulator: Simulator = Simulator::new(loader); 
 
         match args.exe_option {
             ExeOption::OPT_NONE     => simulator.simulation(),
