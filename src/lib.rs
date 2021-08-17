@@ -3,7 +3,7 @@ pub mod cpu;
 pub mod bus;
 pub mod elfload;
 
-use cpu::{CPU, get_u16, get_u32};
+use cpu::CPU;
 use cpu::decode::Decode;
 use cpu::execution::Execution;
 use bus::Bus;
