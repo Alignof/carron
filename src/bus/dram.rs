@@ -1,3 +1,5 @@
+use crate::elfload;
+
 pub struct Dram {
     dram: Vec<u8>,
 }
@@ -5,7 +7,12 @@ pub struct Dram {
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> Dram {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
+        let mmap_start = loader.elf_header.e_entry as usize;
+        let mmap_end = mmap_start + loader.mem_data.len() as usize;
+
+        // load elf memory mapping 
         let new_dram = vec![0; DRAM_SIZE as usize];
+        new_dram.splice(mmap_start..mmap_end, loader.mem_data.iter().cloned());
 
         Dram {
             dram: new_dram,
