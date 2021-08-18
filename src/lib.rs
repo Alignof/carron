@@ -4,7 +4,7 @@ pub mod bus;
 pub mod elfload;
 
 use cpu::CPU;
-use cpu::{fetch, fetch_compressed};
+use cpu::fetch;
 use bus::Bus;
 
 pub struct Simulator {
@@ -23,7 +23,6 @@ impl Simulator {
     }
 
     pub fn simulation(&mut self) {
-        use crate::cpu::decode::Decode;
         use crate::cpu::execution::Execution;
 
         loop {

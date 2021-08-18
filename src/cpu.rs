@@ -5,6 +5,7 @@ mod instruction;
 use std::ops::Deref;
 use crate::bus::dram;
 use crate::bus::dram::Dram;
+use crate::cpu::decode::Decode;
 
 pub struct CPU {
     pub pc: usize,
@@ -33,19 +34,19 @@ impl Deref for InstWrapper {
 }
 
 pub fn fetch(dram: &dram::Dram, index_pc: usize) -> InstWrapper {
-    let is_cinst: bool = self.bus.dram.raw_byte(self.cpu.pc) & 0x3 != 0x3;
+    let is_cinst: bool = Dram::raw_byte(dram, index_pc) & 0x3 != 0x3;
 
     if is_cinst {
         let new_inst: u16 = 
             (Dram::raw_byte(dram, index_pc + 1) as u16) <<  8 |
-            (Dram::raw_byte(dram, index_pc + 0) as u16)
+            (Dram::raw_byte(dram, index_pc + 0) as u16);
         InstWrapper { raw_inst: Box::new(new_inst) }
     } else {
         let new_inst: u32 =
             (Dram::raw_byte(dram, index_pc + 3) as u32) << 24 |
             (Dram::raw_byte(dram, index_pc + 2) as u32) << 16 |
             (Dram::raw_byte(dram, index_pc + 1) as u32) <<  8 |
-            (Dram::raw_byte(dram, index_pc + 0) as u32)
+            (Dram::raw_byte(dram, index_pc + 0) as u32);
         InstWrapper { raw_inst: Box::new(new_inst) }
     }
 }
