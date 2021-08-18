@@ -15,7 +15,7 @@ pub struct Simulator {
 
 impl Simulator {
     pub fn new(loader: elfload::ElfLoader) -> Simulator {
-        let entry_address = loader.elf_header.e_entry;
+        let entry_address = loader.elf_header.e_entry as usize;
 
         Simulator {
             cpu: CPU::new(entry_address),
@@ -28,14 +28,14 @@ impl Simulator {
         use crate::cpu::execution::Execution;
 
         loop {
-            let is_cinst: bool = Dram::raw_byte(&self.bus.dram, self.cpu.pc as usize) & 0x3 != 0x3;
+            let is_cinst: bool = Dram::raw_byte(&self.bus.dram, self.cpu.pc) & 0x3 != 0x3;
 
             if is_cinst {
-                fetch_compressed(&self.bus.dram, self.cpu.pc as usize)
+                fetch_compressed(&self.bus.dram, self.cpu.pc)
                     .decode()
                     .execution(&mut self.cpu, &mut self.bus.dram);
             }else{
-                fetch(&self.bus.dram, self.cpu.pc as usize)
+                fetch(&self.bus.dram, self.cpu.pc)
                     .decode()
                     .execution(&mut self.cpu, &mut self.bus.dram);
             }

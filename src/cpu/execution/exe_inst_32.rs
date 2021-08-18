@@ -4,7 +4,7 @@ use crate::bus::dram::Dram;
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
     use OpecodeKind::*;
-    const INST_SIZE: u32 = 4;
+    const INST_SIZE: usize = 4;
 
     // add program counter
     cpu.pc += 4;
@@ -14,44 +14,44 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
             cpu.reg[inst.rd.unwrap()] = inst.imm.unwrap() << 12;
         },
         OP_AUIPC => {
-            cpu.pc += (inst.imm.unwrap() << 12) as u32;
+            cpu.pc += (inst.imm.unwrap() << 12) as usize;
         },
         OP_JAL => {
             cpu.reg[inst.rd.unwrap()] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += inst.imm.unwrap() as u32;
+            cpu.pc += inst.imm.unwrap() as usize;
         },
         OP_JALR => {
             cpu.reg[inst.rd.unwrap()] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += (cpu.reg[inst.rs1.unwrap()]  + inst.imm.unwrap()) as u32;
+            cpu.pc += (cpu.reg[inst.rs1.unwrap()]  + inst.imm.unwrap()) as usize;
         },
         OP_BEQ => {
             if cpu.reg[inst.rs1.unwrap()] == cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_BNE => {
             if cpu.reg[inst.rs1.unwrap()] != cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_BLT => {
             if cpu.reg[inst.rs1.unwrap()] < cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_BGE => {
             if cpu.reg[inst.rs1.unwrap()] >= cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_BLTU => {
             if (cpu.reg[inst.rs1.unwrap()] as u32) < (cpu.reg[inst.rs1.unwrap()] as u32) {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_BGEU => {
             if (cpu.reg[inst.rs1.unwrap()] as u32) >= (cpu.reg[inst.rs1.unwrap()] as u32) {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_LB => {

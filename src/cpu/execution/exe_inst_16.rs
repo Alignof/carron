@@ -4,7 +4,7 @@ use crate::bus::dram::Dram;
 
 pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
     use OpecodeKind::*;
-    const INST_SIZE: u32 = 2;
+    const INST_SIZE: usize = 2;
     const REG_SP: usize = 2 as usize;
     const LINK_REG: usize = 1 as usize;
 
@@ -79,28 +79,28 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
                 cpu.reg[inst.rs1.unwrap()] & cpu.reg[inst.rs2.unwrap()];
         },
         OP_C_J => {
-            cpu.pc += inst.imm.unwrap() as u32;
+            cpu.pc += inst.imm.unwrap() as usize;
         },
         OP_C_JAL => {
             cpu.reg[1] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += inst.imm.unwrap() as u32;
+            cpu.pc += inst.imm.unwrap() as usize;
         },
         OP_C_JALR => {
             cpu.reg[LINK_REG] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += (cpu.reg[inst.rs1.unwrap()]  + inst.imm.unwrap()) as u32;
+            cpu.pc += (cpu.reg[inst.rs1.unwrap()]  + inst.imm.unwrap()) as usize;
         },
         OP_C_BEQZ => {
             if cpu.reg[inst.rs1.unwrap()] == 0 {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_C_BNEZ => {
             if cpu.reg[inst.rs1.unwrap()] != 0 {
-                cpu.pc += inst.imm.unwrap() as u32;
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_C_JR => {
-            cpu.pc += cpu.reg[inst.rs1.unwrap()] as u32;
+            cpu.pc += cpu.reg[inst.rs1.unwrap()] as usize;
         },
         OP_C_MV => {
             cpu.reg[inst.rd.unwrap()] =
