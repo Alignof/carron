@@ -20,7 +20,7 @@ impl Dram {
     }
 
     // get byte
-    pub fn raw_byte(&mut self, addr: usize) -> u8 {
+    pub fn raw_byte(&self, addr: usize) -> u8 {
         self.dram[addr]
     }
 

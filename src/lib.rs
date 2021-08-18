@@ -4,8 +4,9 @@ pub mod bus;
 pub mod elfload;
 
 use cpu::CPU;
-use cpu::fetch;
+use cpu::{fetch, fetch_compressed};
 use bus::Bus;
+use bus::dram;
 
 pub struct Simulator {
     pub cpu: cpu::CPU,
@@ -24,21 +25,17 @@ impl Simulator {
 
     pub fn simulation(&mut self) {
         loop {
-            // before
-            if is_cinst(mmap, self.cpu.pc) {
-                get_u16(mmap, self.cpu.pc)
+            let is_cinst: bool = Dram::raw_byte(self.cpu.pc) & 0x3 != 0x3;
+
+            if is_cinst {
+                fetch_compressed(self.bus.dram, self.cpu.pc)
                     .decode()
                     .execution(&mut self.cpu, &mut self.bus.dram);
             }else{
-                get_u32(mmap, self.cpu.pc as usize)
+                fetch(self.bus.dram, self.cpu.pc)
                     .decode()
                     .execution(&mut self.cpu, &mut self.bus.dram);
             }
-
-            // after
-            fetch(self.bus.dram, &mut self.cpu.pc) // return u16 or u32
-                .decode()
-                .execution(&mut self.cpu, &mut self.bus.dram);
         }
     }
 } 
