@@ -1,6 +1,6 @@
-mod instruction;
 pub mod decode;
 pub mod execution;
+mod instruction;
 
 use crate::bus::dram;
 use crate::bus::dram::Dram;
@@ -20,19 +20,23 @@ impl CPU {
 }
 
 pub struct InstWrapper {
-    pub raw_inst: Box<dyn Decode>;
+    pub raw_inst: Box<dyn Decode>,
 }
 
 pub fn fetch(dram: &dram::Dram, index_pc: usize) -> InstWrapper {
     let is_cinst: bool = self.bus.dram.raw_byte(self.cpu.pc) & 0x3 != 0x3;
 
     if is_cinst {
-        (Dram::raw_byte(dram, index_pc + 1) as u16) <<  8 |
-        (Dram::raw_byte(dram, index_pc + 0) as u16)
+        let new_inst: u16 = 
+            (Dram::raw_byte(dram, index_pc + 1) as u16) <<  8 |
+            (Dram::raw_byte(dram, index_pc + 0) as u16)
+        InstWrapper { raw_inst: Box::new(new_inst) }
     } else {
-        (Dram::raw_byte(dram, index_pc + 3) as u32) << 24 |
-        (Dram::raw_byte(dram, index_pc + 2) as u32) << 16 |
-        (Dram::raw_byte(dram, index_pc + 1) as u32) <<  8 |
-        (Dram::raw_byte(dram, index_pc + 0) as u32)
+        let new_inst: u32 =
+            (Dram::raw_byte(dram, index_pc + 3) as u32) << 24 |
+            (Dram::raw_byte(dram, index_pc + 2) as u32) << 16 |
+            (Dram::raw_byte(dram, index_pc + 1) as u32) <<  8 |
+            (Dram::raw_byte(dram, index_pc + 0) as u32)
+        InstWrapper { raw_inst: Box::new(new_inst) }
     }
 }
