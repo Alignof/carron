@@ -19,16 +19,16 @@ impl CPU {
     }
 }
 
-pub fn fetch(dram: dram::Dram, index_pc: usize) -> u32 {
+pub fn fetch(dram: &dram::Dram, index_pc: usize) -> u32 {
     // return instruction data
-    (Dram::raw_byte(&dram, index_pc + 4) as u32) << 24 |
-    (Dram::raw_byte(&dram, index_pc + 3) as u32) << 16 |
-    (Dram::raw_byte(&dram, index_pc + 2) as u32) <<  8 |
-    (Dram::raw_byte(&dram, index_pc + 1) as u32)
+    (Dram::raw_byte(dram, index_pc + 4) as u32) << 24 |
+    (Dram::raw_byte(dram, index_pc + 3) as u32) << 16 |
+    (Dram::raw_byte(dram, index_pc + 2) as u32) <<  8 |
+    (Dram::raw_byte(dram, index_pc + 1) as u32)
 }
 
-pub fn fetch_compressed(dram: dram::Dram, index_pc: usize) -> u16 {
+pub fn fetch_compressed(dram: &dram::Dram, index_pc: usize) -> u16 {
     // return compressed instruction data
-    (Dram::raw_byte(&dram, index_pc + 1) as u16) << 8 |
-    (Dram::raw_byte(&dram, index_pc + 0) as u16)
+    (Dram::raw_byte(dram, index_pc + 1) as u16) << 8 |
+    (Dram::raw_byte(dram, index_pc + 0) as u16)
 }

@@ -6,7 +6,7 @@ pub mod elfload;
 use cpu::CPU;
 use cpu::{fetch, fetch_compressed};
 use bus::Bus;
-use bus::dram;
+use bus::dram::Dram;
 
 pub struct Simulator {
     pub cpu: cpu::CPU,
@@ -24,15 +24,18 @@ impl Simulator {
     }
 
     pub fn simulation(&mut self) {
+        use crate::cpu::decode::Decode;
+        use crate::cpu::execution::Execution;
+
         loop {
-            let is_cinst: bool = Dram::raw_byte(self.cpu.pc) & 0x3 != 0x3;
+            let is_cinst: bool = Dram::raw_byte(&self.bus.dram, self.cpu.pc as usize) & 0x3 != 0x3;
 
             if is_cinst {
-                fetch_compressed(self.bus.dram, self.cpu.pc)
+                fetch_compressed(&self.bus.dram, self.cpu.pc as usize)
                     .decode()
                     .execution(&mut self.cpu, &mut self.bus.dram);
             }else{
-                fetch(self.bus.dram, self.cpu.pc)
+                fetch(&self.bus.dram, self.cpu.pc as usize)
                     .decode()
                     .execution(&mut self.cpu, &mut self.bus.dram);
             }
