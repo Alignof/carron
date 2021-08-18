@@ -6,14 +6,14 @@ use crate::bus::dram;
 use crate::bus::dram::Dram;
 
 pub struct CPU {
-    pub pc: u32,
+    pub pc: usize,
     pub reg: [i32; 32],
 }
 
 impl CPU {
-    pub fn new(entry_address: u32) -> CPU {
+    pub fn new(entry_address: usize) -> CPU {
         CPU {
-            pc: entry_address as u32,
+            pc: entry_address,
             reg: [0; 32],
         }
     }
