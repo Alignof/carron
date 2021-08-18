@@ -19,11 +19,20 @@ impl CPU {
     }
 }
 
-pub fn fetch(dram: &dram::Dram, index_pc: usize) -> u32 {
+pub struct InstWrapper {
+    pub raw_inst: Box<dyn Decode>;
+}
+
+pub fn fetch(dram: &dram::Dram, index_pc: usize) -> InstWrapper {
     let is_cinst: bool = self.bus.dram.raw_byte(self.cpu.pc) & 0x3 != 0x3;
 
-    (Dram::raw_byte(dram, index_pc + 3) as u32) << 24 |
-    (Dram::raw_byte(dram, index_pc + 2) as u32) << 16 |
-    (Dram::raw_byte(dram, index_pc + 1) as u32) <<  8 |
-    (Dram::raw_byte(dram, index_pc + 0) as u32)
+    if is_cinst {
+        (Dram::raw_byte(dram, index_pc + 1) as u16) <<  8 |
+        (Dram::raw_byte(dram, index_pc + 0) as u16)
+    } else {
+        (Dram::raw_byte(dram, index_pc + 3) as u32) << 24 |
+        (Dram::raw_byte(dram, index_pc + 2) as u32) << 16 |
+        (Dram::raw_byte(dram, index_pc + 1) as u32) <<  8 |
+        (Dram::raw_byte(dram, index_pc + 0) as u32)
+    }
 }
