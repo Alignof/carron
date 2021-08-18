@@ -2,6 +2,7 @@ pub mod decode;
 pub mod execution;
 mod instruction;
 
+use std::ops::Deref;
 use crate::bus::dram;
 use crate::bus::dram::Dram;
 
@@ -21,6 +22,14 @@ impl CPU {
 
 pub struct InstWrapper {
     pub raw_inst: Box<dyn Decode>,
+}
+
+impl Deref for InstWrapper {
+    type Target = Box<dyn Decode>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.raw_inst
+    }
 }
 
 pub fn fetch(dram: &dram::Dram, index_pc: usize) -> InstWrapper {
