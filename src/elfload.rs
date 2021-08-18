@@ -52,8 +52,8 @@ impl ElfLoader {
         self.elf_header.is_elf()
     }
 
-    pub fn ident_show(&self){
-        self.elf_header.ident_show();
+    pub fn header_show(&self){
+        self.elf_header.show();
     }
 
     pub fn show_all_header(&self){
