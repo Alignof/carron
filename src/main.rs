@@ -37,7 +37,7 @@ fn main() {
             ExeOption::OPT_SECT     => loader.dump_section(),
             ExeOption::OPT_SHOWALL  => loader.show_all_header(),
             ExeOption::OPT_DISASEM  => loader.dump_section(),
-        }
+        };
     } else {
         panic!("This file is not an ELF.");
     }
