@@ -27,17 +27,9 @@ impl Simulator {
         use crate::cpu::execution::Execution;
 
         loop {
-            let is_cinst: bool = self.bus.dram.raw_byte(self.cpu.pc) & 0x3 != 0x3;
-
-            if is_cinst {
-                fetch_compressed(&self.bus.dram, self.cpu.pc)
-                    .decode()
-                    .execution(&mut self.cpu, &mut self.bus.dram);
-            } else {
-                fetch(&self.bus.dram, self.cpu.pc)
-                    .decode()
-                    .execution(&mut self.cpu, &mut self.bus.dram);
-            }
+            fetch(&self.bus.dram, self.cpu.pc)
+                .decode()
+                .execution(&mut self.cpu, &mut self.bus.dram);
         }
     }
 } 
