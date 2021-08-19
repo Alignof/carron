@@ -7,7 +7,7 @@ pub struct Dram {
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> Dram {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
-        let mmap_start = loader.elf_header.e_entry as usize;
+        let mmap_start = 0 as usize;
         let mmap_end = mmap_start + loader.mem_data.len() as usize;
 
         // load elf memory mapping 

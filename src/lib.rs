@@ -14,7 +14,8 @@ pub struct Simulator {
 
 impl Simulator {
     pub fn new(loader: elfload::ElfLoader) -> Simulator {
-        let entry_address = loader.elf_header.e_entry as usize;
+        //let entry_address = loader.elf_header.e_entry as usize;
+        let entry_address = 0 as usize;
 
         Simulator {
             cpu: CPU::new(entry_address),
