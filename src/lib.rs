@@ -12,10 +12,25 @@ pub struct Simulator {
     pub bus: bus::Bus,
 }
 
+fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
+    let e_entry = loader.elf_header.e_entry;
+
+    for segment in loader.prog_headers {
+        // segment.p_type == 1 <--- 1 means PT_LOAD
+        if e_entry == segment.p_paddr && segment.p_type == 1 {
+            return Ok(segment.p_offset as usize);
+        }
+    }
+
+    Err("entry address is not found.")
+}
+
 impl Simulator {
     pub fn new(loader: elfload::ElfLoader) -> Simulator {
-        //let entry_address = loader.elf_header.e_entry as usize;
-        let entry_address = 0 as usize;
+        let entry_address: usize = match find_entry_addr(&loader) {
+            Ok(addr) => addr,
+            Err(msg) => panic!(msg),
+        };
 
         Simulator {
             cpu: CPU::new(entry_address),
