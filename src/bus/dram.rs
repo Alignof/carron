@@ -12,7 +12,6 @@ impl Dram {
 
         // load elf memory mapping 
         let mut new_dram = vec![0; DRAM_SIZE as usize];
-        println!("mmap_start:\t{}\nmmap_end:\t{}", mmap_start, mmap_end);
         new_dram.splice(mmap_start..mmap_end, loader.mem_data.iter().cloned());
 
         Dram {
