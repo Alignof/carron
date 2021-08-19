@@ -13,6 +13,7 @@ pub trait Execution {
 
 impl Execution for Instruction {
     fn execution(&self, cpu: &mut CPU, dram: &mut Dram) {
+        dbg!(self);
         if self.is_compressed {
             exe_cinst(self, cpu, dram);
         } else {

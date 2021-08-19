@@ -1,5 +1,17 @@
 // riscv-spec-20191213-1.pdf page=130
+
+#[derive(Debug)]
+pub struct Instruction {
+    pub opc: OpecodeKind,
+    pub rd:  Option<usize>,
+    pub rs1: Option<usize>,
+    pub rs2: Option<usize>,
+    pub imm: Option<i32>,
+    pub is_compressed: bool,
+}
+
 #[allow(non_camel_case_types)]
+#[derive(Debug)]
 pub enum OpecodeKind{
     OP_LUI,
     OP_AUIPC,
@@ -76,15 +88,6 @@ pub enum OpecodeKind{
     OP_C_FSDSP,
     OP_C_SWSP,
     OP_C_FSWSP,
-}
-
-pub struct Instruction {
-    pub opc: OpecodeKind,
-    pub rd:  Option<usize>,
-    pub rs1: Option<usize>,
-    pub rs2: Option<usize>,
-    pub imm: Option<i32>,
-    pub is_compressed: bool,
 }
 
 impl Instruction {
