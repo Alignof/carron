@@ -17,14 +17,14 @@ fn get_segment_type_name(segment_type:u32) -> &'static str {
 }
 
 pub struct ProgramHeader {
-	p_type: u32,
-	p_offset: u32,
-	p_vaddr: u32,
-	p_paddr: u32,
-	p_filesz: u32,
-	p_memsz: u32,
-	p_flags: u32,
-	p_align: u32,
+	pub p_type: u32,
+	pub p_offset: u32,
+	    p_vaddr: u32,
+	pub p_paddr: u32,
+	    p_filesz: u32,
+	    p_memsz: u32,
+	    p_flags: u32,
+	    p_align: u32,
 }
 
 impl ProgramHeader {
@@ -58,7 +58,7 @@ impl ProgramHeader {
 		println!("p_paddr:\t0x{:x}",	self.p_paddr);
 		println!("p_filesz:\t0x{:x}",	self.p_filesz);
 		println!("p_memsz:\t0x{:x}",	self.p_memsz);
-		println!("p_flags:\t{}",	self.p_flags);
+		println!("p_flags:\t{}",	    self.p_flags);
 		println!("p_align:\t0x{:x}",	self.p_align);
 	}
 
