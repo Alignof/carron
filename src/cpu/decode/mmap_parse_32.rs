@@ -1,6 +1,7 @@
 use super::Decode;
 use crate::cpu::instruction::{OpecodeKind, Instruction};
 
+#[allow(non_snake_case)]
 impl Decode for u32 {
     fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode(){
@@ -128,37 +129,88 @@ impl Decode for u32 {
         return Some(rs2);
     }
 
-    fn parse_imm(&self, _opkind: &OpecodeKind) -> Option<i32> {
-        let inst:&u32 = self;
-        let opmap: u8  = (inst & 0x7F) as u8;
+    fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
+        let inst: &u32 = self;
+        let U_type: i32 = ((inst >> 12) & 0xFFFFF) as i32;
+        let I_type: i32 = ((inst >> 20) & 0xFFF) as i32;
+        let S_type: i32 = ((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as i32;
+        let B_type: i32 = ((((inst >> 27) & 0x1) << 11) + (((inst >> 7) & 0x1) << 10) +
+                          (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as i32;
 
-        // LUI, AUIPC
-        if opmap == 0b00110111 || opmap == 0b00010111 {
-            return Some(((inst >> 12) & 0xFFFFF) as i32);
+        match opkind {
+            OpecodeKind::OP_LUI		=> Some(U_type),
+            OpecodeKind::OP_AUIPC	=> Some(U_type),
+            OpecodeKind::OP_JAL		=> Some(((inst >> 12) & 0xFFFFF) as i32), // issue
+            OpecodeKind::OP_JALR	=> Some(I_type),
+            OpecodeKind::OP_BEQ		=> Some(B_type),
+            OpecodeKind::OP_BNE		=> Some(B_type),
+            OpecodeKind::OP_BLT		=> Some(B_type),
+            OpecodeKind::OP_BGE		=> Some(B_type),
+            OpecodeKind::OP_BLTU	=> Some(B_type),
+            OpecodeKind::OP_BGEU	=> Some(B_type),
+            OpecodeKind::OP_LB		=> Some(I_type),
+            OpecodeKind::OP_LH		=> Some(I_type),
+            OpecodeKind::OP_LW		=> Some(I_type),
+            OpecodeKind::OP_LBU		=> Some(I_type),
+            OpecodeKind::OP_LHU		=> Some(I_type),
+            OpecodeKind::OP_SB		=> Some(S_type),
+            OpecodeKind::OP_SH		=> Some(S_type),
+            OpecodeKind::OP_SW		=> Some(S_type),
+            OpecodeKind::OP_ADDI	=> Some(I_type),
+            OpecodeKind::OP_SLTI	=> Some(I_type),
+            OpecodeKind::OP_SLTIU	=> Some(I_type),
+            OpecodeKind::OP_XORI	=> Some(I_type),
+            OpecodeKind::OP_ORI		=> Some(I_type),
+            OpecodeKind::OP_ANDI	=> Some(I_type),
+            OpecodeKind::OP_SLLI	=> Some(I_type),
+            OpecodeKind::OP_SRLI	=> Some(I_type),
+            _ => None,
         }
-
-        // JAL
-        if opmap == 0b01101111 {
-            // issue
-            return Some(((inst >> 12) & 0xFFFFF) as i32);
-        }
-
-        // JALR, L(B|H|W), ADDI, SLTI, SLTIU, XORI, ORI, ANDI
-        if opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 {
-            return Some(((inst >> 20) & 0xFFF) as i32);
-        }
-
-        // S(B|H|W)
-        if opmap == 0b00100011 {
-            return Some(((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as i32);
-        }
-
-        // B(EQ|NE|LT|GE|LTU|GEU)
-        if opmap == 0b01100011 {
-            return Some(((((inst >> 27) & 0x1) << 11) + (((inst >> 7) & 0x1) << 10) +
-                    (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as i32);
-        }
-
-        return None;
     }
 }
+
+
+/*
+match opkind {
+    OpecodeKind::OP_LUI		=> Some(),
+    OpecodeKind::OP_AUIPC	=> Some(),
+    OpecodeKind::OP_JAL		=> Some(),
+    OpecodeKind::OP_JALR	=> Some(),
+    OpecodeKind::OP_BEQ		=> Some(),
+    OpecodeKind::OP_BNE		=> Some(),
+    OpecodeKind::OP_BLT		=> Some(),
+    OpecodeKind::OP_BGE		=> Some(),
+    OpecodeKind::OP_BLTU	=> Some(),
+    OpecodeKind::OP_BGEU	=> Some(),
+    OpecodeKind::OP_LB		=> Some(),
+    OpecodeKind::OP_LH		=> Some(),
+    OpecodeKind::OP_LW		=> Some(),
+    OpecodeKind::OP_LBU		=> Some(),
+    OpecodeKind::OP_LHU		=> Some(),
+    OpecodeKind::OP_SB		=> Some(),
+    OpecodeKind::OP_SH		=> Some(),
+    OpecodeKind::OP_SW		=> Some(),
+    OpecodeKind::OP_ADDI	=> Some(),
+    OpecodeKind::OP_SLTI	=> Some(),
+    OpecodeKind::OP_SLTIU	=> Some(),
+    OpecodeKind::OP_XORI	=> Some(),
+    OpecodeKind::OP_ORI		=> Some(),
+    OpecodeKind::OP_ANDI	=> Some(),
+    OpecodeKind::OP_SLLI	=> Some(),
+    OpecodeKind::OP_SRLI	=> Some(),
+    OpecodeKind::OP_ADD		=> Some(),
+    OpecodeKind::OP_SUB		=> Some(),
+    OpecodeKind::OP_SLL		=> Some(),
+    OpecodeKind::OP_SLT		=> Some(),
+    OpecodeKind::OP_SLTU	=> Some(),
+    OpecodeKind::OP_XOR		=> Some(),
+    OpecodeKind::OP_SRL		=> Some(),
+    OpecodeKind::OP_SRA		=> Some(),
+    OpecodeKind::OP_OR		=> Some(),
+    OpecodeKind::OP_AND		=> Some(),
+    OpecodeKind::OP_FENCE	=> Some(),
+    OpecodeKind::OP_ECALL	=> Some(),
+    OpecodeKind::OP_EBREAK	=> Some(),
+    _ => None,
+}
+*/
