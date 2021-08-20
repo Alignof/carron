@@ -18,6 +18,15 @@ impl CPU {
             reg: [0; 32],
         }
     }
+    
+    pub fn read_reg(&self, dist: Option<usize>) -> i32 {
+        let dist = dist.unwrap();
+        if dist == 0 {
+            0
+        } else {
+            self.reg[dist]
+        }
+    }
 }
 
 pub fn fetch(dram: &dram::Dram, index_pc: usize) -> Box<dyn Decode> {
