@@ -89,12 +89,36 @@ impl Decode for u32 {
         let rd: usize = ((inst >> 7) & 0x1F) as usize;
 
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
-        if  opmap == 0b01100011 || opmap == 0b00100011 || 
-            opmap == 0b01110011 { 
-                return None;
+        match opkind {
+            OpecodeKind::OP_LUI		=> Some(rd),
+            OpecodeKind::OP_AUIPC	=> Some(rd),
+            OpecodeKind::OP_JAL		=> Some(rd),
+            OpecodeKind::OP_JALR	=> Some(rd),
+            OpecodeKind::OP_LB		=> Some(rd),
+            OpecodeKind::OP_LH		=> Some(rd),
+            OpecodeKind::OP_LW		=> Some(rd),
+            OpecodeKind::OP_LBU		=> Some(rd),
+            OpecodeKind::OP_LHU		=> Some(rd),
+            OpecodeKind::OP_ADDI	=> Some(rd),
+            OpecodeKind::OP_SLTI	=> Some(rd),
+            OpecodeKind::OP_SLTIU	=> Some(rd),
+            OpecodeKind::OP_XORI	=> Some(rd),
+            OpecodeKind::OP_ORI		=> Some(rd),
+            OpecodeKind::OP_ANDI	=> Some(rd),
+            OpecodeKind::OP_SLLI	=> Some(rd),
+            OpecodeKind::OP_SRLI	=> Some(rd),
+            OpecodeKind::OP_ADD		=> Some(rd),
+            OpecodeKind::OP_SUB		=> Some(rd),
+            OpecodeKind::OP_SLL		=> Some(rd),
+            OpecodeKind::OP_SLT		=> Some(rd),
+            OpecodeKind::OP_SLTU	=> Some(rd),
+            OpecodeKind::OP_XOR		=> Some(rd),
+            OpecodeKind::OP_SRL		=> Some(rd),
+            OpecodeKind::OP_SRA		=> Some(rd),
+            OpecodeKind::OP_OR		=> Some(rd),
+            OpecodeKind::OP_AND		=> Some(rd),
+            _ => None,
         }
-
-        return Some(rd);
     }
 
     fn parse_rs1(&self, _opkind: &OpecodeKind) -> Option<usize> {
@@ -103,18 +127,51 @@ impl Decode for u32 {
         let rs1: usize = ((inst >> 15) & 0x1F) as usize;
 
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
-        if  opmap == 0b01010111 || opmap == 0b00010111 || 
-            opmap == 0b01101111 || opmap == 0b01110011 { 
-                return None;
+        match opkind {
+            OpecodeKind::OP_JALR	=> Some(rs1),
+            OpecodeKind::OP_BEQ		=> Some(rs1),
+            OpecodeKind::OP_BNE		=> Some(rs1),
+            OpecodeKind::OP_BLT		=> Some(rs1),
+            OpecodeKind::OP_BGE		=> Some(rs1),
+            OpecodeKind::OP_BLTU	=> Some(rs1),
+            OpecodeKind::OP_BGEU	=> Some(rs1),
+            OpecodeKind::OP_LB		=> Some(rs1),
+            OpecodeKind::OP_LH		=> Some(rs1),
+            OpecodeKind::OP_LW		=> Some(rs1),
+            OpecodeKind::OP_LBU		=> Some(rs1),
+            OpecodeKind::OP_LHU		=> Some(rs1),
+            OpecodeKind::OP_SB		=> Some(rs1),
+            OpecodeKind::OP_SH		=> Some(rs1),
+            OpecodeKind::OP_SW		=> Some(rs1),
+            OpecodeKind::OP_ADDI	=> Some(rs1),
+            OpecodeKind::OP_SLTI	=> Some(rs1),
+            OpecodeKind::OP_SLTIU	=> Some(rs1),
+            OpecodeKind::OP_XORI	=> Some(rs1),
+            OpecodeKind::OP_ORI		=> Some(rs1),
+            OpecodeKind::OP_ANDI	=> Some(rs1),
+            OpecodeKind::OP_SLLI	=> Some(rs1),
+            OpecodeKind::OP_SRLI	=> Some(rs1),
+            OpecodeKind::OP_ADD		=> Some(rs1),
+            OpecodeKind::OP_SUB		=> Some(rs1),
+            OpecodeKind::OP_SLL		=> Some(rs1),
+            OpecodeKind::OP_SLT		=> Some(rs1),
+            OpecodeKind::OP_SLTU	=> Some(rs1),
+            OpecodeKind::OP_XOR		=> Some(rs1),
+            OpecodeKind::OP_SRL		=> Some(rs1),
+            OpecodeKind::OP_SRA		=> Some(rs1),
+            OpecodeKind::OP_OR		=> Some(rs1),
+            OpecodeKind::OP_AND		=> Some(rs1),
+            _ => None,
         }
-
-        return Some(rs1);
     }
 
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
         let rs2: usize = ((inst >> 20) & 0x1F) as usize;
 
+        // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
+        // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
+        // FENCE, ECALL, EBREAK
         match opkind {
             OpecodeKind::OP_BEQ		=> Some(rs2),
             OpecodeKind::OP_BNE		=> Some(rs2),
@@ -181,48 +238,3 @@ impl Decode for u32 {
     }
 }
 
-
-/*
-match opkind {
-    OpecodeKind::OP_LUI		=> Some(),
-    OpecodeKind::OP_AUIPC	=> Some(),
-    OpecodeKind::OP_JAL		=> Some(),
-    OpecodeKind::OP_JALR	=> Some(),
-    OpecodeKind::OP_BEQ		=> Some(),
-    OpecodeKind::OP_BNE		=> Some(),
-    OpecodeKind::OP_BLT		=> Some(),
-    OpecodeKind::OP_BGE		=> Some(),
-    OpecodeKind::OP_BLTU	=> Some(),
-    OpecodeKind::OP_BGEU	=> Some(),
-    OpecodeKind::OP_LB		=> Some(),
-    OpecodeKind::OP_LH		=> Some(),
-    OpecodeKind::OP_LW		=> Some(),
-    OpecodeKind::OP_LBU		=> Some(),
-    OpecodeKind::OP_LHU		=> Some(),
-    OpecodeKind::OP_SB		=> Some(),
-    OpecodeKind::OP_SH		=> Some(),
-    OpecodeKind::OP_SW		=> Some(),
-    OpecodeKind::OP_ADDI	=> Some(),
-    OpecodeKind::OP_SLTI	=> Some(),
-    OpecodeKind::OP_SLTIU	=> Some(),
-    OpecodeKind::OP_XORI	=> Some(),
-    OpecodeKind::OP_ORI		=> Some(),
-    OpecodeKind::OP_ANDI	=> Some(),
-    OpecodeKind::OP_SLLI	=> Some(),
-    OpecodeKind::OP_SRLI	=> Some(),
-    OpecodeKind::OP_ADD		=> Some(),
-    OpecodeKind::OP_SUB		=> Some(),
-    OpecodeKind::OP_SLL		=> Some(),
-    OpecodeKind::OP_SLT		=> Some(),
-    OpecodeKind::OP_SLTU	=> Some(),
-    OpecodeKind::OP_XOR		=> Some(),
-    OpecodeKind::OP_SRL		=> Some(),
-    OpecodeKind::OP_SRA		=> Some(),
-    OpecodeKind::OP_OR		=> Some(),
-    OpecodeKind::OP_AND		=> Some(),
-    OpecodeKind::OP_FENCE	=> Some(),
-    OpecodeKind::OP_ECALL	=> Some(),
-    OpecodeKind::OP_EBREAK	=> Some(),
-    _ => None,
-}
-*/
