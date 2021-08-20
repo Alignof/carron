@@ -19,12 +19,19 @@ impl CPU {
         }
     }
     
-    pub fn read_reg(&self, dist: Option<usize>) -> i32 {
-        let dist = dist.unwrap();
-        if dist == 0 {
+    pub fn read_reg(&self, src: Option<usize>) -> i32 {
+        let src = src.unwrap();
+        if src == 0 {
             0
         } else {
-            self.reg[dist]
+            self.reg[src]
+        }
+    }
+
+    pub fn write_reg(&mut self, dist: Option<usize>, src: i32) {
+        let dist = dist.unwrap();
+        if dist != 0 {
+            self.reg[dist] = src;
         }
     }
 }
