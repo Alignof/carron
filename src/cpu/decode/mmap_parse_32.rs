@@ -83,9 +83,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(&self, _opkind: &OpecodeKind) -> Option<usize> {
+    fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let opmap: usize  = (inst & 0x7F) as usize;
         let rd: usize = ((inst >> 7) & 0x1F) as usize;
 
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
@@ -121,9 +120,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rs1(&self, _opkind: &OpecodeKind) -> Option<usize> {
+    fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let opmap: usize  = (inst & 0x7F) as usize;
         let rs1: usize = ((inst >> 15) & 0x1F) as usize;
 
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
