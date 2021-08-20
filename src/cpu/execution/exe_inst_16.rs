@@ -5,8 +5,8 @@ use crate::bus::dram::Dram;
 pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
     use OpecodeKind::*;
     const INST_SIZE: usize = 2;
-    const REG_SP: usize = 2 as usize;
-    const LINK_REG: usize = 1 as usize;
+    const REG_SP: usize = 2;
+    const LINK_REG: usize = 1;
 
     // add program counter
     cpu.pc += 2;

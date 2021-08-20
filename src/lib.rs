@@ -16,8 +16,8 @@ fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
     let e_entry = loader.elf_header.e_entry;
 
     for segment in loader.prog_headers.iter() {
-        // segment.p_type == 1 <--- 1 means PT_LOAD
-        if segment.p_paddr == e_entry && segment.p_type == 1 {
+        //                PT_LOAD
+        if segment.p_type == 1 && segment.p_paddr == e_entry {
             return Ok(segment.p_offset as usize);
         }
     }
