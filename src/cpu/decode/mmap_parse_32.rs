@@ -139,6 +139,7 @@ impl Decode for u32 {
 
         // JAL
         if opmap == 0b01101111 {
+            // issue
             return Some(((inst >> 12) & 0xFFFFF) as i32);
         }
 
