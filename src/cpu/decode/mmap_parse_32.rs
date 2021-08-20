@@ -202,7 +202,7 @@ impl Decode for u32 {
         let B_type: i32 = ((((inst >> 27) & 0x1) << 11) | (((inst >> 7) & 0x1) << 10) |
                           (((inst >> 25) & 0x1F) << 4) | ((inst >> 8) & 0xF)) as i32;
         let JAL_imm: i32 = (((((inst >> 12) & 0xFF) << 12) | (((inst >> 20) & 0x1) << 13) |
-                          ((inst >> 21) & 0x3FF << 14) | ((inst >> 31) & 0x1 << 32)) << 1) as i32;
+                          ((inst >> 21) & 0x3FF << 1) | ((inst >> 31) & 0x1 << 31)) << 1) as i32;
 
         match opkind {
             OpecodeKind::OP_LUI		=> Some(U_type),
