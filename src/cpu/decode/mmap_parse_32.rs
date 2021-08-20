@@ -111,21 +111,32 @@ impl Decode for u32 {
         return Some(rs1);
     }
 
-    fn parse_rs2(&self, _opkind: &OpecodeKind) -> Option<usize> {
+    fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let opmap: usize  = (inst & 0x7F) as usize;
         let rs2: usize = ((inst >> 20) & 0x1F) as usize;
 
-        // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
-        // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
-        // FENCE, ECALL, EBREAK
-        if  opmap == 0b01010111 || opmap == 0b00010111 || opmap == 0b01101111 ||
-            opmap == 0b01100111 || opmap == 0b00000011 || opmap == 0b00010011 || 
-            opmap == 0b00001111 || opmap == 0b01110011 { 
-                return None;
+        match opkind {
+            OpecodeKind::OP_BEQ		=> Some(rs2),
+            OpecodeKind::OP_BNE		=> Some(rs2),
+            OpecodeKind::OP_BLT		=> Some(rs2),
+            OpecodeKind::OP_BGE		=> Some(rs2),
+            OpecodeKind::OP_BLTU	=> Some(rs2),
+            OpecodeKind::OP_BGEU	=> Some(rs2),
+            OpecodeKind::OP_SB		=> Some(rs2),
+            OpecodeKind::OP_SH		=> Some(rs2),
+            OpecodeKind::OP_SW		=> Some(rs2),
+            OpecodeKind::OP_ADD		=> Some(rs2),
+            OpecodeKind::OP_SUB		=> Some(rs2),
+            OpecodeKind::OP_SLL		=> Some(rs2),
+            OpecodeKind::OP_SLT		=> Some(rs2),
+            OpecodeKind::OP_SLTU	=> Some(rs2),
+            OpecodeKind::OP_XOR		=> Some(rs2),
+            OpecodeKind::OP_SRL		=> Some(rs2),
+            OpecodeKind::OP_SRA		=> Some(rs2),
+            OpecodeKind::OP_OR		=> Some(rs2),
+            OpecodeKind::OP_AND		=> Some(rs2),
+            _ => None,
         }
-
-        return Some(rs2);
     }
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
