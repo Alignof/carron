@@ -73,10 +73,11 @@ impl Dram {
 #[cfg(test)]
 mod tests {
     use super::*;
+    const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
 
     #[test]
     fn load_store_u8_test() {
-        let dram = &mut Dram::new();
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -96,7 +97,7 @@ mod tests {
 
     #[test]
     fn load_store_8_test() {
-        let dram = &mut Dram::new();
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -115,7 +116,7 @@ mod tests {
 
     #[test]
     fn load_store_16_test() {
-        let dram = &mut Dram::new();
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
         let mut addr = 0;
         let mut test_16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -135,7 +136,7 @@ mod tests {
 
     #[test]
     fn load_store_u16_test() {
-        let dram = &mut Dram::new();
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
         let mut addr = 0;
         let mut test_u16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -157,7 +158,7 @@ mod tests {
     #[test]
     #[allow(overflowing_literals)]
     fn load_store_32_test() {
-        let dram = &mut Dram::new();
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
         let mut addr = 0;
         let mut test_32 = |data: i32| {
             Dram::store32(dram, addr, data);
