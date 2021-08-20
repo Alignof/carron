@@ -76,7 +76,7 @@ mod tests {
 
 	#[test]
 	fn program_header_test() {
-		let loader = match ElfLoader::try_new("./src/example_elf") {
+		let loader = match ElfLoader::try_new("example_elf") {
 			Ok(loader) => loader,
 			Err(error) => {
 				panic!("There was a problem opening the file: {:?}", error);
