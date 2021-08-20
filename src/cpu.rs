@@ -8,7 +8,7 @@ use crate::cpu::decode::Decode;
 
 pub struct CPU {
     pub pc: usize,
-    pub reg: [i32; 32],
+        reg: [i32; 32],
 }
 
 impl CPU {
