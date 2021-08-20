@@ -66,8 +66,7 @@ impl Decode for u32 {
                 0b110 => Ok(OpecodeKind::OP_ORI),
                 0b111 => Ok(OpecodeKind::OP_ANDI),
                 _     => Err("opecode decoding failed"),
-            },
-            0b0110011 => match funct3 {
+            }, 0b0110011 => match funct3 {
                 0b000 => Ok(OpecodeKind::OP_ADD),//OP_SUB,
                 0b001 => Ok(OpecodeKind::OP_SLL),
                 0b010 => Ok(OpecodeKind::OP_SLT),
@@ -131,16 +130,18 @@ impl Decode for u32 {
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
         let inst: &u32 = self;
-        let U_type: i32 = ((inst >> 12) & 0xFFFFF) as i32;
+        let U_type: i32 = (((inst >> 12) & 0xFFFF) << 12) as i32;
         let I_type: i32 = ((inst >> 20) & 0xFFF) as i32;
-        let S_type: i32 = ((((inst >> 25) & 0x1F) << 5) + ((inst >> 7) & 0x1F)) as i32;
-        let B_type: i32 = ((((inst >> 27) & 0x1) << 11) + (((inst >> 7) & 0x1) << 10) +
-                          (((inst >> 25) & 0x1F) << 4) + ((inst >> 8) & 0xF)) as i32;
+        let S_type: i32 = ((((inst >> 25) & 0x1F) << 5) | ((inst >> 7) & 0x1F)) as i32;
+        let B_type: i32 = ((((inst >> 27) & 0x1) << 11) | (((inst >> 7) & 0x1) << 10) |
+                          (((inst >> 25) & 0x1F) << 4) | ((inst >> 8) & 0xF)) as i32;
+        let JAL_imm: i32 = (((((inst >> 12) & 0xFF) << 12) | (((inst >> 20) & 0x1) << 13) |
+                          ((inst >> 21) & 0x3FF << 14) | ((inst >> 31) & 0x1 << 32)) << 1) as i32;
 
         match opkind {
             OpecodeKind::OP_LUI		=> Some(U_type),
             OpecodeKind::OP_AUIPC	=> Some(U_type),
-            OpecodeKind::OP_JAL		=> Some(((inst >> 12) & 0xFFFFF) as i32), // issue
+            OpecodeKind::OP_JAL		=> Some(JAL_imm),
             OpecodeKind::OP_JALR	=> Some(I_type),
             OpecodeKind::OP_BEQ		=> Some(B_type),
             OpecodeKind::OP_BNE		=> Some(B_type),
