@@ -11,17 +11,17 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
 
     match inst.opc {
         OP_LUI => {
-            cpu.reg[inst.rd.unwrap()] = inst.imm.unwrap() << 12;
+            cpu.write_reg(inst.rd, inst.imm.unwrap() << 12);
         },
         OP_AUIPC => {
             cpu.pc += (inst.imm.unwrap() << 12) as usize;
         },
         OP_JAL => {
-            cpu.reg[inst.rd.unwrap()] = (cpu.pc + INST_SIZE) as i32; 
+            cpu.write_reg(inst.rd, (cpu.pc + INST_SIZE) as i32); 
             cpu.pc += inst.imm.unwrap() as usize;
         },
         OP_JALR => {
-            cpu.reg[inst.rd.unwrap()] = (cpu.pc + INST_SIZE) as i32; 
+            cpu.write_reg(inst.rd, (cpu.pc + INST_SIZE) as i32); 
             cpu.pc += (cpu.reg[inst.rs1.unwrap()]  + inst.imm.unwrap()) as usize;
         },
         OP_BEQ => {
@@ -55,24 +55,24 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
             } 
         },
         OP_LB => {
-            cpu.reg[inst.rd.unwrap()] = 
-                Dram::load8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.write_reg(inst.rd,  
+                Dram::load8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize));
         },
         OP_LH => {
-            cpu.reg[inst.rd.unwrap()] =
-                Dram::load16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.write_reg(inst.rd,  
+                Dram::load16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize));
         },
         OP_LW => {
-            cpu.reg[inst.rd.unwrap()] =
-                Dram::load32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.write_reg(inst.rd,  
+                Dram::load32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize));
         },
         OP_LBU => {
-            cpu.reg[inst.rd.unwrap()] = 
-                Dram::load_u8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.write_reg(inst.rd,  
+                Dram::load_u8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize));
         },
         OP_LHU => {
-            cpu.reg[inst.rd.unwrap()] = 
-                Dram::load_u16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.write_reg(inst.rd,  
+                Dram::load_u16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize));
         },
         OP_SB => {
             Dram::store8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
@@ -87,72 +87,73 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
                          cpu.reg[inst.rs2.unwrap()]);
         },
         OP_ADDI => {
-            cpu.reg[inst.rd.unwrap()] += cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap();
+            cpu.write_reg(inst.rd,
+                cpu.reg[inst.rd.unwrap()] + cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap());
         },
         OP_SLTI => {
-            cpu.reg[inst.rd.unwrap()] =
-                (cpu.reg[inst.rs1.unwrap()] < inst.imm.unwrap()) as i32;
+            cpu.write_reg(inst.rd,  
+                (cpu.reg[inst.rs1.unwrap()] < inst.imm.unwrap()) as i32);
         },
         OP_SLTIU => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) < inst.imm.unwrap() as u32) as i32;
+            cpu.write_reg(inst.rd,  
+                ((cpu.reg[inst.rs1.unwrap()] as u32) < inst.imm.unwrap() as u32) as i32);
         },
         OP_XORI => {
-            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] ^ inst.imm.unwrap();
+            cpu.write_reg(inst.rd, cpu.reg[inst.rs1.unwrap()] ^ inst.imm.unwrap());
         },
         OP_ORI => {
-            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] | inst.imm.unwrap();
+            cpu.write_reg(inst.rd, cpu.reg[inst.rs1.unwrap()] | inst.imm.unwrap());
         },
         OP_ANDI => {
-            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] & inst.imm.unwrap();
+            cpu.write_reg(inst.rd, cpu.reg[inst.rs1.unwrap()] & inst.imm.unwrap());
         },
         OP_SLLI => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) << inst.imm.unwrap()) as i32;
+            cpu.write_reg(inst.rd,
+                ((cpu.reg[inst.rs1.unwrap()] as u32) << inst.imm.unwrap()) as i32);
         },                                                
         OP_SRLI => {                                    
-            cpu.reg[inst.rd.unwrap()] =          
-                ((cpu.reg[inst.rs1.unwrap()] as u32) >> inst.imm.unwrap()) as i32;
+            cpu.write_reg(inst.rd,          
+                ((cpu.reg[inst.rs1.unwrap()] as u32) >> inst.imm.unwrap()) as i32);
         },
         OP_ADD => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] + cpu.reg[inst.rs2.unwrap()];
+            cpu.write_reg(inst.rd,
+                cpu.reg[inst.rs1.unwrap()] + cpu.reg[inst.rs2.unwrap()]);
         },
         OP_SUB => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] - cpu.reg[inst.rs2.unwrap()];
+            cpu.write_reg(inst.rd,
+                cpu.reg[inst.rs1.unwrap()] - cpu.reg[inst.rs2.unwrap()]);
         },
         OP_SLL => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) << cpu.reg[inst.rs2.unwrap()]) as i32;
+            cpu.write_reg(inst.rd,
+                ((cpu.reg[inst.rs1.unwrap()] as u32) << cpu.reg[inst.rs2.unwrap()]) as i32);
         },
         OP_SLT => {
-            cpu.reg[inst.rd.unwrap()] =
-                (cpu.reg[inst.rs1.unwrap()] < cpu.reg[inst.rs2.unwrap()]) as i32;
+            cpu.write_reg(inst.rd,
+                (cpu.reg[inst.rs1.unwrap()] < cpu.reg[inst.rs2.unwrap()]) as i32);
         },
         OP_SLTU => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) < (cpu.reg[inst.rs2.unwrap()] as u32)) as i32;
+            cpu.write_reg(inst.rd,
+                ((cpu.reg[inst.rs1.unwrap()] as u32) < (cpu.reg[inst.rs2.unwrap()] as u32)) as i32);
         },
         OP_XOR => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] ^ cpu.reg[inst.rs2.unwrap()];
+            cpu.write_reg(inst.rd,
+                cpu.reg[inst.rs1.unwrap()] ^ cpu.reg[inst.rs2.unwrap()]);
         },
         OP_SRL => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32)  >> cpu.reg[inst.rs2.unwrap()]) as i32;
+            cpu.write_reg(inst.rd,
+                ((cpu.reg[inst.rs1.unwrap()] as u32)  >> cpu.reg[inst.rs2.unwrap()]) as i32);
         },
         OP_SRA => {
-            cpu.reg[inst.rd.unwrap()] =
-                (cpu.reg[inst.rs1.unwrap()] as i32)  >> cpu.reg[inst.rs2.unwrap()];
+            cpu.write_reg(inst.rd,
+                (cpu.reg[inst.rs1.unwrap()] as i32)  >> cpu.reg[inst.rs2.unwrap()]);
         },
         OP_OR => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] | cpu.reg[inst.rs2.unwrap()];
+            cpu.write_reg(inst.rd,
+                cpu.reg[inst.rs1.unwrap()] | cpu.reg[inst.rs2.unwrap()]);
         },
         OP_AND => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] & cpu.reg[inst.rs2.unwrap()];
+            cpu.write_reg(inst.rd,
+                cpu.reg[inst.rs1.unwrap()] & cpu.reg[inst.rs2.unwrap()]);
         },
         OP_FENCE => {
             panic!("not yet implemented: OP_FENCE");
