@@ -7,7 +7,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
     const INST_SIZE: usize = 4;
 
     // add program counter
-    cpu.pc += 4;
+    cpu.pc += INST_SIZE;
 
     match inst.opc {
         OP_LUI => {

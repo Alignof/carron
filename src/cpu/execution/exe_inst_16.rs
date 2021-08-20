@@ -9,7 +9,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
     const LINK_REG: usize = 1;
 
     // add program counter
-    cpu.pc += 2;
+    cpu.pc += INST_SIZE;
 
     match inst.opc {
         OP_C_LI => {
