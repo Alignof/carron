@@ -78,7 +78,20 @@ impl Decode for u32 {
                 _     => Err("opecode decoding failed"),
             },
             0b0001111 => Ok(OpecodeKind::OP_FENCE),
-            0b1110011 => Ok(OpecodeKind::OP_ECALL),//OP_EBREAK,
+            0b1110011 => match funct3 {
+                0b000 => if (inst >> 19) & 0x1 == 0x1 {
+                    Ok(OpecodeKind::OP_ECALL)
+                } else {
+                    Ok(OpecodeKind::OP_EBREAK)
+                },
+                0b001 => Ok(OpecodeKind::OP_CSRRW),
+                0b010 => Ok(OpecodeKind::OP_CSRRS),
+                0b011 => Ok(OpecodeKind::OP_CSRRC),
+                0b101 => Ok(OpecodeKind::OP_CSRRWI),
+                0b110 => Ok(OpecodeKind::OP_CSRRSI),
+                0b111 => Ok(OpecodeKind::OP_CSRRCI),
+                _     => Err("opecode decoding failed"),
+            },
             _         => Err("opecode decoding failed"),
         }
     }

@@ -12,7 +12,7 @@ pub struct Instruction {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
-pub enum OpecodeKind{
+pub enum OpecodeKind {
     OP_LUI,
     OP_AUIPC,
     OP_JAL,
