@@ -5,7 +5,6 @@ pub mod elfload;
 
 use cpu::CPU;
 use cpu::fetch;
-use bus::Bus;
 
 pub struct Simulator {
     pub cpu: cpu::CPU,
@@ -42,7 +41,7 @@ impl Simulator {
         loop {
             fetch(&self.cpu)
                 .decode()
-                .execution(&mut self.cpu, &mut self.bus.dram);
+                .execution(&mut self.cpu);
         }
     }
 } 

@@ -1,8 +1,7 @@
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::bus::dram::Dram;
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     const INST_SIZE: usize = 4;
 
@@ -56,34 +55,34 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
         },
         OP_LB => {
             cpu.write_reg(inst.rd,  
-                Dram::load8(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.dram.load8((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LH => {
             cpu.write_reg(inst.rd,  
-                Dram::load16(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.dram.load16((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LW => {
             cpu.write_reg(inst.rd,  
-                Dram::load32(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.dram.load32((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LBU => {
             cpu.write_reg(inst.rd,  
-                Dram::load_u8(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.dram.load_u8((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LHU => {
             cpu.write_reg(inst.rd,  
-                Dram::load_u16(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.dram.load_u16((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_SB => {
-            Dram::store8(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
+            cpu.bus.dram.store8((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
                          cpu.read_reg(inst.rs2));
         },
         OP_SH => {
-            Dram::store16(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
+            cpu.bus.dram.store16((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
                          cpu.read_reg(inst.rs2));
         },
         OP_SW => {
-            Dram::store32(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
+            cpu.bus.dram.store32((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
                          cpu.read_reg(inst.rs2));
         },
         OP_ADDI => {

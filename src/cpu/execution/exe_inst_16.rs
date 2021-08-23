@@ -1,8 +1,7 @@
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::bus::dram::Dram;
 
-pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
+pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     const INST_SIZE: usize = 2;
     const REG_SP: usize = 2;
@@ -17,17 +16,17 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
         },
         OP_C_LW => {
             cpu.write_reg(inst.rd,
-                Dram::load32(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.dram.load32((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_C_LWSP => {
             cpu.write_reg(inst.rd,
-                Dram::load32(dram, (cpu.read_reg(Some(REG_SP)) + inst.imm.unwrap()) as usize));
+                cpu.bus.dram.load32((cpu.read_reg(Some(REG_SP)) + inst.imm.unwrap()) as usize));
         },
         OP_C_LUI => {
             cpu.write_reg(inst.rd, inst.imm.unwrap() << 12);
         },
         OP_C_SW => {
-            Dram::store32(dram, (cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
+            cpu.bus.dram.store32((cpu.read_reg(inst.rs1) + inst.imm.unwrap()) as usize,
                          cpu.read_reg(inst.rs2));
         },
         OP_C_SLLI => {
@@ -35,7 +34,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
                 ((cpu.read_reg(inst.rs1) as u32) << inst.imm.unwrap()) as i32);
         },
         OP_C_SWSP => {
-            Dram::store32(dram, (cpu.read_reg(Some(REG_SP)) + inst.imm.unwrap()) as usize,
+            cpu.bus.dram.store32((cpu.read_reg(Some(REG_SP)) + inst.imm.unwrap()) as usize,
                          cpu.read_reg(inst.rs2));
         },
         OP_C_SRLI => {

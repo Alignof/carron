@@ -44,7 +44,7 @@ impl CPU {
 }
 
 pub fn fetch(cpu: &cpu::CPU) -> Box<dyn Decode> {
-    let dram: &dram::Dram = &cpu.dram;
+    let dram: &dram::Dram = &cpu.bus.dram;
     let index_pc : usize = cpu.pc;
     let is_cinst: bool = Dram::raw_byte(dram, index_pc) & 0x3 != 0x3;
 
