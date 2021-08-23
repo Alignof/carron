@@ -9,7 +9,6 @@ use bus::Bus;
 
 pub struct Simulator {
     pub cpu: cpu::CPU,
-    pub bus: bus::Bus,
 }
 
 fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
@@ -33,8 +32,7 @@ impl Simulator {
         };
 
         Simulator {
-            cpu: CPU::new(entry_address),
-            bus: Bus::new(loader),
+            cpu: CPU::new(entry_address, loader),
         }
     }
 
@@ -42,7 +40,7 @@ impl Simulator {
         use crate::cpu::execution::Execution;
 
         loop {
-            fetch(&self.bus.dram, self.cpu.pc)
+            fetch(&self.cpu)
                 .decode()
                 .execution(&mut self.cpu, &mut self.bus.dram);
         }

@@ -2,7 +2,10 @@ pub mod decode;
 pub mod execution;
 mod instruction;
 
-use crate::bus::dram;
+use crate::cpu;
+use crate::bus;
+use crate::elfload;
+use crate::bus::{Bus, dram};
 use crate::bus::dram::Dram;
 use crate::cpu::decode::Decode;
 
@@ -10,14 +13,16 @@ pub struct CPU {
     pub pc: usize,
         reg: [i32; 32],
         csrs: [i32; 4096],
+        bus: bus::Bus,
 }
 
 impl CPU {
-    pub fn new(entry_address: usize) -> CPU {
+    pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU {
         CPU {
             pc: entry_address,
             reg: [0; 32],
             csrs: [0; 4096],
+            bus: Bus::new(loader),
         }
     }
     
@@ -38,7 +43,9 @@ impl CPU {
     }
 }
 
-pub fn fetch(dram: &dram::Dram, index_pc: usize) -> Box<dyn Decode> {
+pub fn fetch(cpu: &cpu::CPU) -> Box<dyn Decode> {
+    let dram: &dram::Dram = &cpu.dram;
+    let index_pc : usize = cpu.pc;
     let is_cinst: bool = Dram::raw_byte(dram, index_pc) & 0x3 != 0x3;
 
     if is_cinst {
