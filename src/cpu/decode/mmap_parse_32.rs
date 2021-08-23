@@ -62,17 +62,29 @@ impl Decode for u32 {
                 0b010 => Ok(OpecodeKind::OP_SLTI),
                 0b011 => Ok(OpecodeKind::OP_SLTIU),
                 0b100 => Ok(OpecodeKind::OP_XORI),
-                0b101 => Ok(OpecodeKind::OP_SRLI),//OP_SRAI,
+                0b101 => if (inst >> 30) & 0x1 == 0x1 {
+                    Ok(OpecodeKind::OP_SRLI)
+                } else {
+                    Ok(OpecodeKind::OP_SRAI)
+                },
                 0b110 => Ok(OpecodeKind::OP_ORI),
                 0b111 => Ok(OpecodeKind::OP_ANDI),
                 _     => Err("opecode decoding failed"),
             }, 0b0110011 => match funct3 {
-                0b000 => Ok(OpecodeKind::OP_ADD),//OP_SUB,
+                0b000 => if (inst >> 30) & 0x1 == 0x1 {
+                    Ok(OpecodeKind::OP_ADD)
+                } else {
+                    Ok(OpecodeKind::OP_SUB)
+                },
                 0b001 => Ok(OpecodeKind::OP_SLL),
                 0b010 => Ok(OpecodeKind::OP_SLT),
                 0b011 => Ok(OpecodeKind::OP_SLTU),
                 0b100 => Ok(OpecodeKind::OP_XOR),
-                0b101 => Ok(OpecodeKind::OP_SRL),//OP_SRA,
+                0b101 => if (inst >> 30) & 0x1 == 0x1 {
+                    Ok(OpecodeKind::OP_SRL)
+                } else {
+                    Ok(OpecodeKind::OP_SRA)
+                },
                 0b110 => Ok(OpecodeKind::OP_OR),
                 0b111 => Ok(OpecodeKind::OP_AND),
                 _     => Err("opecode decoding failed"),
