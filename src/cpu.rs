@@ -40,6 +40,10 @@ impl CPU {
             self.reg[dist] = src;
         }
     }
+
+    pub fn read_csr(&self, src: Option<usize>) -> u32 {
+        self.csrs[src.unwrap()]
+    }
 }
 
 pub fn fetch(cpu: &cpu::CPU) -> Box<dyn Decode> {
