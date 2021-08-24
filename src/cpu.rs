@@ -10,7 +10,7 @@ use crate::cpu::decode::Decode;
 
 pub struct CPU {
     pub pc: usize,
-        reg: [i32; 32],
+        regs: [i32; 32],
         csrs: [u32; 4096],
         bus: bus::Bus,
 }
@@ -19,7 +19,7 @@ impl CPU {
     pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU {
         CPU {
             pc: entry_address,
-            reg: [0; 32],
+            regs: [0; 32],
             csrs: [0; 4096],
             bus: Bus::new(loader),
         }
@@ -30,14 +30,14 @@ impl CPU {
         if src == 0 {
             0
         } else {
-            self.reg[src]
+            self.regs[src]
         }
     }
 
     pub fn write_reg(&mut self, dist: Option<usize>, src: i32) {
         let dist = dist.unwrap();
         if dist != 0 {
-            self.reg[dist] = src;
+            self.regs[dist] = src;
         }
     }
 
