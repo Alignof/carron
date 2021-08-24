@@ -44,6 +44,10 @@ impl CPU {
     pub fn read_csr(&self, src: Option<usize>) -> u32 {
         self.csrs[src.unwrap()]
     }
+
+    pub fn write_csr(&mut self, dist: Option<usize>, src: i32) {
+        self.csrs[dist.unwrap()] = src as u32;
+    }
 }
 
 pub fn fetch(cpu: &cpu::CPU) -> Box<dyn Decode> {
