@@ -11,7 +11,7 @@ use crate::cpu::decode::Decode;
 pub struct CPU {
     pub pc: usize,
         reg: [i32; 32],
-        csrs: [i32; 4096],
+        csrs: [u32; 4096],
         bus: bus::Bus,
 }
 
