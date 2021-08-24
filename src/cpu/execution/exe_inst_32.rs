@@ -179,6 +179,18 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.write_reg(inst.rd, cpu.read_csr(inst.rs2) as i32);
             cpu.bitclr_csr(inst.rs2, cpu.read_reg(inst.rs1));
         },
+        OP_CSRRWI => {
+            cpu.write_reg(inst.rd, cpu.read_csr(inst.rs2) as i32);
+            cpu.write_csr(inst.rs2, inst.rs1.unwrap() as i32);
+        },
+        OP_CSRRSI => {
+            cpu.write_reg(inst.rd, cpu.read_csr(inst.rs2) as i32);
+            cpu.bitset_csr(inst.rs2, inst.rs1.unwrap() as i32);
+        },
+        OP_CSRRCI => {
+            cpu.write_reg(inst.rd, cpu.read_csr(inst.rs2) as i32);
+            cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
+        },
         _ => panic!("not a full instruction"),
     }
 }
