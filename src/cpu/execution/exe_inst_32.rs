@@ -110,9 +110,13 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.write_reg(inst.rd,
                 ((cpu.read_reg(inst.rs1) as u32) << inst.imm.unwrap()) as i32);
         },                                                
-        OP_SRLI => {                                    
-            cpu.write_reg(inst.rd,          
+        OP_SRLI => {
+            cpu.write_reg(inst.rd,
                 ((cpu.read_reg(inst.rs1) as u32) >> inst.imm.unwrap()) as i32);
+        },
+        OP_SRAI => {
+            cpu.write_reg(inst.rd,
+                ((cpu.read_reg(inst.rs1) as i32) >> inst.imm.unwrap()) as i32);
         },
         OP_ADD => {
             cpu.write_reg(inst.rd,
