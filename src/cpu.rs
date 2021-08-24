@@ -50,11 +50,17 @@ impl CPU {
     }
 
     pub fn bitset_csr(&mut self, dist: Option<usize>, src: i32) {
-        self.csrs[dist.unwrap()] |= src as u32;
+        let mask = src as u32;
+        if mask != 0 {
+            self.csrs[dist.unwrap()] |= mask;
+        }
     }
 
     pub fn bitclr_csr(&mut self, dist: Option<usize>, src: i32) {
-        self.csrs[dist.unwrap()] &= !(src as u32);
+        let mask = src as u32;
+        if mask != 0 {
+            self.csrs[dist.unwrap()] &= !mask;
+        }
     }
 }
 
