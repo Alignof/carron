@@ -167,6 +167,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
         },
+        OP_CSRRW => {
+            cpu.write_reg(inst.rd, cpu.read_csr(inst.rs2) as i32);
+            cpu.write_csr(inst.rs2, cpu.read_reg(inst.rs1));
+        },
         _ => panic!("not a full instruction"),
     }
 }
