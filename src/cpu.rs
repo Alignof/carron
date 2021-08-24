@@ -52,6 +52,10 @@ impl CPU {
     pub fn bitset_csr(&mut self, dist: Option<usize>, src: i32) {
         self.csrs[dist.unwrap()] |= src as u32;
     }
+
+    pub fn bitclr_csr(&mut self, dist: Option<usize>, src: i32) {
+        self.csrs[dist.unwrap()] &= !(src as u32);
+    }
 }
 
 pub fn fetch(cpu: &cpu::CPU) -> Box<dyn Decode> {
