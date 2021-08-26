@@ -141,6 +141,12 @@ impl Decode for u32 {
             OpecodeKind::OP_SRA		=> Some(rd),
             OpecodeKind::OP_OR		=> Some(rd),
             OpecodeKind::OP_AND		=> Some(rd),
+            OpecodeKind::OP_CSRRW	=> Some(rd),
+            OpecodeKind::OP_CSRRS	=> Some(rd),
+            OpecodeKind::OP_CSRRC	=> Some(rd),
+            OpecodeKind::OP_CSRRWI	=> Some(rd),
+            OpecodeKind::OP_CSRRSI	=> Some(rd),
+            OpecodeKind::OP_CSRRCI	=> Some(rd),
             _ => None,
         }
     }
@@ -184,6 +190,12 @@ impl Decode for u32 {
             OpecodeKind::OP_SRA		=> Some(rs1),
             OpecodeKind::OP_OR		=> Some(rs1),
             OpecodeKind::OP_AND		=> Some(rs1),
+            OpecodeKind::OP_CSRRW	=> Some(rs1),
+            OpecodeKind::OP_CSRRS	=> Some(rs1),
+            OpecodeKind::OP_CSRRC	=> Some(rs1),
+            OpecodeKind::OP_CSRRWI	=> Some(rs1),
+            OpecodeKind::OP_CSRRSI	=> Some(rs1),
+            OpecodeKind::OP_CSRRCI	=> Some(rs1),
             _ => None,
         }
     }
@@ -215,6 +227,12 @@ impl Decode for u32 {
             OpecodeKind::OP_SRA		=> Some(rs2),
             OpecodeKind::OP_OR		=> Some(rs2),
             OpecodeKind::OP_AND		=> Some(rs2),
+            OpecodeKind::OP_CSRRW	=> Some(rs2),
+            OpecodeKind::OP_CSRRS	=> Some(rs2),
+            OpecodeKind::OP_CSRRC	=> Some(rs2),
+            OpecodeKind::OP_CSRRWI	=> Some(rs2),
+            OpecodeKind::OP_CSRRSI	=> Some(rs2),
+            OpecodeKind::OP_CSRRCI	=> Some(rs2),
             _ => None,
         }
     }
