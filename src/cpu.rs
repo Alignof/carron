@@ -24,6 +24,16 @@ impl CPU {
             bus: Bus::new(loader),
         }
     }
+
+    pub fn show_regs(&self) {
+        println!("=========================================== dump ============================================");
+        println!("pc:\t0x{:x}", self.pc);
+        for (num, reg) in self.regs.iter().enumerate() {
+            print!("reg{}:\t0x{:08x}\t", num, reg);
+            if (num + 1) % 4 == 0 { println!() }
+        }
+        println!("=============================================================================================");
+    }
     
     pub fn read_reg(&self, src: Option<usize>) -> i32 {
         let src = src.unwrap();

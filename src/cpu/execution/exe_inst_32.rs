@@ -1,4 +1,3 @@
-use dbg_hex::dbg_hex;
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
@@ -163,7 +162,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             panic!("not yet implemented: OP_FENCE");
         },
         OP_ECALL => {
-            dbg_hex!(cpu.pc);
+            cpu.show_regs();
             panic!("not yet implemented: OP_ECALL");
         },
         OP_EBREAK => {
