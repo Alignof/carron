@@ -1,6 +1,7 @@
 mod exe_inst_16;
 mod exe_inst_32;
 
+use dbg_hex::dbg_hex;
 use super::CPU;
 use super::instruction::Instruction;
 use exe_inst_16::exe_cinst;
@@ -12,6 +13,7 @@ pub trait Execution {
 
 impl Execution for Instruction {
     fn execution(&self, cpu: &mut CPU) {
+        dbg_hex!(cpu.pc);
         dbg!(self);
         if self.is_compressed {
             exe_cinst(self, cpu);
