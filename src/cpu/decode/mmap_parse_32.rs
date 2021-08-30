@@ -27,6 +27,8 @@ impl Decode for u32 {
         let inst: &u32 = self;
         let opmap: u8  = (inst & 0x7F) as u8;
         let funct3: u8 = ((inst >> 12) & 0x7) as u8;
+        let funct5: u8 = ((inst >> 20) & 0x1F) as u8;
+        let funct7: u8 = ((inst >> 25) & 0x3F) as u8;
 
         match opmap {
             0b0110111 => Ok(OpecodeKind::OP_LUI),
@@ -91,10 +93,14 @@ impl Decode for u32 {
             },
             0b0001111 => Ok(OpecodeKind::OP_FENCE),
             0b1110011 => match funct3 {
-                0b000 => if (inst >> 19) & 0x1 == 0x0 {
-                    Ok(OpecodeKind::OP_ECALL)
-                } else {
-                    Ok(OpecodeKind::OP_EBREAK)
+                0b000 => match funct7 {
+                    0b0000000 => match funct5 {
+                        0b00000 => Ok(OpecodeKind::OP_ECALL),
+                        0b00001 => Ok(OpecodeKind::OP_EBREAK),
+                        _ => Err("opecode decoding failed"),
+                    }
+                    0b0011000 => Ok(OpecodeKind::OP_MRET),
+                    _ => Err("opecode decoding failed"),
                 },
                 0b001 => Ok(OpecodeKind::OP_CSRRW),
                 0b010 => Ok(OpecodeKind::OP_CSRRS),
