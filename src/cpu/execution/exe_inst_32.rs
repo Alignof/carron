@@ -5,8 +5,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     const INST_SIZE: usize = 4;
 
-    // add program counter
-    cpu.pc += INST_SIZE;
+    // store previous program counter for excluding branch case
+    let prev_pc = cpu.pc;
 
     match inst.opc {
         OP_LUI => {
@@ -193,5 +193,11 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         _ => panic!("not a full instruction"),
+    }
+
+
+    // add the program counter when it isn't a branch instruction
+    if cpu.pc == prev_pc {
+        cpu.pc += INST_SIZE;
     }
 }

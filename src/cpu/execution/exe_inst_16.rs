@@ -7,8 +7,8 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
     const REG_SP: usize = 2;
     const LINK_REG: usize = 1;
 
-    // add program counter
-    cpu.pc += INST_SIZE;
+    // store previous program counter for excluding branch case
+    let prev_pc = cpu.pc;
 
     match inst.opc {
         OP_C_LI => {
@@ -109,5 +109,10 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_C_NOP => {/* NOP */},
         _ => panic!("not a compressed Instruction"),
+    }
+
+    // add the program counter when it isn't a branch instruction
+    if cpu.pc == prev_pc {
+        cpu.pc += INST_SIZE;
     }
 }
