@@ -209,6 +209,7 @@ impl Decode for u32 {
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
         let rs2: usize = ((inst >> 20) & 0x1F) as usize;
+        let csr: usize = ((inst >> 20) & 0xFFF) as usize;
 
         // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
         // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
@@ -233,12 +234,12 @@ impl Decode for u32 {
             OpecodeKind::OP_SRA		=> Some(rs2),
             OpecodeKind::OP_OR		=> Some(rs2),
             OpecodeKind::OP_AND		=> Some(rs2),
-            OpecodeKind::OP_CSRRW	=> Some(rs2),
-            OpecodeKind::OP_CSRRS	=> Some(rs2),
-            OpecodeKind::OP_CSRRC	=> Some(rs2),
-            OpecodeKind::OP_CSRRWI	=> Some(rs2),
-            OpecodeKind::OP_CSRRSI	=> Some(rs2),
-            OpecodeKind::OP_CSRRCI	=> Some(rs2),
+            OpecodeKind::OP_CSRRW	=> Some(csr),
+            OpecodeKind::OP_CSRRS	=> Some(csr),
+            OpecodeKind::OP_CSRRC	=> Some(csr),
+            OpecodeKind::OP_CSRRWI	=> Some(csr),
+            OpecodeKind::OP_CSRRSI	=> Some(csr),
+            OpecodeKind::OP_CSRRCI	=> Some(csr),
             _ => None,
         }
     }
