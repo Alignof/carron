@@ -87,8 +87,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
                          cpu.read_reg(inst.rs2));
         },
         OP_ADDI => {
-            cpu.write_reg(inst.rd,
-                cpu.read_reg(inst.rd) + cpu.read_reg(inst.rs1) + inst.imm.unwrap());
+            cpu.write_reg(inst.rd, cpu.read_reg(inst.rs1) + inst.imm.unwrap());
         },
         OP_SLTI => {
             cpu.write_reg(inst.rd,  
