@@ -4,6 +4,7 @@ use crate::cpu::instruction::{Instruction, OpecodeKind};
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     const INST_SIZE: usize = 4;
+    const MEPC: Option<usize> = Some(0x341);
 
     // store previous program counter for excluding branch case
     let prev_pc = cpu.pc;
@@ -162,7 +163,6 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             panic!("not yet implemented: OP_FENCE");
         },
         OP_ECALL => {
-            cpu.show_regs();
             panic!("not yet implemented: OP_ECALL");
         },
         OP_EBREAK => {
@@ -192,6 +192,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.write_reg(inst.rd, cpu.read_csr(inst.rs2) as i32);
             cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
         },
+        OP_MRET => {
+            cpu.pc = cpu.read_csr(MEPC) as usize;
+        }
         _ => panic!("not a full instruction"),
     }
 

@@ -20,5 +20,6 @@ impl Execution for Instruction {
         } else {
             exe_inst(self, cpu);
         }
+        cpu.show_regs();
     }
 }
