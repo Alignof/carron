@@ -14,33 +14,38 @@ pub trait Decode {
 
 
 #[cfg(test)]
+#[allow(unused_variables)]
 mod tests {
     use super::*;
 
     #[test]
     fn parsing_opecode_test() {
         use OpecodeKind::*;
-        let test_32 = |inst_32: u32, _e_op: OpecodeKind, _e_rd| {
+        let test_32 = |inst_32: u32, op: OpecodeKind, rd: Option<usize>,
+                       rs1: Option<usize>, rs2: Option<usize>, imm: Option<i32>| {
             let op_32 = inst_32.parse_opecode().unwrap();
-            assert!(matches!(&op_32, _e_op));
-            assert_eq!(inst_32.parse_rd(&op_32).unwrap(), _e_rd);
+            assert!(matches!(&op_32, op));
+            assert!(matches!(inst_32.parse_rd(&op_32), rd));
+            assert!(matches!(inst_32.parse_rs1(&op_32), rs1));
+            assert!(matches!(inst_32.parse_rs2(&op_32), rs2));
+            assert!(matches!(inst_32.parse_imm(&op_32), imm));
         };
 
-        test_32(0b00000000000000000000000010110111, OP_LUI, 1);
-        test_32(0b00000000000000000000000000000011, OP_LB, 0);
-        test_32(0b00000000000000000001000000000011, OP_LH, 0);
-        test_32(0b00000000000000000000000000010011, OP_ADDI, 0);
-        test_32(0b00000000000000000100000000110011, OP_XOR, 0);
-        test_32(0b00000000000000000111000000110011, OP_AND, 0);
+        test_32(0b00000000000000000000000010110111,
+                OP_LUI, Some(1), Some(0), Some(0), Some(0));
+        test_32(0b00000000000000000000000001110011,
+                OP_ECALL, None, None, None, None);
+        test_32(0b00000000000001010100110001100011,
+                OP_BLT, None, Some(10), Some(0), Some(24));
     }
 
     #[test]
     fn parsing_compressed_opecode_test() {
         use OpecodeKind::*;
-        let test_16 = |inst_16: u16, _e_op: OpecodeKind, _e_rd: Option<u8>| {
+        let test_16 = |inst_16: u16, _op: OpecodeKind, _rd: Option<u8>| {
             let op_16 = inst_16.parse_opecode().unwrap();
-            assert!(matches!(&op_16, _e_op));
-            assert!(matches!(inst_16.parse_rd(&op_16), _e_rd));
+            assert!(matches!(&op_16, _op));
+            assert!(matches!(inst_16.parse_rd(&op_16), _rd));
         };
 
         test_16(0b0000000000000001, OP_C_NOP, None);

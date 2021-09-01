@@ -15,11 +15,14 @@ impl Execution for Instruction {
     fn execution(&self, cpu: &mut CPU) {
         dbg_hex!(cpu.pc);
         dbg!(self);
+
         if self.is_compressed {
             exe_cinst(self, cpu);
         } else {
             exe_inst(self, cpu);
         }
+
         cpu.show_regs();
+        if cpu.pc > 0x142c { panic!("out of range"); }
     }
 }
