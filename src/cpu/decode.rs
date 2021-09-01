@@ -25,14 +25,16 @@ mod tests {
                        rs1: Option<usize>, rs2: Option<usize>, imm: Option<i32>| {
             let op_32 = inst_32.parse_opecode().unwrap();
             assert!(matches!(&op_32, op));
-            assert!(matches!(inst_32.parse_rd(&op_32), rd));
-            assert!(matches!(inst_32.parse_rs1(&op_32), rs1));
-            assert!(matches!(inst_32.parse_rs2(&op_32), rs2));
-            assert!(matches!(inst_32.parse_imm(&op_32), imm));
+            assert_eq!(inst_32.parse_rd(&op_32), rd);
+            assert_eq!(inst_32.parse_rs1(&op_32), rs1);
+            assert_eq!(inst_32.parse_rs2(&op_32), rs2);
+            assert_eq!(inst_32.parse_imm(&op_32), imm);
         };
 
         test_32(0b00000000000000000000000010110111,
-                OP_LUI, Some(1), Some(0), Some(0), Some(0));
+                OP_LUI, Some(1), None, None, Some(0));
+        test_32(0b00000000000000000000001010010111,
+                OP_AUIPC, Some(5), None, None, Some(0));
         test_32(0b00000000000000000000000001110011,
                 OP_ECALL, None, None, None, None);
         test_32(0b00000000000001010100110001100011,
