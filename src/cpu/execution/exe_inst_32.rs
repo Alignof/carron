@@ -14,7 +14,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.write_reg(inst.rd, inst.imm.unwrap() << 12);
         },
         OP_AUIPC => {
-            cpu.pc += (inst.imm.unwrap() << 12) as usize;
+            cpu.write_reg(inst.rd, cpu.pc as i32 + (inst.imm.unwrap() << 12));
         },
         OP_JAL => {
             cpu.write_reg(inst.rd, (cpu.pc + INST_SIZE) as i32); 
