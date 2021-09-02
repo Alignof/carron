@@ -162,7 +162,15 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            panic!("not yet implemented: OP_ECALL");
+            cpu.write_csr(CSRname::mcause.wrap(), match cpu.priv_lv {
+                PrivilegedLevel::User => 8,
+                PrivilegedLevel::Supervisor => 9,
+            });
+            cpu.write_csr(CSRname::mepc.wrap(), cpu.pc);
+            // update MSTATUS
+            cpu.bitclr_csr(CSRname::mstatus.wrap(), 0x3 << 11);
+            cpu.priv_lv = PrivilegedLevel::Machine;
+            cpu.pc = cpu.read_csr(CSRname::mtvec.wrap());
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
