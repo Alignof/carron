@@ -1,10 +1,10 @@
 use crate::cpu::CPU;
+use crate::cpu::csr::CSRname;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
     const INST_SIZE: usize = 4;
-    const MEPC: Option<usize> = Some(0x341);
 
     // store previous program counter for excluding branch case
     let prev_pc = cpu.pc;
@@ -192,7 +192,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_MRET => {
-            cpu.pc = cpu.read_csr(MEPC) as usize;
+            cpu.pc = cpu.read_csr(CSRname::mepc.wrap()) as usize;
         },
         _ => panic!("not a full instruction"),
     }

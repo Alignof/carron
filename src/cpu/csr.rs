@@ -1,11 +1,17 @@
 use super::CPU;
 
 #[allow(non_camel_case_types)]
-enum CSRname {
+pub enum CSRname {
     mstatus = 0x300,
     mepc = 0x341, 
     mcause = 0x342,
     mtval = 0x343,
+}
+
+impl CSRname {
+    pub fn wrap(self) -> Option<usize> {
+        Some(self as usize)
+    }
 }
 
 impl CPU {
