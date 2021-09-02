@@ -9,6 +9,26 @@ pub enum CSRname {
     mtval = 0x343,
 }
 
+pub enum Mstatus {
+    UIE,	// 0
+    SIE,	// 1
+    MIE,	// 3
+    UPIE,	// 4
+    SPIE,	// 5
+    MPIE,	// 7
+    SPP,	// 8
+    MPP,	// 11-12
+    FS,		// 13-14
+    XS,		// 15-16
+    MPRV,	// 17
+    SUM,	// 18
+    MXR,	// 19
+    TVM,	// 20
+    TW,		// 21
+    TSR,	// 22
+    SD,		// 31
+}
+
 impl CSRname {
     pub fn wrap(self) -> Option<usize> {
         Some(self as usize)
