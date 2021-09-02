@@ -8,11 +8,19 @@ use crate::bus;
 use crate::elfload;
 use crate::bus::Bus;
 
+pub enum PrivilegedLevel {
+    User = 0b00,
+    Supervisor = 0b01,
+    Reserved = 0b10,
+    Machine = 0b11,
+}
+
 pub struct CPU {
     pub pc: usize,
         regs: [i32; 32],
         csrs: [u32; 4096],
         bus: bus::Bus,
+    pub priv_lv: PrivilegedLevel,
 }
 
 impl CPU {
@@ -22,6 +30,7 @@ impl CPU {
             regs: [0; 32],
             csrs: [0; 4096],
             bus: Bus::new(loader),
+            priv_lv: PrivilegedLevel::Machine, 
         }
     }
 
