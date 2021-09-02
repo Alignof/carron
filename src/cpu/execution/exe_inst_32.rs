@@ -159,7 +159,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
                 cpu.read_reg(inst.rs1) & cpu.read_reg(inst.rs2));
         },
         OP_FENCE => {
-            panic!("not yet implemented: OP_FENCE");
+            // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
             panic!("not yet implemented: OP_ECALL");
@@ -193,7 +193,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_MRET => {
             cpu.pc = cpu.read_csr(MEPC) as usize;
-        }
+        },
         _ => panic!("not a full instruction"),
     }
 
