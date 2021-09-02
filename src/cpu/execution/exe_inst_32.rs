@@ -1,5 +1,5 @@
 use crate::cpu::{CPU, PrivilegedLevel};
-use crate::cpu::csr::CSRname;
+use crate::cpu::csr::{CSRname, Mstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
@@ -165,12 +165,12 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.write_csr(CSRname::mcause.wrap(), match cpu.priv_lv {
                 PrivilegedLevel::User => 8,
                 PrivilegedLevel::Supervisor => 9,
+                _ => panic!("cannot enviroment call in current privileged mode."),
             });
-            cpu.write_csr(CSRname::mepc.wrap(), cpu.pc);
-            // update MSTATUS
+            cpu.write_csr(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.bitclr_csr(CSRname::mstatus.wrap(), 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
-            cpu.pc = cpu.read_csr(CSRname::mtvec.wrap());
+            cpu.pc = cpu.read_csr(CSRname::mtvec.wrap()) as usize;
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
@@ -200,9 +200,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_MRET => {
-            let mpp = cpu.read_csr(CSRname::mstatus.wrap()) >> 11 & 0x3;
             cpu.pc = cpu.read_csr(CSRname::mepc.wrap()) as usize;
-            cpu.priv_lv = match mpp {
+            cpu.priv_lv = match cpu.read_csr_mstatus(Mstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => PrivilegedLevel::Machine,
