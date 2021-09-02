@@ -1,7 +1,6 @@
-use crate::cpu;
-use crate::cpu::decode::Decode;
+use super::decode::Decode;
 
-pub fn fetch(cpu: &cpu::CPU) -> Box<dyn Decode> {
+pub fn fetch(cpu: &super::CPU) -> Box<dyn Decode> {
     let dram = &cpu.bus.dram;
     let index_pc : usize = cpu.pc;
     let is_cinst: bool = dram.raw_byte(index_pc) & 0x3 != 0x3;
