@@ -4,7 +4,7 @@ pub mod bus;
 pub mod elfload;
 
 use cpu::CPU;
-use cpu::fetch;
+use cpu::fetch::fetch;
 
 pub struct Simulator {
     pub cpu: cpu::CPU,
