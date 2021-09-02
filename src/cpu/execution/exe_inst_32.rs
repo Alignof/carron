@@ -1,4 +1,4 @@
-use crate::cpu::CPU;
+use crate::cpu::{CPU, PrivilegedLevel};
 use crate::cpu::csr::CSRname;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
@@ -192,7 +192,14 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_MRET => {
+            let mpp = cpu.read_csr(CSRname::mstatus.wrap()) >> 11 & 0x3;
             cpu.pc = cpu.read_csr(CSRname::mepc.wrap()) as usize;
+            cpu.priv_lv = match mpp {
+                0b00 => PrivilegedLevel::User,
+                0b01 => PrivilegedLevel::Supervisor,
+                0b11 => PrivilegedLevel::Machine,
+                _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+            }
         },
         _ => panic!("not a full instruction"),
     }
