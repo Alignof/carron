@@ -1,5 +1,13 @@
 use super::CPU;
 
+#[allow(non_camel_case_types)]
+enum CSRname {
+    mstatus = 0x300,
+    mepc = 0x341, 
+    mcause = 0x342,
+    mtval = 0x343,
+}
+
 impl CPU {
     pub fn read_csr(&self, src: Option<usize>) -> u32 {
         self.csrs[src.unwrap()]
