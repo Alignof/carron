@@ -18,40 +18,40 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_JAL => {
             cpu.write_reg(inst.rd, (cpu.pc + INST_SIZE) as i32); 
-            cpu.pc += inst.imm.unwrap() as usize;
+            cpu.add2pc(inst.imm.unwrap());
         },
         OP_JALR => {
             cpu.write_reg(inst.rd, (cpu.pc + INST_SIZE) as i32); 
-            cpu.pc += (cpu.read_reg(inst.rs1)  + inst.imm.unwrap()) as usize;
+            cpu.add2pc(cpu.read_reg(inst.rs1)  + inst.imm.unwrap());
         },
         OP_BEQ => {
             if cpu.read_reg(inst.rs1) == cpu.read_reg(inst.rs2) {
-                cpu.pc += inst.imm.unwrap() as usize;
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BNE => {
             if cpu.read_reg(inst.rs1) != cpu.read_reg(inst.rs2) {
-                cpu.pc += inst.imm.unwrap() as usize;
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BLT => {
             if cpu.read_reg(inst.rs1) < cpu.read_reg(inst.rs2) {
-                cpu.pc += inst.imm.unwrap() as usize;
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BGE => {
             if cpu.read_reg(inst.rs1) >= cpu.read_reg(inst.rs2) {
-                cpu.pc += inst.imm.unwrap() as usize;
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BLTU => {
             if (cpu.read_reg(inst.rs1) as u32) < (cpu.read_reg(inst.rs2) as u32) {
-                cpu.pc += inst.imm.unwrap() as usize;
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BGEU => {
             if (cpu.read_reg(inst.rs1) as u32) >= (cpu.read_reg(inst.rs2) as u32) {
-                cpu.pc += inst.imm.unwrap() as usize;
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_LB => {
@@ -214,6 +214,6 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
 
     // add the program counter when it isn't a branch instruction
     if cpu.pc == prev_pc {
-        cpu.pc += INST_SIZE;
+        cpu.add2pc(INST_SIZE as i32);
     }
 }

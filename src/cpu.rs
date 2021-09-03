@@ -34,6 +34,10 @@ impl CPU {
         }
     }
 
+    pub fn add2pc(&mut self, addval: i32) {
+        self.pc = (self.pc as i32 + addval) as usize;
+    }
+
     pub fn show_regs(&self) {
         println!("=========================================== dump ============================================");
         println!("pc:\t0x{:x}", self.pc);
