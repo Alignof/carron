@@ -247,7 +247,7 @@ impl Decode for u32 {
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
         let inst: &u32 = self;
         let U_type = | | {
-            (((inst >> 12) & 0xFFFF) << 12) as i32
+            ((inst >> 12) & 0xFFFFF) as i32
         };
         let I_type = | | {
             let imm32 = ((inst >> 20) & 0xFFF) as i32;

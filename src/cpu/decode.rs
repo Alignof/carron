@@ -39,8 +39,8 @@ mod tests {
             assert_eq!(inst_32.parse_imm(&op_32), imm);
         };
 
-        test_32(0b00000000000000000000000010110111,
-                OP_LUI, Some(1), None, None, Some(0));
+        test_32(0b10000000000000000000000010110111,
+                OP_LUI, Some(1), None, None, Some(0x80000));
         test_32(0b00000000000000000000001010010111,
                 OP_AUIPC, Some(5), None, None, Some(0));
         test_32(0b11111111100111111111000001101111,
