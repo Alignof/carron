@@ -35,6 +35,8 @@ mod tests {
                 OP_LUI, Some(1), None, None, Some(0));
         test_32(0b00000000000000000000001010010111,
                 OP_AUIPC, Some(5), None, None, Some(0));
+        test_32(0b11101110110000101000001010010011,
+                OP_ADDI, Some(5), Some(5), None, Some(-276));
         test_32(0b00000000000000000000000001110011,
                 OP_ECALL, None, None, None, None);
         test_32(0b00000000000001010100110001100011,
