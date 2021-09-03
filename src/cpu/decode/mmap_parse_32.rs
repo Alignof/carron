@@ -250,24 +250,30 @@ impl Decode for u32 {
             (((inst >> 12) & 0xFFFF) << 12) as i32
         };
         let I_type = | | {
-            ((inst >> 20) & 0xFFF) as i32
+            let imm32 = ((inst >> 20) & 0xFFF) as i32;
+            self.to_signed_nbit(imm32, 12)
         };
         let S_type = | | {
-            ((((inst >> 25) & 0x1F) << 5) | ((inst >> 7) & 0x1F)) as i32
+            let imm32 = ((((inst >> 25) & 0x1F) << 5) | ((inst >> 7) & 0x1F)) as i32;
+            self.to_signed_nbit(imm32, 12)
         };
         let B_type = | | {
+            let imm32 =
             ((((inst >> 8) & 0xF) << 1)  | (((inst >> 25) & 0x3F) << 5) |
-             (((inst >> 7) & 0x1) << 11) | (((inst >> 31) & 0x1) << 12)) as i32
+             (((inst >> 7) & 0x1) << 11) | (((inst >> 31) & 0x1) << 12)) as i32;
+            self.to_signed_nbit(imm32, 13)
         };
-        let JAL_imm = | | {
-            (((((inst >> 12) & 0xFF) << 12) | (((inst >> 20) & 0x1) << 13) |
-             (((inst >> 21) & 0x3FF) << 1)  | ((inst >> 31) & 0x1 << 31)) << 1) as i32
+        let J_type = | | {
+            let imm32 =
+            ((((inst >> 21) & 0x3FF) << 1) | (((inst >> 20) & 0x1) << 11) |
+             (((inst >> 12) & 0xFF) << 12)  | ((inst >> 31) & 0x1 << 20)) as i32;
+            self.to_signed_nbit(imm32, 20)
         };
 
         match opkind {
             OpecodeKind::OP_LUI		=> Some(U_type()),
             OpecodeKind::OP_AUIPC	=> Some(U_type()),
-            OpecodeKind::OP_JAL		=> Some(JAL_imm()),
+            OpecodeKind::OP_JAL		=> Some(J_type()),
             OpecodeKind::OP_JALR	=> Some(I_type()),
             OpecodeKind::OP_BEQ		=> Some(B_type()),
             OpecodeKind::OP_BNE		=> Some(B_type()),
