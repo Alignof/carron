@@ -45,7 +45,7 @@ impl CPU {
 
     pub fn show_regs(&self) {
         println!("=========================================== dump ============================================");
-        println!("pc:\t0x{:x}", self.pc);
+        println!("pc: 0x{:x}", self.pc);
         for (num, reg) in self.regs.iter().enumerate() {
             print!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
             if (num + 1) % 4 == 0 { println!() }
