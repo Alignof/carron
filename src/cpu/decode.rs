@@ -10,6 +10,14 @@ pub trait Decode {
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize>;
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize>;
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32>;
+    fn to_signed_nbit(&self, imm32: i32, bit_size: u32) -> i32 {
+        let imm32 = imm32 & 2_i32.pow(bit_size) - 1;
+        if (imm32 >> bit_size - 1) & 0x1 == 1 {
+            imm32 - 2_i32.pow(bit_size)
+        } else {
+            imm32
+        }
+    }
 }
 
 
