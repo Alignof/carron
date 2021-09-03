@@ -170,7 +170,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.write_csr(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.bitclr_csr(CSRname::mstatus.wrap(), 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
-            cpu.pc = cpu.read_csr(CSRname::mtvec.wrap()) as usize;
+            cpu.update_pc(cpu.read_csr(CSRname::mtvec.wrap()));
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
@@ -200,7 +200,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_MRET => {
-            cpu.pc = cpu.read_csr(CSRname::mepc.wrap()) as usize;
+            cpu.update_pc(cpu.read_csr(CSRname::mepc.wrap()));
             cpu.priv_lv = match cpu.read_csr_mstatus(Mstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,

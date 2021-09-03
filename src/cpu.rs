@@ -38,6 +38,10 @@ impl CPU {
         self.pc = (self.pc as i32 + addval) as usize;
     }
 
+    pub fn update_pc(&mut self, newval: u32) {
+        self.pc = newval as usize;
+    }
+
     pub fn show_regs(&self) {
         println!("=========================================== dump ============================================");
         println!("pc:\t0x{:x}", self.pc);
