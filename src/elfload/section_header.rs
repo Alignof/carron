@@ -1,5 +1,5 @@
 use super::ElfHeader;
-use crate::elfload::{get_u32, get_u16, is_cinst};
+use super::{get_u32, get_u16, is_cinst};
 
 pub struct SectionHeader {
     sh_name: String,
@@ -94,7 +94,7 @@ impl SectionHeader {
 
 
     pub fn section_dump(&self, mmap: &[u8]){
-        use crate::decode::Decode;
+        use crate::cpu::decode::Decode;
 
         println!("--------------------------------");
         let mut dump_head = self.sh_offset;

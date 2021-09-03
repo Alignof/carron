@@ -1,9 +1,18 @@
-mod mmap_parse_16;
-mod mmap_parse_32;
-
 // riscv-spec-20191213-1.pdf page=130
+
+#[derive(Debug)]
+pub struct Instruction {
+    pub opc: OpecodeKind,
+    pub rd:  Option<usize>,
+    pub rs1: Option<usize>,
+    pub rs2: Option<usize>,
+    pub imm: Option<i32>,
+    pub is_compressed: bool,
+}
+
 #[allow(non_camel_case_types)]
-pub enum OpecodeKind{
+#[derive(Debug)]
+pub enum OpecodeKind {
     OP_LUI,
     OP_AUIPC,
     OP_JAL,
@@ -30,6 +39,7 @@ pub enum OpecodeKind{
     OP_ANDI,
     OP_SLLI,
     OP_SRLI,
+    OP_SRAI,
     OP_ADD,
     OP_SUB,
     OP_SLL,
@@ -43,6 +53,15 @@ pub enum OpecodeKind{
     OP_FENCE,
     OP_ECALL,
     OP_EBREAK,
+//== CSR Instruction == 
+    OP_CSRRW,
+    OP_CSRRS,
+    OP_CSRRC,
+    OP_CSRRWI,
+    OP_CSRRSI,
+    OP_CSRRCI,
+//== privileged Instruction == 
+    OP_MRET,
 //== compressed Instruction == 
     OP_C_ADDI4SPN,
     OP_C_FLD,
@@ -81,16 +100,14 @@ pub enum OpecodeKind{
     OP_C_FSWSP,
 }
 
-pub struct Instruction {
-    pub opc: OpecodeKind,
-    pub rd:  Option<u8>,
-    pub rs1: Option<u8>,
-    pub rs2: Option<u8>,
-    pub imm: Option<u32>,
-    pub is_compressed: bool,
-}
-
 impl Instruction {
+    pub fn print_myself(&self) {
+        print!("{:<12}{:>4}", self.opc_to_string(), self.reg_to_string());
+        if let Some(v) = self.rs1 { print!("{:>10},", v) } else { print!("          ,") } 
+        if let Some(v) = self.rs2 { print!("{:>10},", v) } else { print!("          ,") }
+        if let Some(v) = self.imm { print!("{:>10},", v) } else { print!("          ,") }
+    }
+
     pub fn opc_to_string(&self) -> &'static str {
         use OpecodeKind::*;
         match self.opc {
@@ -120,6 +137,7 @@ impl Instruction {
             OP_ANDI         => "andi",
             OP_SLLI         => "slli",
             OP_SRLI         => "srli",
+            OP_SRAI         => "srai",
             OP_ADD          => "add",
             OP_SUB          => "sub",
             OP_SLL          => "sll",
@@ -133,6 +151,13 @@ impl Instruction {
             OP_FENCE        => "fence",
             OP_ECALL        => "ecall",
             OP_EBREAK       => "ebreak",
+            OP_CSRRW		=> "csrrw",
+            OP_CSRRS		=> "csrrs",
+            OP_CSRRC		=> "csrrc",
+            OP_CSRRWI		=> "csrrwi",
+            OP_CSRRSI		=> "csrrsi",
+            OP_CSRRCI		=> "csrrci",
+            OP_MRET         => "mret",
             OP_C_ADDI4SPN   => "C.addi4spn",
             OP_C_FLD        => "C.fld",
             OP_C_LW         => "C.lw",
@@ -172,99 +197,48 @@ impl Instruction {
     }
 
     pub fn reg_to_string(&self) -> &'static str {
-        match self.rd {
-            Some(rd) => match rd {
-                0  => "zero",
-                1  => "ra",
-                2  => "sp",
-                3  => "gp",
-                4  => "tp",
-                5  => "t0",
-                6  => "t1",
-                7  => "t2",
-                8  => "fp",
-                9  => "s1",
-                10 => "a0",
-                11 => "a1",
-                12 => "a2",
-                13 => "a3",
-                14 => "a4",
-                15 => "a5",
-                16 => "a6",
-                17 => "a7",
-                18 => "s2",
-                19 => "s3",
-                20 => "s4",
-                21 => "s5",
-                22 => "s6",
-                23 => "s7",
-                24 => "s8",
-                25 => "s9",
-                26 => "s10",
-                27 => "s11",
-                28 => "t3",
-                29 => "t4",
-                30 => "t5",
-                31 => "t6",
-                _  => panic!("unknown register"),
-            },
-            None => "  ",
+        if let Some(rd_val) = self.rd {
+            reg2str(rd_val)
+        } else {
+            "  "
         }
     }
-
-    pub fn print_myself(&self) {
-        print!("{:<16}{:>4}", self.opc_to_string(), self.reg_to_string());
-        if let Some(v) = self.rs1 {print!(" {}", v)}
-        if let Some(v) = self.rs2 {print!(" {}", v)}
-    }
 }
 
-
-pub trait Decode {
-    fn decode(&self) -> Instruction;
-    fn parse_opecode(&self) -> Result<OpecodeKind, &'static str>;
-    fn parse_rd(&self,  opkind: &OpecodeKind) -> Option<u8>;
-    fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<u8>;
-    fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<u8>;
-    fn parse_imm(&self, opkind: &OpecodeKind) -> Option<u32>;
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parsing_opecode_test() {
-        use OpecodeKind::*;
-        let test_32 = |inst_32: u32, _e_op: OpecodeKind, _e_rd| {
-            let op_32 = inst_32.parse_opecode().unwrap();
-            assert!(matches!(&op_32, _e_op));
-            assert_eq!(inst_32.parse_rd(&op_32).unwrap(), _e_rd);
-        };
-
-        test_32(0b00000000000000000000000010110111, OP_LUI, 1);
-        test_32(0b00000000000000000000000000000011, OP_LB, 0);
-        test_32(0b00000000000000000001000000000011, OP_LH, 0);
-        test_32(0b00000000000000000000000000010011, OP_ADDI, 0);
-        test_32(0b00000000000000000100000000110011, OP_XOR, 0);
-        test_32(0b00000000000000000111000000110011, OP_AND, 0);
-    }
-
-    #[test]
-    fn parsing_compressed_opecode_test() {
-        use OpecodeKind::*;
-        let test_16 = |inst_16: u16, _e_op: OpecodeKind, _e_rd: Option<u8>| {
-            let op_16 = inst_16.parse_opecode().unwrap();
-            assert!(matches!(&op_16, _e_op));
-            assert!(matches!(inst_16.parse_rd(&op_16), _e_rd));
-        };
-
-        test_16(0b0000000000000001, OP_C_NOP, None);
-        test_16(0b0000000010000001, OP_C_ADDI, Some(0));
-        test_16(0b0110000100000001, OP_C_ADDI16SP, None);
-        test_16(0b0110001110000001, OP_C_LUI, None);
-        test_16(0b1000001011000001, OP_C_SRAI, Some(0));
-        test_16(0b1000010011000001, OP_C_ANDI, None);
+pub fn reg2str(rd_value: usize) -> &'static str {
+    match rd_value {
+        0  => "zero",
+        1  => "ra",
+        2  => "sp",
+        3  => "gp",
+        4  => "tp",
+        5  => "t0",
+        6  => "t1",
+        7  => "t2",
+        8  => "fp",
+        9  => "s1",
+        10 => "a0",
+        11 => "a1",
+        12 => "a2",
+        13 => "a3",
+        14 => "a4",
+        15 => "a5",
+        16 => "a6",
+        17 => "a7",
+        18 => "s2",
+        19 => "s3",
+        20 => "s4",
+        21 => "s5",
+        22 => "s6",
+        23 => "s7",
+        24 => "s8",
+        25 => "s9",
+        26 => "s10",
+        27 => "s11",
+        28 => "t3",
+        29 => "t4",
+        30 => "t5",
+        31 => "t6",
+        _  => panic!("unknown register"),
     }
 }

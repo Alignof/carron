@@ -57,7 +57,7 @@ pub struct ElfHeader {
         e_type: u16,
         e_machine: u16,
         e_version: u32,
-        e_entry: u32,
+    pub e_entry: u32,
     pub e_phoff: u32,
     pub e_shoff: u32,
         e_flags: u32,
@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn elf_header_test() {
-        let loader = match ElfLoader::try_new("./src/example_elf") {
+        let loader = match ElfLoader::try_new("example_elf") {
             Ok(loader) => loader,
             Err(error) => {
                 panic!("There was a problem opening the file: {:?}", error);

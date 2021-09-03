@@ -8,28 +8,28 @@ use elf_header::ElfHeader;
 use section_header::SectionHeader;
 use program_header::ProgramHeader;
 
-fn get_u16(mmap: &[u8], index: usize) -> u16 {
+
+pub fn get_u16(mmap: &[u8], index: usize) -> u16 {
     (mmap[index + 1] as u16) << 8 |
     (mmap[index + 0] as u16)
 }
 
-fn get_u32(mmap: &[u8], index: usize) -> u32 {
+pub fn get_u32(mmap: &[u8], index: usize) -> u32 {
     (mmap[index + 3] as u32) << 24 |
     (mmap[index + 2] as u32) << 16 |
     (mmap[index + 1] as u32) <<  8 |
     (mmap[index + 0] as u32)
 }
 
-fn is_cinst(mmap: &[u8], index: usize) -> bool {
+pub fn is_cinst(mmap: &[u8], index: usize) -> bool {
     mmap[index] & 0x3 != 0x3
 }
 
-
 pub struct ElfLoader {
-    elf_header: ElfHeader,
-    prog_headers: Vec<ProgramHeader>,
-    sect_headers: Vec<SectionHeader>,
-    mem_data: Mmap,
+    pub elf_header: ElfHeader,
+    pub prog_headers: Vec<ProgramHeader>,
+        sect_headers: Vec<SectionHeader>,
+    pub mem_data: Mmap,
 }
 
 impl ElfLoader {
@@ -52,8 +52,8 @@ impl ElfLoader {
         self.elf_header.is_elf()
     }
 
-    pub fn ident_show(&self){
-        self.elf_header.ident_show();
+    pub fn header_show(&self){
+        self.elf_header.show();
     }
 
     pub fn show_all_header(&self){

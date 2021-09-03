@@ -1,56 +1,53 @@
+pub mod system;
+pub mod cpu;
+pub mod bus;
 pub mod elfload;
-pub mod decode;
 
-#[allow(non_camel_case_types)]
-pub enum ExeOption {
-    OPT_NONE,
-    OPT_ELFHEAD,
-    OPT_PROG,
-    OPT_SECT,
-    OPT_SHOWALL,
-    OPT_DISASEM,
+use cpu::CPU;
+use cpu::fetch::fetch;
+
+pub struct Simulator {
+    pub cpu: cpu::CPU,
 }
 
-fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
-    match option {
-        "-h" => Ok(ExeOption::OPT_ELFHEAD),
-        "-p" => Ok(ExeOption::OPT_PROG),
-        "-s" => Ok(ExeOption::OPT_SECT),
-        "-a" => Ok(ExeOption::OPT_SHOWALL),
-        "-d" => Ok(ExeOption::OPT_DISASEM),
-        _    => Err("invalid option"),
-    }
-}
+fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
+    let e_entry = loader.elf_header.e_entry;
 
-pub struct Arguments {
-    pub filename: String,
-    pub exe_option: ExeOption,
-}
-
-impl Arguments {
-    pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
-        if args.len() < 2 {
-            return Err("not enough arguments");
+    for segment in loader.prog_headers.iter() {
+        //                PT_LOAD
+        if segment.p_type == 1 && segment.p_paddr == e_entry {
+            return Ok(segment.p_offset as usize);
         }
-
-        let filename: String;
-        let exe_option: ExeOption;
-
-        // no option
-        if args.len() == 2 {
-            exe_option = ExeOption::OPT_NONE;
-            filename = args[1].clone();
-        } else {
-            exe_option = match parse_option(&args[1]) {
-                Ok(opt)  => opt,
-                Err(msg) => panic!("{}", msg),
-            };
-            filename = args[2].clone();
-        }
-
-        Ok(Arguments {
-            filename,
-            exe_option,
-        })
     }
+
+    Err("entry address is not found.")
 }
+
+impl Simulator {
+    pub fn new(loader: elfload::ElfLoader) -> Simulator {
+        let entry_address: usize = match find_entry_addr(&loader) {
+            Ok(addr) => addr,
+            Err(msg) => panic!("{}", msg),
+        };
+
+        Simulator {
+            cpu: CPU::new(entry_address, loader),
+        }
+    }
+
+    pub fn simulation(&mut self) {
+        use crate::cpu::execution::Execution;
+        let break_point: Option<usize> = Some(0x1044);
+
+        loop {
+            fetch(&self.cpu)
+                .decode()
+                .execution(&mut self.cpu);
+
+            // debug code
+            if break_point.unwrap_or(usize::MAX) == self.cpu.pc {
+                break;
+            }
+        }
+    }
+} 
