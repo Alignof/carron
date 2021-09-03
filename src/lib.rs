@@ -37,11 +37,16 @@ impl Simulator {
 
     pub fn simulation(&mut self) {
         use crate::cpu::execution::Execution;
+        let break_point: Option<usize> = Some(0x1044);
 
         loop {
             fetch(&self.cpu)
                 .decode()
                 .execution(&mut self.cpu);
+
+            if break_point.unwrap_or(usize::MAX) == self.cpu.pc {
+                break;
+            }
         }
     }
 } 
