@@ -246,41 +246,51 @@ impl Decode for u32 {
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
         let inst: &u32 = self;
-        let U_type: i32 = (((inst >> 12) & 0xFFFF) << 12) as i32;
-        let I_type: i32 = ((inst >> 20) & 0xFFF) as i32;
-        let S_type: i32 = ((((inst >> 25) & 0x1F) << 5) | ((inst >> 7) & 0x1F)) as i32;
-        let B_type: i32 = ((((inst >> 8) & 0xF) << 1) | (((inst >> 25) & 0x3F) << 5) |
-                           (((inst >> 7) & 0x1) << 11) | (((inst >> 31) & 0x1) << 12)) as i32;
-        let JAL_imm: i32 = (((((inst >> 12) & 0xFF) << 12) | (((inst >> 20) & 0x1) << 13) |
-                          (((inst >> 21) & 0x3FF) << 1) | ((inst >> 31) & 0x1 << 31)) << 1) as i32;
+        let U_type = | | {
+            (((inst >> 12) & 0xFFFF) << 12) as i32
+        };
+        let I_type = | | {
+            ((inst >> 20) & 0xFFF) as i32
+        };
+        let S_type = | | {
+            ((((inst >> 25) & 0x1F) << 5) | ((inst >> 7) & 0x1F)) as i32
+        };
+        let B_type = | | {
+            ((((inst >> 8) & 0xF) << 1)  | (((inst >> 25) & 0x3F) << 5) |
+             (((inst >> 7) & 0x1) << 11) | (((inst >> 31) & 0x1) << 12)) as i32
+        };
+        let JAL_imm = | | {
+            (((((inst >> 12) & 0xFF) << 12) | (((inst >> 20) & 0x1) << 13) |
+             (((inst >> 21) & 0x3FF) << 1)  | ((inst >> 31) & 0x1 << 31)) << 1) as i32
+        };
 
         match opkind {
-            OpecodeKind::OP_LUI		=> Some(U_type),
-            OpecodeKind::OP_AUIPC	=> Some(U_type),
-            OpecodeKind::OP_JAL		=> Some(JAL_imm),
-            OpecodeKind::OP_JALR	=> Some(I_type),
-            OpecodeKind::OP_BEQ		=> Some(B_type),
-            OpecodeKind::OP_BNE		=> Some(B_type),
-            OpecodeKind::OP_BLT		=> Some(B_type),
-            OpecodeKind::OP_BGE		=> Some(B_type),
-            OpecodeKind::OP_BLTU	=> Some(B_type),
-            OpecodeKind::OP_BGEU	=> Some(B_type),
-            OpecodeKind::OP_LB		=> Some(I_type),
-            OpecodeKind::OP_LH		=> Some(I_type),
-            OpecodeKind::OP_LW		=> Some(I_type),
-            OpecodeKind::OP_LBU		=> Some(I_type),
-            OpecodeKind::OP_LHU		=> Some(I_type),
-            OpecodeKind::OP_SB		=> Some(S_type),
-            OpecodeKind::OP_SH		=> Some(S_type),
-            OpecodeKind::OP_SW		=> Some(S_type),
-            OpecodeKind::OP_ADDI	=> Some(I_type),
-            OpecodeKind::OP_SLTI	=> Some(I_type),
-            OpecodeKind::OP_SLTIU	=> Some(I_type),
-            OpecodeKind::OP_XORI	=> Some(I_type),
-            OpecodeKind::OP_ORI		=> Some(I_type),
-            OpecodeKind::OP_ANDI	=> Some(I_type),
-            OpecodeKind::OP_SLLI	=> Some(I_type),
-            OpecodeKind::OP_SRLI	=> Some(I_type),
+            OpecodeKind::OP_LUI		=> Some(U_type()),
+            OpecodeKind::OP_AUIPC	=> Some(U_type()),
+            OpecodeKind::OP_JAL		=> Some(JAL_imm()),
+            OpecodeKind::OP_JALR	=> Some(I_type()),
+            OpecodeKind::OP_BEQ		=> Some(B_type()),
+            OpecodeKind::OP_BNE		=> Some(B_type()),
+            OpecodeKind::OP_BLT		=> Some(B_type()),
+            OpecodeKind::OP_BGE		=> Some(B_type()),
+            OpecodeKind::OP_BLTU	=> Some(B_type()),
+            OpecodeKind::OP_BGEU	=> Some(B_type()),
+            OpecodeKind::OP_LB		=> Some(I_type()),
+            OpecodeKind::OP_LH		=> Some(I_type()),
+            OpecodeKind::OP_LW		=> Some(I_type()),
+            OpecodeKind::OP_LBU		=> Some(I_type()),
+            OpecodeKind::OP_LHU		=> Some(I_type()),
+            OpecodeKind::OP_SB		=> Some(S_type()),
+            OpecodeKind::OP_SH		=> Some(S_type()),
+            OpecodeKind::OP_SW		=> Some(S_type()),
+            OpecodeKind::OP_ADDI	=> Some(I_type()),
+            OpecodeKind::OP_SLTI	=> Some(I_type()),
+            OpecodeKind::OP_SLTIU	=> Some(I_type()),
+            OpecodeKind::OP_XORI	=> Some(I_type()),
+            OpecodeKind::OP_ORI		=> Some(I_type()),
+            OpecodeKind::OP_ANDI	=> Some(I_type()),
+            OpecodeKind::OP_SLLI	=> Some(I_type()),
+            OpecodeKind::OP_SRLI	=> Some(I_type()),
             _ => None,
         }
     }
