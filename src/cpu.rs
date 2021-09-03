@@ -7,6 +7,7 @@ mod instruction;
 use crate::bus;
 use crate::elfload;
 use crate::bus::Bus;
+use instruction::reg2str;
 
 pub enum PrivilegedLevel {
     User = 0b00,
@@ -46,7 +47,7 @@ impl CPU {
         println!("=========================================== dump ============================================");
         println!("pc:\t0x{:x}", self.pc);
         for (num, reg) in self.regs.iter().enumerate() {
-            print!("reg{}:\t0x{:08x}\t", num, reg);
+            print!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
             if (num + 1) % 4 == 0 { println!() }
         }
         println!("=============================================================================================");

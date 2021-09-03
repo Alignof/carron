@@ -44,6 +44,7 @@ impl Simulator {
                 .decode()
                 .execution(&mut self.cpu);
 
+            // debug code
             if break_point.unwrap_or(usize::MAX) == self.cpu.pc {
                 break;
             }
