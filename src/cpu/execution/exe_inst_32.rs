@@ -211,7 +211,6 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         _ => panic!("not a full instruction"),
     }
 
-
     // add the program counter when it isn't a branch instruction
     if cpu.pc == prev_pc {
         cpu.add2pc(INST_SIZE as i32);
