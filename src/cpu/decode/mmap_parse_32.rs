@@ -256,7 +256,7 @@ impl Decode for u32 {
             self.to_signed_nbit(imm32, 12)
         };
         let S_type = | | {
-            let imm32 = ((((inst >> 25) & 0x1F) << 5) | ((inst >> 7) & 0x1F)) as i32;
+            let imm32 = ((((inst >> 25) & 0x7F) << 5) | ((inst >> 7) & 0x1F)) as i32;
             self.to_signed_nbit(imm32, 12)
         };
         let B_type = | | {
