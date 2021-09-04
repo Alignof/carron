@@ -46,7 +46,7 @@ impl Simulator {
 
             // debug code
             if break_point.unwrap_or(usize::MAX) == self.cpu.pc {
-                break;
+                std::process::exit(self.cpu.read_reg(Some(3)));
             }
         }
     }
