@@ -23,6 +23,5 @@ impl Execution for Instruction {
         }
 
         cpu.show_regs();
-        if cpu.pc > 0x142c { panic!("out of range: 0x{:x}", cpu.pc); }
     }
 }

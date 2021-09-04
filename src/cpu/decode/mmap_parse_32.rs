@@ -137,6 +137,7 @@ impl Decode for u32 {
             OpecodeKind::OP_ANDI	=> Some(rd),
             OpecodeKind::OP_SLLI	=> Some(rd),
             OpecodeKind::OP_SRLI	=> Some(rd),
+            OpecodeKind::OP_SRAI	=> Some(rd),
             OpecodeKind::OP_ADD		=> Some(rd),
             OpecodeKind::OP_SUB		=> Some(rd),
             OpecodeKind::OP_SLL		=> Some(rd),
@@ -186,6 +187,7 @@ impl Decode for u32 {
             OpecodeKind::OP_ANDI	=> Some(rs1),
             OpecodeKind::OP_SLLI	=> Some(rs1),
             OpecodeKind::OP_SRLI	=> Some(rs1),
+            OpecodeKind::OP_SRAI	=> Some(rs1),
             OpecodeKind::OP_ADD		=> Some(rs1),
             OpecodeKind::OP_SUB		=> Some(rs1),
             OpecodeKind::OP_SLL		=> Some(rs1),
@@ -254,7 +256,7 @@ impl Decode for u32 {
             self.to_signed_nbit(imm32, 12)
         };
         let S_type = | | {
-            let imm32 = ((((inst >> 25) & 0x1F) << 5) | ((inst >> 7) & 0x1F)) as i32;
+            let imm32 = ((((inst >> 25) & 0x7F) << 5) | ((inst >> 7) & 0x1F)) as i32;
             self.to_signed_nbit(imm32, 12)
         };
         let B_type = | | {
@@ -297,6 +299,7 @@ impl Decode for u32 {
             OpecodeKind::OP_ANDI	=> Some(I_type()),
             OpecodeKind::OP_SLLI	=> Some(I_type()),
             OpecodeKind::OP_SRLI	=> Some(I_type()),
+            OpecodeKind::OP_SRAI	=> Some(I_type()),
             _ => None,
         }
     }
