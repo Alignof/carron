@@ -39,7 +39,7 @@ impl CPU {
         self.pc = (self.pc as i32 + addval) as usize;
     }
 
-    pub fn update_pc(&mut self, newval: u32) {
+    pub fn update_pc(&mut self, newval: i32) {
         self.pc = newval as usize;
     }
 
