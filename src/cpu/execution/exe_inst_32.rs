@@ -21,8 +21,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.add2pc(inst.imm.unwrap());
         },
         OP_JALR => {
-            cpu.update_pc(cpu.read_reg(inst.rs1)  + inst.imm.unwrap());
-            cpu.write_reg(inst.rd, (cpu.pc + INST_SIZE) as i32); 
+            let next_pc = cpu.pc + INST_SIZE;
+            // setting the least-significant bit of the result to zero  vvvvvv
+            cpu.update_pc((cpu.read_reg(inst.rs1)  + inst.imm.unwrap()) & !0x1);
+            cpu.write_reg(inst.rd, next_pc as i32); 
         },
         OP_BEQ => {
             if cpu.read_reg(inst.rs1) == cpu.read_reg(inst.rs2) {
