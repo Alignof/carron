@@ -99,6 +99,7 @@ impl Decode for u32 {
                         0b00001 => Ok(OpecodeKind::OP_EBREAK),
                         _ => Err("opecode decoding failed"),
                     }
+                    0b0001000 => Ok(OpecodeKind::OP_SRET),
                     0b0011000 => Ok(OpecodeKind::OP_MRET),
                     _ => Err("opecode decoding failed"),
                 },

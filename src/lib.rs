@@ -37,7 +37,7 @@ impl Simulator {
 
     pub fn simulation(&mut self) {
         use crate::cpu::execution::Execution;
-        let break_point: Option<usize> = Some(0x1044);
+        let break_point: Option<usize> = None;
 
         loop {
             fetch(&self.cpu)

@@ -61,6 +61,7 @@ pub enum OpecodeKind {
     OP_CSRRSI,
     OP_CSRRCI,
 //== privileged Instruction == 
+    OP_SRET,
     OP_MRET,
 //== compressed Instruction == 
     OP_C_ADDI4SPN,
@@ -157,6 +158,7 @@ impl Instruction {
             OP_CSRRWI		=> "csrrwi",
             OP_CSRRSI		=> "csrrsi",
             OP_CSRRCI		=> "csrrci",
+            OP_SRET         => "sret",
             OP_MRET         => "mret",
             OP_C_ADDI4SPN   => "C.addi4spn",
             OP_C_FLD        => "C.fld",
