@@ -22,7 +22,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_JALR => {
             let next_pc = cpu.pc + INST_SIZE;
-            // setting the least-significant bit of the result to zero  vvvvvv
+            // setting the least-significant bit of the result to zero->vvvvvv
             cpu.update_pc((cpu.read_reg(inst.rs1)  + inst.imm.unwrap()) & !0x1);
             cpu.write_reg(inst.rd, next_pc as i32); 
         },

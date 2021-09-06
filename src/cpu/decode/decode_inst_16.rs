@@ -84,7 +84,7 @@ fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
 
 impl Decode for u16 {
     fn decode(&self) -> Instruction {
-        let new_opc: OpecodeKind = match self.parse_opecode(){
+        let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };

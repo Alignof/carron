@@ -78,7 +78,7 @@ impl SectionHeader {
         }
     }
 
-    pub fn show(&self, id: usize){
+    pub fn show(&self, id: usize) {
         println!("============== section header {}==============", id + 1);
         println!("sh_name:\t{}",        self.sh_name);
         println!("sh_type:\t{}",        self.type_to_str());
@@ -93,7 +93,7 @@ impl SectionHeader {
     }
 
 
-    pub fn section_dump(&self, mmap: &[u8]){
+    pub fn section_dump(&self, mmap: &[u8]) {
         use crate::cpu::decode::Decode;
 
         println!("--------------------------------");

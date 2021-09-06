@@ -4,7 +4,7 @@ use crate::cpu::instruction::{OpecodeKind, Instruction};
 #[allow(non_snake_case)]
 impl Decode for u32 {
     fn decode(&self) -> Instruction {
-        let new_opc: OpecodeKind = match self.parse_opecode(){
+        let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };

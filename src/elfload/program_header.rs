@@ -50,7 +50,7 @@ impl ProgramHeader {
 		return new_prog;
 	}
 
-	pub fn show(&self, id: usize){
+	pub fn show(&self, id: usize) {
 		println!("============== program header {}==============", id + 1);
 		println!("p_type:\t\t{}",	get_segment_type_name(self.p_type));
 		println!("p_offset:\t0x{:x}",	self.p_offset);
@@ -62,8 +62,8 @@ impl ProgramHeader {
 		println!("p_align:\t0x{:x}",	self.p_align);
 	}
 
-	pub fn segment_dump(&self, mmap: &[u8]){
-		for (block, dump_part) in (self.p_offset .. self.p_offset + self.p_memsz as u32).step_by(4).enumerate(){
+	pub fn segment_dump(&self, mmap: &[u8]) {
+		for (block, dump_part) in (self.p_offset .. self.p_offset + self.p_memsz as u32).step_by(4).enumerate() {
 			if block % 16 == 0 { println!() }
 			print!("{:08x} ", get_u32(mmap, dump_part as usize));
 		}
