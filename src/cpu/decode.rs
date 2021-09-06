@@ -1,5 +1,5 @@
-mod mmap_parse_16;
-mod mmap_parse_32;
+mod decode_inst_16;
+mod decode_inst_32;
 
 use super::instruction::{OpecodeKind, Instruction};
 
