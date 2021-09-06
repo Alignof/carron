@@ -2,11 +2,16 @@ use super::CPU;
 
 #[allow(non_camel_case_types)]
 pub enum CSRname {
+    sstatus = 0x100,
+    stvec   = 0x105,
+    sepc    = 0x141, 
+    scause  = 0x142,
+    stval   = 0x143,
     mstatus = 0x300,
-    mtvec = 0x305,
-    mepc = 0x341, 
-    mcause = 0x342,
-    mtval = 0x343,
+    mtvec   = 0x305,
+    mepc    = 0x341, 
+    mcause  = 0x342,
+    mtval   = 0x343,
 }
 
 pub enum Mstatus {
