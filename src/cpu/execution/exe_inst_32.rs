@@ -201,6 +201,15 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.write_reg(inst.rd, cpu.read_csr(inst.rs2) as i32);
             cpu.bitclr_csr(inst.rs2, inst.rs1.unwrap() as i32);
         },
+        OP_SRET => {
+            cpu.update_pc(cpu.read_csr(CSRname::sepc.wrap()) as i32);
+            cpu.priv_lv = match cpu.read_csr_mstatus(Mstatus::SPP) {
+                0b00 => PrivilegedLevel::User,
+                0b01 => PrivilegedLevel::Supervisor,
+                0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
+                _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+            }
+        },
         OP_MRET => {
             cpu.update_pc(cpu.read_csr(CSRname::mepc.wrap()) as i32);
             cpu.priv_lv = match cpu.read_csr_mstatus(Mstatus::MPP) {
