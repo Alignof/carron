@@ -4,6 +4,7 @@ use crate::elfload;
 
 pub struct Bus {
     pub dram: dram::Dram,
+    // todo: add mmu
 }
 
 impl Bus {
