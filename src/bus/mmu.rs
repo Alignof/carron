@@ -13,4 +13,13 @@ impl MMU {
             state: AddrTransMode::Bare,
         }
     }
+
+    pub fn trans_addr(&self, addr: usize) -> usize {
+        match self.state {
+            AddrTransMode::Bare => addr,
+            AddrTransMode::Sv32 => {
+                //
+            },
+        }
+    }
 }
