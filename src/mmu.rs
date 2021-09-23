@@ -18,7 +18,7 @@ impl MMU {
         match self.state {
             AddrTransMode::Bare => addr,
             AddrTransMode::Sv32 => {
-                //
+                addr
             },
         }
     }
