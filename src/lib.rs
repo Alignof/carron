@@ -1,6 +1,6 @@
 pub mod system;
 pub mod cpu;
-pub mod bus;
+pub mod mmu;
 pub mod elfload;
 
 use cpu::CPU;

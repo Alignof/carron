@@ -4,9 +4,8 @@ pub mod execution;
 mod csr;
 mod instruction;
 
-use crate::bus;
 use crate::elfload;
-use crate::bus::Bus;
+use crate::mmu::{self, MMU};
 use instruction::reg2str;
 
 pub enum PrivilegedLevel {
@@ -20,7 +19,7 @@ pub struct CPU {
     pub pc: usize,
         regs: [i32; 32],
         csrs: [u32; 4096],
-        bus: bus::Bus,
+        mmu: mmu::MMU,
     pub priv_lv: PrivilegedLevel,
 }
 
@@ -30,7 +29,7 @@ impl CPU {
             pc: entry_address,
             regs: [0; 32],
             csrs: [0; 4096],
-            bus: Bus::new(loader),
+            mmu: MMU::new(loader),
             priv_lv: PrivilegedLevel::Machine, 
         }
     }
