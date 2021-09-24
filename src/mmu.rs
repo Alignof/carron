@@ -20,7 +20,7 @@ impl MMU {
         }
     }
 
-    pub fn trans_addr(&self, addr: usize) -> usize {
+    fn trans_addr(&self, addr: usize) -> usize {
         match self.state {
             AddrTransMode::Bare => addr,
             AddrTransMode::Sv32 => {
