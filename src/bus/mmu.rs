@@ -1,5 +1,3 @@
-pub mod bus;
-use bus::Bus;
 use crate::elfload;
 
 pub enum AddrTransMode {
@@ -9,14 +7,12 @@ pub enum AddrTransMode {
 
 pub struct MMU {
     state: AddrTransMode,
-    bus: bus::Bus,
 }
 
 impl MMU {
     pub fn new(loader: elfload::ElfLoader) -> MMU {
         MMU {
             state: AddrTransMode::Bare,
-            bus: Bus::new(loader),
         }
     }
 
