@@ -10,7 +10,7 @@ pub struct MMU {
 }
 
 impl MMU {
-    pub fn new(loader: elfload::ElfLoader) -> MMU {
+    pub fn new() -> MMU {
         MMU {
             state: AddrTransMode::Bare,
         }
