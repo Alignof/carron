@@ -5,12 +5,14 @@ pub enum AddrTransMode {
 
 pub struct MMU {
     state: AddrTransMode,
+    ppn: usize,
 }
 
 impl MMU {
     pub fn new() -> MMU {
         MMU {
             state: AddrTransMode::Bare,
+            ppn: 0,
         }
     }
 
