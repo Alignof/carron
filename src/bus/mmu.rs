@@ -30,15 +30,16 @@ impl MMU {
 
                 // first table walk
                 let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
-                let PTE = dram.load32(PTE_addr);
-                let PPN1 = PTE >> 22 & 0xA;
+                let PTE = dram.load32(PTE_addr) as usize;
+                let PPN1 = (PTE >> 22 & 0xA) as usize;
 
                 // second table walk
                 let PTE_addr = (PTE >> 10 & 0x16) * PAGESIZE + VPN0 * PTESIZE;
-                let PTE = dram.load32(PTE_addr);
-                let PPN0 = PTE >> 12 & 0xA;
+                let PTE = dram.load32(PTE_addr) as usize;
+                let PPN0 = (PTE >> 12 & 0xA) as usize;
 
-                addr
+                // return physical address
+                PPN1 << 22 | PPN0 << 12 | page_off
             },
         }
     }
