@@ -1,3 +1,5 @@
+use super::dram::Dram;
+
 pub enum AddrTransMode {
     Bare,
     Sv32,
@@ -16,7 +18,7 @@ impl MMU {
         }
     }
 
-    fn trans_addr(&self, addr: usize) -> usize {
+    fn trans_addr(&self, dram: Dram, addr: usize) -> usize {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
         match self.state {
@@ -32,7 +34,10 @@ impl MMU {
                 let PPN1 = PTE >> 22 & 0xA;
 
                 // second table walk
-                let PTE_addr = PTE >> 10 & 0x16;
+                let PTE_addr = (PTE >> 10 & 0x16) * PAGESIZE + VPN0 * PTESIZE;
+                let PTE = dram.load32(PTE_addr);
+                let PPN0 = PTE >> 12 & 0xA;
+
                 addr
             },
         }
