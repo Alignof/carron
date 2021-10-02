@@ -1,5 +1,3 @@
-use crate::elfload;
-
 pub enum AddrTransMode {
     Bare,
     Sv32,
@@ -20,6 +18,9 @@ impl MMU {
         match self.state {
             AddrTransMode::Bare => addr,
             AddrTransMode::Sv32 => {
+                let VPN1 = addr >> 22 & 0xA;
+                let VPN0 = addr >> 12 & 0xA;
+                let page_off = addr & 0xB;
                 addr
             },
         }
