@@ -21,6 +21,7 @@ impl MMU {
     fn trans_addr(&self, dram: Dram, addr: usize) -> usize {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
+
         match self.state {
             AddrTransMode::Bare => addr,
             AddrTransMode::Sv32 => {
