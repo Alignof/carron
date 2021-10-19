@@ -1,4 +1,4 @@
-use super::dram::Dram;
+use crate::bus::dram::Dram;
 
 pub enum AddrTransMode {
     Bare,

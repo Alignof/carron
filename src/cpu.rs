@@ -1,6 +1,7 @@
 pub mod fetch;
 pub mod decode;
 pub mod execution;
+mod mmu;
 mod csr;
 mod instruction;
 
@@ -19,6 +20,7 @@ pub struct CPU {
     pub pc: usize,
         regs: [i32; 32],
         csrs: [u32; 4096],
+        mmu: mmu::MMU,
         bus: bus::Bus,
     pub priv_lv: PrivilegedLevel,
 }
@@ -29,6 +31,7 @@ impl CPU {
             pc: entry_address,
             regs: [0; 32],
             csrs: [0; 4096],
+            mmu: mmu::MMU::new(),
             bus: bus::Bus::new(loader),
             priv_lv: PrivilegedLevel::Machine, 
         }
