@@ -7,6 +7,7 @@ pub enum CSRname {
     sepc    = 0x141, 
     scause  = 0x142,
     stval   = 0x143,
+    satp    = 0x180,
     mstatus = 0x300,
     mtvec   = 0x305,
     mepc    = 0x341, 
