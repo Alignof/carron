@@ -18,7 +18,7 @@ pub enum PrivilegedLevel {
 
 pub struct CPU {
     pub pc: usize,
-        regs: reg::Register,
+    pub regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
         bus: bus::Bus,
