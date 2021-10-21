@@ -1,13 +1,13 @@
 pub mod fetch;
 pub mod decode;
 pub mod execution;
+mod reg;
 mod mmu;
 mod csr;
 mod instruction;
 
 use crate::bus;
 use crate::elfload;
-use instruction::reg2str;
 
 pub enum PrivilegedLevel {
     User = 0b00,
@@ -18,7 +18,7 @@ pub enum PrivilegedLevel {
 
 pub struct CPU {
     pub pc: usize,
-        regs: [i32; 32],
+        regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
         bus: bus::Bus,
@@ -29,7 +29,7 @@ impl CPU {
     pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU {
         CPU {
             pc: entry_address,
-            regs: [0; 32],
+            regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
             mmu: mmu::MMU::new(),
             bus: bus::Bus::new(loader),
@@ -43,32 +43,6 @@ impl CPU {
 
     pub fn update_pc(&mut self, newval: i32) {
         self.pc = newval as usize;
-    }
-
-    pub fn show_regs(&self) {
-        println!("=========================================== dump ============================================");
-        println!("pc: 0x{:x}", self.pc);
-        for (num, reg) in self.regs.iter().enumerate() {
-            print!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
-            if (num + 1) % 4 == 0 { println!() }
-        }
-        println!("=============================================================================================");
-    }
-    
-    pub fn read_reg(&self, src: Option<usize>) -> i32 {
-        let src = src.unwrap();
-        if src == 0 {
-            0
-        } else {
-            self.regs[src]
-        }
-    }
-
-    pub fn write_reg(&mut self, dist: Option<usize>, src: i32) {
-        let dist = dist.unwrap();
-        if dist != 0 {
-            self.regs[dist] = src;
-        }
     }
 }
 

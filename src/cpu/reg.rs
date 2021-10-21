@@ -1,17 +1,18 @@
+use super::instruction::reg2str;
 pub struct Register {
-    reg: [i32; 32],
+    regs: [i32; 32],
 }
 
 impl Register {
     pub fn new() -> Register {
         Register {
-            reg: [0; 32],
+            regs: [0; 32],
         }
     }
 
     pub fn show(&self) {
         println!("=========================================== dump ============================================");
-        println!("pc: 0x{:x}", self.pc);
+        //println!("pc: 0x{:x}", self.pc);
         for (num, reg) in self.regs.iter().enumerate() {
             print!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
             if (num + 1) % 4 == 0 { println!() }
