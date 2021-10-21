@@ -1,5 +1,4 @@
 use crate::bus::dram::Dram;
-use crate::cpu::csr::CSRname;
 
 pub enum AddrTransMode {
     Bare,

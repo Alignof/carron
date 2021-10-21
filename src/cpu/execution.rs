@@ -22,6 +22,6 @@ impl Execution for Instruction {
             exe_inst(self, cpu);
         }
 
-        cpu.show_regs();
+        cpu.regs.show();
     }
 }
