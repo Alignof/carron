@@ -19,6 +19,7 @@ impl MMU {
         }
     }
 
+    /*
     fn satp_update(&self) {
         let satp = cpu.csrs.read(CSRname::satp.wrap());
         self.state = match satp >> 31 & 0x1 {
@@ -27,6 +28,7 @@ impl MMU {
         };
         self.ppn = satp & 0xFFFFF3;
     }
+    */
 
     fn trans_addr(&self, dram: Dram, addr: usize) -> usize {
         const PTESIZE: usize = 4;
