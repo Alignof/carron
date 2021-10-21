@@ -1,4 +1,5 @@
 use crate::bus::dram::Dram;
+use crate::cpu::csr::CSRname;
 
 pub enum AddrTransMode {
     Bare,
@@ -19,7 +20,7 @@ impl MMU {
     }
 
     fn satp_update(&self) {
-        let satp = cpu.read_csr(CSRname::satp.wrap());
+        let satp = cpu.csrs.read(CSRname::satp.wrap());
         self.state = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
