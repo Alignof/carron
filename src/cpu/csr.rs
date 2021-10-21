@@ -9,6 +9,24 @@ impl CSRs {
         }
     }
 
+    pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
+        let mask = src as u32;
+        if mask != 0 {
+            self.csrs[dist.unwrap()] |= mask;
+        }
+    }
+
+    pub fn bitclr(&mut self, dist: Option<usize>, src: i32) {
+        let mask = src as u32;
+        if mask != 0 {
+            self.csrs[dist.unwrap()] &= !mask;
+        }
+    }
+
+    pub fn write(&mut self, dist: Option<usize>, src: i32) {
+        self.csrs[dist.unwrap()] = src as u32;
+    }
+
     pub fn read(&self, src: Option<usize>) -> u32 {
         self.csrs[src.unwrap()]
     }
@@ -35,24 +53,6 @@ impl CSRs {
             Mstatus::SD     => self.csrs[mstatus] >> 31 & 0x1,
         }
     } 
-
-    pub fn write(&mut self, dist: Option<usize>, src: i32) {
-        self.csrs[dist.unwrap()] = src as u32;
-    }
-
-    pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
-        let mask = src as u32;
-        if mask != 0 {
-            self.csrs[dist.unwrap()] |= mask;
-        }
-    }
-
-    pub fn bitclr(&mut self, dist: Option<usize>, src: i32) {
-        let mask = src as u32;
-        if mask != 0 {
-            self.csrs[dist.unwrap()] &= !mask;
-        }
-    }
 }
 
 #[allow(non_camel_case_types)]
