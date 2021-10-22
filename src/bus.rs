@@ -15,3 +15,15 @@ impl Bus {
     }
 }
 
+trait Device {
+    fn raw_byte(&self, addr: usize) -> u8;
+    fn store8(&mut self, addr: usize, data: i32);
+    fn store16(&mut self, addr: usize, data: i32);
+    fn store32(&mut self, addr: usize, data: i32);
+    fn load8(&self, addr: usize) -> i32;
+    fn load16(&self, addr: usize) -> i32;
+    fn load32(&self, addr: usize) -> i32;
+    fn load_u8(&self, addr: usize) -> i32;
+    fn load_u16(&self, addr: usize) -> i32;
+}
+
