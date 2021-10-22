@@ -1,4 +1,5 @@
 use crate::elfload;
+use super::Device;
 
 pub struct Dram {
     dram: Vec<u8>,
@@ -18,23 +19,25 @@ impl Dram {
             dram: new_dram,
         }
     }
+}
 
+impl Device for Dram {
     // get byte
-    pub fn raw_byte(&self, addr: usize) -> u8 {
+    fn raw_byte(&self, addr: usize) -> u8 {
         self.dram[addr]
     }
 
     // store
-    pub fn store8(&mut self, addr: usize, data: i32) {
+    fn store8(&mut self, addr: usize, data: i32) {
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
-    pub fn store16(&mut self, addr: usize, data: i32) {
+    fn store16(&mut self, addr: usize, data: i32) {
         self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
-    pub fn store32(&mut self, addr: usize, data: i32) {
+    fn store32(&mut self, addr: usize, data: i32) {
         self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
         self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
         self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
@@ -43,27 +46,27 @@ impl Dram {
 
 
     // load
-    pub fn load8(&self, addr: usize) -> i32 {
+    fn load8(&self, addr: usize) -> i32 {
         self.dram[addr] as i8 as i32
     }
 
-    pub fn load16(&self, addr: usize) -> i32 {
+    fn load16(&self, addr: usize) -> i32 {
         ((self.dram[addr + 1] as u16) << 8 |
          (self.dram[addr + 0] as u16)) as i16 as i32
     }
 
-    pub fn load32(&self, addr: usize) -> i32 {
+    fn load32(&self, addr: usize) -> i32 {
         ((self.dram[addr + 3] as u32) << 24 |
          (self.dram[addr + 2] as u32) << 16 |
          (self.dram[addr + 1] as u32) <<  8 |
          (self.dram[addr + 0] as u32)) as i32
     }
 
-    pub fn load_u8(&self, addr: usize) -> i32 {
+    fn load_u8(&self, addr: usize) -> i32 {
         self.dram[addr] as i32
     }
 
-    pub fn load_u16(&self, addr: usize) -> i32 {
+    fn load_u16(&self, addr: usize) -> i32 {
         ((self.dram[addr + 1] as u32) << 8 |
          (self.dram[addr + 0] as u32)) as i32
     }
