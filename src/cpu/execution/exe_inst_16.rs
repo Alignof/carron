@@ -1,5 +1,6 @@
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
+use crate::bus::Device;
 
 pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;

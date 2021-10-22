@@ -1,4 +1,5 @@
 use super::decode::Decode;
+use crate::bus::Device;
 
 pub fn fetch(cpu: &super::CPU) -> Box<dyn Decode> {
     let dram = &cpu.bus.dram;

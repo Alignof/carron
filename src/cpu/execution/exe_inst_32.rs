@@ -1,6 +1,7 @@
 use crate::cpu::{CPU, PrivilegedLevel};
 use crate::cpu::csr::{CSRname, Mstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
+use crate::bus::Device;
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;

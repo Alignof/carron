@@ -15,7 +15,7 @@ impl Bus {
     }
 }
 
-trait Device {
+pub trait Device {
     fn raw_byte(&self, addr: usize) -> u8;
     fn store8(&mut self, addr: usize, data: i32);
     fn store16(&mut self, addr: usize, data: i32);

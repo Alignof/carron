@@ -1,3 +1,4 @@
+use crate::bus::Device;
 use crate::bus::dram::Dram;
 
 pub enum AddrTransMode {
