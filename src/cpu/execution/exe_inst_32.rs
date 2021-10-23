@@ -59,34 +59,34 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_LB => {
             cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.load8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LH => {
             cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.load16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LW => {
             cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LBU => {
             cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load_u8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.load_u8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LHU => {
             cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load_u16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.load_u16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_SB => {
-            cpu.bus.dram.store8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
+            cpu.bus.store8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
                          cpu.regs.read(inst.rs2));
         },
         OP_SH => {
-            cpu.bus.dram.store16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
+            cpu.bus.store16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
                          cpu.regs.read(inst.rs2));
         },
         OP_SW => {
-            cpu.bus.dram.store32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
+            cpu.bus.store32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
                          cpu.regs.read(inst.rs2));
         },
         OP_ADDI => {

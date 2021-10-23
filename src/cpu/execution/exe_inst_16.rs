@@ -17,11 +17,11 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_C_LW => {
             cpu.regs.write(inst.rd,
-                cpu.bus.dram.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+                cpu.bus.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_C_LWSP => {
             cpu.regs.write(inst.rd,
-                cpu.bus.dram.load32((cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) as usize));
+                cpu.bus.load32((cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) as usize));
         },
         OP_C_LUI => {
             cpu.regs.write(inst.rd, inst.imm.unwrap() << 12);
