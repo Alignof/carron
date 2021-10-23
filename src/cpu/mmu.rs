@@ -7,16 +7,14 @@ pub enum AddrTransMode {
     Sv32,
 }
 
-pub struct MMU {
-    state: AddrTransMode,
-    ppn: usize,
+pub struct MMU<'a> {
+    csrs: &'a super::csr::CSRs,
 }
 
-impl MMU {
-    pub fn new() -> MMU {
+impl MMU<'_> {
+    pub fn new(csrs: &super::csr::CSRs) -> MMU {
         MMU {
-            state: AddrTransMode::Bare,
-            ppn: 0,
+            csrs,
         }
     }
 
@@ -24,7 +22,7 @@ impl MMU {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
 
-        let satp = csrs.read(CSRname::satp.wrap());
+        let satp = self.csrs.read(CSRname::satp.wrap());
         let ppn = satp & 0xFFFFF3;
         let state = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,

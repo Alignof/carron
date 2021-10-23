@@ -16,22 +16,22 @@ pub enum PrivilegedLevel {
     Machine = 0b11,
 }
 
-pub struct CPU {
+pub struct CPU<'a> {
     pub pc: usize,
     pub regs: reg::Register,
         csrs: csr::CSRs,
-        mmu: mmu::MMU,
+        mmu: mmu::MMU<'a>,
         bus: bus::Bus,
     pub priv_lv: PrivilegedLevel,
 }
 
 impl CPU {
-    pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU {
+    pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU<'static> {
         CPU {
             pc: entry_address,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
-            mmu: mmu::MMU::new(),
+            mmu: mmu::MMU::new(&Self.csrs),
             bus: bus::Bus::new(loader),
             priv_lv: PrivilegedLevel::Machine, 
         }
