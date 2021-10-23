@@ -19,14 +19,14 @@ impl Dram {
             dram: new_dram,
         }
     }
+
+    // get 1 byte
+    pub fn raw_byte(&self, addr: usize) -> u8 {
+        self.dram[addr]
+    }
 }
 
 impl Device for Dram {
-    // get byte
-    fn raw_byte(&self, addr: usize) -> u8 {
-        self.dram[addr]
-    }
-
     // store
     fn store8(&mut self, addr: usize, data: i32) {
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
