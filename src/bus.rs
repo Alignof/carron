@@ -13,6 +13,40 @@ impl Bus {
             dram: Dram::new(loader),
         }
     }
+
+    pub fn store8(&mut self, addr: usize, data: i32) {
+        self.dram.store8(addr, data)
+    }
+
+    pub fn store16(&mut self, addr: usize, data: i32) {
+        self.dram.store16(addr, data)
+    }
+
+    pub fn store32(&mut self, addr: usize, data: i32) {
+        self.dram.store32(addr, data)
+    }
+
+
+    // load
+    pub fn load8(&self, addr: usize) -> i32 {
+        self.dram.load8(addr)
+    }
+
+    pub fn load16(&self, addr: usize) -> i32 {
+        self.dram.load16(addr)
+    }
+
+    pub fn load32(&self, addr: usize) -> i32 {
+        self.dram.load32(addr)
+    }
+
+    pub fn load_u8(&self, addr: usize) -> i32 {
+        self.dram.load_u8(addr)
+    }
+
+    pub fn load_u16(&self, addr: usize) -> i32 {
+        self.dram.load_u16(addr)
+    }
 }
 
 pub trait Device {
