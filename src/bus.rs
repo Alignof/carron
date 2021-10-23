@@ -19,6 +19,7 @@ impl Bus {
         self.dram.raw_byte(addr)
     }
 
+    // store
     pub fn store8(&mut self, addr: usize, data: i32) {
         self.dram.store8(addr, data)
     }
