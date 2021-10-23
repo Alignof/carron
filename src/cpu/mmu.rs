@@ -20,17 +20,6 @@ impl MMU {
         }
     }
 
-    /*
-    fn satp_update(&self) {
-        let satp = cpu.csrs.read(CSRname::satp.wrap());
-        self.state = match satp >> 31 & 0x1 {
-            1 => AddrTransMode::Sv32,
-            _ => AddrTransMode::Bare,
-        };
-        self.ppn = satp & 0xFFFFF3;
-    }
-    */
-
     fn trans_addr(&self, dram: Dram, addr: usize) -> usize {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
