@@ -14,6 +14,11 @@ impl Bus {
         }
     }
 
+    // get 1 byte
+    pub fn raw_byte(&self, addr: usize) -> u8 {
+        self.dram.raw_byte(addr)
+    }
+
     pub fn store8(&mut self, addr: usize, data: i32) {
         self.dram.store8(addr, data)
     }
