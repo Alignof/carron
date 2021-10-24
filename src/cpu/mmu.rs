@@ -23,7 +23,7 @@ impl MMU<'_> {
         const PAGESIZE: usize = 4096; // 2^12
 
         let satp = self.csrs.read(CSRname::satp.wrap());
-        let ppn = satp & 0xFFFFF3;
+        let ppn = (satp & 0xFFFFF3) as usize;
         let state = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
