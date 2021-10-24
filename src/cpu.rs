@@ -25,13 +25,14 @@ pub struct CPU<'a> {
     pub priv_lv: PrivilegedLevel,
 }
 
-impl CPU {
+impl CPU<'_> {
     pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU<'static> {
+        let csrs = csr::CSRs::new();
         CPU {
             pc: entry_address,
             regs: reg::Register::new(),
-            csrs: csr::CSRs::new(),
-            mmu: mmu::MMU::new(&Self.csrs),
+            csrs: csrs,
+            mmu: mmu::MMU::new(&csrs),
             bus: bus::Bus::new(loader),
             priv_lv: PrivilegedLevel::Machine, 
         }

@@ -23,7 +23,7 @@ fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
     Err("entry address is not found.")
 }
 
-impl Simulator {
+impl Simulator<'_> {
     pub fn new(loader: elfload::ElfLoader) -> Simulator<'static> {
         let entry_address: usize = match find_entry_addr(&loader) {
             Ok(addr) => addr,
