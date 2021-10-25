@@ -6,8 +6,8 @@ pub mod elfload;
 use cpu::CPU;
 use cpu::fetch::fetch;
 
-pub struct Simulator<'a> {
-    pub cpu: cpu::CPU<'a>,
+pub struct Simulator {
+    pub cpu: cpu::CPU,
 }
 
 fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
@@ -23,8 +23,8 @@ fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
     Err("entry address is not found.")
 }
 
-impl Simulator<'_> {
-    pub fn new(loader: elfload::ElfLoader) -> Simulator<'static> {
+impl Simulator {
+    pub fn new(loader: elfload::ElfLoader) -> Simulator {
         let entry_address: usize = match find_entry_addr(&loader) {
             Ok(addr) => addr,
             Err(msg) => panic!("{}", msg),
