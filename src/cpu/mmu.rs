@@ -1,5 +1,6 @@
 use crate::bus::Device;
 use crate::bus::dram::Dram;
+use crate::cpu::csr;
 use crate::cpu::csr::CSRname;
 
 pub enum AddrTransMode {
@@ -8,15 +9,13 @@ pub enum AddrTransMode {
 }
 
 pub struct MMU {
-    state: AddrTransMode,
-    ppn: usize,
+    csrs: Rc<RefCell<csr::CSRs>>,
 }
 
 impl MMU {
     pub fn new() -> MMU {
         MMU {
-            state: AddrTransMode::Bare,
-            ppn: 0,
+            csrs: ,
         }
     }
 
@@ -24,7 +23,7 @@ impl MMU {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
 
-        let satp = csrs.read(CSRname::satp.wrap());
+        let satp = self.csrs.read(CSRname::satp.wrap());
         let ppn = satp & 0xFFFFF3;
         let state = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
