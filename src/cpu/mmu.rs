@@ -1,3 +1,5 @@
+use std::rc::Rc;
+use std::cell::RefCell;
 use crate::bus::Device;
 use crate::bus::dram::Dram;
 use crate::cpu::csr;
@@ -13,9 +15,9 @@ pub struct MMU {
 }
 
 impl MMU {
-    pub fn new() -> MMU {
+    pub fn new(csrs: Rc<RefCell<csr::CSRs>>) -> MMU {
         MMU {
-            csrs: ,
+            csrs,
         }
     }
 
@@ -23,7 +25,7 @@ impl MMU {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
 
-        let satp = self.csrs.read(CSRname::satp.wrap());
+        let satp = self.csrs.borrow().read(CSRname::satp.wrap());
         let ppn = satp & 0xFFFFF3;
         let state = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
