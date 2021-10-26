@@ -30,11 +30,12 @@ pub struct CPU {
 impl CPU {
     pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU {
         let new_csrs = Rc::new(RefCell::new(csr::CSRs::new()));
+        let new_csrs_ref = Rc::clone(&new_csrs);
         CPU {
             pc: entry_address,
             regs: reg::Register::new(),
             csrs: new_csrs,
-            mmu: mmu::MMU::new(Rc::clone(&new_csrs)),
+            mmu: mmu::MMU::new(new_csrs_ref),
             bus: bus::Bus::new(loader),
             priv_lv: PrivilegedLevel::Machine, 
         }
