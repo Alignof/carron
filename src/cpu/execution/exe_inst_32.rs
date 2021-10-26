@@ -164,46 +164,47 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            cpu.csrs.write(CSRname::mcause.wrap(), match cpu.priv_lv {
+            cpu.csrs.borrow_mut().write(CSRname::mcause.wrap(),
+            match cpu.priv_lv {
                 PrivilegedLevel::User => 8,
                 PrivilegedLevel::Supervisor => 9,
                 _ => panic!("cannot enviroment call in current privileged mode."),
             });
-            cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
-            cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
+            cpu.csrs.borrow_mut().write(CSRname::mepc.wrap(), cpu.pc as i32);
+            cpu.csrs.borrow_mut().bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
-            cpu.update_pc(cpu.csrs.read(CSRname::mtvec.wrap()) as i32);
+            cpu.update_pc(cpu.csrs.borrow().read(CSRname::mtvec.wrap()) as i32);
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
         },
         OP_CSRRW => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2) as i32);
-            cpu.csrs.write(inst.rs2, cpu.regs.read(inst.rs1));
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().write(inst.rs2, cpu.regs.read(inst.rs1));
         },
         OP_CSRRS => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2) as i32);
-            cpu.csrs.bitset(inst.rs2, cpu.regs.read(inst.rs1));
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitset(inst.rs2, cpu.regs.read(inst.rs1));
         },
         OP_CSRRC => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2) as i32);
-            cpu.csrs.bitclr(inst.rs2, cpu.regs.read(inst.rs1));
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitclr(inst.rs2, cpu.regs.read(inst.rs1));
         },
         OP_CSRRWI => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2) as i32);
-            cpu.csrs.write(inst.rs2, inst.rs1.unwrap() as i32);
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().write(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_CSRRSI => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2) as i32);
-            cpu.csrs.bitset(inst.rs2, inst.rs1.unwrap() as i32);
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitset(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_CSRRCI => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2) as i32);
-            cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as i32);
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitclr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_SRET => {
-            cpu.update_pc(cpu.csrs.read(CSRname::sepc.wrap()) as i32);
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::SPP) {
+            cpu.update_pc(cpu.csrs.borrow().read(CSRname::sepc.wrap()) as i32);
+            cpu.priv_lv = match cpu.csrs.borrow().read_mstatus(Mstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
@@ -211,8 +212,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             }
         },
         OP_MRET => {
-            cpu.update_pc(cpu.csrs.read(CSRname::mepc.wrap()) as i32);
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::MPP) {
+            cpu.update_pc(cpu.csrs.borrow().read(CSRname::mepc.wrap()) as i32);
+            cpu.priv_lv = match cpu.csrs.borrow().read_mstatus(Mstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => PrivilegedLevel::Machine,
