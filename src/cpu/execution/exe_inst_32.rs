@@ -173,7 +173,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.borrow_mut().write(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.csrs.borrow_mut().bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
-            cpu.update_pc(cpu.csrs.borrow().read(CSRname::mtvec.wrap()) as i32);
+            let new_pc = cpu.csrs.borrow().read(CSRname::mtvec.wrap()) as i32;
+            cpu.update_pc(new_pc);
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
@@ -203,7 +204,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.borrow_mut().bitclr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_SRET => {
-            cpu.update_pc(cpu.csrs.borrow().read(CSRname::sepc.wrap()) as i32);
+            let new_pc = cpu.csrs.borrow().read(CSRname::sepc.wrap()) as i32;
+            cpu.update_pc(new_pc);
             cpu.priv_lv = match cpu.csrs.borrow().read_mstatus(Mstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
@@ -212,7 +214,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             }
         },
         OP_MRET => {
-            cpu.update_pc(cpu.csrs.borrow().read(CSRname::mepc.wrap()) as i32);
+            let new_pc = cpu.csrs.borrow().read(CSRname::mepc.wrap()) as i32;
+            cpu.update_pc(new_pc);
             cpu.priv_lv = match cpu.csrs.borrow().read_mstatus(Mstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
