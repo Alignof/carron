@@ -1,5 +1,8 @@
+use std::rc::Rc;
+use std::cell::RefCell;
 use crate::bus::Device;
 use crate::bus::dram::Dram;
+use crate::cpu::csr;
 use crate::cpu::csr::CSRname;
 
 pub enum AddrTransMode {
@@ -7,12 +10,12 @@ pub enum AddrTransMode {
     Sv32,
 }
 
-pub struct MMU<'a> {
-    csrs: &'a super::csr::CSRs,
+pub struct MMU {
+    csrs: Rc<RefCell<csr::CSRs>>,
 }
 
-impl MMU<'_> {
-    pub fn new(csrs: &super::csr::CSRs) -> MMU {
+impl MMU {
+    pub fn new(csrs: Rc<RefCell<csr::CSRs>>) -> MMU {
         MMU {
             csrs,
         }
@@ -22,7 +25,7 @@ impl MMU<'_> {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
 
-        let satp = self.csrs.read(CSRname::satp.wrap());
+        let satp = self.csrs.borrow().read(CSRname::satp.wrap());
         let ppn = (satp & 0xFFFFF3) as usize;
         let state = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
