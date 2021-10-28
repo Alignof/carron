@@ -1,9 +1,8 @@
 pub mod fetch;
 pub mod decode;
 pub mod execution;
+pub mod csr;
 mod reg;
-mod mmu;
-mod csr;
 mod instruction;
 
 use std::rc::Rc;
@@ -22,7 +21,6 @@ pub struct CPU {
     pub pc: usize,
     pub regs: reg::Register,
         csrs: Rc<RefCell<csr::CSRs>>,
-        mmu: mmu::MMU,
         bus: bus::Bus,
     pub priv_lv: PrivilegedLevel,
 }
@@ -35,8 +33,7 @@ impl CPU {
             pc: entry_address,
             regs: reg::Register::new(),
             csrs: new_csrs,
-            mmu: mmu::MMU::new(new_csrs_ref),
-            bus: bus::Bus::new(loader),
+            bus: bus::Bus::new(loader, new_csrs_ref),
             priv_lv: PrivilegedLevel::Machine, 
         }
     }

@@ -1,16 +1,22 @@
 pub mod dram;
+mod mmu;
 
-use dram::Dram;
+use std::rc::Rc;
+use std::cell::RefCell;
 use crate::elfload;
+use crate::cpu::csr;
+use dram::Dram;
 
 pub struct Bus {
     pub dram: dram::Dram,
+        mmu: mmu::MMU,
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader) -> Bus {
+    pub fn new(loader: elfload::ElfLoader, new_csrs_ref: Rc<RefCell<csr::CSRs>>) -> Bus {
         Bus {
             dram: Dram::new(loader),
+            mmu: mmu::MMU::new(new_csrs_ref),
         }
     }
 

@@ -20,7 +20,7 @@ impl MMU {
             csrs,
         }
     }
-
+    #[allow(non_snake_case)]
     fn trans_addr(&self, dram: Dram, addr: usize) -> usize {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
