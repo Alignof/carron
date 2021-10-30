@@ -22,19 +22,22 @@ pub struct CPU {
     pub regs: reg::Register,
         csrs: Rc<RefCell<csr::CSRs>>,
         bus: bus::Bus,
-    pub priv_lv: PrivilegedLevel,
+    pub priv_lv: Rc<RefCell<PrivilegedLevel>>,
 }
 
 impl CPU {
     pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU {
+        let new_lv = Rc::new(RefCell::new(PrivilegedLevel::Machine));
         let new_csrs = Rc::new(RefCell::new(csr::CSRs::new()));
+        let new_lv_ref = Rc::clone(&new_lv);
         let new_csrs_ref = Rc::clone(&new_csrs);
+
         CPU {
             pc: entry_address,
             regs: reg::Register::new(),
             csrs: new_csrs,
-            bus: bus::Bus::new(loader, new_csrs_ref),
-            priv_lv: PrivilegedLevel::Machine, 
+            bus: bus::Bus::new(loader, new_csrs_ref, new_lv_ref),
+            priv_lv: new_lv, 
         }
     }
 
