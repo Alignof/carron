@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use crate::bus::Device;
 use crate::bus::dram::Dram;
-use crate::cpu::csr;
+use crate::cpu;
 use crate::cpu::csr::CSRname;
 
 pub enum AddrTransMode {
@@ -11,13 +11,16 @@ pub enum AddrTransMode {
 }
 
 pub struct MMU {
-    csrs: Rc<RefCell<csr::CSRs>>,
+    csrs: Rc<RefCell<cpu::csr::CSRs>>,
+    priv_lv: Rc<RefCell<cpu::PrivilegedLevel>>
 }
 
 impl MMU {
-    pub fn new(csrs: Rc<RefCell<csr::CSRs>>) -> MMU {
+    pub fn new(csrs: Rc<RefCell<cpu::csr::CSRs>>,
+               priv_lv: Rc<RefCell<cpu::PrivilegedLevel>>) -> MMU {
         MMU {
             csrs,
+            priv_lv,
         }
     }
 

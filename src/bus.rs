@@ -4,7 +4,7 @@ mod mmu;
 use std::rc::Rc;
 use std::cell::RefCell;
 use crate::elfload;
-use crate::cpu::csr;
+use crate::cpu;
 use dram::Dram;
 
 pub struct Bus {
@@ -13,10 +13,12 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader, new_csrs_ref: Rc<RefCell<csr::CSRs>>) -> Bus {
+    pub fn new(loader: elfload::ElfLoader,
+               new_csrs: Rc<RefCell<cpu::csr::CSRs>>,
+               new_lv: Rc<RefCell<cpu::PrivilegedLevel>>) -> Bus {
         Bus {
             dram: Dram::new(loader),
-            mmu: mmu::MMU::new(new_csrs_ref),
+            mmu: mmu::MMU::new(new_csrs, new_lv),
         }
     }
 
