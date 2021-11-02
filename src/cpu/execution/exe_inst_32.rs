@@ -165,14 +165,14 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_ECALL => {
             cpu.csrs.borrow_mut().write(CSRname::mcause.wrap(),
-            match cpu.priv_lv {
+            match *(cpu.priv_lv.borrow()) {
                 PrivilegedLevel::User => 8,
                 PrivilegedLevel::Supervisor => 9,
                 _ => panic!("cannot enviroment call in current privileged mode."),
             });
             cpu.csrs.borrow_mut().write(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.csrs.borrow_mut().bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
-            cpu.priv_lv = PrivilegedLevel::Machine;
+            *(cpu.priv_lv.borrow_mut()) = PrivilegedLevel::Machine;
             let new_pc = cpu.csrs.borrow().read(CSRname::mtvec.wrap()) as i32;
             cpu.update_pc(new_pc);
         },
@@ -206,7 +206,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_SRET => {
             let new_pc = cpu.csrs.borrow().read(CSRname::sepc.wrap()) as i32;
             cpu.update_pc(new_pc);
-            cpu.priv_lv = match cpu.csrs.borrow().read_mstatus(Mstatus::SPP) {
+            *(cpu.priv_lv.borrow_mut()) = match cpu.csrs.borrow().read_mstatus(Mstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
@@ -216,7 +216,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_MRET => {
             let new_pc = cpu.csrs.borrow().read(CSRname::mepc.wrap()) as i32;
             cpu.update_pc(new_pc);
-            cpu.priv_lv = match cpu.csrs.borrow().read_mstatus(Mstatus::MPP) {
+            *(cpu.priv_lv.borrow_mut()) = match cpu.csrs.borrow().read_mstatus(Mstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => PrivilegedLevel::Machine,
