@@ -26,14 +26,14 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(entry_address: usize, loader: elfload::ElfLoader) -> CPU {
+    pub fn new(loader: elfload::ElfLoader) -> CPU {
         let new_lv = Rc::new(RefCell::new(PrivilegedLevel::Machine));
         let new_csrs = Rc::new(RefCell::new(csr::CSRs::new()));
         let new_lv_ref = Rc::clone(&new_lv);
         let new_csrs_ref = Rc::clone(&new_csrs);
 
         CPU {
-            pc: entry_address,
+            pc: 0,
             regs: reg::Register::new(),
             csrs: new_csrs,
             bus: bus::Bus::new(loader, new_csrs_ref, new_lv_ref),
