@@ -25,13 +25,13 @@ impl Dram {
             Ok(addr) => addr,
             Err(msg) => panic!("{}", msg),
         };
-        let mmap_start = entry_address;
-        let mmap_end = mmap_start + loader.mem_data.len() as usize;
+        let mmap_start = 0 as usize;
+        let mmap_end = mmap_start + loader.mem_data.len()as usize;
 
 
         // load elf memory mapping 
         let mut new_dram = vec![0; DRAM_SIZE as usize];
-        new_dram.splice(mmap_start..mmap_end, loader.mem_data.iter().cloned());
+        new_dram.splice(mmap_start..mmap_end, loader.mem_data[entry_address..mmap_end].iter().cloned());
 
         Dram {
             dram: new_dram,
