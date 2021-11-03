@@ -18,7 +18,7 @@ pub enum PrivilegedLevel {
 }
 
 pub struct CPU {
-    pub pc: usize,
+    pub pc: u32,
     pub regs: reg::Register,
         csrs: Rc<RefCell<csr::CSRs>>,
         bus: bus::Bus,
@@ -42,11 +42,11 @@ impl CPU {
     }
 
     pub fn add2pc(&mut self, addval: i32) {
-        self.pc = (self.pc as i32 + addval) as usize;
+        self.pc = (self.pc as i32 + addval) as u32;
     }
 
     pub fn update_pc(&mut self, newval: i32) {
-        self.pc = newval as usize;
+        self.pc = newval as u32;
     }
 }
 
