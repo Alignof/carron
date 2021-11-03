@@ -58,6 +58,9 @@ impl MMU {
                         let PTE = dram.load32(PTE_addr) as usize;
                         let PPN0 = (PTE >> 12 & 0xA) as usize;
 
+                        println!("raw address:{:x}\ntransrated address:{:x}",
+                                 addr, PPN1 << 22 | PPN0 << 12 | page_off);
+
                         // return physical address
                         PPN1 << 22 | PPN0 << 12 | page_off
                     },
