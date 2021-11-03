@@ -1,6 +1,19 @@
 use crate::elfload;
 use super::Device;
 
+fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
+    let e_entry = loader.elf_header.e_entry;
+
+    for segment in loader.prog_headers.iter() {
+        //                PT_LOAD
+        if segment.p_type == 1 && segment.p_paddr == e_entry {
+            return Ok(segment.p_offset as usize);
+        }
+    }
+
+    Err("entry address is not found.")
+}
+
 pub struct Dram {
     dram: Vec<u8>,
 }
@@ -8,8 +21,13 @@ pub struct Dram {
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> Dram {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
-        let mmap_start = 0 as usize;
+        let entry_address: usize = match find_entry_addr(&loader) {
+            Ok(addr) => addr,
+            Err(msg) => panic!("{}", msg),
+        };
+        let mmap_start = entry_address;
         let mmap_end = mmap_start + loader.mem_data.len() as usize;
+
 
         // load elf memory mapping 
         let mut new_dram = vec![0; DRAM_SIZE as usize];
