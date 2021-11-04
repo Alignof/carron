@@ -38,27 +38,26 @@ impl MMU {
         };
 
         match *(self.priv_lv.borrow()) {
-            // return raw address if privileged level is Machine
-            PrivilegedLevel::Machine => addr,
-            _ => {
+            PrivilegedLevel::Supervisor |
+            PrivilegedLevel::User => {
                 match state {
                     AddrTransMode::Bare => addr,
                     AddrTransMode::Sv32 => {
-                        let VPN1 = addr >> 22 & 0xA;
-                        let VPN0 = addr >> 12 & 0xA;
-                        let page_off = addr & 0xB;
+                        let VPN1 = addr >> 22 & 0x3FF;
+                        let VPN0 = addr >> 12 & 0x3FF;
+                        let page_off = addr & 0xFFF;
 
                         // first table walk
                         let PTE_addr = ppn * PAGESIZE + VPN1 * PTESIZE;
                         let PTE = dram.load32(PTE_addr) as usize;
-                        let PPN1 = (PTE >> 22 & 0xA) as usize;
+                        let PPN1 = (PTE >> 20 & 0xFFF) as usize;
 
                         // second table walk
-                        let PTE_addr = (PTE >> 10 & 0x16) * PAGESIZE + VPN0 * PTESIZE;
+                        let PTE_addr = (PTE >> 10 & 0xFFFFF3) * PAGESIZE + VPN0 * PTESIZE;
                         let PTE = dram.load32(PTE_addr) as usize;
-                        let PPN0 = (PTE >> 12 & 0xA) as usize;
+                        let PPN0 = (PTE >> 10 & 0x3FF) as usize;
 
-                        println!("raw address:{:x}\ntransrated address:{:x}",
+                        println!("raw address:{:x}\n\t=> transrated address:{:x}",
                                  addr, PPN1 << 22 | PPN0 << 12 | page_off);
 
                         // return physical address
@@ -66,6 +65,8 @@ impl MMU {
                     },
                 }
             },
+            // return raw address if privileged level is Machine
+            _ => addr,
         }
     }
 }
