@@ -49,18 +49,20 @@ impl MMU {
 
                         // first table walk
                         let PTE_addr = ppn * PAGESIZE + VPN1 * PTESIZE;
+                        println!("PTE_addr(1):{:x}\n", PTE_addr);
                         let PTE = dram.load32(PTE_addr) as usize;
                         let PPN1 = (PTE >> 20 & 0xFFF) as usize;
 
                         // second table walk
                         let PTE_addr = (PTE >> 10 & 0xFFFFF3) * PAGESIZE + VPN0 * PTESIZE;
+                        println!("PTE_addr(2):{:x}\n", PTE_addr);
                         let PTE = dram.load32(PTE_addr) as usize;
                         let PPN0 = (PTE >> 10 & 0x3FF) as usize;
 
                         println!("raw address:{:x}\n\t=> transrated address:{:x}",
                                  addr, PPN1 << 22 | PPN0 << 12 | page_off);
 
-                        // return physical address
+                        // return transrated address
                         PPN1 << 22 | PPN0 << 12 | page_off
                     },
                 }
