@@ -1,8 +1,8 @@
 use crate::elfload;
 use super::Device;
 
+/*
 fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
-    let e_entry = loader.elf_header.e_entry;
 
     for segment in loader.prog_headers.iter() {
         //                PT_LOAD
@@ -13,6 +13,7 @@ fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
 
     Err("entry address is not found.")
 }
+*/
 
 pub struct Dram {
     dram: Vec<u8>,
@@ -21,17 +22,28 @@ pub struct Dram {
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> Dram {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
-        let entry_address: usize = match find_entry_addr(&loader) {
-            Ok(addr) => addr,
-            Err(msg) => panic!("{}", msg),
-        };
-        let mmap_start = 0 as usize;
-        let mmap_end = mmap_start + loader.mem_data.len()as usize;
+        let vart_entry = loader.elf_header.e_entry;
 
+        // create new dram 
+        let mut new_dram = vec![0; DRAM_SIZE as usize];
 
         // load elf memory mapping 
-        let mut new_dram = vec![0; DRAM_SIZE as usize];
-        new_dram.splice(mmap_start..mmap_end, loader.mem_data[entry_address..mmap_end].iter().cloned());
+        for segment in loader.prog_headers.iter() {
+            let dram_start = (segment.p_paddr - vart_entry) as usize;
+            let mmap_start = (segment.p_offset) as usize;
+            let dram_end = dram_start + segment.p_filesz as usize;
+            let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+            dbg!(loader.mem_data.len());
+            dbg!(dram_start);
+            dbg!(dram_end);
+            dbg!(mmap_start);
+            dbg!(mmap_end);
+
+            new_dram.splice(
+                dram_start .. dram_end,
+                loader.mem_data[mmap_start .. mmap_end].iter().cloned()
+            );
+        }
 
         Dram {
             dram: new_dram,
