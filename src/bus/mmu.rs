@@ -5,6 +5,7 @@ use crate::bus::dram::Dram;
 use crate::cpu;
 use crate::cpu::PrivilegedLevel;
 use crate::cpu::csr::CSRname;
+use dbg_hex::dbg_hex;
 
 pub enum AddrTransMode {
     Bare,
@@ -31,7 +32,7 @@ impl MMU {
         const PAGESIZE: usize = 4096; // 2^12
 
         let satp = self.csrs.borrow().read(CSRname::satp.wrap());
-        let ppn = (satp & 0xFFFFF3) as usize;
+        let ppn = (satp & 0x3FFFFF) as usize;
         let state = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
@@ -48,17 +49,20 @@ impl MMU {
                         let page_off = addr & 0xFFF;
 
                         // first table walk
+                        dbg_hex!(satp);
+                        dbg_hex!(ppn);
+                        dbg_hex!(VPN1);
                         let PTE_addr = ppn * PAGESIZE + VPN1 * PTESIZE;
-                        println!("PTE_addr(1):{:x}", PTE_addr);
+                        println!("PTE_addr(1): 0x{:x}", PTE_addr);
                         let PTE = dram.load32(PTE_addr) as usize;
-                        println!("PTE(1):{:x}", PTE);
+                        println!("PTE(1): 0x{:x}", PTE);
                         let PPN1 = (PTE >> 20 & 0xFFF) as usize;
 
                         // second table walk
-                        let PTE_addr = (PTE >> 10 & 0xFFFFF3) * PAGESIZE + VPN0 * PTESIZE;
-                        println!("PTE_addr(2):{:x}", PTE_addr);
+                        let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
+                        println!("PTE_addr(2): 0x{:x}", PTE_addr);
                         let PTE = dram.load32(PTE_addr) as usize;
-                        println!("PTE(2):{:x}", PTE);
+                        println!("PTE(2): 0x{:x}", PTE);
                         let PPN0 = (PTE >> 10 & 0x3FF) as usize;
 
                         println!("raw address:{:x}\n\t=> transrated address:{:x}",
