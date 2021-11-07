@@ -1,5 +1,3 @@
-use std::rc::Rc;
-use std::cell::RefCell;
 use crate::bus::Device;
 use crate::bus::dram::Dram;
 use crate::cpu;
@@ -13,16 +11,15 @@ pub enum AddrTransMode {
 }
 
 pub struct MMU {
-    satp: u32,
-    priv_lv: cpu::PrivilegedLevel,
+    ppn: u32,
+    trans_mode: AddrTransMode,
 }
 
 impl MMU {
-    pub fn new(csrs: Rc<RefCell<cpu::csr::CSRs>>,
-               priv_lv: Rc<RefCell<cpu::PrivilegedLevel>>) -> MMU {
+    pub fn new() -> MMU {
         MMU {
-            csrs,
-            priv_lv,
+            ppn: 0,
+            trans_mode: AddrTransMode::Bare,
         }
     }
 
