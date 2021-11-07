@@ -36,7 +36,7 @@ impl CPU {
             pc: 0,
             regs: reg::Register::new(),
             csrs: new_csrs,
-            bus: bus::Bus::new(loader, new_csrs_ref, new_lv_ref),
+            bus: bus::Bus::new(loader),
             priv_lv: new_lv, 
         }
     }
