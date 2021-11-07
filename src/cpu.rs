@@ -41,5 +41,9 @@ impl CPU {
     pub fn update_pc(&mut self, newval: i32) {
         self.pc = newval as usize;
     }
+
+    pub fn trans_addr(&mut self, addr: i32) -> usize {
+        addr as usize
+    }
 }
 
