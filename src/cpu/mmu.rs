@@ -13,8 +13,8 @@ pub enum AddrTransMode {
 }
 
 pub struct MMU {
-    csrs: Rc<RefCell<cpu::csr::CSRs>>,
-    priv_lv: Rc<RefCell<cpu::PrivilegedLevel>>
+    satp: u32,
+    priv_lv: cpu::PrivilegedLevel,
 }
 
 impl MMU {
