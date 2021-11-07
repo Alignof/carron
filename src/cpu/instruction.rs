@@ -1,6 +1,18 @@
 // riscv-spec-20191213-1.pdf page=130
+
+#[derive(Debug)]
+pub struct Instruction {
+    pub opc: OpecodeKind,
+    pub rd:  Option<usize>,
+    pub rs1: Option<usize>,
+    pub rs2: Option<usize>,
+    pub imm: Option<i32>,
+    pub is_compressed: bool,
+}
+
 #[allow(non_camel_case_types)]
-pub enum OpecodeKind{
+#[derive(Debug)]
+pub enum OpecodeKind {
     OP_LUI,
     OP_AUIPC,
     OP_JAL,
@@ -27,6 +39,7 @@ pub enum OpecodeKind{
     OP_ANDI,
     OP_SLLI,
     OP_SRLI,
+    OP_SRAI,
     OP_ADD,
     OP_SUB,
     OP_SLL,
@@ -40,6 +53,16 @@ pub enum OpecodeKind{
     OP_FENCE,
     OP_ECALL,
     OP_EBREAK,
+//== CSR Instruction == 
+    OP_CSRRW,
+    OP_CSRRS,
+    OP_CSRRC,
+    OP_CSRRWI,
+    OP_CSRRSI,
+    OP_CSRRCI,
+//== privileged Instruction == 
+    OP_SRET,
+    OP_MRET,
 //== compressed Instruction == 
     OP_C_ADDI4SPN,
     OP_C_FLD,
@@ -78,16 +101,14 @@ pub enum OpecodeKind{
     OP_C_FSWSP,
 }
 
-pub struct Instruction {
-    pub opc: OpecodeKind,
-    pub rd:  Option<usize>,
-    pub rs1: Option<usize>,
-    pub rs2: Option<usize>,
-    pub imm: Option<i32>,
-    pub is_compressed: bool,
-}
-
 impl Instruction {
+    pub fn print_myself(&self) {
+        print!("{:<12}{:>4}", self.opc_to_string(), self.reg_to_string());
+        if let Some(v) = self.rs1 { print!("{:>10},", v) } else { print!("          ,") } 
+        if let Some(v) = self.rs2 { print!("{:>10},", v) } else { print!("          ,") }
+        if let Some(v) = self.imm { print!("{:>10},", v) } else { print!("          ,") }
+    }
+
     pub fn opc_to_string(&self) -> &'static str {
         use OpecodeKind::*;
         match self.opc {
@@ -117,6 +138,7 @@ impl Instruction {
             OP_ANDI         => "andi",
             OP_SLLI         => "slli",
             OP_SRLI         => "srli",
+            OP_SRAI         => "srai",
             OP_ADD          => "add",
             OP_SUB          => "sub",
             OP_SLL          => "sll",
@@ -130,6 +152,14 @@ impl Instruction {
             OP_FENCE        => "fence",
             OP_ECALL        => "ecall",
             OP_EBREAK       => "ebreak",
+            OP_CSRRW		=> "csrrw",
+            OP_CSRRS		=> "csrrs",
+            OP_CSRRC		=> "csrrc",
+            OP_CSRRWI		=> "csrrwi",
+            OP_CSRRSI		=> "csrrsi",
+            OP_CSRRCI		=> "csrrci",
+            OP_SRET         => "sret",
+            OP_MRET         => "mret",
             OP_C_ADDI4SPN   => "C.addi4spn",
             OP_C_FLD        => "C.fld",
             OP_C_LW         => "C.lw",
@@ -169,49 +199,48 @@ impl Instruction {
     }
 
     pub fn reg_to_string(&self) -> &'static str {
-        match self.rd {
-            Some(rd) => match rd {
-                0  => "zero",
-                1  => "ra",
-                2  => "sp",
-                3  => "gp",
-                4  => "tp",
-                5  => "t0",
-                6  => "t1",
-                7  => "t2",
-                8  => "fp",
-                9  => "s1",
-                10 => "a0",
-                11 => "a1",
-                12 => "a2",
-                13 => "a3",
-                14 => "a4",
-                15 => "a5",
-                16 => "a6",
-                17 => "a7",
-                18 => "s2",
-                19 => "s3",
-                20 => "s4",
-                21 => "s5",
-                22 => "s6",
-                23 => "s7",
-                24 => "s8",
-                25 => "s9",
-                26 => "s10",
-                27 => "s11",
-                28 => "t3",
-                29 => "t4",
-                30 => "t5",
-                31 => "t6",
-                _  => panic!("unknown register"),
-            },
-            None => "  ",
+        if let Some(rd_val) = self.rd {
+            reg2str(rd_val)
+        } else {
+            "  "
         }
     }
+}
 
-    pub fn print_myself(&self) {
-        print!("{:<16}{:>4}", self.opc_to_string(), self.reg_to_string());
-        if let Some(v) = self.rs1 {print!(" {}", v)}
-        if let Some(v) = self.rs2 {print!(" {}", v)}
+pub fn reg2str(rd_value: usize) -> &'static str {
+    match rd_value {
+        0  => "zero",
+        1  => "ra",
+        2  => "sp",
+        3  => "gp",
+        4  => "tp",
+        5  => "t0",
+        6  => "t1",
+        7  => "t2",
+        8  => "fp",
+        9  => "s1",
+        10 => "a0",
+        11 => "a1",
+        12 => "a2",
+        13 => "a3",
+        14 => "a4",
+        15 => "a5",
+        16 => "a6",
+        17 => "a7",
+        18 => "s2",
+        19 => "s3",
+        20 => "s4",
+        21 => "s5",
+        22 => "s6",
+        23 => "s7",
+        24 => "s8",
+        25 => "s9",
+        26 => "s10",
+        27 => "s11",
+        28 => "t3",
+        29 => "t4",
+        30 => "t5",
+        31 => "t6",
+        _  => panic!("unknown register"),
     }
 }

@@ -84,7 +84,7 @@ fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
 
 impl Decode for u16 {
     fn decode(&self) -> Instruction {
-        let new_opc: OpecodeKind = match self.parse_opecode(){
+        let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };
@@ -129,23 +129,23 @@ impl Decode for u16 {
             OpecodeKind::OP_C_LW        => Some(q0_rd),
             OpecodeKind::OP_C_FLW       => Some(q0_rd),
             // Quadrant 1
-            OpecodeKind::OP_C_SRLI        => Some(q1_rd),
-            OpecodeKind::OP_C_SRAI        => Some(q1_rd),
-            OpecodeKind::OP_C_ANDI        => Some(q1_rd),
-            OpecodeKind::OP_C_SUB        => Some(q1_rd),
-            OpecodeKind::OP_C_XOR        => Some(q1_rd),
+            OpecodeKind::OP_C_SRLI      => Some(q1_rd),
+            OpecodeKind::OP_C_SRAI      => Some(q1_rd),
+            OpecodeKind::OP_C_ANDI      => Some(q1_rd),
+            OpecodeKind::OP_C_SUB       => Some(q1_rd),
+            OpecodeKind::OP_C_XOR       => Some(q1_rd),
             OpecodeKind::OP_C_OR        => Some(q1_rd),
-            OpecodeKind::OP_C_AND        => Some(q1_rd),
+            OpecodeKind::OP_C_AND       => Some(q1_rd),
             // Quadrant 2
-            OpecodeKind::OP_C_SLLI        => Some(q2_rd),
-            OpecodeKind::OP_C_FLDSP        => Some(q2_rd),
-            OpecodeKind::OP_C_LWSP        => Some(q2_rd),
-            OpecodeKind::OP_C_FLWSP        => Some(q2_rd),
+            OpecodeKind::OP_C_SLLI      => Some(q2_rd),
+            OpecodeKind::OP_C_FLDSP     => Some(q2_rd),
+            OpecodeKind::OP_C_LWSP      => Some(q2_rd),
+            OpecodeKind::OP_C_FLWSP     => Some(q2_rd),
             OpecodeKind::OP_C_JR        => Some(q2_rd),
             OpecodeKind::OP_C_MV        => Some(q2_rd),
-            OpecodeKind::OP_C_EBREAK       => Some(q2_rd),
-            OpecodeKind::OP_C_JALR        => Some(q2_rd),
-            OpecodeKind::OP_C_ADD        => Some(q2_rd),
+            OpecodeKind::OP_C_EBREAK    => Some(q2_rd),
+            OpecodeKind::OP_C_JALR      => Some(q2_rd),
+            OpecodeKind::OP_C_ADD       => Some(q2_rd),
             _ => None,
         }
     }

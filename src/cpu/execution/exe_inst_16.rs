@@ -1,115 +1,119 @@
 use crate::cpu::CPU;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::bus::dram::Dram;
+use crate::bus::Device;
 
-pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
+pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
-    const INST_SIZE: u32 = 2;
-    const REG_SP: usize = 2 as usize;
-    const LINK_REG: usize = 1 as usize;
+    const INST_SIZE: usize = 2;
+    const REG_SP: usize = 2;
+    const LINK_REG: usize = 1;
 
-    // add program counter
-    cpu.pc += 2;
+    // store previous program counter for excluding branch case
+    let prev_pc = cpu.pc;
 
     match inst.opc {
         OP_C_LI => {
-            cpu.reg[inst.rd.unwrap()] = inst.imm.unwrap();
+            cpu.regs.write(inst.rd, inst.imm.unwrap());
         },
         OP_C_LW => {
-            cpu.reg[inst.rd.unwrap()] =
-                Dram::load32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.regs.write(inst.rd,
+                cpu.bus.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_C_LWSP => {
-            cpu.reg[inst.rd.unwrap()] =
-                Dram::load32(dram, (cpu.reg[REG_SP] + inst.imm.unwrap()) as usize);
+            cpu.regs.write(inst.rd,
+                cpu.bus.load32((cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) as usize));
         },
         OP_C_LUI => {
-            cpu.reg[inst.rd.unwrap()] = inst.imm.unwrap() << 12;
+            cpu.regs.write(inst.rd, inst.imm.unwrap() << 12);
         },
         OP_C_SW => {
-            Dram::store32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
-                         cpu.reg[inst.rs2.unwrap()]);
+            cpu.bus.dram.store32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
+                         cpu.regs.read(inst.rs2));
         },
         OP_C_SLLI => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) << inst.imm.unwrap()) as i32;
+            cpu.regs.write(inst.rd,
+                ((cpu.regs.read(inst.rs1) as u32) << inst.imm.unwrap()) as i32);
         },
         OP_C_SWSP => {
-            Dram::store32(dram, (cpu.reg[REG_SP] + inst.imm.unwrap()) as usize,
-                         cpu.reg[inst.rs2.unwrap()]);
+            cpu.bus.dram.store32((cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) as usize,
+                         cpu.regs.read(inst.rs2));
         },
         OP_C_SRLI => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] >> inst.imm.unwrap();
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) >> inst.imm.unwrap());
         },
         OP_C_SRAI => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] >> inst.imm.unwrap();
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) >> inst.imm.unwrap());
         },
         OP_C_ADD => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] + cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) + cpu.regs.read(inst.rs2));
         },
         OP_C_ADDI4SPN => {
-            cpu.reg[inst.rd.unwrap()] += inst.imm.unwrap();
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap());
         },
         OP_C_ADDI => {
-            cpu.reg[inst.rd.unwrap()] += inst.imm.unwrap();
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap());
         },
         OP_C_ADDI16SP => {
-            cpu.reg[REG_SP] += inst.imm.unwrap();
+            cpu.regs.write(Some(REG_SP), cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap());
         },
         OP_C_ANDI => {
-            cpu.reg[inst.rd.unwrap()] &= inst.imm.unwrap();
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rd) & inst.imm.unwrap());
         },
         OP_C_SUB => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] - cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) - cpu.regs.read(inst.rs2));
         },
         OP_C_XOR => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] ^ cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) ^ cpu.regs.read(inst.rs2));
         },
         OP_C_OR => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] | cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) | cpu.regs.read(inst.rs2));
         },
         OP_C_AND => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] & cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) & cpu.regs.read(inst.rs2));
         },
         OP_C_J => {
-            cpu.pc += inst.imm.unwrap() as u32;
+            cpu.pc += inst.imm.unwrap() as usize;
         },
         OP_C_JAL => {
-            cpu.reg[1] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += inst.imm.unwrap() as u32;
+            cpu.regs.write(Some(1), (cpu.pc + INST_SIZE) as i32); 
+            cpu.pc += inst.imm.unwrap() as usize;
         },
         OP_C_JALR => {
-            cpu.reg[LINK_REG] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += (cpu.reg[inst.rs1.unwrap()]  + inst.imm.unwrap()) as u32;
+            cpu.regs.write(Some(LINK_REG), (cpu.pc + INST_SIZE) as i32); 
+            cpu.pc += (cpu.regs.read(inst.rs1)  + inst.imm.unwrap()) as usize;
         },
         OP_C_BEQZ => {
-            if cpu.reg[inst.rs1.unwrap()] == 0 {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if cpu.regs.read(inst.rs1) == 0 {
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_C_BNEZ => {
-            if cpu.reg[inst.rs1.unwrap()] != 0 {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if cpu.regs.read(inst.rs1) != 0 {
+                cpu.pc += inst.imm.unwrap() as usize;
             } 
         },
         OP_C_JR => {
-            cpu.pc += cpu.reg[inst.rs1.unwrap()] as u32;
+            cpu.pc += cpu.regs.read(inst.rs1) as usize;
         },
         OP_C_MV => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rs2));
         },
         OP_C_EBREAK => {
             panic!("not yet implemented: OP_C_EBREAK");
         },
         OP_C_NOP => {/* NOP */},
         _ => panic!("not a compressed Instruction"),
+    }
+
+    // add the program counter when it isn't a branch instruction
+    if cpu.pc == prev_pc {
+        cpu.pc += INST_SIZE;
     }
 }

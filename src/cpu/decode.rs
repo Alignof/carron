@@ -1,5 +1,5 @@
-mod mmap_parse_16;
-mod mmap_parse_32;
+mod decode_inst_16;
+mod decode_inst_32;
 
 use super::instruction::{OpecodeKind, Instruction};
 
@@ -10,37 +10,58 @@ pub trait Decode {
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize>;
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize>;
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32>;
+    fn to_signed_nbit(&self, imm32: i32, bit_size: u32) -> i32 {
+        let imm32 = imm32 & 2_i32.pow(bit_size) - 1;
+        if (imm32 >> bit_size - 1) & 0x1 == 1 {
+            imm32 - 2_i32.pow(bit_size)
+        } else {
+            imm32
+        }
+    }
 }
 
 
 #[cfg(test)]
+#[allow(unused_variables)]
 mod tests {
     use super::*;
 
     #[test]
     fn parsing_opecode_test() {
         use OpecodeKind::*;
-        let test_32 = |inst_32: u32, _e_op: OpecodeKind, _e_rd| {
+        let test_32 = |inst_32: u32, op: OpecodeKind, rd: Option<usize>,
+                       rs1: Option<usize>, rs2: Option<usize>, imm: Option<i32>| {
             let op_32 = inst_32.parse_opecode().unwrap();
-            assert!(matches!(&op_32, _e_op));
-            assert_eq!(inst_32.parse_rd(&op_32).unwrap(), _e_rd);
+            assert!(matches!(&op_32, op));
+            assert_eq!(inst_32.parse_rd(&op_32), rd);
+            assert_eq!(inst_32.parse_rs1(&op_32), rs1);
+            assert_eq!(inst_32.parse_rs2(&op_32), rs2);
+            assert_eq!(inst_32.parse_imm(&op_32), imm);
         };
 
-        test_32(0b00000000000000000000000010110111, OP_LUI, 1);
-        test_32(0b00000000000000000000000000000011, OP_LB, 0);
-        test_32(0b00000000000000000001000000000011, OP_LH, 0);
-        test_32(0b00000000000000000000000000010011, OP_ADDI, 0);
-        test_32(0b00000000000000000100000000110011, OP_XOR, 0);
-        test_32(0b00000000000000000111000000110011, OP_AND, 0);
+        test_32(0b10000000000000000000000010110111,
+                OP_LUI, Some(1), None, None, Some(0x80000));
+        test_32(0b00000000000000000000001010010111,
+                OP_AUIPC, Some(5), None, None, Some(0));
+        test_32(0b11111111100111111111000001101111,
+                OP_JAL, Some(0), None, None, Some(-8));
+        test_32(0b11111110001000001000111010100011,
+                OP_SB, None, Some(1), Some(2), Some(-3));
+        test_32(0b11101110110000101000001010010011,
+                OP_ADDI, Some(5), Some(5), None, Some(-276));
+        test_32(0b00000000000000000000000001110011,
+                OP_ECALL, None, None, None, None);
+        test_32(0b00000000000001010100110001100011,
+                OP_BLT, None, Some(10), Some(0), Some(24));
     }
 
     #[test]
     fn parsing_compressed_opecode_test() {
         use OpecodeKind::*;
-        let test_16 = |inst_16: u16, _e_op: OpecodeKind, _e_rd: Option<u8>| {
+        let test_16 = |inst_16: u16, _op: OpecodeKind, _rd: Option<u8>| {
             let op_16 = inst_16.parse_opecode().unwrap();
-            assert!(matches!(&op_16, _e_op));
-            assert!(matches!(inst_16.parse_rd(&op_16), _e_rd));
+            assert!(matches!(&op_16, _op));
+            assert!(matches!(inst_16.parse_rd(&op_16), _rd));
         };
 
         test_16(0b0000000000000001, OP_C_NOP, None);

@@ -37,7 +37,7 @@ impl ElfIdentification {
         }
     }
 
-    fn show(&self){
+    fn show(&self) {
         print!("magic:\t");
         for byte in self.magic.iter() {
             print!("{:02x} ", byte);
@@ -90,7 +90,7 @@ impl ElfHeader {
         }
     }
             
-    pub fn show(&self){
+    pub fn show(&self) {
         println!("================ elf header ================");
         self.e_ident.show();
         println!("e_type:\t\t{}",                   get_elf_type_name(self.e_type));
@@ -108,7 +108,7 @@ impl ElfHeader {
         println!("e_shstrndx:\t{}",                 self.e_shstrndx);
     }
 
-    pub fn ident_show(&self){
+    pub fn ident_show(&self) {
         self.e_ident.show();
     }
 
@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn elf_header_test() {
-        let loader = match ElfLoader::try_new("./src/example_elf") {
+        let loader = match ElfLoader::try_new("example_elf") {
             Ok(loader) => loader,
             Err(error) => {
                 panic!("There was a problem opening the file: {:?}", error);

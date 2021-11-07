@@ -1,5 +1,5 @@
 use super::ElfHeader;
-use crate::cpu::{get_u32};
+use super::get_u32;
 
 fn get_segment_type_name(segment_type:u32) -> &'static str {
 	match segment_type {
@@ -17,14 +17,14 @@ fn get_segment_type_name(segment_type:u32) -> &'static str {
 }
 
 pub struct ProgramHeader {
-	p_type: u32,
-	p_offset: u32,
-	p_vaddr: u32,
-	p_paddr: u32,
-	p_filesz: u32,
-	p_memsz: u32,
-	p_flags: u32,
-	p_align: u32,
+    pub p_type: u32,
+    pub p_offset: u32,
+        p_vaddr: u32,
+    pub p_paddr: u32,
+    pub p_filesz: u32,
+        p_memsz: u32,
+        p_flags: u32,
+        p_align: u32,
 }
 
 impl ProgramHeader {
@@ -32,7 +32,9 @@ impl ProgramHeader {
 		let mut new_prog = Vec::new();
 
 		for segment_num in 0 .. elf_header.e_phnum {
-			let segment_start:usize = (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
+			let segment_start:usize =
+                (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
+
 			new_prog.push(
 				ProgramHeader {
 					p_type:   get_u32(mmap, segment_start +  0),
@@ -50,7 +52,7 @@ impl ProgramHeader {
 		return new_prog;
 	}
 
-	pub fn show(&self, id: usize){
+	pub fn show(&self, id: usize) {
 		println!("============== program header {}==============", id + 1);
 		println!("p_type:\t\t{}",	get_segment_type_name(self.p_type));
 		println!("p_offset:\t0x{:x}",	self.p_offset);
@@ -58,12 +60,12 @@ impl ProgramHeader {
 		println!("p_paddr:\t0x{:x}",	self.p_paddr);
 		println!("p_filesz:\t0x{:x}",	self.p_filesz);
 		println!("p_memsz:\t0x{:x}",	self.p_memsz);
-		println!("p_flags:\t{}",	self.p_flags);
+		println!("p_flags:\t{}",	    self.p_flags);
 		println!("p_align:\t0x{:x}",	self.p_align);
 	}
 
-	pub fn segment_dump(&self, mmap: &[u8]){
-		for (block, dump_part) in (self.p_offset .. self.p_offset + self.p_memsz as u32).step_by(4).enumerate(){
+	pub fn segment_dump(&self, mmap: &[u8]) {
+		for (block, dump_part) in (self.p_offset .. self.p_offset + self.p_memsz as u32).step_by(4).enumerate() {
 			if block % 16 == 0 { println!() }
 			print!("{:08x} ", get_u32(mmap, dump_part as usize));
 		}
@@ -76,7 +78,7 @@ mod tests {
 
 	#[test]
 	fn program_header_test() {
-		let loader = match ElfLoader::try_new("./src/example_elf") {
+		let loader = match ElfLoader::try_new("example_elf") {
 			Ok(loader) => loader,
 			Err(error) => {
 				panic!("There was a problem opening the file: {:?}", error);

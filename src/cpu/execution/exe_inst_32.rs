@@ -1,168 +1,233 @@
-use crate::cpu::CPU;
+use crate::cpu::{CPU, PrivilegedLevel};
+use crate::cpu::csr::{CSRname, Mstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::bus::dram::Dram;
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU, dram: &mut Dram) {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
-    const INST_SIZE: u32 = 4;
+    const INST_SIZE: usize = 4;
 
-    // add program counter
-    cpu.pc += 4;
+    // store previous program counter for excluding branch case
+    let prev_pc = cpu.pc;
 
     match inst.opc {
         OP_LUI => {
-            cpu.reg[inst.rd.unwrap()] = inst.imm.unwrap() << 12;
+            cpu.regs.write(inst.rd, inst.imm.unwrap() << 12);
         },
         OP_AUIPC => {
-            cpu.pc += (inst.imm.unwrap() << 12) as u32;
+            cpu.regs.write(inst.rd, cpu.pc as i32 + (inst.imm.unwrap() << 12));
         },
         OP_JAL => {
-            cpu.reg[inst.rd.unwrap()] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += inst.imm.unwrap() as u32;
+            cpu.regs.write(inst.rd, (cpu.pc + INST_SIZE) as i32); 
+            cpu.add2pc(inst.imm.unwrap());
         },
         OP_JALR => {
-            cpu.reg[inst.rd.unwrap()] = (cpu.pc + INST_SIZE) as i32; 
-            cpu.pc += (cpu.reg[inst.rs1.unwrap()]  + inst.imm.unwrap()) as u32;
+            let next_pc = cpu.pc + INST_SIZE;
+            // setting the least-significant bit of the result to zero->vvvvvv
+            cpu.update_pc((cpu.regs.read(inst.rs1)  + inst.imm.unwrap()) & !0x1);
+            cpu.regs.write(inst.rd, next_pc as i32); 
         },
         OP_BEQ => {
-            if cpu.reg[inst.rs1.unwrap()] == cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if cpu.regs.read(inst.rs1) == cpu.regs.read(inst.rs2) {
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BNE => {
-            if cpu.reg[inst.rs1.unwrap()] != cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if cpu.regs.read(inst.rs1) != cpu.regs.read(inst.rs2) {
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BLT => {
-            if cpu.reg[inst.rs1.unwrap()] < cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if cpu.regs.read(inst.rs1) < cpu.regs.read(inst.rs2) {
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BGE => {
-            if cpu.reg[inst.rs1.unwrap()] >= cpu.reg[inst.rs1.unwrap()] {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if cpu.regs.read(inst.rs1) >= cpu.regs.read(inst.rs2) {
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BLTU => {
-            if (cpu.reg[inst.rs1.unwrap()] as u32) < (cpu.reg[inst.rs1.unwrap()] as u32) {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if (cpu.regs.read(inst.rs1) as u32) < (cpu.regs.read(inst.rs2) as u32) {
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_BGEU => {
-            if (cpu.reg[inst.rs1.unwrap()] as u32) >= (cpu.reg[inst.rs1.unwrap()] as u32) {
-                cpu.pc += inst.imm.unwrap() as u32;
+            if (cpu.regs.read(inst.rs1) as u32) >= (cpu.regs.read(inst.rs2) as u32) {
+                cpu.add2pc(inst.imm.unwrap());
             } 
         },
         OP_LB => {
-            cpu.reg[inst.rd.unwrap()] = 
-                Dram::load8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.regs.write(inst.rd,  
+                cpu.bus.load8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LH => {
-            cpu.reg[inst.rd.unwrap()] =
-                Dram::load16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.regs.write(inst.rd,  
+                cpu.bus.load16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LW => {
-            cpu.reg[inst.rd.unwrap()] =
-                Dram::load32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.regs.write(inst.rd,  
+                cpu.bus.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LBU => {
-            cpu.reg[inst.rd.unwrap()] = 
-                Dram::load_u8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.regs.write(inst.rd,  
+                cpu.bus.load_u8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_LHU => {
-            cpu.reg[inst.rd.unwrap()] = 
-                Dram::load_u16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize);
+            cpu.regs.write(inst.rd,  
+                cpu.bus.load_u16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
         },
         OP_SB => {
-            Dram::store8(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
-                         cpu.reg[inst.rs2.unwrap()]);
+            cpu.bus.store8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
+                         cpu.regs.read(inst.rs2));
         },
         OP_SH => {
-            Dram::store16(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
-                         cpu.reg[inst.rs2.unwrap()]);
+            cpu.bus.store16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
+                         cpu.regs.read(inst.rs2));
         },
         OP_SW => {
-            Dram::store32(dram, (cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap()) as usize,
-                         cpu.reg[inst.rs2.unwrap()]);
+            cpu.bus.store32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
+                         cpu.regs.read(inst.rs2));
         },
         OP_ADDI => {
-            cpu.reg[inst.rd.unwrap()] += cpu.reg[inst.rs1.unwrap()] + inst.imm.unwrap();
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) + inst.imm.unwrap());
         },
         OP_SLTI => {
-            cpu.reg[inst.rd.unwrap()] =
-                (cpu.reg[inst.rs1.unwrap()] < inst.imm.unwrap()) as i32;
+            cpu.regs.write(inst.rd,  
+                (cpu.regs.read(inst.rs1) < inst.imm.unwrap()) as i32);
         },
         OP_SLTIU => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) < inst.imm.unwrap() as u32) as i32;
+            cpu.regs.write(inst.rd,  
+                ((cpu.regs.read(inst.rs1) as u32) < inst.imm.unwrap() as u32) as i32);
         },
         OP_XORI => {
-            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] ^ inst.imm.unwrap();
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) ^ inst.imm.unwrap());
         },
         OP_ORI => {
-            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] | inst.imm.unwrap();
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) | inst.imm.unwrap());
         },
         OP_ANDI => {
-            cpu.reg[inst.rd.unwrap()] = cpu.reg[inst.rs1.unwrap()] & inst.imm.unwrap();
+            cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) & inst.imm.unwrap());
         },
         OP_SLLI => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) << inst.imm.unwrap()) as i32;
+            cpu.regs.write(inst.rd,
+                ((cpu.regs.read(inst.rs1) as u32) << inst.imm.unwrap()) as i32);
         },                                                
-        OP_SRLI => {                                    
-            cpu.reg[inst.rd.unwrap()] =          
-                ((cpu.reg[inst.rs1.unwrap()] as u32) >> inst.imm.unwrap()) as i32;
+        OP_SRLI => {
+            cpu.regs.write(inst.rd,
+                ((cpu.regs.read(inst.rs1) as u32) >> inst.imm.unwrap()) as i32);
+        },
+        OP_SRAI => {
+            cpu.regs.write(inst.rd,
+                ((cpu.regs.read(inst.rs1) as i32) >> inst.imm.unwrap()) as i32);
         },
         OP_ADD => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] + cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) + cpu.regs.read(inst.rs2));
         },
         OP_SUB => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] - cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) - cpu.regs.read(inst.rs2));
         },
         OP_SLL => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) << cpu.reg[inst.rs2.unwrap()]) as i32;
+            cpu.regs.write(inst.rd,
+                ((cpu.regs.read(inst.rs1) as u32) << cpu.regs.read(inst.rs2)) as i32);
         },
         OP_SLT => {
-            cpu.reg[inst.rd.unwrap()] =
-                (cpu.reg[inst.rs1.unwrap()] < cpu.reg[inst.rs2.unwrap()]) as i32;
+            cpu.regs.write(inst.rd,
+                (cpu.regs.read(inst.rs1) < cpu.regs.read(inst.rs2)) as i32);
         },
         OP_SLTU => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32) < (cpu.reg[inst.rs2.unwrap()] as u32)) as i32;
+            cpu.regs.write(inst.rd,
+                ((cpu.regs.read(inst.rs1) as u32) < (cpu.regs.read(inst.rs2) as u32)) as i32);
         },
         OP_XOR => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] ^ cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) ^ cpu.regs.read(inst.rs2));
         },
         OP_SRL => {
-            cpu.reg[inst.rd.unwrap()] =
-                ((cpu.reg[inst.rs1.unwrap()] as u32)  >> cpu.reg[inst.rs2.unwrap()]) as i32;
+            cpu.regs.write(inst.rd,
+                ((cpu.regs.read(inst.rs1) as u32)  >> cpu.regs.read(inst.rs2)) as i32);
         },
         OP_SRA => {
-            cpu.reg[inst.rd.unwrap()] =
-                (cpu.reg[inst.rs1.unwrap()] as i32)  >> cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                (cpu.regs.read(inst.rs1) as i32)  >> cpu.regs.read(inst.rs2));
         },
         OP_OR => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] | cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) | cpu.regs.read(inst.rs2));
         },
         OP_AND => {
-            cpu.reg[inst.rd.unwrap()] =
-                cpu.reg[inst.rs1.unwrap()] & cpu.reg[inst.rs2.unwrap()];
+            cpu.regs.write(inst.rd,
+                cpu.regs.read(inst.rs1) & cpu.regs.read(inst.rs2));
         },
         OP_FENCE => {
-            panic!("not yet implemented: OP_FENCE");
+            // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            panic!("not yet implemented: OP_ECALL");
+            cpu.csrs.borrow_mut().write(CSRname::mcause.wrap(),
+            match *(cpu.priv_lv.borrow()) {
+                PrivilegedLevel::User => 8,
+                PrivilegedLevel::Supervisor => 9,
+                _ => panic!("cannot enviroment call in current privileged mode."),
+            });
+            cpu.csrs.borrow_mut().write(CSRname::mepc.wrap(), cpu.pc as i32);
+            cpu.csrs.borrow_mut().bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
+            *(cpu.priv_lv.borrow_mut()) = PrivilegedLevel::Machine;
+            let new_pc = cpu.csrs.borrow().read(CSRname::mtvec.wrap()) as i32;
+            cpu.update_pc(new_pc);
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
         },
+        OP_CSRRW => {
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().write(inst.rs2, cpu.regs.read(inst.rs1));
+        },
+        OP_CSRRS => {
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitset(inst.rs2, cpu.regs.read(inst.rs1));
+        },
+        OP_CSRRC => {
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitclr(inst.rs2, cpu.regs.read(inst.rs1));
+        },
+        OP_CSRRWI => {
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().write(inst.rs2, inst.rs1.unwrap() as i32);
+        },
+        OP_CSRRSI => {
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitset(inst.rs2, inst.rs1.unwrap() as i32);
+        },
+        OP_CSRRCI => {
+            cpu.regs.write(inst.rd, cpu.csrs.borrow().read(inst.rs2) as i32);
+            cpu.csrs.borrow_mut().bitclr(inst.rs2, inst.rs1.unwrap() as i32);
+        },
+        OP_SRET => {
+            let new_pc = cpu.csrs.borrow().read(CSRname::sepc.wrap()) as i32;
+            cpu.update_pc(new_pc);
+            *(cpu.priv_lv.borrow_mut()) = match cpu.csrs.borrow().read_mstatus(Mstatus::SPP) {
+                0b00 => PrivilegedLevel::User,
+                0b01 => PrivilegedLevel::Supervisor,
+                0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
+                _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+            }
+        },
+        OP_MRET => {
+            let new_pc = cpu.csrs.borrow().read(CSRname::mepc.wrap()) as i32;
+            cpu.update_pc(new_pc);
+            *(cpu.priv_lv.borrow_mut()) = match cpu.csrs.borrow().read_mstatus(Mstatus::MPP) {
+                0b00 => PrivilegedLevel::User,
+                0b01 => PrivilegedLevel::Supervisor,
+                0b11 => PrivilegedLevel::Machine,
+                _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+            }
+        },
         _ => panic!("not a full instruction"),
+    }
+
+    // add the program counter when it isn't a branch instruction
+    if cpu.pc == prev_pc {
+        cpu.add2pc(INST_SIZE as i32);
     }
 }

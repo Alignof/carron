@@ -1,34 +1,52 @@
-mod instruction;
+pub mod fetch;
 pub mod decode;
 pub mod execution;
+pub mod csr;
+mod reg;
+mod instruction;
+
+use std::rc::Rc;
+use std::cell::RefCell;
+use crate::bus;
+use crate::elfload;
+
+pub enum PrivilegedLevel {
+    User = 0b00,
+    Supervisor = 0b01,
+    Reserved = 0b10,
+    Machine = 0b11,
+}
 
 pub struct CPU {
-    pub pc: u32,
-    pub reg: [i32; 32],
+    pub pc: usize,
+    pub regs: reg::Register,
+        csrs: Rc<RefCell<csr::CSRs>>,
+        bus: bus::Bus,
+    pub priv_lv: Rc<RefCell<PrivilegedLevel>>,
 }
 
 impl CPU {
-    pub fn new(entry_address: u32) -> CPU {
+    pub fn new(loader: elfload::ElfLoader) -> CPU {
+        let new_lv = Rc::new(RefCell::new(PrivilegedLevel::Machine));
+        let new_csrs = Rc::new(RefCell::new(csr::CSRs::new()));
+        let new_lv_ref = Rc::clone(&new_lv);
+        let new_csrs_ref = Rc::clone(&new_csrs);
+
         CPU {
-            pc: entry_address as u32,
-            reg: [0; 32],
+            pc: 0,
+            regs: reg::Register::new(),
+            csrs: new_csrs,
+            bus: bus::Bus::new(loader, new_csrs_ref, new_lv_ref),
+            priv_lv: new_lv, 
         }
     }
-}
 
-pub fn get_u16(mmap: &[u8], index: usize) -> u16 {
-    (mmap[index + 1] as u16) << 8 |
-    (mmap[index + 0] as u16)
-}
+    pub fn add2pc(&mut self, addval: i32) {
+        self.pc = (self.pc as i32 + addval) as usize;
+    }
 
-pub fn get_u32(mmap: &[u8], index: usize) -> u32 {
-    (mmap[index + 3] as u32) << 24 |
-    (mmap[index + 2] as u32) << 16 |
-    (mmap[index + 1] as u32) <<  8 |
-    (mmap[index + 0] as u32)
-}
-
-pub fn is_cinst(mmap: &[u8], index: usize) -> bool {
-    mmap[index] & 0x3 != 0x3
+    pub fn update_pc(&mut self, newval: i32) {
+        self.pc = newval as usize;
+    }
 }
 
