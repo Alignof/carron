@@ -5,8 +5,6 @@ pub mod csr;
 mod reg;
 mod instruction;
 
-use std::rc::Rc;
-use std::cell::RefCell;
 use crate::bus;
 use crate::elfload;
 
@@ -20,24 +18,19 @@ pub enum PrivilegedLevel {
 pub struct CPU {
     pub pc: usize,
     pub regs: reg::Register,
-        csrs: Rc<RefCell<csr::CSRs>>,
+        csrs: csr::CSRs,
         bus: bus::Bus,
-    pub priv_lv: Rc<RefCell<PrivilegedLevel>>,
+    pub priv_lv: PrivilegedLevel,
 }
 
 impl CPU {
     pub fn new(loader: elfload::ElfLoader) -> CPU {
-        let new_lv = Rc::new(RefCell::new(PrivilegedLevel::Machine));
-        let new_csrs = Rc::new(RefCell::new(csr::CSRs::new()));
-        let new_lv_ref = Rc::clone(&new_lv);
-        let new_csrs_ref = Rc::clone(&new_csrs);
-
         CPU {
             pc: 0,
             regs: reg::Register::new(),
-            csrs: new_csrs,
+            csrs: csr::CSRs::new(),
             bus: bus::Bus::new(loader),
-            priv_lv: new_lv, 
+            priv_lv: PrivilegedLevel::Machine, 
         }
     }
 
