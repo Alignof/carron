@@ -57,36 +57,36 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             } 
         },
         OP_LB => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.load8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.regs.write(inst.rd, cpu.bus.load8(load_addr));
         },
         OP_LH => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.load16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.regs.write(inst.rd, cpu.bus.load16(load_addr));
         },
         OP_LW => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
         },
         OP_LBU => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.load_u8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr));
         },
         OP_LHU => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.load_u16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr));
         },
         OP_SB => {
-            cpu.bus.store8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
-                         cpu.regs.read(inst.rs2));
+            let store_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
         },
         OP_SH => {
-            cpu.bus.store16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
-                         cpu.regs.read(inst.rs2));
+            let store_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
         },
         OP_SW => {
-            cpu.bus.store32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
-                         cpu.regs.read(inst.rs2));
+            let store_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
+            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
         },
         OP_ADDI => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) + inst.imm.unwrap());
@@ -173,8 +173,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
-            let new_pc = cpu.csrs.read(CSRname::mtvec.wrap()) as i32;
-            cpu.update_pc(new_pc);
+            cpu.update_pc(cpu.csrs.read(CSRname::mtvec.wrap()) as i32);
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
