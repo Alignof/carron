@@ -32,7 +32,9 @@ impl ProgramHeader {
 		let mut new_prog = Vec::new();
 
 		for segment_num in 0 .. elf_header.e_phnum {
-			let segment_start:usize = (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
+			let segment_start:usize =
+                (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
+
 			new_prog.push(
 				ProgramHeader {
 					p_type:   get_u32(mmap, segment_start +  0),
