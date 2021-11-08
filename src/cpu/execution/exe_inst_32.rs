@@ -57,36 +57,44 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             } 
         },
         OP_LB => {
-            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.regs.write(inst.rd, cpu.bus.load8(load_addr));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load8(load_addr));
+            }
         },
         OP_LH => {
-            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.regs.write(inst.rd, cpu.bus.load16(load_addr));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load16(load_addr));
+            }
         },
         OP_LW => {
-            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+            }
         },
         OP_LBU => {
-            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr));
+            }
         },
         OP_LHU => {
-            let load_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr));
+            }
         },
         OP_SB => {
-            let store_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
+            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
+            }
         },
         OP_SH => {
-            let store_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
+            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
+            }
         },
         OP_SW => {
-            let store_addr = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap());
-            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+            }
         },
         OP_ADDI => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) + inst.imm.unwrap());
