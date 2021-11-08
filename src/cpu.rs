@@ -46,6 +46,7 @@ impl CPU {
         self.pc = newval as usize;
     }
 
+
     pub fn trans_addr(&mut self, addr: i32) -> Option<usize> {
         match self.mmu.trans_addr(addr as usize, 
                                   self.csrs.read(CSRname::satp.wrap()), 
