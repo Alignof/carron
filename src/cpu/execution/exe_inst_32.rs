@@ -172,8 +172,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            cpu.csrs.write(CSRname::mcause.wrap(), 
-                match cpu.priv_lv {
+            cpu.csrs.write(CSRname::mcause.wrap(),
+            match cpu.priv_lv {
                 PrivilegedLevel::User => 8,
                 PrivilegedLevel::Supervisor => 9,
                 _ => panic!("cannot enviroment call in current privileged mode."),
@@ -211,24 +211,24 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_SRET => {
-            let new_pc = cpu.csrs.read(CSRname::sepc.wrap()) as i32;
-            cpu.update_pc(new_pc);
             cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
                 _ => panic!("PrivilegedLevel 0x3 is Reserved."),
-            }
+            };
+            let new_pc = cpu.trans_addr(cpu.csrs.read(CSRname::sepc.wrap()) as i32).unwrap();
+            cpu.update_pc(new_pc as i32);
         },
         OP_MRET => {
-            let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
-            cpu.update_pc(new_pc);
             cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => PrivilegedLevel::Machine,
                 _ => panic!("PrivilegedLevel 0x3 is Reserved."),
-            }
+            };
+            let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
+            cpu.update_pc(new_pc);
         },
         _ => panic!("not a full instruction"),
     }
