@@ -52,7 +52,10 @@ impl CPU {
                                   self.csrs.read(CSRname::satp.wrap()), 
                                   &self.bus.dram, &self.priv_lv) {
             Ok(addr) => Some(addr),
-            Err(()) => None,
+            Err(()) => {
+                panic!("page fault");
+                None
+            },
         }
     }
 }
