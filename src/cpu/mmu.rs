@@ -31,7 +31,7 @@ impl MMU {
 
     #[allow(non_snake_case)]
     pub fn trans_addr(&mut self, addr: usize, satp: u32, 
-                      dram: &Dram, priv_lv: &PrivilegedLevel) -> usize {
+                      dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<usize, ()> {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
 
@@ -41,7 +41,7 @@ impl MMU {
             PrivilegedLevel::Supervisor |
             PrivilegedLevel::User => {
                 match self.trans_mode {
-                    AddrTransMode::Bare => addr,
+                    AddrTransMode::Bare => Ok(addr),
                     AddrTransMode::Sv32 => {
                         let VPN1 = addr >> 22 & 0x3FF;
                         let VPN0 = addr >> 12 & 0x3FF;
@@ -68,12 +68,12 @@ impl MMU {
                                  addr, PPN1 << 22 | PPN0 << 12 | page_off);
 
                         // return transrated address
-                        PPN1 << 22 | PPN0 << 12 | page_off
+                        Ok(PPN1 << 22 | PPN0 << 12 | page_off)
                     },
                 }
             },
             // return raw address if privileged level is Machine
-            _ => addr,
+            _ => Ok(addr),
         }
     }
 }

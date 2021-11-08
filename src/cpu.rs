@@ -47,8 +47,12 @@ impl CPU {
     }
 
     pub fn trans_addr(&mut self, addr: i32) -> usize {
-        self.mmu.trans_addr(addr as usize, self.csrs.read(CSRname::satp.wrap()),
-                            &self.bus.dram, &self.priv_lv)
+        match self.mmu.trans_addr(addr as usize, 
+                                  self.csrs.read(CSRname::satp.wrap()), 
+                                  &self.bus.dram, &self.priv_lv) {
+            Ok(addr) => addr,
+            Err(()) => 0,
+        }
     }
 }
 
