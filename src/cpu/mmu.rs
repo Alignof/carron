@@ -30,8 +30,8 @@ impl MMU {
     }
 
     #[allow(non_snake_case)]
-    pub fn trans_addr(&self, addr: usize, satp: u32, 
-                      dram: &Dram, priv_lv: PrivilegedLevel) -> usize {
+    pub fn trans_addr(&mut self, addr: usize, satp: u32, 
+                      dram: &Dram, priv_lv: &PrivilegedLevel) -> usize {
         const PTESIZE: usize = 4;
         const PAGESIZE: usize = 4096; // 2^12
 
