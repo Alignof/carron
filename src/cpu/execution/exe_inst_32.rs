@@ -181,8 +181,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
-            let new_pc = cpu.trans_addr(cpu.csrs.read(CSRname::mtvec.wrap()) as i32);
-            cpu.update_pc(new_pc);
+            let new_pc = cpu.trans_addr(cpu.csrs.read(CSRname::mtvec.wrap()) as i32).unwrap();
+            cpu.update_pc(new_pc as i32);
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
