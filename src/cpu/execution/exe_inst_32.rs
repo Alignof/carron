@@ -218,8 +218,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
                 _ => panic!("PrivilegedLevel 0x3 is Reserved."),
             };
-            let new_pc = cpu.trans_addr(cpu.csrs.read(CSRname::sepc.wrap()) as i32).unwrap();
-            cpu.update_pc(new_pc as i32);
+            if let Some(new_pc) = cpu.trans_addr(cpu.csrs.read(CSRname::sepc.wrap()) as i32) {
+                cpu.update_pc(new_pc as i32);
+            };
         },
         OP_MRET => {
             cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::MPP) {
