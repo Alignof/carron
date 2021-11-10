@@ -46,6 +46,19 @@ impl CPU {
         self.pc = newval as usize;
     }
 
+    pub fn exception(&mut self) {
+        self.csrs.write(CSRname::mcause.wrap(),
+        match self.priv_lv {
+            PrivilegedLevel::User => 8,
+            PrivilegedLevel::Supervisor => 9,
+            _ => panic!("cannot enviroment call in current privileged mode."),
+        });
+        self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
+        self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
+        self.priv_lv = PrivilegedLevel::Machine;
+        let new_pc = self.trans_addr(self.csrs.read(CSRname::mtvec.wrap()) as i32).unwrap();
+        self.update_pc(new_pc as i32);
+    }
 
     pub fn trans_addr(&mut self, addr: i32) -> Option<usize> {
         match self.mmu.trans_addr(addr as usize, 
@@ -53,7 +66,8 @@ impl CPU {
                                   &self.bus.dram, &self.priv_lv) {
             Ok(addr) => Some(addr),
             Err(()) => {
-                panic!("page fault");
+                //panic!("page fault");
+                self.exception();
                 None
             },
         }
