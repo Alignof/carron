@@ -56,8 +56,9 @@ impl CPU {
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
         self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
         self.priv_lv = PrivilegedLevel::Machine;
-        let new_pc = self.trans_addr(self.csrs.read(CSRname::mtvec.wrap()) as i32).unwrap();
-        self.update_pc(new_pc as i32);
+        if let Some(new_pc) = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32) {
+            self.update_pc(new_pc as i32);
+        };
     }
 
     pub fn trans_addr(&mut self, addr: i32) -> Option<usize> {
