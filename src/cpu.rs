@@ -61,6 +61,8 @@ impl CPU {
         if let Some(new_pc) = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32) {
             self.update_pc(new_pc as i32);
         };
+
+        println!("new epc:0x{:x}", self.pc);
     }
 
     pub fn trans_addr(&mut self, addr: i32) -> Option<usize> {

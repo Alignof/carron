@@ -64,6 +64,7 @@ pub enum CSRname {
     stval   = 0x143,
     satp    = 0x180,
     mstatus = 0x300,
+    medeleg = 0x302,
     mtvec   = 0x305,
     mepc    = 0x341, 
     mcause  = 0x342,
