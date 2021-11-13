@@ -47,7 +47,7 @@ impl CPU {
     }
 
     pub fn exception(&mut self) {
-        self.csrs.write(CSRname::mcause.wrap(),
+        self.csrs.bitset(CSRname::mcause.wrap(),
         match self.priv_lv {
             PrivilegedLevel::User => 8,
             PrivilegedLevel::Supervisor => 9,
