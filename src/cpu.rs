@@ -10,6 +10,14 @@ use crate::bus;
 use crate::elfload;
 use csr::CSRname;
 
+pub enum TrapCause {
+    UmodeEcall = 8,
+    SmodeEcall = 9,
+    MmodeEcall = 11,
+    InstPageFault = 12,
+    LoadPageFault = 13,
+}
+
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
@@ -46,13 +54,8 @@ impl CPU {
         self.pc = newval as usize;
     }
 
-    pub fn exception(&mut self) {
-        self.csrs.bitset(CSRname::mcause.wrap(),
-        match self.priv_lv {
-            PrivilegedLevel::User => 8,
-            PrivilegedLevel::Supervisor => 9,
-            _ => panic!("cannot enviroment call in current privileged mode."),
-        });
+    pub fn exception(&mut self, trap_cause: TrapCause) {
+        self.csrs.bitset(CSRname::mcause.wrap(), trap_cause as i32);
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
         self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
         self.priv_lv = PrivilegedLevel::Machine;
@@ -81,7 +84,7 @@ impl CPU {
             Ok(addr) => Some(addr),
             Err(()) => {
                 //panic!("page fault");
-                self.exception();
+                self.exception(TrapCause::LoadPageFault);
                 None
             },
         }
