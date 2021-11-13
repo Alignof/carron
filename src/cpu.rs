@@ -57,10 +57,19 @@ impl CPU {
         self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
         self.priv_lv = PrivilegedLevel::Machine;
 
-        // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
-        if let Some(new_pc) = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32) {
-            self.update_pc(new_pc as i32);
-        };
+        // check Machine Trap Delegation Registers
+        let mcause = self.csrs.read(CSRname::mcause.wrap());
+        let medeleg = self.csrs.read(CSRname::medeleg.wrap());
+        if medeleg == mcause {
+            dbg!("delegated");
+            self.priv_lv = PrivilegedLevel::Supervisor;
+        } else {
+            // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
+            if let Some(new_pc) = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32) {
+                self.update_pc(new_pc as i32);
+            };
+        }
+
 
         println!("new epc:0x{:x}", self.pc);
     }
