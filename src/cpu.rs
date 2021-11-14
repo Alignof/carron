@@ -3,12 +3,20 @@ pub mod decode;
 pub mod execution;
 pub mod csr;
 mod reg;
+mod mmu;
 mod instruction;
 
-use std::rc::Rc;
-use std::cell::RefCell;
 use crate::bus;
 use crate::elfload;
+use csr::CSRname;
+
+pub enum TrapCause {
+    UmodeEcall = 8,
+    SmodeEcall = 9,
+    MmodeEcall = 11,
+    InstPageFault = 12,
+    LoadPageFault = 13,
+}
 
 pub enum PrivilegedLevel {
     User = 0b00,
@@ -20,24 +28,21 @@ pub enum PrivilegedLevel {
 pub struct CPU {
     pub pc: usize,
     pub regs: reg::Register,
-        csrs: Rc<RefCell<csr::CSRs>>,
+        csrs: csr::CSRs,
         bus: bus::Bus,
-    pub priv_lv: Rc<RefCell<PrivilegedLevel>>,
+        mmu: mmu::MMU,
+    pub priv_lv: PrivilegedLevel,
 }
 
 impl CPU {
     pub fn new(loader: elfload::ElfLoader) -> CPU {
-        let new_lv = Rc::new(RefCell::new(PrivilegedLevel::Machine));
-        let new_csrs = Rc::new(RefCell::new(csr::CSRs::new()));
-        let new_lv_ref = Rc::clone(&new_lv);
-        let new_csrs_ref = Rc::clone(&new_csrs);
-
         CPU {
             pc: 0,
             regs: reg::Register::new(),
-            csrs: new_csrs,
-            bus: bus::Bus::new(loader, new_csrs_ref, new_lv_ref),
-            priv_lv: new_lv, 
+            csrs: csr::CSRs::new(),
+            bus: bus::Bus::new(loader),
+            mmu: mmu::MMU::new(),
+            priv_lv: PrivilegedLevel::Machine, 
         }
     }
 
@@ -47,6 +52,42 @@ impl CPU {
 
     pub fn update_pc(&mut self, newval: i32) {
         self.pc = newval as usize;
+    }
+
+    pub fn exception(&mut self, trap_cause: TrapCause) {
+        self.csrs.bitset(CSRname::mcause.wrap(), trap_cause as i32);
+        self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
+        self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
+        self.priv_lv = PrivilegedLevel::Machine;
+
+        // check Machine Trap Delegation Registers
+        let mcause = self.csrs.read(CSRname::mcause.wrap());
+        let medeleg = self.csrs.read(CSRname::medeleg.wrap());
+        if medeleg == mcause {
+            dbg!("delegated");
+            self.priv_lv = PrivilegedLevel::Supervisor;
+        } else {
+            // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
+            if let Some(new_pc) = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32) {
+                self.update_pc(new_pc as i32);
+            };
+        }
+
+
+        println!("new epc:0x{:x}", self.pc);
+    }
+
+    pub fn trans_addr(&mut self, addr: i32) -> Option<usize> {
+        match self.mmu.trans_addr(addr as usize, 
+                                  self.csrs.read(CSRname::satp.wrap()), 
+                                  &self.bus.dram, &self.priv_lv) {
+            Ok(addr) => Some(addr),
+            Err(()) => {
+                //panic!("page fault");
+                self.exception(TrapCause::LoadPageFault);
+                None
+            },
+        }
     }
 }
 
