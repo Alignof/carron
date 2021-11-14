@@ -22,7 +22,7 @@ impl Simulator {
 
         // rv32ui-p: 0x1044
         // rv32ui-v: 0x2308
-        let break_point: Option<usize> = Some(0x2308);
+        let break_point: Option<usize> = Some(0x1044);
 
         loop {
             fetch(&self.cpu)
