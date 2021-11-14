@@ -18,6 +18,7 @@ pub enum TrapCause {
     LoadPageFault = 13,
 }
 
+#[derive(Debug)]
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
@@ -71,7 +72,6 @@ impl CPU {
             dbg!("delegated");
             self.priv_lv = PrivilegedLevel::Supervisor;
         }
-
 
         println!("new epc:0x{:x}", self.pc);
     }
