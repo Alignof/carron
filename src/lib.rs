@@ -20,9 +20,9 @@ impl Simulator {
     pub fn simulation(&mut self) {
         use crate::cpu::execution::Execution;
 
-        // rv32ui-p: 0x1044
+        // rv32ui-p: 0x44
         // rv32ui-v: 0x2308
-        let break_point: Option<usize> = Some(0x1044);
+        let break_point: Option<usize> = Some(0x44);
 
         loop {
             fetch(&self.cpu)
