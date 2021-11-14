@@ -1,7 +1,7 @@
 #!/bin/bash
 
 test_dir=/opt/riscv32/share/riscv-tests/isa/
-test_kind="rv32ui-v"
+test_kind="rv32ui-p"
 
 for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
     cargo r $test_dir$test_name > /dev/null 2>&1;
