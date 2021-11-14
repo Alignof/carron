@@ -54,8 +54,8 @@ impl CPU {
         self.pc = newval as usize;
     }
 
-    pub fn exception(&mut self, trap_cause: TrapCause) {
-        self.csrs.bitset(CSRname::mcause.wrap(), trap_cause as i32);
+    pub fn exception(&mut self, cause_of_trap: TrapCause) {
+        self.csrs.bitset(CSRname::mcause.wrap(), 1 << (cause_of_trap as i32));
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
         self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
         self.priv_lv = PrivilegedLevel::Machine;
@@ -63,14 +63,13 @@ impl CPU {
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap());
         let medeleg = self.csrs.read(CSRname::medeleg.wrap());
-        if medeleg == mcause {
-            dbg!("delegated");
-            self.priv_lv = PrivilegedLevel::Supervisor;
+        if (medeleg & mcause) == 0 {
+            let new_pc = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32).unwrap();
+            self.update_pc(new_pc as i32);
         } else {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
-            if let Some(new_pc) = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32) {
-                self.update_pc(new_pc as i32);
-            };
+            dbg!("delegated");
+            self.priv_lv = PrivilegedLevel::Supervisor;
         }
 
 
