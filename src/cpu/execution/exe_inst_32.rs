@@ -172,10 +172,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            cpu.csrs.write(CSRname::mcause.wrap(),
+            cpu.csrs.bitset(CSRname::mcause.wrap(),
             match cpu.priv_lv {
-                PrivilegedLevel::User => 8,
-                PrivilegedLevel::Supervisor => 9,
+                PrivilegedLevel::User => 1 << 8,
+                PrivilegedLevel::Supervisor => 1 << 9,
                 _ => panic!("cannot enviroment call in current privileged mode."),
             });
             cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
