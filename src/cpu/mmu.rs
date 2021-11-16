@@ -51,9 +51,8 @@ impl MMU {
     #[allow(non_snake_case)]
     pub fn trans_addr(&mut self, addr: usize, satp: u32, 
                       dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<usize, ()> {
-        const PTESIZE: usize = 4;
-        const PAGESIZE: usize = 4096; // 2^12
 
+        // update trans_mode and ppn
         self.update_data(satp);
 
         match priv_lv {
@@ -62,6 +61,9 @@ impl MMU {
                 match self.trans_mode {
                     AddrTransMode::Bare => Ok(addr),
                     AddrTransMode::Sv32 => {
+                        const PTESIZE: usize = 4;
+                        const PAGESIZE: usize = 4096; // 2^12
+
                         let VPN1 = addr >> 22 & 0x3FF;
                         let VPN0 = addr >> 12 & 0x3FF;
                         let page_off = addr & 0xFFF;
@@ -69,29 +71,31 @@ impl MMU {
                         // first table walk
                         dbg_hex!(satp);
                         dbg_hex!(self.ppn);
+                        dbg_hex!(PAGESIZE);
                         dbg_hex!(VPN1);
+                        dbg_hex!(PTESIZE);
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
+                        println!("PTE_addr(1): 0x{:x}", PTE_addr);
                         let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(()) => {
                                 return Err(()) // exception
                             },
                         };
-                        let PPN1 = (PTE >> 20 & 0xFFF) as usize;
-                        println!("PTE_addr(1): 0x{:x}", PTE_addr);
                         println!("PTE(1): 0x{:x}", PTE);
+                        let PPN1 = (PTE >> 20 & 0xFFF) as usize;
 
                         // second table walk
                         let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
+                        println!("PTE_addr(2): 0x{:x}", PTE_addr);
                         let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(()) => {
                                 return Err(()) // exception
                             },
                         };
-                        let PPN0 = (PTE >> 10 & 0x3FF) as usize;
-                        println!("PTE_addr(2): 0x{:x}", PTE_addr);
                         println!("PTE(2): 0x{:x}", PTE);
+                        let PPN0 = (PTE >> 10 & 0x3FF) as usize;
 
                         // check PTE to be leaf
                         if !self.check_leaf_pte(PTE) {
