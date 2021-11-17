@@ -49,7 +49,7 @@ impl ProgramHeader {
 			);
 		}
 
-		return new_prog;
+		new_prog
 	}
 
 	pub fn show(&self, id: usize) {
