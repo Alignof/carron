@@ -83,7 +83,7 @@ impl CPU {
             Ok(addr) => Some(addr),
             Err(()) => {
                 //panic!("page fault");
-                self.exception(TrapCause::LoadPageFault);
+                self.exception(TrapCause::InstPageFault);
                 None
             },
         }
