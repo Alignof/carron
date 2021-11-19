@@ -16,7 +16,8 @@ fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
 */
 
 pub struct Dram {
-    dram: Vec<u8>,
+        dram: Vec<u8>,
+    pub base_addr: usize,
 }
 
 impl Dram {
@@ -47,6 +48,7 @@ impl Dram {
 
         Dram {
             dram: new_dram,
+            base_addr: vart_entry as usize,
         }
     }
 }
