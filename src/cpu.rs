@@ -82,7 +82,7 @@ impl CPU {
                                   self.csrs.read(CSRname::satp.wrap()), 
                                   &self.bus.dram, &self.priv_lv) {
             Ok(addr) => {
-                Some((addr - base_addr) as u32 as usize)
+                Some(addr - base_addr)
             },
             Err(()) => {
                 //panic!("page fault");
