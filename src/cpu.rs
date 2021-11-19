@@ -38,7 +38,7 @@ pub struct CPU {
 impl CPU {
     pub fn new(loader: elfload::ElfLoader) -> CPU {
         CPU {
-            pc: 0,
+            pc: loader.elf_header.e_entry as usize,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
             bus: bus::Bus::new(loader),
