@@ -27,7 +27,7 @@ pub enum PrivilegedLevel {
 }
 
 pub struct CPU {
-    pub pc: usize,
+    pub pc: u32,
     pub regs: reg::Register,
         csrs: csr::CSRs,
         bus: bus::Bus,
@@ -38,7 +38,7 @@ pub struct CPU {
 impl CPU {
     pub fn new(loader: elfload::ElfLoader) -> CPU {
         CPU {
-            pc: loader.elf_header.e_entry as usize,
+            pc: loader.elf_header.e_entry,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
             bus: bus::Bus::new(loader),
@@ -48,11 +48,11 @@ impl CPU {
     }
 
     pub fn add2pc(&mut self, addval: i32) {
-        self.pc = (self.pc as i32 + addval) as u32 as usize;
+        self.pc = (self.pc as i32 + addval) as u32;
     }
 
     pub fn update_pc(&mut self, newval: i32) {
-        self.pc = newval as u32 as usize;
+        self.pc = newval as u32;
     }
 
     pub fn exception(&mut self, cause_of_trap: TrapCause) {
