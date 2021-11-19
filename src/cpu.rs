@@ -48,11 +48,11 @@ impl CPU {
     }
 
     pub fn add2pc(&mut self, addval: i32) {
-        self.pc = (self.pc as i32 + addval) as usize;
+        self.pc = (self.pc as i32 + addval) as u32 as usize;
     }
 
     pub fn update_pc(&mut self, newval: i32) {
-        self.pc = newval as usize;
+        self.pc = newval as u32 as usize;
     }
 
     pub fn exception(&mut self, cause_of_trap: TrapCause) {
@@ -77,10 +77,13 @@ impl CPU {
     }
 
     pub fn trans_addr(&mut self, addr: i32) -> Option<usize> {
+        let base_addr = self.bus.dram.base_addr;
         match self.mmu.trans_addr(addr as usize, 
                                   self.csrs.read(CSRname::satp.wrap()), 
                                   &self.bus.dram, &self.priv_lv) {
-            Ok(addr) => Some(addr),
+            Ok(addr) => {
+                Some((addr - base_addr) as u32 as usize)
+            },
             Err(()) => {
                 //panic!("page fault");
                 self.exception(TrapCause::InstPageFault);
