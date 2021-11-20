@@ -69,6 +69,7 @@ impl MMU {
                         let page_off = addr & 0xFFF;
 
                         // first table walk
+                        dbg_hex!(addr);
                         dbg_hex!(satp);
                         dbg_hex!(self.ppn);
                         dbg_hex!(PAGESIZE);
