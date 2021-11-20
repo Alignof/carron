@@ -9,7 +9,7 @@ pub enum AddrTransMode {
 }
 
 pub struct MMU {
-    ppn: usize,
+    ppn: u32,
     trans_mode: AddrTransMode,
 }
 
@@ -22,14 +22,14 @@ impl MMU {
     }
 
     fn update_data(&mut self, satp: u32) {
-        self.ppn = (satp & 0x3FFFFF) as usize;
+        self.ppn = (satp & 0x3FFFFF) as u32;
         self.trans_mode = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
         };
     }
 
-    fn check_pte_validity(&self, pte: i32) -> Result<usize, ()>{
+    fn check_pte_validity(&self, pte: u32) -> Result<u32, ()>{
         let pte_v = pte & 0x1;
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
@@ -37,11 +37,11 @@ impl MMU {
         if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
             Err(())
         } else {
-            Ok(pte as usize)
+            Ok(pte as u32)
         }
     }
 
-    fn check_leaf_pte(&self, pte: usize) -> bool {
+    fn check_leaf_pte(&self, pte: u32) -> bool {
         let pte_r = pte >> 1 & 0x1;
         let pte_x = pte >> 3 & 0x1;
 
@@ -49,8 +49,8 @@ impl MMU {
     }
 
     #[allow(non_snake_case)]
-    pub fn trans_addr(&mut self, addr: usize, satp: u32, 
-                      dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<usize, ()> {
+    pub fn trans_addr(&mut self, addr: u32, satp: u32, 
+                      dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<u32, ()> {
 
         // update trans_mode and ppn
         self.update_data(satp);
@@ -61,8 +61,8 @@ impl MMU {
                 match self.trans_mode {
                     AddrTransMode::Bare => Ok(addr),
                     AddrTransMode::Sv32 => {
-                        const PTESIZE: usize = 4;
-                        const PAGESIZE: usize = 4096; // 2^12
+                        const PTESIZE: u32 = 4;
+                        const PAGESIZE: u32 = 4096; // 2^12
 
                         let VPN1 = addr >> 22 & 0x3FF;
                         let VPN0 = addr >> 12 & 0x3FF;
@@ -83,7 +83,7 @@ impl MMU {
                             },
                         };
                         println!("PTE(1): 0x{:x}", PTE);
-                        let PPN1 = (PTE >> 20 & 0xFFF) as usize;
+                        let PPN1 = (PTE >> 20 & 0xFFF);
 
                         // second table walk
                         let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
@@ -95,7 +95,7 @@ impl MMU {
                             },
                         };
                         println!("PTE(2): 0x{:x}", PTE);
-                        let PPN0 = (PTE >> 10 & 0x3FF) as usize;
+                        let PPN0 = (PTE >> 10 & 0x3FF);
 
                         // check PTE to be leaf
                         if !self.check_leaf_pte(PTE) {
