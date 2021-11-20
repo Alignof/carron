@@ -27,7 +27,7 @@ pub enum PrivilegedLevel {
 }
 
 pub struct CPU {
-    pub pc: usize,
+    pub pc: u32,
     pub regs: reg::Register,
         csrs: csr::CSRs,
         bus: bus::Bus,
@@ -38,7 +38,7 @@ pub struct CPU {
 impl CPU {
     pub fn new(loader: elfload::ElfLoader) -> CPU {
         CPU {
-            pc: 0,
+            pc: loader.elf_header.e_entry,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
             bus: bus::Bus::new(loader),
@@ -48,11 +48,11 @@ impl CPU {
     }
 
     pub fn add2pc(&mut self, addval: i32) {
-        self.pc = (self.pc as i32 + addval) as usize;
+        self.pc = (self.pc as i32 + addval) as u32;
     }
 
     pub fn update_pc(&mut self, newval: i32) {
-        self.pc = newval as usize;
+        self.pc = newval as u32;
     }
 
     pub fn exception(&mut self, cause_of_trap: TrapCause) {
@@ -76,11 +76,14 @@ impl CPU {
         println!("new epc:0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, addr: i32) -> Option<usize> {
-        match self.mmu.trans_addr(addr as usize, 
+    pub fn trans_addr(&mut self, addr: i32) -> Option<u32> {
+        let base_addr = self.bus.dram.base_addr;
+        match self.mmu.trans_addr(addr as u32, 
                                   self.csrs.read(CSRname::satp.wrap()), 
                                   &self.bus.dram, &self.priv_lv) {
-            Ok(addr) => Some(addr),
+            Ok(addr) => {
+                Some(addr - base_addr)
+            },
             Err(()) => {
                 //panic!("page fault");
                 self.exception(TrapCause::InstPageFault);

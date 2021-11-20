@@ -16,7 +16,8 @@ fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
 */
 
 pub struct Dram {
-    dram: Vec<u8>,
+        dram: Vec<u8>,
+    pub base_addr: u32,
 }
 
 impl Dram {
@@ -47,58 +48,59 @@ impl Dram {
 
         Dram {
             dram: new_dram,
+            base_addr: vart_entry,
         }
     }
 }
 
 impl Device for Dram {
     // get 1 byte
-    fn raw_byte(&self, addr: usize) -> u8 {
-        self.dram[addr]
+    fn raw_byte(&self, addr: u32) -> u8 {
+        self.dram[addr as usize]
     }
 
     // store
-    fn store8(&mut self, addr: usize, data: i32) {
-        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
+    fn store8(&mut self, addr: u32, data: i32) {
+        self.dram[addr as usize + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
-    fn store16(&mut self, addr: usize, data: i32) {
-        self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
-        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
+    fn store16(&mut self, addr: u32, data: i32) {
+        self.dram[addr as usize + 1] = ((data >> 8) & 0xFF) as u8;
+        self.dram[addr as usize + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
-    fn store32(&mut self, addr: usize, data: i32) {
-        self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
-        self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
-        self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
-        self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
+    fn store32(&mut self, addr: u32, data: i32) {
+        self.dram[addr as usize + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[addr as usize + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[addr as usize + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[addr as usize + 0] = ((data >>  0) & 0xFF) as u8;
     }
 
 
     // load
-    fn load8(&self, addr: usize) -> i32 {
-        self.dram[addr] as i8 as i32
+    fn load8(&self, addr: u32) -> i32 {
+        self.dram[addr as usize] as i8 as i32
     }
 
-    fn load16(&self, addr: usize) -> i32 {
-        ((self.dram[addr + 1] as u16) << 8 |
-         (self.dram[addr + 0] as u16)) as i16 as i32
+    fn load16(&self, addr: u32) -> i32 {
+        ((self.dram[addr as usize + 1] as u16) << 8 |
+         (self.dram[addr as usize + 0] as u16)) as i16 as i32
     }
 
-    fn load32(&self, addr: usize) -> i32 {
-        ((self.dram[addr + 3] as u32) << 24 |
-         (self.dram[addr + 2] as u32) << 16 |
-         (self.dram[addr + 1] as u32) <<  8 |
-         (self.dram[addr + 0] as u32)) as i32
+    fn load32(&self, addr: u32) -> i32 {
+        ((self.dram[addr as usize + 3] as u32) << 24 |
+         (self.dram[addr as usize + 2] as u32) << 16 |
+         (self.dram[addr as usize + 1] as u32) <<  8 |
+         (self.dram[addr as usize + 0] as u32)) as i32
     }
 
-    fn load_u8(&self, addr: usize) -> i32 {
-        self.dram[addr] as i32
+    fn load_u8(&self, addr: u32) -> i32 {
+        self.dram[addr as usize] as i32
     }
 
-    fn load_u16(&self, addr: usize) -> i32 {
-        ((self.dram[addr + 1] as u32) << 8 |
-         (self.dram[addr + 0] as u32)) as i32
+    fn load_u16(&self, addr: u32) -> i32 {
+        ((self.dram[addr as usize + 1] as u32) << 8 |
+         (self.dram[addr as usize + 0] as u32)) as i32
     }
 }
 

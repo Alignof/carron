@@ -22,7 +22,7 @@ impl Simulator {
 
         // rv32ui-p: 0x44
         // rv32ui-v: 0x2308
-        let break_point: Option<usize> = Some(0x2308);
+        let break_point: Option<u32> = Some(0x2308);
 
         loop {
             fetch(&self.cpu)
@@ -30,7 +30,7 @@ impl Simulator {
                 .execution(&mut self.cpu);
 
             // debug code
-            if break_point.unwrap_or(usize::MAX) == self.cpu.pc {
+            if break_point.unwrap_or(u32::MAX) == self.cpu.pc {
                 std::process::exit(self.cpu.regs.read(Some(3)));
             }
         }

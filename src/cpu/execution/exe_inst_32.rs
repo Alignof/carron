@@ -4,7 +4,7 @@ use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
-    const INST_SIZE: usize = 4;
+    const INST_SIZE: u32 = 4;
 
     // store previous program counter for excluding branch case
     let prev_pc = cpu.pc;
