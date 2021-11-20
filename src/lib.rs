@@ -20,9 +20,10 @@ impl Simulator {
     pub fn simulation(&mut self) {
         use crate::cpu::execution::Execution;
 
-        // rv32ui-p: 0x80000044
-        // rv32ui-v: 0x80002308
+        // rv32ui-p: 0x80000044, gp(3)
+        // rv32ui-v: 0x80002308, a0(10)
         let break_point: Option<u32> = Some(0x80002308);
+        let reg_result = 10;
 
         loop {
             fetch(&self.cpu)
@@ -31,7 +32,7 @@ impl Simulator {
 
             // debug code
             if break_point.unwrap_or(u32::MAX) == self.cpu.pc {
-                std::process::exit(self.cpu.regs.read(Some(3)));
+                std::process::exit(self.cpu.regs.read(Some(reg_result)));
             }
         }
     }
