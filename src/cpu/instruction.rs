@@ -217,7 +217,7 @@ pub fn reg2str(rd_value: usize) -> &'static str {
         5  => "t0",
         6  => "t1",
         7  => "t2",
-        8  => "fp",
+        8  => "s0", // fp
         9  => "s1",
         10 => "a0",
         11 => "a1",
