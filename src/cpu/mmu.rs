@@ -29,7 +29,7 @@ impl MMU {
         };
     }
 
-    fn check_pte_validity(&self, pte: u32) -> Result<u32, ()>{
+    fn check_pte_validity(&self, pte: i32) -> Result<u32, ()>{
         let pte_v = pte & 0x1;
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
@@ -83,7 +83,7 @@ impl MMU {
                             },
                         };
                         println!("PTE(1): 0x{:x}", PTE);
-                        let PPN1 = (PTE >> 20 & 0xFFF);
+                        let PPN1 = PTE >> 20 & 0xFFF;
 
                         // second table walk
                         let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
@@ -95,7 +95,7 @@ impl MMU {
                             },
                         };
                         println!("PTE(2): 0x{:x}", PTE);
-                        let PPN0 = (PTE >> 10 & 0x3FF);
+                        let PPN0 = PTE >> 10 & 0x3FF;
 
                         // check PTE to be leaf
                         if !self.check_leaf_pte(PTE) {

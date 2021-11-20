@@ -2,7 +2,7 @@ use super::decode::Decode;
 
 pub fn fetch(cpu: &super::CPU) -> Box<dyn Decode> {
     let bus = &cpu.bus;
-    let index_pc: usize = cpu.pc - bus.dram.base_addr;
+    let index_pc: u32 = cpu.pc - bus.dram.base_addr;
     let is_cinst: bool = bus.raw_byte(index_pc) & 0x3 != 0x3;
 
     if is_cinst {
