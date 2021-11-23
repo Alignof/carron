@@ -1,4 +1,4 @@
-use crate::cpu::{CPU, PrivilegedLevel};
+use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
@@ -172,12 +172,12 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            cpu.csrs.bitset(CSRname::mcause.wrap(),
+            cpu.csrs.write(CSRname::mcause.wrap(),
                 match cpu.priv_lv {
-                    PrivilegedLevel::User => 1 << 8,
-                    PrivilegedLevel::Supervisor => 1 << 9,
+                    PrivilegedLevel::User => TrapCause::UmodeEcall,
+                    PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
                     _ => panic!("cannot enviroment call in current privileged mode."),
-                }
+                } as i32
             );
             cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);

@@ -10,6 +10,7 @@ use crate::bus;
 use crate::elfload;
 use csr::{CSRname, Xstatus};
 
+#[derive(Copy, Clone)]
 pub enum TrapCause {
     UmodeEcall = 8,
     SmodeEcall = 9,
@@ -56,14 +57,14 @@ impl CPU {
     }
 
     pub fn exception(&mut self, cause_of_trap: TrapCause) {
-        self.csrs.bitset(CSRname::mcause.wrap(), 1 << (cause_of_trap as i32));
+        self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
+        self.csrs.bitclr(CSRname::sstatus.wrap(), 0x3 << 11);
 
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap());
         let medeleg = self.csrs.read(CSRname::medeleg.wrap());
         if (medeleg & mcause) == 0 {
             self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
-            self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
             self.priv_lv = PrivilegedLevel::Machine;
 
             let new_pc = self.trans_addr(
@@ -79,8 +80,7 @@ impl CPU {
         } else {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
-            self.csrs.bitset(CSRname::scause.wrap(), 1 << (TrapCause::InstPageFault as i32));
-            self.csrs.bitclr(CSRname::sstatus.wrap(), 0x3 << 11);
+            self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
             self.priv_lv = PrivilegedLevel::Supervisor;
         }
 
