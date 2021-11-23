@@ -1,5 +1,5 @@
 use crate::cpu::{CPU, PrivilegedLevel};
-use crate::cpu::csr::{CSRname, Mstatus};
+use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
@@ -212,7 +212,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_SRET => {
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::SPP) {
+            cpu.priv_lv = match cpu.csrs.read_mstatus(Xstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
@@ -226,7 +226,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             };
         },
         OP_MRET => {
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::MPP) {
+            cpu.priv_lv = match cpu.csrs.read_mstatus(Xstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => PrivilegedLevel::Machine,

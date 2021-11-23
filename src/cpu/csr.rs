@@ -31,26 +31,26 @@ impl CSRs {
         self.csrs[src.unwrap()]
     }
 
-    pub fn read_mstatus(&self, mstat: Mstatus) -> u32 {
+    pub fn read_mstatus(&self, mstat: Xstatus) -> u32 {
         let mstatus: usize = CSRname::mstatus as usize;
         match mstat {
-            Mstatus::UIE    => self.csrs[mstatus] >>  0 & 0x1,
-            Mstatus::SIE    => self.csrs[mstatus] >>  1 & 0x1,
-            Mstatus::MIE    => self.csrs[mstatus] >>  3 & 0x1,
-            Mstatus::UPIE   => self.csrs[mstatus] >>  4 & 0x1,
-            Mstatus::SPIE   => self.csrs[mstatus] >>  5 & 0x1,
-            Mstatus::MPIE   => self.csrs[mstatus] >>  7 & 0x1,
-            Mstatus::SPP    => self.csrs[mstatus] >>  8 & 0x1,
-            Mstatus::MPP    => self.csrs[mstatus] >> 11 & 0x3,
-            Mstatus::FS     => self.csrs[mstatus] >> 13 & 0x3,
-            Mstatus::XS     => self.csrs[mstatus] >> 15 & 0x3,
-            Mstatus::MPRV   => self.csrs[mstatus] >> 17 & 0x1,
-            Mstatus::SUM    => self.csrs[mstatus] >> 18 & 0x1,
-            Mstatus::MXR    => self.csrs[mstatus] >> 19 & 0x1,
-            Mstatus::TVM    => self.csrs[mstatus] >> 20 & 0x1,
-            Mstatus::TW     => self.csrs[mstatus] >> 21 & 0x1,
-            Mstatus::TSR    => self.csrs[mstatus] >> 22 & 0x1,
-            Mstatus::SD     => self.csrs[mstatus] >> 31 & 0x1,
+            Xstatus::UIE    => self.csrs[mstatus] >>  0 & 0x1,
+            Xstatus::SIE    => self.csrs[mstatus] >>  1 & 0x1,
+            Xstatus::MIE    => self.csrs[mstatus] >>  3 & 0x1,
+            Xstatus::UPIE   => self.csrs[mstatus] >>  4 & 0x1,
+            Xstatus::SPIE   => self.csrs[mstatus] >>  5 & 0x1,
+            Xstatus::MPIE   => self.csrs[mstatus] >>  7 & 0x1,
+            Xstatus::SPP    => self.csrs[mstatus] >>  8 & 0x1,
+            Xstatus::MPP    => self.csrs[mstatus] >> 11 & 0x3,
+            Xstatus::FS     => self.csrs[mstatus] >> 13 & 0x3,
+            Xstatus::XS     => self.csrs[mstatus] >> 15 & 0x3,
+            Xstatus::MPRV   => self.csrs[mstatus] >> 17 & 0x1,
+            Xstatus::SUM    => self.csrs[mstatus] >> 18 & 0x1,
+            Xstatus::MXR    => self.csrs[mstatus] >> 19 & 0x1,
+            Xstatus::TVM    => self.csrs[mstatus] >> 20 & 0x1,
+            Xstatus::TW     => self.csrs[mstatus] >> 21 & 0x1,
+            Xstatus::TSR    => self.csrs[mstatus] >> 22 & 0x1,
+            Xstatus::SD     => self.csrs[mstatus] >> 31 & 0x1,
         }
     } 
 }
@@ -71,7 +71,7 @@ pub enum CSRname {
     mtval   = 0x343,
 }
 
-pub enum Mstatus {
+pub enum Xstatus {
     UIE,	// 0
     SIE,	// 1
     MIE,	// 3
