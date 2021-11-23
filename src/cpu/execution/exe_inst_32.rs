@@ -236,6 +236,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
             cpu.update_pc(new_pc);
         },
+        OP_SFENCE_VMA => {
+            // nop (pipeline are not yet implemented)
+        },
         _ => panic!("not a full instruction"),
     }
 
