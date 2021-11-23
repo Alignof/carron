@@ -8,7 +8,7 @@ mod instruction;
 
 use crate::bus;
 use crate::elfload;
-use csr::{CSRname, Xstatus};
+use csr::CSRname;
 
 #[derive(Copy, Clone)]
 pub enum TrapCause {
@@ -56,31 +56,25 @@ impl CPU {
         self.pc = newval as u32;
     }
 
-    pub fn exception(&mut self, cause_of_trap: TrapCause) {
+    pub fn exception(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
         self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
-        self.csrs.bitclr(CSRname::sstatus.wrap(), 0x3 << 11);
+        self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
+        self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
 
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap());
         let medeleg = self.csrs.read(CSRname::medeleg.wrap());
-        if (medeleg & mcause) == 0 {
-            self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
+        if (medeleg & 1 << mcause) == 0 {
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Machine;
 
-            let new_pc = self.trans_addr(
-                self.csrs.read(
-                    match self.csrs.read_xstatus(&self.priv_lv, Xstatus::MPP) {
-                        0b00 => CSRname::mepc.wrap(),
-                        0b01 => CSRname::sepc.wrap(),
-                        _ => panic!("PrivilegedLevel 0x3 is Reserved."),
-                    }
-                ) as i32
-            ).unwrap();
+            let new_pc = self.trans_addr(self.csrs.read(CSRname::mtvec.wrap()) as i32).unwrap();
             self.update_pc(new_pc as i32);
         } else {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
         }
 
@@ -97,7 +91,7 @@ impl CPU {
             },
             Err(()) => {
                 //panic!("page fault");
-                self.exception(TrapCause::InstPageFault);
+                self.exception(addr, TrapCause::InstPageFault);
                 None
             },
         }
