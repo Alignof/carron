@@ -90,7 +90,6 @@ impl CPU {
                 Some(addr - base_addr)
             },
             Err(()) => {
-                //panic!("page fault");
                 self.exception(addr, TrapCause::InstPageFault);
                 None
             },
