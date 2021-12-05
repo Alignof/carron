@@ -81,7 +81,7 @@ impl CPU {
             self.update_pc(new_pc as i32);
         }
 
-        println!("new epc:0x{:x}", self.pc);
+        println!("new pc:0x{:x}", self.pc);
     }
 
     pub fn trans_addr(&mut self, addr: i32) -> Option<u32> {

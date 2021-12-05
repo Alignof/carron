@@ -69,12 +69,6 @@ impl MMU {
                         let page_off = addr & 0xFFF;
 
                         // first table walk
-                        dbg_hex!(addr);
-                        dbg_hex!(satp);
-                        dbg_hex!(self.ppn);
-                        dbg_hex!(PAGESIZE);
-                        dbg_hex!(VPN1);
-                        dbg_hex!(PTESIZE);
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
                         let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
