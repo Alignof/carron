@@ -68,7 +68,7 @@ impl CPU {
             self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Machine;
 
-            let new_pc = self.trans_addr(self.csrs.read(CSRname::mtvec.wrap()) as i32).unwrap();
+            let new_pc = self.csrs.read(CSRname::mtvec.wrap()) as i32;
             self.update_pc(new_pc as i32);
         } else {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
@@ -77,7 +77,7 @@ impl CPU {
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
 
-            let new_pc = self.trans_addr(self.csrs.read(CSRname::stvec.wrap()) as i32).unwrap();
+            let new_pc = self.csrs.read(CSRname::stvec.wrap()) as i32;
             self.update_pc(new_pc as i32);
         }
 
