@@ -26,7 +26,7 @@ impl Simulator {
         let reg_result = 10;
 
         loop {
-            fetch(&self.cpu)
+            fetch(&mut self.cpu)
                 .decode()
                 .execution(&mut self.cpu);
 
