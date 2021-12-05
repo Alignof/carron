@@ -21,8 +21,8 @@ impl Simulator {
         use crate::cpu::execution::Execution;
 
         // rv32ui-p: 0x80000044, gp(3)
-        // rv32ui-v: 0x80002308, a0(10)
-        let break_point: Option<u32> = Some(0x80002308);
+        // rv32ui-v: 0xffc02308, a0(10)
+        let break_point: Option<u32> = Some(0xffc02308);
         let reg_result = 10;
 
         loop {
