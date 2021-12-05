@@ -1,20 +1,6 @@
 use crate::elfload;
 use super::Device;
 
-/*
-fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
-
-    for segment in loader.prog_headers.iter() {
-        //                PT_LOAD
-        if segment.p_type == 1 && segment.p_paddr == e_entry {
-            return Ok(segment.p_offset as usize);
-        }
-    }
-
-    Err("entry address is not found.")
-}
-*/
-
 pub struct Dram {
         dram: Vec<u8>,
     pub base_addr: u32,
@@ -130,7 +116,7 @@ mod tests {
 
     #[test]
     fn load_store_u8_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -150,7 +136,7 @@ mod tests {
 
     #[test]
     fn load_store_8_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -169,7 +155,7 @@ mod tests {
 
     #[test]
     fn load_store_16_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -189,7 +175,7 @@ mod tests {
 
     #[test]
     fn load_store_u16_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_u16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -211,7 +197,7 @@ mod tests {
     #[test]
     #[allow(overflowing_literals)]
     fn load_store_32_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_32 = |data: i32| {
             Dram::store32(dram, addr, data);
