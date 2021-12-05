@@ -77,7 +77,7 @@ impl MMU {
                         dbg_hex!(PTESIZE);
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr - dram.base_addr)) {
+                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(()) => {
                                 return Err(()) // exception
@@ -89,7 +89,7 @@ impl MMU {
                         // second table walk
                         let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
                         println!("PTE_addr(2): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr - dram.base_addr)) {
+                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(()) => {
                                 return Err(()) // exception
