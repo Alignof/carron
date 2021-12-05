@@ -76,6 +76,9 @@ impl CPU {
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
+
+            let new_pc = self.trans_addr(self.csrs.read(CSRname::stvec.wrap()) as i32).unwrap();
+            self.update_pc(new_pc as i32);
         }
 
         println!("new epc:0x{:x}", self.pc);
