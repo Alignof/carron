@@ -56,6 +56,10 @@ impl Dram {
 impl Device for Dram {
     // address to raw index
     fn addr2index(&self, addr: u32) -> usize {
+        if addr < self.base_addr {
+            panic!("invalid address for Dram: {}", addr);
+        }
+
         (addr - self.base_addr) as usize
     }
 
@@ -108,13 +112,13 @@ impl Device for Dram {
 
     fn load_u8(&self, addr: u32) -> i32 {
         let addr = self.addr2index(addr);
-        self.dram[addr as usize] as i32
+        self.dram[addr] as i32
     }
 
     fn load_u16(&self, addr: u32) -> i32 {
         let addr = self.addr2index(addr);
-        ((self.dram[addr as usize + 1] as u32) << 8 |
-         (self.dram[addr as usize + 0] as u32)) as i32
+        ((self.dram[addr + 1] as u32) << 8 |
+         (self.dram[addr + 0] as u32)) as i32
     }
 }
 
