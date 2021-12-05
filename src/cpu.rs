@@ -85,12 +85,11 @@ impl CPU {
     }
 
     pub fn trans_addr(&mut self, addr: i32) -> Option<u32> {
-        let base_addr = self.bus.dram.base_addr;
         match self.mmu.trans_addr(addr as u32, 
                                   self.csrs.read(CSRname::satp.wrap()), 
                                   &self.bus.dram, &self.priv_lv) {
             Ok(addr) => {
-                Some(addr - base_addr)
+                Some(addr)
             },
             Err(()) => {
                 self.exception(addr, TrapCause::InstPageFault);
