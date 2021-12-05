@@ -56,6 +56,7 @@ impl Bus {
 }
 
 pub trait Device {
+    fn addr2index(&self, addr: u32) -> usize;
     fn raw_byte(&self, addr: u32) -> u8;
     fn store8(&mut self, addr: u32, data: i32);
     fn store16(&mut self, addr: u32, data: i32);

@@ -54,51 +54,65 @@ impl Dram {
 }
 
 impl Device for Dram {
+    // address to raw index
+    fn addr2index(&self, addr: u32) -> usize {
+        (addr - self.base_addr) as usize
+    }
+
     // get 1 byte
     fn raw_byte(&self, addr: u32) -> u8 {
-        self.dram[addr as usize]
+        let addr = self.addr2index(addr);
+        self.dram[addr]
     }
 
     // store
     fn store8(&mut self, addr: u32, data: i32) {
-        self.dram[addr as usize + 0] = ((data >> 0) & 0xFF) as u8;
+        let addr = self.addr2index(addr);
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
     fn store16(&mut self, addr: u32, data: i32) {
-        self.dram[addr as usize + 1] = ((data >> 8) & 0xFF) as u8;
-        self.dram[addr as usize + 0] = ((data >> 0) & 0xFF) as u8;
+        let addr = self.addr2index(addr);
+        self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
     fn store32(&mut self, addr: u32, data: i32) {
-        self.dram[addr as usize + 3] = ((data >> 24) & 0xFF) as u8;
-        self.dram[addr as usize + 2] = ((data >> 16) & 0xFF) as u8;
-        self.dram[addr as usize + 1] = ((data >>  8) & 0xFF) as u8;
-        self.dram[addr as usize + 0] = ((data >>  0) & 0xFF) as u8;
+        let addr = self.addr2index(addr);
+        self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
     }
 
 
     // load
     fn load8(&self, addr: u32) -> i32 {
-        self.dram[addr as usize] as i8 as i32
+        let addr = self.addr2index(addr);
+        self.dram[addr] as i8 as i32
     }
 
     fn load16(&self, addr: u32) -> i32 {
-        ((self.dram[addr as usize + 1] as u16) << 8 |
-         (self.dram[addr as usize + 0] as u16)) as i16 as i32
+        let addr = self.addr2index(addr);
+        ((self.dram[addr + 1] as u16) << 8 |
+         (self.dram[addr + 0] as u16)) as i16 as i32
     }
 
     fn load32(&self, addr: u32) -> i32 {
-        ((self.dram[addr as usize + 3] as u32) << 24 |
-         (self.dram[addr as usize + 2] as u32) << 16 |
-         (self.dram[addr as usize + 1] as u32) <<  8 |
-         (self.dram[addr as usize + 0] as u32)) as i32
+        let addr = self.addr2index(addr);
+        ((self.dram[addr + 3] as u32) << 24 |
+         (self.dram[addr + 2] as u32) << 16 |
+         (self.dram[addr + 1] as u32) <<  8 |
+         (self.dram[addr + 0] as u32)) as i32
     }
 
     fn load_u8(&self, addr: u32) -> i32 {
+        let addr = self.addr2index(addr);
         self.dram[addr as usize] as i32
     }
 
     fn load_u16(&self, addr: u32) -> i32 {
+        let addr = self.addr2index(addr);
         ((self.dram[addr as usize + 1] as u32) << 8 |
          (self.dram[addr as usize + 0] as u32)) as i32
     }
