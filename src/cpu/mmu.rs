@@ -89,6 +89,7 @@ impl MMU {
                                 return Err(()) // exception
                             },
                         };
+
                         println!("PTE(2): 0x{:x}", PTE);
                         let PPN0 = PTE >> 10 & 0x3FF;
 
