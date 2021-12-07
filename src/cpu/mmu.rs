@@ -79,10 +79,13 @@ impl MMU {
                         };
                         println!("PTE(1): 0x{:x}", PTE);
                         let PPN1 = PTE >> 20 & 0xFFF;
+                        println!("PPN1: 0x{:x}", PPN1);
 
                         // second table walk
                         let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
-                        println!("PTE_addr(2): 0x{:x}", PTE_addr);
+                        println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
+                        println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
+                                 PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
                         let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(()) => {
@@ -92,6 +95,7 @@ impl MMU {
 
                         println!("PTE(2): 0x{:x}", PTE);
                         let PPN0 = PTE >> 10 & 0x3FF;
+                        println!("PPN0: 0x{:x}", PPN0);
 
                         // check PTE to be leaf
                         if !self.check_leaf_pte(PTE) {
