@@ -1,6 +1,8 @@
+use dbg_hex::dbg_hex;
 use super::decode::Decode;
 
 pub fn fetch(cpu: &mut super::CPU) -> Box<dyn Decode> {
+    dbg_hex!(cpu.pc);
     let index_pc: u32 = cpu.trans_addr(cpu.pc as i32).unwrap();
     let is_cinst: bool = cpu.bus.raw_byte(index_pc) & 0x3 != 0x3;
 
@@ -18,6 +20,4 @@ pub fn fetch(cpu: &mut super::CPU) -> Box<dyn Decode> {
         Box::new(new_inst)
     }
 }
-
-
 

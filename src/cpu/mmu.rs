@@ -81,7 +81,7 @@ impl MMU {
                         let PPN1 = PTE >> 20 & 0xFFF;
                         println!("PPN1: 0x{:x}", PPN1);
 
-                        // stop the trans addr if PTE is the leaf
+                        // complete the trans addr if PTE is the leaf
                         if self.check_leaf_pte(PTE) {
                             println!("raw address:{:x}\n\t=> transrated address:{:x}",
                                      addr, PPN1 << 22 | VPN0 << 12 | page_off);
