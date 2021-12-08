@@ -81,6 +81,14 @@ impl MMU {
                         let PPN1 = PTE >> 20 & 0xFFF;
                         println!("PPN1: 0x{:x}", PPN1);
 
+                        // stop the trans addr if PTE is the leaf
+                        if self.check_leaf_pte(PTE) {
+                            println!("raw address:{:x}\n\t=> transrated address:{:x}",
+                                     addr, PPN1 << 22 | VPN0 << 12 | page_off);
+
+                            return Ok(PPN1 << 22 | VPN0 << 12 | page_off);
+                        }
+
                         // second table walk
                         let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
                         println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
