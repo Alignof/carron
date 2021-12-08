@@ -1,5 +1,5 @@
-use crate::cpu::{CPU, PrivilegedLevel};
-use crate::cpu::csr::{CSRname, Mstatus};
+use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
+use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
@@ -172,12 +172,13 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            cpu.csrs.bitset(CSRname::mcause.wrap(),
-            match cpu.priv_lv {
-                PrivilegedLevel::User => 1 << 8,
-                PrivilegedLevel::Supervisor => 1 << 9,
-                _ => panic!("cannot enviroment call in current privileged mode."),
-            });
+            cpu.csrs.write(CSRname::mcause.wrap(),
+                match cpu.priv_lv {
+                    PrivilegedLevel::User => TrapCause::UmodeEcall,
+                    PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
+                    _ => panic!("cannot enviroment call in current privileged mode."),
+                } as i32
+            );
             cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
             cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
@@ -212,7 +213,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_SRET => {
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::SPP) {
+            cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
@@ -226,7 +227,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             };
         },
         OP_MRET => {
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::MPP) {
+            cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b11 => PrivilegedLevel::Machine,
@@ -234,6 +235,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             };
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
             cpu.update_pc(new_pc);
+        },
+        OP_SFENCE_VMA => {
+            // nop (pipeline are not yet implemented)
         },
         _ => panic!("not a full instruction"),
     }

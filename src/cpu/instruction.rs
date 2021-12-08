@@ -63,6 +63,7 @@ pub enum OpecodeKind {
 //== privileged Instruction == 
     OP_SRET,
     OP_MRET,
+    OP_SFENCE_VMA,
 //== compressed Instruction == 
     OP_C_ADDI4SPN,
     OP_C_FLD,
@@ -160,6 +161,7 @@ impl Instruction {
             OP_CSRRCI		=> "csrrci",
             OP_SRET         => "sret",
             OP_MRET         => "mret",
+            OP_SFENCE_VMA   => "sfence.vma",
             OP_C_ADDI4SPN   => "C.addi4spn",
             OP_C_FLD        => "C.fld",
             OP_C_LW         => "C.lw",

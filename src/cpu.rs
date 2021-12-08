@@ -10,6 +10,7 @@ use crate::bus;
 use crate::elfload;
 use csr::CSRname;
 
+#[derive(Copy, Clone)]
 pub enum TrapCause {
     UmodeEcall = 8,
     SmodeEcall = 9,
@@ -55,38 +56,43 @@ impl CPU {
         self.pc = newval as u32;
     }
 
-    pub fn exception(&mut self, cause_of_trap: TrapCause) {
-        self.csrs.bitset(CSRname::mcause.wrap(), 1 << (cause_of_trap as i32));
+    pub fn exception(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
+        self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
         self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
-        self.priv_lv = PrivilegedLevel::Machine;
 
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap());
         let medeleg = self.csrs.read(CSRname::medeleg.wrap());
-        if (medeleg & mcause) == 0 {
-            let new_pc = self.trans_addr(self.csrs.read(CSRname::sepc.wrap()) as i32).unwrap();
+        if (medeleg & 1 << mcause) == 0 {
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+            self.priv_lv = PrivilegedLevel::Machine;
+
+            let new_pc = self.csrs.read(CSRname::mtvec.wrap()) as i32;
             self.update_pc(new_pc as i32);
         } else {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
+            self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
+
+            let new_pc = self.csrs.read(CSRname::stvec.wrap()) as i32;
+            self.update_pc(new_pc as i32);
         }
 
-        println!("new epc:0x{:x}", self.pc);
+        println!("new pc:0x{:x}", self.pc);
     }
 
     pub fn trans_addr(&mut self, addr: i32) -> Option<u32> {
-        let base_addr = self.bus.dram.base_addr;
         match self.mmu.trans_addr(addr as u32, 
                                   self.csrs.read(CSRname::satp.wrap()), 
                                   &self.bus.dram, &self.priv_lv) {
             Ok(addr) => {
-                Some(addr - base_addr)
+                Some(addr)
             },
             Err(()) => {
-                //panic!("page fault");
-                self.exception(TrapCause::InstPageFault);
+                self.exception(addr, TrapCause::InstPageFault);
                 None
             },
         }

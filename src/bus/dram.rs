@@ -1,20 +1,6 @@
 use crate::elfload;
 use super::Device;
 
-/*
-fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
-
-    for segment in loader.prog_headers.iter() {
-        //                PT_LOAD
-        if segment.p_type == 1 && segment.p_paddr == e_entry {
-            return Ok(segment.p_offset as usize);
-        }
-    }
-
-    Err("entry address is not found.")
-}
-*/
-
 pub struct Dram {
         dram: Vec<u8>,
     pub base_addr: u32,
@@ -54,53 +40,71 @@ impl Dram {
 }
 
 impl Device for Dram {
+    // address to raw index
+    fn addr2index(&self, addr: u32) -> usize {
+        if addr < self.base_addr {
+            panic!("invalid address for Dram: {}", addr);
+        }
+
+        (addr - self.base_addr) as usize
+    }
+
     // get 1 byte
     fn raw_byte(&self, addr: u32) -> u8 {
-        self.dram[addr as usize]
+        let addr = self.addr2index(addr);
+        self.dram[addr]
     }
 
     // store
     fn store8(&mut self, addr: u32, data: i32) {
-        self.dram[addr as usize + 0] = ((data >> 0) & 0xFF) as u8;
+        let addr = self.addr2index(addr);
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
     fn store16(&mut self, addr: u32, data: i32) {
-        self.dram[addr as usize + 1] = ((data >> 8) & 0xFF) as u8;
-        self.dram[addr as usize + 0] = ((data >> 0) & 0xFF) as u8;
+        let addr = self.addr2index(addr);
+        self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
     }
 
     fn store32(&mut self, addr: u32, data: i32) {
-        self.dram[addr as usize + 3] = ((data >> 24) & 0xFF) as u8;
-        self.dram[addr as usize + 2] = ((data >> 16) & 0xFF) as u8;
-        self.dram[addr as usize + 1] = ((data >>  8) & 0xFF) as u8;
-        self.dram[addr as usize + 0] = ((data >>  0) & 0xFF) as u8;
+        let addr = self.addr2index(addr);
+        self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
     }
 
 
     // load
     fn load8(&self, addr: u32) -> i32 {
-        self.dram[addr as usize] as i8 as i32
+        let addr = self.addr2index(addr);
+        self.dram[addr] as i8 as i32
     }
 
     fn load16(&self, addr: u32) -> i32 {
-        ((self.dram[addr as usize + 1] as u16) << 8 |
-         (self.dram[addr as usize + 0] as u16)) as i16 as i32
+        let addr = self.addr2index(addr);
+        ((self.dram[addr + 1] as u16) << 8 |
+         (self.dram[addr + 0] as u16)) as i16 as i32
     }
 
     fn load32(&self, addr: u32) -> i32 {
-        ((self.dram[addr as usize + 3] as u32) << 24 |
-         (self.dram[addr as usize + 2] as u32) << 16 |
-         (self.dram[addr as usize + 1] as u32) <<  8 |
-         (self.dram[addr as usize + 0] as u32)) as i32
+        let addr = self.addr2index(addr);
+        ((self.dram[addr + 3] as u32) << 24 |
+         (self.dram[addr + 2] as u32) << 16 |
+         (self.dram[addr + 1] as u32) <<  8 |
+         (self.dram[addr + 0] as u32)) as i32
     }
 
     fn load_u8(&self, addr: u32) -> i32 {
-        self.dram[addr as usize] as i32
+        let addr = self.addr2index(addr);
+        self.dram[addr] as i32
     }
 
     fn load_u16(&self, addr: u32) -> i32 {
-        ((self.dram[addr as usize + 1] as u32) << 8 |
-         (self.dram[addr as usize + 0] as u32)) as i32
+        let addr = self.addr2index(addr);
+        ((self.dram[addr + 1] as u32) << 8 |
+         (self.dram[addr + 0] as u32)) as i32
     }
 }
 
@@ -112,7 +116,7 @@ mod tests {
 
     #[test]
     fn load_store_u8_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -132,7 +136,7 @@ mod tests {
 
     #[test]
     fn load_store_8_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -151,7 +155,7 @@ mod tests {
 
     #[test]
     fn load_store_16_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -171,7 +175,7 @@ mod tests {
 
     #[test]
     fn load_store_u16_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_u16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -193,7 +197,7 @@ mod tests {
     #[test]
     #[allow(overflowing_literals)]
     fn load_store_32_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize] };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
         let mut addr = 0;
         let mut test_32 = |data: i32| {
             Dram::store32(dram, addr, data);
