@@ -40,6 +40,12 @@ impl MMU {
         }
     }
 
+    fn is_invalid_leaf_pte(&self, pte: u32) -> bool {
+        let pte_a = pte >> 6 & 0x1;
+
+        pte_a == 0
+    }
+
     fn is_leaf_pte(&self, pte: u32) -> bool {
         let pte_r = pte >> 1 & 0x1;
         let pte_x = pte >> 3 & 0x1;
