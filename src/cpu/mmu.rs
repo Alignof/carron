@@ -40,7 +40,7 @@ impl MMU {
         }
     }
 
-    fn check_leaf_pte(&self, pte: u32) -> bool {
+    fn is_leaf_pte(&self, pte: u32) -> bool {
         let pte_r = pte >> 1 & 0x1;
         let pte_x = pte >> 3 & 0x1;
 
@@ -81,7 +81,12 @@ impl MMU {
                         println!("PPN1: 0x{:x}", PPN1);
 
                         // complete the trans addr if PTE is the leaf
-                        let PPN0 = if self.check_leaf_pte(PTE) {
+                        let PPN0 = if self.is_leaf_pte(PTE) {
+                            // check misaligned superpage
+                            if (PTE >> 10 & 0x3FF) != 0 {
+                                return Err(()) // exception
+                            }
+
                             println!("PPN0: 0x{:x}", VPN0);
                             VPN0
                         } else {
@@ -100,7 +105,7 @@ impl MMU {
                             println!("PTE(2): 0x{:x}", PTE);
 
                             // check PTE to be leaf
-                            if !self.check_leaf_pte(PTE) {
+                            if !self.is_leaf_pte(PTE) {
                                 return Err(()) // exception
                             }
 
