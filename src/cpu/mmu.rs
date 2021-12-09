@@ -1,7 +1,6 @@
 use crate::bus::Device;
 use crate::bus::dram::Dram;
 use crate::cpu::PrivilegedLevel;
-use dbg_hex::dbg_hex;
 
 pub enum AddrTransMode {
     Bare,
@@ -82,33 +81,32 @@ impl MMU {
                         println!("PPN1: 0x{:x}", PPN1);
 
                         // complete the trans addr if PTE is the leaf
-                        if self.check_leaf_pte(PTE) {
-                            println!("raw address:{:x}\n\t=> transrated address:{:x}",
-                                     addr, PPN1 << 22 | VPN0 << 12 | page_off);
+                        let PPN0 = if self.check_leaf_pte(PTE) {
+                            println!("PPN0: 0x{:x}", VPN0);
+                            VPN0
+                        } else {
+                            // second table walk
+                            let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
+                            println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
+                            println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
+                                     PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
+                            let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
+                                Ok(pte) => pte,
+                                Err(()) => {
+                                    return Err(()) // exception
+                                },
+                            };
 
-                            return Ok(PPN1 << 22 | VPN0 << 12 | page_off);
-                        }
+                            println!("PTE(2): 0x{:x}", PTE);
 
-                        // second table walk
-                        let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
-                        println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
-                        println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
-                                 PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
-                            Ok(pte) => pte,
-                            Err(()) => {
+                            // check PTE to be leaf
+                            if !self.check_leaf_pte(PTE) {
                                 return Err(()) // exception
-                            },
+                            }
+
+                            println!("PPN0: 0x{:x}", PTE >> 10 & 0x3FF);
+                            PTE >> 10 & 0x3FF
                         };
-
-                        println!("PTE(2): 0x{:x}", PTE);
-                        let PPN0 = PTE >> 10 & 0x3FF;
-                        println!("PPN0: 0x{:x}", PPN0);
-
-                        // check PTE to be leaf
-                        if !self.check_leaf_pte(PTE) {
-                            return Err(()) // exception
-                        }
 
                         println!("raw address:{:x}\n\t=> transrated address:{:x}",
                                  addr, PPN1 << 22 | PPN0 << 12 | page_off);
