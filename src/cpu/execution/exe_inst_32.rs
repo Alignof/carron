@@ -222,9 +222,9 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             dbg!(&cpu.priv_lv);
             use dbg_hex::dbg_hex;
             dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
-            if let Some(new_pc) = cpu.trans_addr(cpu.csrs.read(CSRname::sepc.wrap()) as i32) {
-                cpu.update_pc(new_pc as i32);
-            };
+
+            let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
+            cpu.update_pc(new_pc as i32);
         },
         OP_MRET => {
             cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::MPP) {
