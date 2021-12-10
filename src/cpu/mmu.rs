@@ -34,6 +34,7 @@ impl MMU {
         let pte_w = pte >> 2 & 0x1;
 
         if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
+            println!("invalid pte: {:x}", pte);
             Err(())
         } else {
             Ok(pte as u32)
