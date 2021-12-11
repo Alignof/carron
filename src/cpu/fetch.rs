@@ -3,7 +3,10 @@ use super::decode::Decode;
 
 pub fn fetch(cpu: &mut super::CPU) -> Box<dyn Decode> {
     dbg_hex!(cpu.pc);
-    let index_pc: u32 = cpu.trans_addr(cpu.pc as i32).unwrap();
+    let index_pc: u32 = match cpu.trans_addr(cpu.pc as i32) {
+        Some(addr) => addr,
+        None => cpu.trans_addr(cpu.pc as i32).unwrap(), // skip following process and retry it 
+    };
     let is_cinst: bool = cpu.bus.raw_byte(index_pc) & 0x3 != 0x3;
 
     if is_cinst {
