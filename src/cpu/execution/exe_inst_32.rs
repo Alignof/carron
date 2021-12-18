@@ -242,6 +242,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_SFENCE_VMA => {
             // nop (pipeline are not yet implemented)
+            if cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::TVM) != 0 {
+                let except_pc = cpu.pc as i32;
+                cpu.exception(except_pc, TrapCause::IllegalInst);
+            }
         },
         _ => panic!("not a full instruction"),
     }
