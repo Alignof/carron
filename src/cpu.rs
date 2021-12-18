@@ -12,6 +12,7 @@ use csr::CSRname;
 
 #[derive(Copy, Clone)]
 pub enum TrapCause {
+    IllegalInst = 2,
     UmodeEcall = 8,
     SmodeEcall = 9,
     MmodeEcall = 11,

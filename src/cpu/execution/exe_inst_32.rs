@@ -220,11 +220,15 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
                 _ => panic!("PrivilegedLevel 0x3 is Reserved."),
             };
             dbg!(&cpu.priv_lv);
-            use dbg_hex::dbg_hex;
-            dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
+            dbg_hex::dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
 
-            let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
-            cpu.update_pc(new_pc as i32);
+            if cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::TVM) == 0 {
+                let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
+                cpu.update_pc(new_pc as i32);
+            } else {
+                let except_pc = cpu.pc as i32;
+                cpu.exception(except_pc, TrapCause::IllegalInst);
+            }
         },
         OP_MRET => {
             cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::MPP) {
