@@ -172,15 +172,24 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            cpu.csrs.write(CSRname::mcause.wrap(),
+            let (xcause, xepc, xstatus) = match cpu.priv_lv {
+                PrivilegedLevel::Machine => {
+                    (CSRname::mcause.wrap(), CSRname::mepc.wrap(), CSRname::mstatus.wrap())
+                },
+                PrivilegedLevel::Supervisor => {
+                    (CSRname::scause.wrap(), CSRname::sepc.wrap(), CSRname::sstatus.wrap())
+                },
+                _ => panic!("cannot enviroment call in current privileged mode."),
+            };
+            cpu.csrs.write(xcause,
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
                     PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
                     _ => panic!("cannot enviroment call in current privileged mode."),
                 } as i32
             );
-            cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
-            cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
+            cpu.csrs.write(xepc, cpu.pc as i32);
+            cpu.csrs.bitclr(xstatus, 0x3 << 11);
             cpu.priv_lv = PrivilegedLevel::Machine;
             let new_pc = cpu.trans_addr(cpu.csrs.read(CSRname::mtvec.wrap()) as i32).unwrap();
             cpu.update_pc(new_pc as i32);
