@@ -172,39 +172,13 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            use CSRname::*;
-            let (xcause, xepc, xstatus, xtvec) = match cpu.priv_lv {
-                PrivilegedLevel::User => {
-                    (ucause.wrap(), uepc.wrap(), ustatus.wrap(), utvec.wrap())
-                },
-                PrivilegedLevel::Supervisor => {
-                    (scause.wrap(), sepc.wrap(), sstatus.wrap(), stvec.wrap())
-                },
-                PrivilegedLevel::Machine => {
-                    (mcause.wrap(), mepc.wrap(), mstatus.wrap(), mtvec.wrap())
-                },
-                _ => panic!("cannot enviroment call in current privileged mode."),
-            };
-
-            // udpate CSRs
-            cpu.csrs.write(xcause,
+            cpu.exception(cpu.pc as i32, 
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
                     PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
                     _ => panic!("cannot enviroment call in current privileged mode."),
-                } as i32
+                }
             );
-            cpu.csrs.write(xepc, cpu.pc as i32);
-            cpu.csrs.bitclr(xstatus, 0x3 << 11);
-
-            // change privileged level to Machine
-            cpu.priv_lv = PrivilegedLevel::Machine;
-
-            // update pc from xtvec
-            dbg!(&cpu.priv_lv);
-            dbg_hex::dbg_hex!(cpu.csrs.read(xtvec) as i32);
-            let new_pc = cpu.trans_addr(cpu.csrs.read(xtvec) as i32).unwrap();
-            cpu.update_pc(new_pc as i32);
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
