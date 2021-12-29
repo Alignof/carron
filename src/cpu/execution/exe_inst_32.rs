@@ -173,11 +173,14 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_ECALL => {
             let (xcause, xepc, xstatus) = match cpu.priv_lv {
-                PrivilegedLevel::Machine => {
-                    (CSRname::mcause.wrap(), CSRname::mepc.wrap(), CSRname::mstatus.wrap())
+                PrivilegedLevel::User => {
+                    (CSRname::ucause.wrap(), CSRname::uepc.wrap(), CSRname::ustatus.wrap())
                 },
                 PrivilegedLevel::Supervisor => {
                     (CSRname::scause.wrap(), CSRname::sepc.wrap(), CSRname::sstatus.wrap())
+                },
+                PrivilegedLevel::Machine => {
+                    (CSRname::mcause.wrap(), CSRname::mepc.wrap(), CSRname::mstatus.wrap())
                 },
                 _ => panic!("cannot enviroment call in current privileged mode."),
             };
