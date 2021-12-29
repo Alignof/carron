@@ -53,6 +53,7 @@ mod tests {
                 OP_ECALL, None, None, None, None);
         test_32(0b00000000000001010100110001100011,
                 OP_BLT, None, Some(10), Some(0), Some(24));
+        test_32(0x00100513, OP_ADDI, Some(10), Some(0), None, Some(1))
     }
 
     #[test]
