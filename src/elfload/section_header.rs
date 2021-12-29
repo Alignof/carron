@@ -40,7 +40,7 @@ impl SectionHeader {
             );
         }
 
-        return new_sect;
+        new_sect
     }
 
     fn get_sh_name(mmap: &[u8], section_head: usize, name_table_head: usize) -> String {
@@ -53,7 +53,8 @@ impl SectionHeader {
             }
             sh_name.push(*c as char);
         }
-        return sh_name;
+
+        sh_name
     }
 
     fn type_to_str(&self) -> &'static str {

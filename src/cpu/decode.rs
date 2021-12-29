@@ -11,8 +11,8 @@ pub trait Decode {
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize>;
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32>;
     fn to_signed_nbit(&self, imm32: i32, bit_size: u32) -> i32 {
-        let imm32 = imm32 & 2_i32.pow(bit_size) - 1;
-        if (imm32 >> bit_size - 1) & 0x1 == 1 {
+        let imm32 = imm32 & (2_i32.pow(bit_size) - 1);
+        if imm32 >> (bit_size - 1) & 0x1 == 1 {
             imm32 - 2_i32.pow(bit_size)
         } else {
             imm32
@@ -53,6 +53,7 @@ mod tests {
                 OP_ECALL, None, None, None, None);
         test_32(0b00000000000001010100110001100011,
                 OP_BLT, None, Some(10), Some(0), Some(24));
+        test_32(0x00100513, OP_ADDI, Some(10), Some(0), None, Some(1))
     }
 
     #[test]

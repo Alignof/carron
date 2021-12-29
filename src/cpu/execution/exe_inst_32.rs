@@ -1,10 +1,10 @@
-use crate::cpu::{CPU, PrivilegedLevel};
-use crate::cpu::csr::{CSRname, Mstatus};
+use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
+use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     use OpecodeKind::*;
-    const INST_SIZE: usize = 4;
+    const INST_SIZE: u32 = 4;
 
     // store previous program counter for excluding branch case
     let prev_pc = cpu.pc;
@@ -57,36 +57,44 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             } 
         },
         OP_LB => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load8(load_addr));
+            }
         },
         OP_LH => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load16(load_addr));
+            }
         },
         OP_LW => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+            }
         },
         OP_LBU => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load_u8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr));
+            }
         },
         OP_LHU => {
-            cpu.regs.write(inst.rd,  
-                cpu.bus.dram.load_u16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize));
+            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr));
+            }
         },
         OP_SB => {
-            cpu.bus.dram.store8((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
-                         cpu.regs.read(inst.rs2));
+            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
+            }
         },
         OP_SH => {
-            cpu.bus.dram.store16((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
-                         cpu.regs.read(inst.rs2));
+            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
+            }
         },
         OP_SW => {
-            cpu.bus.dram.store32((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) as usize,
-                         cpu.regs.read(inst.rs2));
+            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+            }
         },
         OP_ADDI => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) + inst.imm.unwrap());
@@ -164,15 +172,13 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            cpu.csrs.write(CSRname::mcause.wrap(), match cpu.priv_lv {
-                PrivilegedLevel::User => 8,
-                PrivilegedLevel::Supervisor => 9,
-                _ => panic!("cannot enviroment call in current privileged mode."),
-            });
-            cpu.csrs.write(CSRname::mepc.wrap(), cpu.pc as i32);
-            cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
-            cpu.priv_lv = PrivilegedLevel::Machine;
-            cpu.update_pc(cpu.csrs.read(CSRname::mtvec.wrap()) as i32);
+            cpu.exception(cpu.pc as i32, 
+                match cpu.priv_lv {
+                    PrivilegedLevel::User => TrapCause::UmodeEcall,
+                    PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
+                    _ => panic!("cannot enviroment call in current privileged mode."),
+                }
+            );
         },
         OP_EBREAK => {
             panic!("not yet implemented: OP_EBREAK");
@@ -202,21 +208,40 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         OP_SRET => {
-            cpu.update_pc(cpu.csrs.read(CSRname::sepc.wrap()) as i32);
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::SPP) {
+            cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
+                0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
-                _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+                _ => panic!("invalid PrivilegedLevel"),
+            };
+            dbg!(&cpu.priv_lv);
+            dbg_hex::dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
+
+            if cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::TVM) == 0 {
+                let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
+                cpu.update_pc(new_pc as i32);
+            } else {
+                let except_pc = cpu.pc as i32;
+                cpu.exception(except_pc, TrapCause::IllegalInst);
             }
         },
         OP_MRET => {
-            cpu.update_pc(cpu.csrs.read(CSRname::mepc.wrap()) as i32);
-            cpu.priv_lv = match cpu.csrs.read_mstatus(Mstatus::MPP) {
+            cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
+                0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
                 0b11 => PrivilegedLevel::Machine,
-                _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+                _ => panic!("invalid PrivilegedLevel"),
+            };
+            let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
+            cpu.update_pc(new_pc);
+        },
+        OP_SFENCE_VMA => {
+            // nop (pipeline are not yet implemented)
+            if cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::TVM) != 0 {
+                let except_pc = cpu.pc as i32;
+                cpu.exception(except_pc, TrapCause::IllegalInst);
             }
         },
         _ => panic!("not a full instruction"),

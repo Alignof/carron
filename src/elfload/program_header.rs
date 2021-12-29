@@ -17,14 +17,14 @@ fn get_segment_type_name(segment_type:u32) -> &'static str {
 }
 
 pub struct ProgramHeader {
-	pub p_type: u32,
-	pub p_offset: u32,
-	    p_vaddr: u32,
-	pub p_paddr: u32,
-	    p_filesz: u32,
-	    p_memsz: u32,
-	    p_flags: u32,
-	    p_align: u32,
+    pub p_type: u32,
+    pub p_offset: u32,
+        p_vaddr: u32,
+    pub p_paddr: u32,
+    pub p_filesz: u32,
+        p_memsz: u32,
+        p_flags: u32,
+        p_align: u32,
 }
 
 impl ProgramHeader {
@@ -32,7 +32,9 @@ impl ProgramHeader {
 		let mut new_prog = Vec::new();
 
 		for segment_num in 0 .. elf_header.e_phnum {
-			let segment_start:usize = (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
+			let segment_start:usize =
+                (elf_header.e_phoff + (elf_header.e_phentsize * segment_num) as u32) as usize;
+
 			new_prog.push(
 				ProgramHeader {
 					p_type:   get_u32(mmap, segment_start +  0),
@@ -47,7 +49,7 @@ impl ProgramHeader {
 			);
 		}
 
-		return new_prog;
+		new_prog
 	}
 
 	pub fn show(&self, id: usize) {

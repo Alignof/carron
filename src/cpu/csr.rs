@@ -1,3 +1,5 @@
+use crate::cpu::PrivilegedLevel;
+
 pub struct CSRs {
     csrs: [u32; 4096],
 }
@@ -31,32 +33,42 @@ impl CSRs {
         self.csrs[src.unwrap()]
     }
 
-    pub fn read_mstatus(&self, mstat: Mstatus) -> u32 {
-        let mstatus: usize = CSRname::mstatus as usize;
-        match mstat {
-            Mstatus::UIE    => self.csrs[mstatus] >>  0 & 0x1,
-            Mstatus::SIE    => self.csrs[mstatus] >>  1 & 0x1,
-            Mstatus::MIE    => self.csrs[mstatus] >>  3 & 0x1,
-            Mstatus::UPIE   => self.csrs[mstatus] >>  4 & 0x1,
-            Mstatus::SPIE   => self.csrs[mstatus] >>  5 & 0x1,
-            Mstatus::MPIE   => self.csrs[mstatus] >>  7 & 0x1,
-            Mstatus::SPP    => self.csrs[mstatus] >>  8 & 0x1,
-            Mstatus::MPP    => self.csrs[mstatus] >> 11 & 0x3,
-            Mstatus::FS     => self.csrs[mstatus] >> 13 & 0x3,
-            Mstatus::XS     => self.csrs[mstatus] >> 15 & 0x3,
-            Mstatus::MPRV   => self.csrs[mstatus] >> 17 & 0x1,
-            Mstatus::SUM    => self.csrs[mstatus] >> 18 & 0x1,
-            Mstatus::MXR    => self.csrs[mstatus] >> 19 & 0x1,
-            Mstatus::TVM    => self.csrs[mstatus] >> 20 & 0x1,
-            Mstatus::TW     => self.csrs[mstatus] >> 21 & 0x1,
-            Mstatus::TSR    => self.csrs[mstatus] >> 22 & 0x1,
-            Mstatus::SD     => self.csrs[mstatus] >> 31 & 0x1,
+    pub fn read_xstatus(&self, priv_lv: &PrivilegedLevel, xfield: Xstatus) -> u32 {
+        let xstatus: usize = match priv_lv {
+            PrivilegedLevel::Machine => CSRname::mstatus as usize,
+            PrivilegedLevel::Supervisor => CSRname::sstatus as usize,
+            PrivilegedLevel::User => CSRname::ustatus as usize,
+            _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+        };
+
+        match xfield {
+            Xstatus::UIE    => self.csrs[xstatus] >>  0 & 0x1,
+            Xstatus::SIE    => self.csrs[xstatus] >>  1 & 0x1,
+            Xstatus::MIE    => self.csrs[xstatus] >>  3 & 0x1,
+            Xstatus::UPIE   => self.csrs[xstatus] >>  4 & 0x1,
+            Xstatus::SPIE   => self.csrs[xstatus] >>  5 & 0x1,
+            Xstatus::MPIE   => self.csrs[xstatus] >>  7 & 0x1,
+            Xstatus::SPP    => self.csrs[xstatus] >>  8 & 0x1,
+            Xstatus::MPP    => self.csrs[xstatus] >> 11 & 0x3,
+            Xstatus::FS     => self.csrs[xstatus] >> 13 & 0x3,
+            Xstatus::XS     => self.csrs[xstatus] >> 15 & 0x3,
+            Xstatus::MPRV   => self.csrs[xstatus] >> 17 & 0x1,
+            Xstatus::SUM    => self.csrs[xstatus] >> 18 & 0x1,
+            Xstatus::MXR    => self.csrs[xstatus] >> 19 & 0x1,
+            Xstatus::TVM    => self.csrs[xstatus] >> 20 & 0x1,
+            Xstatus::TW     => self.csrs[xstatus] >> 21 & 0x1,
+            Xstatus::TSR    => self.csrs[xstatus] >> 22 & 0x1,
+            Xstatus::SD     => self.csrs[xstatus] >> 31 & 0x1,
         }
     } 
 }
 
 #[allow(non_camel_case_types)]
 pub enum CSRname {
+    ustatus = 0x000,
+    utvec   = 0x005,
+    uepc    = 0x041,
+    ucause  = 0x042,
     sstatus = 0x100,
     stvec   = 0x105,
     sepc    = 0x141, 
@@ -64,13 +76,14 @@ pub enum CSRname {
     stval   = 0x143,
     satp    = 0x180,
     mstatus = 0x300,
+    medeleg = 0x302,
     mtvec   = 0x305,
     mepc    = 0x341, 
     mcause  = 0x342,
     mtval   = 0x343,
 }
 
-pub enum Mstatus {
+pub enum Xstatus {
     UIE,	// 0
     SIE,	// 1
     MIE,	// 3
