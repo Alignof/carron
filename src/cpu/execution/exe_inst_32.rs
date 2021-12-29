@@ -172,18 +172,21 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             // nop (pipeline are not yet implemented)
         },
         OP_ECALL => {
-            let (xcause, xepc, xstatus) = match cpu.priv_lv {
+            use CSRname::*;
+            let (xcause, xepc, xstatus, xtvec) = match cpu.priv_lv {
                 PrivilegedLevel::User => {
-                    (CSRname::ucause.wrap(), CSRname::uepc.wrap(), CSRname::ustatus.wrap())
+                    (ucause.wrap(), uepc.wrap(), ustatus.wrap(), utvec.wrap())
                 },
                 PrivilegedLevel::Supervisor => {
-                    (CSRname::scause.wrap(), CSRname::sepc.wrap(), CSRname::sstatus.wrap())
+                    (scause.wrap(), sepc.wrap(), sstatus.wrap(), stvec.wrap())
                 },
                 PrivilegedLevel::Machine => {
-                    (CSRname::mcause.wrap(), CSRname::mepc.wrap(), CSRname::mstatus.wrap())
+                    (mcause.wrap(), mepc.wrap(), mstatus.wrap(), mtvec.wrap())
                 },
                 _ => panic!("cannot enviroment call in current privileged mode."),
             };
+
+            // udpate CSRs
             cpu.csrs.write(xcause,
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
@@ -193,8 +196,14 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             );
             cpu.csrs.write(xepc, cpu.pc as i32);
             cpu.csrs.bitclr(xstatus, 0x3 << 11);
+
+            // change privileged level to Machine
             cpu.priv_lv = PrivilegedLevel::Machine;
-            let new_pc = cpu.trans_addr(cpu.csrs.read(CSRname::mtvec.wrap()) as i32).unwrap();
+
+            // update pc from xtvec
+            dbg!(&cpu.priv_lv);
+            dbg_hex::dbg_hex!(cpu.csrs.read(xtvec) as i32);
+            let new_pc = cpu.trans_addr(cpu.csrs.read(xtvec) as i32).unwrap();
             cpu.update_pc(new_pc as i32);
         },
         OP_EBREAK => {
