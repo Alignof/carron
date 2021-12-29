@@ -66,6 +66,7 @@ impl CSRs {
 #[allow(non_camel_case_types)]
 pub enum CSRname {
     ustatus = 0x000,
+    utvec   = 0x005,
     uepc    = 0x041,
     ucause  = 0x042,
     sstatus = 0x100,
