@@ -1,4 +1,4 @@
-use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
+use crate::cpu::{CPU, PrivilegedLevel, TransFor, TrapCause};
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
@@ -57,42 +57,42 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             } 
         },
         OP_LB => {
-            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.regs.write(inst.rd, cpu.bus.load8(load_addr));
             }
         },
         OP_LH => {
-            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.regs.write(inst.rd, cpu.bus.load16(load_addr));
             }
         },
         OP_LW => {
-            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
             }
         },
         OP_LBU => {
-            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr));
             }
         },
         OP_LHU => {
-            if let Some(load_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr));
             }
         },
         OP_SB => {
-            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
             }
         },
         OP_SH => {
-            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
             }
         },
         OP_SW => {
-            if let Some(store_addr) = cpu.trans_addr(cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
             }
         },

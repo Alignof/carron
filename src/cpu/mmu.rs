@@ -1,6 +1,6 @@
 use crate::bus::Device;
 use crate::bus::dram::Dram;
-use crate::cpu::PrivilegedLevel;
+use crate::cpu::{PrivilegedLevel, TransFor};
 
 pub enum AddrTransMode {
     Bare,
@@ -56,7 +56,7 @@ impl MMU {
     }
 
     #[allow(non_snake_case)]
-    pub fn trans_addr(&mut self, addr: u32, satp: u32, 
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: u32, satp: u32, 
                       dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<u32, ()> {
 
         // update trans_mode and ppn

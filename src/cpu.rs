@@ -92,10 +92,11 @@ impl CPU {
         println!("new pc:0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, addr: i32) -> Option<u32> {
-        match self.mmu.trans_addr(addr as u32, 
-                                  self.csrs.read(CSRname::satp.wrap()), 
-                                  &self.bus.dram, &self.priv_lv) {
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Option<u32> {
+        match self.mmu.trans_addr(
+            purpose, addr as u32, self.csrs.read(CSRname::satp.wrap()),
+            &self.bus.dram, &self.priv_lv) {
+
             Ok(addr) => {
                 Some(addr)
             },
