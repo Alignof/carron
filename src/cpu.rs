@@ -33,6 +33,7 @@ pub enum TransFor {
     Fetch,
     Load,
     Store,
+    Deleg,
 }
 
 pub struct CPU {
