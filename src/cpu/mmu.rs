@@ -28,17 +28,41 @@ impl MMU {
         };
     }
 
-    fn check_pte_validity(&self, pte: i32) -> Result<u32, ()>{
+    fn check_pte_validity(&self, purpose: &TransFor, pte: i32) -> Result<u32, ()>{
         let pte_v = pte & 0x1;
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
+        let pte_x = pte >> 3 & 0x1;
 
         if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
             println!("invalid pte: {:x}", pte);
-            Err(())
-        } else {
-            Ok(pte as u32)
+            return Err(());
         }
+
+        // checking the PTE field according to translate purpose 
+        match purpose {
+            TransFor::Fetch => {
+                if pte_x != 1 {
+                    println!("invalid pte: {:x}", pte);
+                    return Err(());
+                }
+            },
+            TransFor::Load => {
+                if pte_r != 1 {
+                    println!("invalid pte: {:x}", pte);
+                    return Err(());
+                }
+            },
+            TransFor::Store => {
+                if pte_w != 1 {
+                    println!("invalid pte: {:x}", pte);
+                    return Err(());
+                }
+            },
+        }
+
+
+        Ok(pte as u32)
     }
 
     fn is_invalid_leaf_pte(&self, pte: u32) -> bool {
@@ -78,7 +102,7 @@ impl MMU {
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
+                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(()) => {
                                 return Err(()) // exception
@@ -103,7 +127,7 @@ impl MMU {
                             println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
                             println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                      PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                            let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
+                            let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr)) {
                                 Ok(pte) => pte,
                                 Err(()) => {
                                     return Err(()) // exception
