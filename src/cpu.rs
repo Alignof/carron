@@ -10,7 +10,7 @@ use crate::bus;
 use crate::elfload;
 use csr::CSRname;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum TrapCause {
     IllegalInst = 2,
     UmodeEcall = 8,
@@ -18,6 +18,7 @@ pub enum TrapCause {
     MmodeEcall = 11,
     InstPageFault = 12,
     LoadPageFault = 13,
+    StorePageFault = 15,
 }
 
 #[derive(Debug, PartialEq)]
@@ -101,8 +102,9 @@ impl CPU {
             Ok(addr) => {
                 Some(addr)
             },
-            Err(()) => {
-                self.exception(addr, TrapCause::InstPageFault);
+            Err(cause) => {
+                dbg!(cause);
+                self.exception(addr, cause);
                 None
             },
         }
