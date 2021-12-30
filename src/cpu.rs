@@ -20,7 +20,7 @@ pub enum TrapCause {
     LoadPageFault = 13,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
