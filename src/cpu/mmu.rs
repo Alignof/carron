@@ -55,10 +55,17 @@ impl MMU {
         let pte_w = pte >> 2 & 0x1;
         let pte_x = pte >> 3 & 0x1;
         let pte_u = pte >> 4 & 0x1;
+        let pte_a = pte >> 6 & 0x1;
+        let pte_d = pte >> 7 & 0x1;
 
         // check the U bit
         if priv_lv == &PrivilegedLevel::User && pte_u != 1 {
             println!("invalid pte_u: {:x}", pte);
+            return Err(());
+        }
+
+        if pte_a == 0 {
+            println!("invalid pte_a: {:x}", pte);
             return Err(());
         }
 
@@ -77,7 +84,7 @@ impl MMU {
                 }
             },
             TransFor::Store => {
-                if pte_w != 1 {
+                if pte_w != 1 || pte_d == 0 {
                     println!("invalid pte_w: {:x}", pte);
                     return Err(());
                 }
@@ -131,7 +138,7 @@ impl MMU {
 
                                 // check leaf pte and return PPN0
                                 match self.check_leaf_pte(&purpose, priv_lv, PTE) {
-                                    Ok(PTE) => VPN0,
+                                    Ok(_) => VPN0,
                                     Err(()) => return Err(()),
                                 }
                             } else {
