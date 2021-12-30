@@ -28,6 +28,13 @@ pub enum PrivilegedLevel {
     Machine = 0b11,
 }
 
+#[derive(Debug)]
+pub enum TransFor {
+    Fetch,
+    Load,
+    Store,
+}
+
 pub struct CPU {
     pub pc: u32,
     pub regs: reg::Register,
