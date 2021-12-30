@@ -4,7 +4,7 @@ use crate::cpu::instruction::{OpecodeKind, Instruction};
 #[allow(non_snake_case)]
 impl Decode for u32 {
     fn decode(&self) -> Instruction {
-        let new_opc: OpecodeKind = match self.parse_opecode(){
+        let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };
@@ -99,7 +99,9 @@ impl Decode for u32 {
                         0b00001 => Ok(OpecodeKind::OP_EBREAK),
                         _ => Err("opecode decoding failed"),
                     }
+                    0b0001000 => Ok(OpecodeKind::OP_SRET),
                     0b0011000 => Ok(OpecodeKind::OP_MRET),
+                    0b0001001 => Ok(OpecodeKind::OP_SFENCE_VMA),
                     _ => Err("opecode decoding failed"),
                 },
                 0b001 => Ok(OpecodeKind::OP_CSRRW),
@@ -204,6 +206,7 @@ impl Decode for u32 {
             OpecodeKind::OP_CSRRWI	=> Some(rs1),
             OpecodeKind::OP_CSRRSI	=> Some(rs1),
             OpecodeKind::OP_CSRRCI	=> Some(rs1),
+            OpecodeKind::OP_SFENCE_VMA	=> Some(rs1),
             _ => None,
         }
     }
@@ -236,6 +239,7 @@ impl Decode for u32 {
             OpecodeKind::OP_SRA		=> Some(rs2),
             OpecodeKind::OP_OR		=> Some(rs2),
             OpecodeKind::OP_AND		=> Some(rs2),
+            OpecodeKind::OP_SFENCE_VMA	=> Some(rs2),
             OpecodeKind::OP_CSRRW	=> Some(csr),
             OpecodeKind::OP_CSRRS	=> Some(csr),
             OpecodeKind::OP_CSRRC	=> Some(csr),

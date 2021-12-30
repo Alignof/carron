@@ -84,7 +84,7 @@ fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
 
 impl Decode for u16 {
     fn decode(&self) -> Instruction {
-        let new_opc: OpecodeKind = match self.parse_opecode(){
+        let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
         };
@@ -213,9 +213,9 @@ impl Decode for u16 {
     }
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
-        let q0_imm = ((self >> 5) & 0x3 + (((self >> 10) & 0x7) << 0x5)) as i32;
-        let q1_imm = ((self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2)) as i32;
-        let q2_imm = ((self >> 2) & 0x1F + (((self >> 12) & 0x1) << 0x2)) as i32;
+        let q0_imm = ((self >> 5) & (0x3 + (((self >> 10) & 0x7) << 0x5))) as i32;
+        let q1_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
+        let q2_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
         match opkind {
             // Quadrant0
             OpecodeKind::OP_C_ADDI4SPN  => Some(((self >> 5) & 0xFF) as i32),
@@ -236,8 +236,8 @@ impl Decode for u16 {
             OpecodeKind::OP_C_SRAI      => Some(q1_imm),
             OpecodeKind::OP_C_ANDI      => Some(q1_imm),
             OpecodeKind::OP_C_J         => Some(((self >> 2) & 0x7FF) as i32),
-            OpecodeKind::OP_C_BEQZ      => Some(((self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2)) as i32),
-            OpecodeKind::OP_C_BNEZ      => Some(((self >> 2) & 0x1F + (((self >> 10) & 0x7) << 0x2)) as i32),
+            OpecodeKind::OP_C_BEQZ      => Some(((self >> 2) & (0x1F + (((self >> 10) & 0x7) << 0x2))) as i32),
+            OpecodeKind::OP_C_BNEZ      => Some(((self >> 2) & (0x1F + (((self >> 10) & 0x7) << 0x2))) as i32),
             // Quadrant2
             OpecodeKind::OP_C_SLLI      => Some(q2_imm),
             OpecodeKind::OP_C_FLDSP     => Some(q2_imm),

@@ -1,18 +1,16 @@
 extern crate rv32im_sim;
 
-use std::env;
-use std::process;
 use rv32im_sim::elfload;
 use rv32im_sim::Simulator;
 use rv32im_sim::system::ExeOption;
 use rv32im_sim::system::Arguments;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
 
     let args = Arguments::new(&args).unwrap_or_else(|err| {
         println!("problem occured while parsing arguments: {}", err);
-        process::exit(1);
+        std::process::exit(1);
     });
 
     println!("\nIn file {}", args.filename);

@@ -10,43 +10,29 @@ pub struct Simulator {
     pub cpu: cpu::CPU,
 }
 
-fn find_entry_addr(loader: &elfload::ElfLoader) -> Result<usize, &'static str> {
-    let e_entry = loader.elf_header.e_entry;
-
-    for segment in loader.prog_headers.iter() {
-        //                PT_LOAD
-        if segment.p_type == 1 && segment.p_paddr == e_entry {
-            return Ok(segment.p_offset as usize);
-        }
-    }
-
-    Err("entry address is not found.")
-}
-
 impl Simulator {
     pub fn new(loader: elfload::ElfLoader) -> Simulator {
-        let entry_address: usize = match find_entry_addr(&loader) {
-            Ok(addr) => addr,
-            Err(msg) => panic!("{}", msg),
-        };
-
         Simulator {
-            cpu: CPU::new(entry_address, loader),
+            cpu: CPU::new(loader),
         }
     }
 
     pub fn simulation(&mut self) {
         use crate::cpu::execution::Execution;
-        let break_point: Option<usize> = Some(0x1044);
+
+        // rv32ui-p: 0x80000044, gp(3)
+        // rv32ui-v: 0xffc02308, a0(10)
+        let break_point: Option<u32> = Some(0xffc02308);
+        let reg_result = 10;
 
         loop {
-            fetch(&self.cpu)
+            fetch(&mut self.cpu)
                 .decode()
                 .execution(&mut self.cpu);
 
             // debug code
-            if break_point.unwrap_or(usize::MAX) == self.cpu.pc {
-                std::process::exit(self.cpu.read_reg(Some(3)));
+            if break_point.unwrap_or(u32::MAX) == self.cpu.pc {
+                std::process::exit(self.cpu.regs.read(Some(reg_result)));
             }
         }
     }
