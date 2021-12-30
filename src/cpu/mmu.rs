@@ -49,9 +49,10 @@ impl MMU {
 
     fn is_leaf_pte(&self, pte: u32) -> bool {
         let pte_r = pte >> 1 & 0x1;
+        let pte_w = pte >> 2 & 0x1;
         let pte_x = pte >> 3 & 0x1;
 
-        pte_r == 1 || pte_x == 1
+        pte_r == 1 || pte_w == 1 || pte_x == 1
     }
 
     #[allow(non_snake_case)]
