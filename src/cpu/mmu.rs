@@ -82,6 +82,7 @@ impl MMU {
                     return Err(());
                 }
             },
+            _ => (),
         }
 
         println!("PPN0: 0x{:x}", pte >> 10 & 0x3FF);
@@ -123,42 +124,42 @@ impl MMU {
 
                         // complete the trans addr if PTE is the leaf
                         let PPN0 = if self.is_leaf_pte(PTE) {
-                            // check misaligned superpage
-                            if (PTE >> 10 & 0x3FF) != 0 {
-                                return Err(()) // exception
-                            }
-
-                            // check leaf pte and return PPN0
-                            match self.check_leaf_pte(&purpose, priv_lv, VPN0) {
-                                Ok(VPN0) => VPN0,
-                                Err(()) => return Err(()),
-                            }
-                        } else {
-                            // second table walk
-                            let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
-                            println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
-                            println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
-                                     PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                            let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
-                                Ok(pte) => pte,
-                                Err(()) => {
+                                // check misaligned superpage
+                                if (PTE >> 10 & 0x3FF) != 0 {
                                     return Err(()) // exception
-                                },
+                                }
+
+                                // check leaf pte and return PPN0
+                                match self.check_leaf_pte(&purpose, priv_lv, PTE) {
+                                    Ok(PTE) => VPN0,
+                                    Err(()) => return Err(()),
+                                }
+                            } else {
+                                // second table walk
+                                let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
+                                println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
+                                println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
+                                         PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
+                                let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
+                                    Ok(pte) => pte,
+                                    Err(()) => {
+                                        return Err(()) // exception
+                                    },
+                                };
+
+                                println!("PTE(2): 0x{:x}", PTE);
+
+                                // check PTE to be leaf
+                                if !self.is_leaf_pte(PTE) {
+                                    return Err(()) // exception
+                                }
+
+                                // check leaf pte and return PPN0
+                                match self.check_leaf_pte(&purpose, priv_lv, PTE) {
+                                    Ok(PTE) => PTE >> 10 & 0x3FF,
+                                    Err(()) => return Err(()),
+                                }
                             };
-
-                            println!("PTE(2): 0x{:x}", PTE);
-
-                            // check PTE to be leaf
-                            if !self.is_leaf_pte(PTE) {
-                                return Err(()) // exception
-                            }
-
-                            // check leaf pte and return PPN0
-                            match self.check_leaf_pte(&purpose, priv_lv, PTE) {
-                                Ok(PTE) => PTE >> 10 & 0x3FF,
-                                Err(()) => return Err(()),
-                            }
-                        };
 
                         println!("raw address:{:x}\n\t=> transrated address:{:x}",
                                  addr, PPN1 << 22 | PPN0 << 12 | page_off);
