@@ -28,12 +28,10 @@ impl MMU {
         };
     }
 
-    fn check_pte_validity(&self, purpose: &TransFor, priv_lv: &PrivilegedLevel, pte: i32) -> Result<u32, ()>{
+    fn check_pte_validity(&self, pte: i32) -> Result<u32, ()>{
         let pte_v = pte & 0x1;
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
-        let pte_x = pte >> 3 & 0x1;
-        let pte_u = pte >> 4 & 0x1;
 
         // check the PTE validity
         if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
@@ -41,41 +39,7 @@ impl MMU {
             return Err(());
         }
 
-        // check the U bit
-        if priv_lv == &PrivilegedLevel::User && pte_u != 1 {
-            println!("invalid pte: {:x}", pte);
-            return Err(());
-        }
-
-        // check the PTE field according to translate purpose 
-        match purpose {
-            TransFor::Fetch => {
-                if pte_x != 1 {
-                    println!("invalid pte: {:x}", pte);
-                    return Err(());
-                }
-            },
-            TransFor::Load => {
-                if pte_r != 1 {
-                    println!("invalid pte: {:x}", pte);
-                    return Err(());
-                }
-            },
-            TransFor::Store => {
-                if pte_w != 1 {
-                    println!("invalid pte: {:x}", pte);
-                    return Err(());
-                }
-            },
-        }
-
         Ok(pte as u32)
-    }
-
-    fn is_invalid_leaf_pte(&self, pte: u32) -> bool {
-        let pte_a = pte >> 6 & 0x1;
-
-        pte_a == 0
     }
 
     fn is_leaf_pte(&self, pte: u32) -> bool {
@@ -84,6 +48,44 @@ impl MMU {
         let pte_x = pte >> 3 & 0x1;
 
         pte_r == 1 || pte_w == 1 || pte_x == 1
+    }
+
+    fn check_leaf_pte(&self, purpose: &TransFor, priv_lv: &PrivilegedLevel, pte: u32) -> Result<u32, ()> {
+        let pte_r = pte >> 1 & 0x1;
+        let pte_w = pte >> 2 & 0x1;
+        let pte_x = pte >> 3 & 0x1;
+        let pte_u = pte >> 4 & 0x1;
+
+        // check the U bit
+        if priv_lv == &PrivilegedLevel::User && pte_u != 1 {
+            println!("invalid pte_u: {:x}", pte);
+            return Err(());
+        }
+
+        // check the PTE field according to translate purpose 
+        match purpose {
+            TransFor::Fetch => {
+                if pte_x != 1 {
+                    println!("invalid pte_x: {:x}", pte);
+                    return Err(());
+                }
+            },
+            TransFor::Load => {
+                if pte_r != 1 {
+                    println!("invalid pte_r: {:x}", pte);
+                    return Err(());
+                }
+            },
+            TransFor::Store => {
+                if pte_w != 1 {
+                    println!("invalid pte_w: {:x}", pte);
+                    return Err(());
+                }
+            },
+        }
+
+        println!("PPN0: 0x{:x}", pte >> 10 & 0x3FF);
+        Ok(pte)
     }
 
     #[allow(non_snake_case)]
@@ -109,7 +111,7 @@ impl MMU {
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(&purpose, priv_lv, dram.load32(PTE_addr)) {
+                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(()) => {
                                 return Err(()) // exception
@@ -126,15 +128,18 @@ impl MMU {
                                 return Err(()) // exception
                             }
 
-                            println!("PPN0: 0x{:x}", VPN0);
-                            VPN0
+                            // check leaf pte and return PPN0
+                            match self.check_leaf_pte(&purpose, priv_lv, VPN0) {
+                                Ok(VPN0) => VPN0,
+                                Err(()) => return Err(()),
+                            }
                         } else {
                             // second table walk
                             let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
                             println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
                             println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                      PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                            let PTE = match self.check_pte_validity(&purpose, priv_lv, dram.load32(PTE_addr)) {
+                            let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
                                 Ok(pte) => pte,
                                 Err(()) => {
                                     return Err(()) // exception
@@ -148,8 +153,11 @@ impl MMU {
                                 return Err(()) // exception
                             }
 
-                            println!("PPN0: 0x{:x}", PTE >> 10 & 0x3FF);
-                            PTE >> 10 & 0x3FF
+                            // check leaf pte and return PPN0
+                            match self.check_leaf_pte(&purpose, priv_lv, PTE) {
+                                Ok(PTE) => PTE >> 10 & 0x3FF,
+                                Err(()) => return Err(()),
+                            }
                         };
 
                         println!("raw address:{:x}\n\t=> transrated address:{:x}",
