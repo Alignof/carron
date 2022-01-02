@@ -4,12 +4,8 @@ use crate::cpu::instruction::{OpecodeKind, Instruction};
 fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
     match opmap {
         0b000 => Ok(OpecodeKind::OP_C_ADDI4SPN),
-        0b001 => Ok(OpecodeKind::OP_C_FLD),
         0b010 => Ok(OpecodeKind::OP_C_LW),
-        0b011 => Ok(OpecodeKind::OP_C_FLW),
-        0b100 => Ok(OpecodeKind::OP_C_FSD),
         0b110 => Ok(OpecodeKind::OP_C_SW),
-        0b111 => Ok(OpecodeKind::OP_C_FSW),
         _     => Err("opecode decoding failed"),
     }
 }
@@ -58,9 +54,7 @@ fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
 
     match opmap {
         0b000 => Ok(OpecodeKind::OP_C_SLLI),
-        0b001 => Ok(OpecodeKind::OP_C_FLDSP),
         0b010 => Ok(OpecodeKind::OP_C_LWSP),
-        0b011 => Ok(OpecodeKind::OP_C_FLWSP),
         0b100 => match hi_flag {
             0b0 => match lo_flag {
                 0b0 => Ok(OpecodeKind::OP_C_JR),
@@ -75,9 +69,7 @@ fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
             },
         _   => Err("opecode decoding failed"),
         },
-        0b101 => Ok(OpecodeKind::OP_C_FSDSP),
         0b110 => Ok(OpecodeKind::OP_C_SWSP),
-        0b111 => Ok(OpecodeKind::OP_C_FSWSP),
         _     => Err("opecode decoding failed"),
     }
 }
@@ -126,9 +118,7 @@ impl Decode for u16 {
         match opkind {
             // Quadrant 0
             OpecodeKind::OP_C_ADDI4SPN  => Some(q0_rd),
-            OpecodeKind::OP_C_FLD       => Some(q0_rd),
             OpecodeKind::OP_C_LW        => Some(q0_rd),
-            OpecodeKind::OP_C_FLW       => Some(q0_rd),
             // Const
             OpecodeKind::OP_C_LI        => Some(const_rd),
             OpecodeKind::OP_C_LUI       => Some(const_rd),
@@ -142,9 +132,7 @@ impl Decode for u16 {
             OpecodeKind::OP_C_AND       => Some(q1_rd),
             // Quadrant 2
             OpecodeKind::OP_C_SLLI      => Some(q2_rd),
-            OpecodeKind::OP_C_FLDSP     => Some(q2_rd),
             OpecodeKind::OP_C_LWSP      => Some(q2_rd),
-            OpecodeKind::OP_C_FLWSP     => Some(q2_rd),
             OpecodeKind::OP_C_JR        => Some(q2_rd),
             OpecodeKind::OP_C_MV        => Some(q2_rd),
             OpecodeKind::OP_C_EBREAK    => Some(q2_rd),
@@ -163,12 +151,8 @@ impl Decode for u16 {
 
         match opkind {
             // Quadrant 0
-            OpecodeKind::OP_C_FLD       => Some(q0_rs1),
             OpecodeKind::OP_C_LW        => Some(q0_rs1),
-            OpecodeKind::OP_C_FLW       => Some(q0_rs1),
-            OpecodeKind::OP_C_FSD       => Some(q0_rs1),
             OpecodeKind::OP_C_SW        => Some(q0_rs1),
-            OpecodeKind::OP_C_FSW       => Some(q0_rs1),
             // Quadrant 1
             OpecodeKind::OP_C_ADDI      => Some(addi_rs1),
             OpecodeKind::OP_C_ADDI16SP  => Some(addi_rs1),
@@ -198,9 +182,7 @@ impl Decode for u16 {
 
         match opkind {
             // Quadrant 0
-            OpecodeKind::OP_C_FSD   => Some(q0_rs2),
             OpecodeKind::OP_C_SW    => Some(q0_rs2),
-            OpecodeKind::OP_C_FSW   => Some(q0_rs2),
             // Quadrant 1
             OpecodeKind::OP_C_SUB   => Some(q1_rs2),
             OpecodeKind::OP_C_XOR   => Some(q1_rs2),
@@ -209,9 +191,7 @@ impl Decode for u16 {
             // Quadrant 2
             OpecodeKind::OP_C_MV    => Some(q2_rs2),
             OpecodeKind::OP_C_ADD   => Some(q2_rs2),
-            OpecodeKind::OP_C_FSDSP => Some(q2_rs2),
             OpecodeKind::OP_C_SWSP  => Some(q2_rs2),
-            OpecodeKind::OP_C_FSWSP => Some(q2_rs2),
             _ => None,
         }
     }
@@ -223,12 +203,8 @@ impl Decode for u16 {
         match opkind {
             // Quadrant0
             OpecodeKind::OP_C_ADDI4SPN  => Some(((self >> 5) & 0xFF) as i32),
-            OpecodeKind::OP_C_FLD       => Some(q0_imm),
             OpecodeKind::OP_C_LW        => Some(q0_imm),
-            OpecodeKind::OP_C_FLW       => Some(q0_imm),
-            OpecodeKind::OP_C_FSD       => Some(q0_imm),
             OpecodeKind::OP_C_SW        => Some(q0_imm),
-            OpecodeKind::OP_C_FSW       => Some(q0_imm),
             // Quadrant1
             OpecodeKind::OP_C_NOP       => Some(q1_imm),
             OpecodeKind::OP_C_ADDI      => Some(q1_imm),
@@ -244,13 +220,9 @@ impl Decode for u16 {
             OpecodeKind::OP_C_BNEZ      => Some(((self >> 2) & (0x1F + (((self >> 10) & 0x7) << 0x2))) as i32),
             // Quadrant2
             OpecodeKind::OP_C_SLLI      => Some(q2_imm),
-            OpecodeKind::OP_C_FLDSP     => Some(q2_imm),
             OpecodeKind::OP_C_LWSP      => Some(q2_imm),
-            OpecodeKind::OP_C_FLWSP     => Some(q2_imm),
             OpecodeKind::OP_C_JR        => Some(q2_imm),
-            OpecodeKind::OP_C_FSDSP     => Some(((self >> 7) & 0x3F) as i32),
             OpecodeKind::OP_C_SWSP      => Some(((self >> 7) & 0x3F) as i32),
-            OpecodeKind::OP_C_FSWSP     => Some(((self >> 7) & 0x3F) as i32),
             _ => None,
         }
     }
