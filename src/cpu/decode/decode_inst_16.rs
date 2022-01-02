@@ -11,8 +11,8 @@ fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
 }
 
 fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
-    let sr_flag: u8 = ((inst >> 9) & 0x3) as u8;
-    let lo_flag: u8 = ((inst >> 4) & 0x3) as u8;
+    let sr_flag: u8 = ((inst >> 10) & 0x3) as u8;
+    let lo_flag: u8 = ((inst >> 5) & 0x3) as u8;
     let mi_flag: u8 = ((inst >> 7) & 0x1F) as u8;
 
     match opmap {
@@ -112,6 +112,7 @@ impl Decode for u16 {
         let inst: &u16 = self;
         let q0_rd: usize  = ((inst >> 2) & 0x7) as usize;
         let q1_rd: usize  = ((inst >> 7) & 0x7) as usize;
+        let q1_wide_rd: usize  = ((inst >> 7) & 0x3f) as usize;
         let q2_rd: usize  = ((inst >> 7) & 0x1F) as usize;
         let const_rd: usize  = ((inst >> 7) & 0x5) as usize;
 
@@ -130,6 +131,9 @@ impl Decode for u16 {
             OpecodeKind::OP_C_XOR       => Some(q1_rd),
             OpecodeKind::OP_C_OR        => Some(q1_rd),
             OpecodeKind::OP_C_AND       => Some(q1_rd),
+            OpecodeKind::OP_C_ADDI      => Some(q1_wide_rd),
+            OpecodeKind::OP_C_LI        => Some(q1_wide_rd),
+            OpecodeKind::OP_C_LUI       => Some(q1_wide_rd),
             // Quadrant 2
             OpecodeKind::OP_C_SLLI      => Some(q2_rd),
             OpecodeKind::OP_C_LWSP      => Some(q2_rd),
@@ -146,8 +150,8 @@ impl Decode for u16 {
         let inst: &u16 = self;
         let q0_rs1: usize = ((inst >> 7) & 0x3) as usize;
         let q1_rs1: usize = ((inst >> 7) & 0x3) as usize;
-        let q2_rs1: usize = ((inst >> 7) & 0x3) as usize;
-        let addi_rs1: usize = ((inst >> 7) & 0x1F) as usize;
+        let q2_rs1: usize = ((inst >> 7) & 0x1f) as usize;
+        let addi_rs1: usize = ((inst >> 7) & 0x1f) as usize;
 
         match opkind {
             // Quadrant 0
