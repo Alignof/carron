@@ -121,6 +121,7 @@ impl Decode for u16 {
         let q0_rd: usize  = ((inst >> 2) & 0x7) as usize;
         let q1_rd: usize  = ((inst >> 7) & 0x7) as usize;
         let q2_rd: usize  = ((inst >> 7) & 0x1F) as usize;
+        let const_rd: usize  = ((inst >> 7) & 0x5) as usize;
 
         match opkind {
             // Quadrant 0
@@ -128,6 +129,9 @@ impl Decode for u16 {
             OpecodeKind::OP_C_FLD       => Some(q0_rd),
             OpecodeKind::OP_C_LW        => Some(q0_rd),
             OpecodeKind::OP_C_FLW       => Some(q0_rd),
+            // Const
+            OpecodeKind::OP_C_LI        => Some(const_rd),
+            OpecodeKind::OP_C_LUI       => Some(const_rd),
             // Quadrant 1
             OpecodeKind::OP_C_SRLI      => Some(q1_rd),
             OpecodeKind::OP_C_SRAI      => Some(q1_rd),
