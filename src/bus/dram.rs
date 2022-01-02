@@ -9,7 +9,7 @@ pub struct Dram {
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> Dram {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
-        let vart_entry = loader.elf_header.e_entry;
+        let vart_entry = loader.prog_headers[0].p_vaddr;
 
         // create new dram 
         let mut new_dram = vec![0; DRAM_SIZE as usize];
