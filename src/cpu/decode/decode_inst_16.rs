@@ -10,7 +10,7 @@ fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
+fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
     let sr_flag: u8 = inst.slice(10, 11) as u8;
     let lo_flag: u8 = inst.slice(5, 6) as u8;
     let mi_flag: u8 = inst.slice(7, 11) as u8;
@@ -47,7 +47,7 @@ fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
 }
 
 
-fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> { 
+fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> { 
     let lo_flag: u8 = inst.slice(2, 6) as u8;
     let mi_flag: u8 = inst.slice(7, 11) as u8;
     let hi_flag: u8 = inst.slice(12, 12) as u8;
@@ -96,7 +96,7 @@ impl Decode for u16 {
     }
 
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
-        let inst: &u16 = self;
+        let inst: u16 = *self;
         let opmap: u8 = inst.slice(13, 15) as u8;
         let quadrant: u8  = inst.slice(0, 1) as u8;
 
@@ -109,11 +109,11 @@ impl Decode for u16 {
     }
 
     fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
-        let inst: &u16 = self;
-        let q0_rd: usize  = inst.slice(2, 4) as usize;
-        let q1_rd: usize  = inst.slice(7, 9) as usize;
-        let q1_wide_rd: usize  = inst.slice(7, 11) as usize;
-        let q2_rd: usize  = inst.slice(7, 11) as usize;
+        let inst: u16 = *self;
+        let q0_rd: usize = inst.slice(2, 4) as usize;
+        let q1_rd: usize = inst.slice(7, 9) as usize;
+        let q1_wide_rd: usize = inst.slice(7, 11) as usize;
+        let q2_rd: usize = inst.slice(7, 11) as usize;
 
         match opkind {
             // Quadrant 0
@@ -130,8 +130,6 @@ impl Decode for u16 {
             OpecodeKind::OP_C_LI        => Some(q1_wide_rd),
             OpecodeKind::OP_C_LUI       => Some(q1_wide_rd),
             OpecodeKind::OP_C_ADDI      => Some(q1_wide_rd),
-            OpecodeKind::OP_C_LI        => Some(q1_wide_rd),
-            OpecodeKind::OP_C_LUI       => Some(q1_wide_rd),
             // Quadrant 2
             OpecodeKind::OP_C_SLLI      => Some(q2_rd),
             OpecodeKind::OP_C_LWSP      => Some(q2_rd),
@@ -145,7 +143,7 @@ impl Decode for u16 {
     }
 
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
-        let inst: &u16 = self;
+        let inst: u16 = *self;
         let q0_rs1: usize = inst.slice(7, 9) as usize;
         let q1_rs1: usize = inst.slice(7, 9) as usize;
         let q2_rs1: usize = inst.slice(7, 11) as usize;
@@ -177,7 +175,7 @@ impl Decode for u16 {
     }
 
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
-        let inst: &u16 = self;
+        let inst: u16 = *self;
         let q0_rs2: usize = inst.slice(2, 4) as usize;
         let q1_rs2: usize = inst.slice(2, 4) as usize;
         let q2_rs2: usize = inst.slice(2, 6) as usize;
@@ -199,13 +197,13 @@ impl Decode for u16 {
     }
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
-        let q0_uimm = ((((self >> 10) & 0x7) << 3) | (((self >> 6) & 0x1) << 2) | (((self >> 5) & 0x1) << 6)) as i32;
+        let q0_uimm = ((self.slice(10, 12) << 3) | (self.slice(6, 6) << 2) | (self.slice(5, 5) << 6)) as i32;
         let q0_nzuimm = ((((self >> 10) & 0x7) << 3) | (((self >> 6) & 0x1) << 2) | (((self >> 5) & 0x1) << 6)) as i32;
         let q1_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
         let q2_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
         match opkind {
             // Quadrant0
-            OpecodeKind::OP_C_ADDI4SPN  => Some(((self >> 5) & 0xFF) as i32),
+            OpecodeKind::OP_C_ADDI4SPN  => Some(q0_nzuimm),
             OpecodeKind::OP_C_LW        => Some(q0_uimm),
             OpecodeKind::OP_C_SW        => Some(q0_uimm),
             // Quadrant1
