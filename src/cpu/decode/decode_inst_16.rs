@@ -197,34 +197,59 @@ impl Decode for u16 {
     }
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
-        let q0_uimm = (self.slice(10, 12).set(&[5, 4, 3]) | self.slice(5, 6).set(&[2, 6])) as i32;
-        let q0_nzuimm = (self.slice(5, 12).set(&[5, 4, 9, 8, 7, 6, 2, 3])) as i32;
-        let q1_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
-        let q2_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
+        let q0_uimm = | | {
+            (self.slice(10, 12).set(&[5,4,3]) | self.slice(5, 6).set(&[2,6])) as i32
+        };
+        let q0_nzuimm = | | {
+            self.slice(5, 12).set(&[5,4,9,8,7,6,2,3]) as i32
+        };
+        let q1_imm = | | {
+            (self.slice(2, 6).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
+        };
+        let q1_j_imm = | | {
+            self.slice(2, 12).set(&[11,4,9,8,10,6,7,3,2,1,5]) as i32
+        };
+        let q1_b_imm = | | {
+            (self.slice(2, 6).set(&[7,6,2,1,5]) | self.slice(10, 12).set(&[8,4,3])) as i32
+        };
+        let q1_16sp_imm = | | {
+            (self.slice(2, 6).set(&[4,6,8,7,5]) | self.slice(12, 12).set(&[9])) as i32
+        };
+        let q1_lui_imm = | | {
+            (self.slice(2, 6).set(&[16,15,14,13,12]) | self.slice(12, 12).set(&[17])) as i32
+        };
+        let q2_imm = | | {
+            (self.slice(2, 6).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
+        };
+        let q2_lwsp_imm = | | {
+            (self.slice(2, 6).set(&[4,3,2,7,6]) | self.slice(12, 12).set(&[5])) as i32
+        };
+        let q2_swsp_imm = | | {
+            self.slice(7, 12).set(&[5,4,3,2,7,6]) as i32
+        };
 
         match opkind {
             // Quadrant0
-            OpecodeKind::OP_C_ADDI4SPN  => Some(q0_nzuimm),
-            OpecodeKind::OP_C_LW        => Some(q0_uimm),
-            OpecodeKind::OP_C_SW        => Some(q0_uimm),
+            OpecodeKind::OP_C_ADDI4SPN  => Some(q0_nzuimm()),
+            OpecodeKind::OP_C_LW        => Some(q0_uimm()),
+            OpecodeKind::OP_C_SW        => Some(q0_uimm()),
             // Quadrant1
-            OpecodeKind::OP_C_NOP       => Some(q1_imm),
-            OpecodeKind::OP_C_ADDI      => Some(q1_imm),
-            OpecodeKind::OP_C_JAL       => Some(((self >> 2) & 0x7FF) as i32),
-            OpecodeKind::OP_C_LI        => Some(q1_imm),
-            OpecodeKind::OP_C_ADDI16SP  => Some(q1_imm),
-            OpecodeKind::OP_C_LUI       => Some(q1_imm),
-            OpecodeKind::OP_C_SRLI      => Some(q1_imm),
-            OpecodeKind::OP_C_SRAI      => Some(q1_imm),
-            OpecodeKind::OP_C_ANDI      => Some(q1_imm),
-            OpecodeKind::OP_C_J         => Some(((self >> 2) & 0x7FF) as i32),
-            OpecodeKind::OP_C_BEQZ      => Some(((self >> 2) & (0x1F + (((self >> 10) & 0x7) << 0x2))) as i32),
-            OpecodeKind::OP_C_BNEZ      => Some(((self >> 2) & (0x1F + (((self >> 10) & 0x7) << 0x2))) as i32),
+            OpecodeKind::OP_C_NOP       => Some(q1_imm()),
+            OpecodeKind::OP_C_ADDI      => Some(q1_imm()),
+            OpecodeKind::OP_C_JAL       => Some(q1_j_imm()),
+            OpecodeKind::OP_C_LI        => Some(q1_imm()),
+            OpecodeKind::OP_C_ADDI16SP  => Some(q1_16sp_imm()),
+            OpecodeKind::OP_C_LUI       => Some(q1_lui_imm()),
+            OpecodeKind::OP_C_SRLI      => Some(q1_imm()),
+            OpecodeKind::OP_C_SRAI      => Some(q1_imm()),
+            OpecodeKind::OP_C_ANDI      => Some(q1_imm()),
+            OpecodeKind::OP_C_J         => Some(q1_j_imm()),
+            OpecodeKind::OP_C_BEQZ      => Some(q1_b_imm()),
+            OpecodeKind::OP_C_BNEZ      => Some(q1_b_imm()),
             // Quadrant2
-            OpecodeKind::OP_C_SLLI      => Some(q2_imm),
-            OpecodeKind::OP_C_LWSP      => Some(q2_imm),
-            OpecodeKind::OP_C_JR        => Some(q2_imm),
-            OpecodeKind::OP_C_SWSP      => Some(((self >> 7) & 0x3F) as i32),
+            OpecodeKind::OP_C_SLLI      => Some(q2_imm()),
+            OpecodeKind::OP_C_LWSP      => Some(q2_lwsp_imm()),
+            OpecodeKind::OP_C_SWSP      => Some(q2_swsp_imm()),
             _ => None,
         }
     }
