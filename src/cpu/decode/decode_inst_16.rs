@@ -1,4 +1,4 @@
-use super::Decode;
+use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{OpecodeKind, Instruction};
 
 fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
@@ -11,7 +11,7 @@ fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
 }
 
 fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
-    let sr_flag: u8 = ((inst >> 10) & 0x3) as u8;
+    let sr_flag: u8 = inst.cut(10, 11) as u8;
     let lo_flag: u8 = ((inst >> 5) & 0x3) as u8;
     let mi_flag: u8 = ((inst >> 7) & 0x1F) as u8;
 
@@ -201,14 +201,15 @@ impl Decode for u16 {
     }
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
-        let q0_imm = ((self >> 5) & (0x3 + (((self >> 10) & 0x7) << 0x5))) as i32;
+        let q0_uimm = ((((self >> 10) & 0x7) << 3) | (((self >> 6) & 0x1) << 2) | (((self >> 5) & 0x1) << 6)) as i32;
+        let q0_nzuimm = ((((self >> 10) & 0x7) << 3) | (((self >> 6) & 0x1) << 2) | (((self >> 5) & 0x1) << 6)) as i32;
         let q1_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
         let q2_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
         match opkind {
             // Quadrant0
             OpecodeKind::OP_C_ADDI4SPN  => Some(((self >> 5) & 0xFF) as i32),
-            OpecodeKind::OP_C_LW        => Some(q0_imm),
-            OpecodeKind::OP_C_SW        => Some(q0_imm),
+            OpecodeKind::OP_C_LW        => Some(q0_uimm),
+            OpecodeKind::OP_C_SW        => Some(q0_uimm),
             // Quadrant1
             OpecodeKind::OP_C_NOP       => Some(q1_imm),
             OpecodeKind::OP_C_ADDI      => Some(q1_imm),
@@ -229,5 +230,11 @@ impl Decode for u16 {
             OpecodeKind::OP_C_SWSP      => Some(((self >> 7) & 0x3F) as i32),
             _ => None,
         }
+    }
+}
+
+impl DecodeUtil for u16 {
+    fn cut(&self, start: u32, end: u32) -> Self {
+        (self >> start) & (2_u16.pow(end - start) - 1)
     }
 }

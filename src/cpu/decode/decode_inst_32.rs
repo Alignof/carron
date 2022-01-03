@@ -1,4 +1,4 @@
-use super::Decode;
+use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{OpecodeKind, Instruction};
 
 #[allow(non_snake_case)]
@@ -309,3 +309,8 @@ impl Decode for u32 {
     }
 }
 
+impl DecodeUtil for u32 {
+    fn cut(&self, start: u32, end: u32) -> Self {
+        (self >> start) & (2_u32.pow(end - start) - 1)
+    }
+}
