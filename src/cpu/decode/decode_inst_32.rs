@@ -256,11 +256,11 @@ impl Decode for u32 {
             (inst.slice(12, 31) << 12) as i32
         };
         let I_type = | | {
-            let imm32 = ((inst >> 20) & 0xFFF) as i32;
+            let imm32 = inst.slice(20, 31) as i32;
             self.to_signed_nbit(imm32, 12)
         };
         let S_type = | | {
-            let imm32 = ((((inst >> 25) & 0x7F) << 5) | ((inst >> 7) & 0x1F)) as i32;
+            let imm32 = (inst.slice(7, 11).set(&[4,3,2,1,0]) | inst.slice(25, 31).set(&[11,10,9,8,7,6,5])) as i32;
             self.to_signed_nbit(imm32, 12)
         };
         let B_type = | | {
@@ -316,7 +316,7 @@ impl DecodeUtil for u32 {
 
     fn set(self, mask: &[u32]) -> u32 {
         let mut inst: u32 = 0;
-        for (i, m) in mask.iter().enumerate() {
+        for (i, m) in mask.iter().rev().enumerate() {
             inst |= ((self >> i) & 0x1) << m;
         }
 
