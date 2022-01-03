@@ -198,9 +198,10 @@ impl Decode for u16 {
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
         let q0_uimm = (self.slice(10, 12).set(&[5, 4, 3]) | self.slice(5, 6).set(&[2, 6])) as i32;
-        let q0_nzuimm = ((((self >> 10) & 0x7) << 3) | (((self >> 6) & 0x1) << 2) | (((self >> 5) & 0x1) << 6)) as i32;
+        let q0_nzuimm = (self.slice(5, 12).set(&[5, 4, 9, 8, 7, 6, 2, 3])) as i32;
         let q1_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
         let q2_imm = ((self >> 2) & (0x1F + (((self >> 12) & 0x1) << 0x2))) as i32;
+
         match opkind {
             // Quadrant0
             OpecodeKind::OP_C_ADDI4SPN  => Some(q0_nzuimm),
@@ -230,14 +231,14 @@ impl Decode for u16 {
 }
 
 impl DecodeUtil for u16 {
-    fn slice(&self, start: u32, end: u32) -> u16 {
+    fn slice(self, start: u32, end: u32) -> u16 {
         (self >> start) & (2_u16.pow(end - start + 1) - 1)
     }
 
-    fn set(&self, mask: &[u32]) -> u16 {
-        let mut inst: u16 = 0;
+    fn set(self, mask: &[u32]) -> u32 {
+        let mut inst: u32 = 0;
         for (i, m) in mask.iter().enumerate() {
-            inst |= ((self >> i) & 0x1) << m;
+            inst |= ((self as u32 >> i) & 0x1) << m;
         }
 
         inst
