@@ -264,15 +264,12 @@ impl Decode for u32 {
             self.to_signed_nbit(imm32, 12)
         };
         let B_type = | | {
-            let imm32 =
-            ((((inst >> 8) & 0xF) << 1)  | (((inst >> 25) & 0x3F) << 5) |
-             (((inst >> 7) & 0x1) << 11) | (((inst >> 31) & 0x1) << 12)) as i32;
+            let imm32 = (inst.slice(7, 11).set(&[4,3,2,1,11]) | inst.slice(25, 31).set(&[12,10,9,8,7,6,5])) as i32;
             self.to_signed_nbit(imm32, 13)
         };
         let J_type = | | {
-            let imm32 =
-            ((((inst >> 21) & 0x3FF) << 1) | (((inst >> 20) & 0x1) << 11) |
-             (((inst >> 12) & 0xFF) << 12)  | ((inst >> 31) & 0x1 << 20)) as i32;
+            let imm32 = inst.slice(12, 31)
+                .set(&[20,10,9,8,7,6,5,4,3,2,1,11,19,18,17,16,15,14,13,12]) as i32;
             self.to_signed_nbit(imm32, 20)
         };
 
