@@ -25,10 +25,10 @@ impl Decode for u32 {
 
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
         let inst: &u32 = self;
-        let opmap: u8  = (inst & 0x7F) as u8;
-        let funct3: u8 = ((inst >> 12) & 0x7) as u8;
-        let funct5: u8 = ((inst >> 20) & 0x1F) as u8;
-        let funct7: u8 = ((inst >> 25) & 0x3F) as u8;
+        let opmap: u8  = inst.slice(0, 6) as u8;
+        let funct3: u8 = inst.slice(12, 14) as u8;
+        let funct5: u8 = inst.slice(20, 24) as u8;
+        let funct7: u8 = inst.slice(25, 31) as u8;
 
         match opmap {
             0b0110111 => Ok(OpecodeKind::OP_LUI),
@@ -118,7 +118,7 @@ impl Decode for u32 {
 
     fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let rd: usize = ((inst >> 7) & 0x1F) as usize;
+        let rd: usize = inst.slice(7, 11) as usize;
 
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
         match opkind {
@@ -162,7 +162,7 @@ impl Decode for u32 {
 
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let rs1: usize = ((inst >> 15) & 0x1F) as usize;
+        let rs1: usize = inst.slice(15, 19) as usize;
 
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
         match opkind {
@@ -213,8 +213,8 @@ impl Decode for u32 {
 
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let rs2: usize = ((inst >> 20) & 0x1F) as usize;
-        let csr: usize = ((inst >> 20) & 0xFFF) as usize;
+        let rs2: usize = inst.slice(20, 24) as usize;
+        let csr: usize = inst.slice(20, 31) as usize;
 
         // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
         // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
@@ -253,7 +253,7 @@ impl Decode for u32 {
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
         let inst: &u32 = self;
         let U_type = | | {
-            ((inst >> 12) & 0xFFFFF) as i32
+            (inst.slice(12, 31) << 12) as i32
         };
         let I_type = | | {
             let imm32 = ((inst >> 20) & 0xFFF) as i32;

@@ -11,10 +11,10 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
 
     match inst.opc {
         OP_LUI => {
-            cpu.regs.write(inst.rd, inst.imm.unwrap() << 12);
+            cpu.regs.write(inst.rd, inst.imm.unwrap());
         },
         OP_AUIPC => {
-            cpu.regs.write(inst.rd, cpu.pc as i32 + (inst.imm.unwrap() << 12));
+            cpu.regs.write(inst.rd, cpu.pc as i32 + inst.imm.unwrap());
         },
         OP_JAL => {
             cpu.regs.write(inst.rd, (cpu.pc + INST_SIZE) as i32); 
