@@ -106,7 +106,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
             } 
         },
         OP_C_JR => {
-            cpu.add2pc(cpu.regs.read(inst.rs1));
+            cpu.update_pc(cpu.regs.read(inst.rs1));
         },
         OP_C_MV => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs2));
