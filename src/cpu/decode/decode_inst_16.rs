@@ -209,6 +209,10 @@ impl Decode for u16 {
         let q1_nzuimm = | | {
             (self.slice(6, 2).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
         };
+        let q1_nzimm = | | {
+            let imm16 = (self.slice(6, 2).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32;
+            self.to_signed_nbit(imm16, 6)
+        };
         let q1_imm = | | {
             let imm16 = (self.slice(6, 2).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32;
             self.to_signed_nbit(imm16, 6)
@@ -243,8 +247,8 @@ impl Decode for u16 {
             OpecodeKind::OP_C_LW        => Some(q0_uimm()),
             OpecodeKind::OP_C_SW        => Some(q0_uimm()),
             // Quadrant1
-            OpecodeKind::OP_C_NOP       => Some(q1_nzuimm()),
-            OpecodeKind::OP_C_ADDI      => Some(q1_nzuimm()),
+            OpecodeKind::OP_C_NOP       => Some(q1_nzimm()),
+            OpecodeKind::OP_C_ADDI      => Some(q1_nzimm()),
             OpecodeKind::OP_C_JAL       => Some(q1_j_imm()),
             OpecodeKind::OP_C_LI        => Some(q1_imm()),
             OpecodeKind::OP_C_ADDI16SP  => Some(q1_16sp_imm()),
