@@ -32,6 +32,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(overflowing_literals)]
     fn parsing_opecode_test() {
         use OpecodeKind::*;
         let test_32 = |inst_32: u32, op: OpecodeKind, rd: Option<usize>,
@@ -45,7 +46,7 @@ mod tests {
         };
 
         test_32(0b10000000000000000000000010110111,
-                OP_LUI, Some(1), None, None, Some(0x80000));
+                OP_LUI, Some(1), None, None, Some(0x80000000));
         test_32(0b00000000000000000000001010010111,
                 OP_AUIPC, Some(5), None, None, Some(0));
         test_32(0b11111111100111111111000001101111,
