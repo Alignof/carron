@@ -110,8 +110,9 @@ impl Decode for u16 {
 
     fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: u16 = *self;
-        let q0_rd: usize = inst.slice(2, 4) as usize;
-        let q1_rd: usize = inst.slice(7, 9) as usize;
+        // see riscv-spec-20191213.pdf, page 100, Table 16.2
+        let q0_rd: usize = (inst.slice(2, 4) + 8) as usize;
+        let q1_rd: usize = (inst.slice(7, 9) + 8) as usize;
         let q1_wide_rd: usize = inst.slice(7, 11) as usize;
         let q2_rd: usize = inst.slice(7, 11) as usize;
 
@@ -144,18 +145,19 @@ impl Decode for u16 {
 
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: u16 = *self;
-        let q0_rs1: usize = inst.slice(7, 9) as usize;
-        let q1_rs1: usize = inst.slice(7, 9) as usize;
+        // see riscv-spec-20191213.pdf, page 100, Table 16.2
+        let q0_rs1: usize = (inst.slice(7, 9) + 8) as usize;
+        let q1_rs1: usize = (inst.slice(7, 9) + 8) as usize;
+        let q1_addi_rs1: usize = inst.slice(7, 11) as usize;
         let q2_rs1: usize = inst.slice(7, 11) as usize;
-        let addi_rs1: usize = inst.slice(7, 11) as usize;
 
         match opkind {
             // Quadrant 0
             OpecodeKind::OP_C_LW        => Some(q0_rs1),
             OpecodeKind::OP_C_SW        => Some(q0_rs1),
             // Quadrant 1
-            OpecodeKind::OP_C_ADDI      => Some(addi_rs1),
-            OpecodeKind::OP_C_ADDI16SP  => Some(addi_rs1),
+            OpecodeKind::OP_C_ADDI      => Some(q1_addi_rs1),
+            OpecodeKind::OP_C_ADDI16SP  => Some(q1_addi_rs1),
             OpecodeKind::OP_C_SRLI      => Some(q1_rs1),
             OpecodeKind::OP_C_SRAI      => Some(q1_rs1),
             OpecodeKind::OP_C_ANDI      => Some(q1_rs1),
@@ -176,8 +178,9 @@ impl Decode for u16 {
 
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: u16 = *self;
-        let q0_rs2: usize = inst.slice(2, 4) as usize;
-        let q1_rs2: usize = inst.slice(2, 4) as usize;
+        // see riscv-spec-20191213.pdf, page 100, Table 16.2
+        let q0_rs2: usize = (inst.slice(2, 4) + 8) as usize;
+        let q1_rs2: usize = (inst.slice(2, 4) + 8) as usize;
         let q2_rs2: usize = inst.slice(2, 6) as usize;
 
         match opkind {
@@ -203,14 +206,20 @@ impl Decode for u16 {
         let q0_nzuimm = | | {
             self.slice(5, 12).set(&[5,4,9,8,7,6,2,3]) as i32
         };
-        let q1_imm = | | {
+        let q1_nzuimm = | | {
             (self.slice(2, 6).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
         };
+        let q1_imm = | | {
+            let imm16 = (self.slice(2, 6).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32;
+            self.to_signed_nbit(imm16, 6)
+        };
         let q1_j_imm = | | {
-            self.slice(2, 12).set(&[11,4,9,8,10,6,7,3,2,1,5]) as i32
+            let imm16 = self.slice(2, 12).set(&[11,4,9,8,10,6,7,3,2,1,5]) as i32;
+            self.to_signed_nbit(imm16, 12)
         };
         let q1_b_imm = | | {
-            (self.slice(2, 6).set(&[7,6,2,1,5]) | self.slice(10, 12).set(&[8,4,3])) as i32
+            let imm16 = (self.slice(2, 6).set(&[7,6,2,1,5]) | self.slice(10, 12).set(&[8,4,3])) as i32;
+            self.to_signed_nbit(imm16, 9)
         };
         let q1_16sp_imm = | | {
             (self.slice(2, 6).set(&[4,6,8,7,5]) | self.slice(12, 12).set(&[9])) as i32
@@ -234,14 +243,14 @@ impl Decode for u16 {
             OpecodeKind::OP_C_LW        => Some(q0_uimm()),
             OpecodeKind::OP_C_SW        => Some(q0_uimm()),
             // Quadrant1
-            OpecodeKind::OP_C_NOP       => Some(q1_imm()),
-            OpecodeKind::OP_C_ADDI      => Some(q1_imm()),
+            OpecodeKind::OP_C_NOP       => Some(q1_nzuimm()),
+            OpecodeKind::OP_C_ADDI      => Some(q1_nzuimm()),
             OpecodeKind::OP_C_JAL       => Some(q1_j_imm()),
             OpecodeKind::OP_C_LI        => Some(q1_imm()),
             OpecodeKind::OP_C_ADDI16SP  => Some(q1_16sp_imm()),
             OpecodeKind::OP_C_LUI       => Some(q1_lui_imm()),
-            OpecodeKind::OP_C_SRLI      => Some(q1_imm()),
-            OpecodeKind::OP_C_SRAI      => Some(q1_imm()),
+            OpecodeKind::OP_C_SRLI      => Some(q1_nzuimm()),
+            OpecodeKind::OP_C_SRAI      => Some(q1_nzuimm()),
             OpecodeKind::OP_C_ANDI      => Some(q1_imm()),
             OpecodeKind::OP_C_J         => Some(q1_j_imm()),
             OpecodeKind::OP_C_BEQZ      => Some(q1_b_imm()),
