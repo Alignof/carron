@@ -310,7 +310,7 @@ impl Decode for u32 {
 }
 
 impl DecodeUtil for u32 {
-    fn cut(&self, start: u32, end: u32) -> Self {
-        (self >> start) & (2_u32.pow(end - start) - 1)
+    fn slice(&self, start: u32, end: u32) -> Self {
+        (self >> start) & (2_u32.pow(end - start + 1) - 1)
     }
 }
