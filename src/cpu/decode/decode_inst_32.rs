@@ -25,10 +25,10 @@ impl Decode for u32 {
 
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
         let inst: &u32 = self;
-        let opmap: u8  = inst.slice(0, 6) as u8;
-        let funct3: u8 = inst.slice(12, 14) as u8;
-        let funct5: u8 = inst.slice(20, 24) as u8;
-        let funct7: u8 = inst.slice(25, 31) as u8;
+        let opmap: u8  = inst.slice(6, 0) as u8;
+        let funct3: u8 = inst.slice(14, 12) as u8;
+        let funct5: u8 = inst.slice(24, 20) as u8;
+        let funct7: u8 = inst.slice(31, 25) as u8;
 
         match opmap {
             0b0110111 => Ok(OpecodeKind::OP_LUI),
@@ -118,7 +118,7 @@ impl Decode for u32 {
 
     fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let rd: usize = inst.slice(7, 11) as usize;
+        let rd: usize = inst.slice(11, 7) as usize;
 
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
         match opkind {
@@ -162,7 +162,7 @@ impl Decode for u32 {
 
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let rs1: usize = inst.slice(15, 19) as usize;
+        let rs1: usize = inst.slice(19, 15) as usize;
 
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
         match opkind {
@@ -213,8 +213,8 @@ impl Decode for u32 {
 
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst:&u32 = self;
-        let rs2: usize = inst.slice(20, 24) as usize;
-        let csr: usize = inst.slice(20, 31) as usize;
+        let rs2: usize = inst.slice(24, 20) as usize;
+        let csr: usize = inst.slice(31, 20) as usize;
 
         // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
         // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
@@ -253,22 +253,22 @@ impl Decode for u32 {
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
         let inst: &u32 = self;
         let U_type = | | {
-            (inst.slice(12, 31) << 12) as i32
+            (inst.slice(31, 12) << 12) as i32
         };
         let I_type = | | {
-            let imm32 = inst.slice(20, 31) as i32;
+            let imm32 = inst.slice(31, 20) as i32;
             self.to_signed_nbit(imm32, 12)
         };
         let S_type = | | {
-            let imm32 = (inst.slice(7, 11).set(&[4,3,2,1,0]) | inst.slice(25, 31).set(&[11,10,9,8,7,6,5])) as i32;
+            let imm32 = (inst.slice(11, 7).set(&[4,3,2,1,0]) | inst.slice(31, 25).set(&[11,10,9,8,7,6,5])) as i32;
             self.to_signed_nbit(imm32, 12)
         };
         let B_type = | | {
-            let imm32 = (inst.slice(7, 11).set(&[4,3,2,1,11]) | inst.slice(25, 31).set(&[12,10,9,8,7,6,5])) as i32;
+            let imm32 = (inst.slice(11, 7).set(&[4,3,2,1,11]) | inst.slice(31, 25).set(&[12,10,9,8,7,6,5])) as i32;
             self.to_signed_nbit(imm32, 13)
         };
         let J_type = | | {
-            let imm32 = inst.slice(12, 31)
+            let imm32 = inst.slice(31, 12)
                 .set(&[20,10,9,8,7,6,5,4,3,2,1,11,19,18,17,16,15,14,13,12]) as i32;
             self.to_signed_nbit(imm32, 20)
         };
@@ -307,7 +307,7 @@ impl Decode for u32 {
 }
 
 impl DecodeUtil for u32 {
-    fn slice(self, start: u32, end: u32) -> u32 {
+    fn slice(self, end: u32, start: u32) -> u32 {
         (self >> start) & (2_u32.pow(end - start + 1) - 1)
     }
 

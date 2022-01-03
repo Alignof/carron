@@ -11,9 +11,9 @@ fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
 }
 
 fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
-    let sr_flag: u8 = inst.slice(10, 11) as u8;
-    let lo_flag: u8 = inst.slice(5, 6) as u8;
-    let mi_flag: u8 = inst.slice(7, 11) as u8;
+    let sr_flag: u8 = inst.slice(11, 10) as u8;
+    let lo_flag: u8 = inst.slice(6, 5) as u8;
+    let mi_flag: u8 = inst.slice(11, 7) as u8;
 
     match opmap {
         0b000 => match mi_flag {
@@ -48,8 +48,8 @@ fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
 
 
 fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> { 
-    let lo_flag: u8 = inst.slice(2, 6) as u8;
-    let mi_flag: u8 = inst.slice(7, 11) as u8;
+    let lo_flag: u8 = inst.slice(6, 2) as u8;
+    let mi_flag: u8 = inst.slice(11, 7) as u8;
     let hi_flag: u8 = inst.slice(12, 12) as u8;
 
     match opmap {
@@ -97,8 +97,8 @@ impl Decode for u16 {
 
     fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
         let inst: u16 = *self;
-        let opmap: u8 = inst.slice(13, 15) as u8;
-        let quadrant: u8  = inst.slice(0, 1) as u8;
+        let opmap: u8 = inst.slice(15, 13) as u8;
+        let quadrant: u8  = inst.slice(1, 0) as u8;
 
         match quadrant {
             0b00 => quadrant0(&opmap),
@@ -111,10 +111,10 @@ impl Decode for u16 {
     fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: u16 = *self;
         // see riscv-spec-20191213.pdf, page 100, Table 16.2
-        let q0_rd: usize = (inst.slice(2, 4) + 8) as usize;
-        let q1_rd: usize = (inst.slice(7, 9) + 8) as usize;
-        let q1_wide_rd: usize = inst.slice(7, 11) as usize;
-        let q2_rd: usize = inst.slice(7, 11) as usize;
+        let q0_rd: usize = (inst.slice(4, 2) + 8) as usize;
+        let q1_rd: usize = (inst.slice(9, 7) + 8) as usize;
+        let q1_wide_rd: usize = inst.slice(11, 7) as usize;
+        let q2_rd: usize = inst.slice(11, 7) as usize;
 
         match opkind {
             // Quadrant 0
@@ -146,10 +146,10 @@ impl Decode for u16 {
     fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: u16 = *self;
         // see riscv-spec-20191213.pdf, page 100, Table 16.2
-        let q0_rs1: usize = (inst.slice(7, 9) + 8) as usize;
-        let q1_rs1: usize = (inst.slice(7, 9) + 8) as usize;
-        let q1_addi_rs1: usize = inst.slice(7, 11) as usize;
-        let q2_rs1: usize = inst.slice(7, 11) as usize;
+        let q0_rs1: usize = (inst.slice(9, 7) + 8) as usize;
+        let q1_rs1: usize = (inst.slice(9, 7) + 8) as usize;
+        let q1_addi_rs1: usize = inst.slice(11, 7) as usize;
+        let q2_rs1: usize = inst.slice(11, 7) as usize;
 
         match opkind {
             // Quadrant 0
@@ -179,9 +179,9 @@ impl Decode for u16 {
     fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
         let inst: u16 = *self;
         // see riscv-spec-20191213.pdf, page 100, Table 16.2
-        let q0_rs2: usize = (inst.slice(2, 4) + 8) as usize;
-        let q1_rs2: usize = (inst.slice(2, 4) + 8) as usize;
-        let q2_rs2: usize = inst.slice(2, 6) as usize;
+        let q0_rs2: usize = (inst.slice(4, 2) + 8) as usize;
+        let q1_rs2: usize = (inst.slice(4, 2) + 8) as usize;
+        let q2_rs2: usize = inst.slice(6, 2) as usize;
 
         match opkind {
             // Quadrant 0
@@ -201,40 +201,40 @@ impl Decode for u16 {
 
     fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
         let q0_uimm = | | {
-            (self.slice(10, 12).set(&[5,4,3]) | self.slice(5, 6).set(&[2,6])) as i32
+            (self.slice(12, 10).set(&[5,4,3]) | self.slice(6, 5).set(&[2,6])) as i32
         };
         let q0_nzuimm = | | {
-            self.slice(5, 12).set(&[5,4,9,8,7,6,2,3]) as i32
+            self.slice(12, 5).set(&[5,4,9,8,7,6,2,3]) as i32
         };
         let q1_nzuimm = | | {
-            (self.slice(2, 6).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
+            (self.slice(6, 2).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
         };
         let q1_imm = | | {
-            let imm16 = (self.slice(2, 6).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32;
+            let imm16 = (self.slice(6, 2).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32;
             self.to_signed_nbit(imm16, 6)
         };
         let q1_j_imm = | | {
-            let imm16 = self.slice(2, 12).set(&[11,4,9,8,10,6,7,3,2,1,5]) as i32;
+            let imm16 = self.slice(12, 2).set(&[11,4,9,8,10,6,7,3,2,1,5]) as i32;
             self.to_signed_nbit(imm16, 12)
         };
         let q1_b_imm = | | {
-            let imm16 = (self.slice(2, 6).set(&[7,6,2,1,5]) | self.slice(10, 12).set(&[8,4,3])) as i32;
+            let imm16 = (self.slice(6, 2).set(&[7,6,2,1,5]) | self.slice(12, 10).set(&[8,4,3])) as i32;
             self.to_signed_nbit(imm16, 9)
         };
         let q1_16sp_imm = | | {
-            (self.slice(2, 6).set(&[4,6,8,7,5]) | self.slice(12, 12).set(&[9])) as i32
+            (self.slice(6, 2).set(&[4,6,8,7,5]) | self.slice(12, 12).set(&[9])) as i32
         };
         let q1_lui_imm = | | {
-            (self.slice(2, 6).set(&[16,15,14,13,12]) | self.slice(12, 12).set(&[17])) as i32
+            (self.slice(6, 2).set(&[16,15,14,13,12]) | self.slice(12, 12).set(&[17])) as i32
         };
         let q2_imm = | | {
-            (self.slice(2, 6).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
+            (self.slice(6, 2).set(&[4,3,2,1,0]) | self.slice(12, 12).set(&[5])) as i32
         };
         let q2_lwsp_imm = | | {
-            (self.slice(2, 6).set(&[4,3,2,7,6]) | self.slice(12, 12).set(&[5])) as i32
+            (self.slice(6, 2).set(&[4,3,2,7,6]) | self.slice(12, 12).set(&[5])) as i32
         };
         let q2_swsp_imm = | | {
-            self.slice(7, 12).set(&[5,4,3,2,7,6]) as i32
+            self.slice(12, 7).set(&[5,4,3,2,7,6]) as i32
         };
 
         match opkind {
@@ -265,7 +265,7 @@ impl Decode for u16 {
 }
 
 impl DecodeUtil for u16 {
-    fn slice(self, start: u32, end: u32) -> u16 {
+    fn slice(self, end: u32, start: u32) -> u16 {
         (self >> start) & (2_u16.pow(end - start + 1) - 1)
     }
 
