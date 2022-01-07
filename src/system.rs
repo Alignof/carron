@@ -30,9 +30,11 @@ impl Arguments {
             return Err("not enough arguments");
         }
 
+        let app = clap::app_from_crate!();
+        dbg!(app);
+
         let filename: String;
         let exe_option: ExeOption;
-
         // no option
         if args.len() == 2 {
             exe_option = ExeOption::OPT_NONE;
