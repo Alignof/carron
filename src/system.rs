@@ -19,7 +19,7 @@ pub struct Arguments {
 impl Arguments {
     pub fn new() -> Arguments {
         let app = clap::app_from_crate!()
-            .arg(arg!([filename] "ELF file path").group("ELF"))
+            .arg(arg!(<filename> "ELF file path").group("ELF"))
             .arg(arg!(--pc <init_pc> ... "entry program counter").required(false))
             .arg(arg!(-p --program ... "see add segments"))
             .arg(arg!(-s --section ... "see all sections"))
@@ -28,12 +28,9 @@ impl Arguments {
             .group(
                 ArgGroup::new("run option")
                     .args(&["disasem", "program", "section", "all"])
-                    .requires("ELF")
                     .required(false)
             )
             .get_matches();
-
-        dbg!(app.value_of("run option"));
 
         let filename = match app.value_of("filename") {
             Some(f) => f.to_string(),
