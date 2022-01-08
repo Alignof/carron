@@ -1,4 +1,4 @@
-use clap::{ArgGroup, arg};
+use clap::{AppSettings, ArgGroup, arg};
 
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
@@ -20,16 +20,18 @@ impl Arguments {
     pub fn new() -> Arguments {
         let app = clap::app_from_crate!()
             .arg(arg!(<filename> "ELF file path").group("ELF"))
-            .arg(arg!(--pc <init_pc> ... "entry program counter").required(false))
-            .arg(arg!(-p --program ... "see add segments"))
-            .arg(arg!(-s --section ... "see all sections"))
+            .arg(arg!(-e --elfhead ... "show ELF header"))
+            .arg(arg!(-p --program ... "show all segments"))
+            .arg(arg!(-s --section ... "show all sections"))
             .arg(arg!(-d --disasem ... "disassemble ELF"))
-            .arg(arg!(-a --all ... "see all data"))
+            .arg(arg!(-a --all ... "show all data"))
             .group(
                 ArgGroup::new("run option")
-                    .args(&["disasem", "program", "section", "all"])
+                    .args(&["elfhead", "disasem", "program", "section", "all"])
                     .required(false)
             )
+            .arg(arg!(--pc <init_pc> ... "entry address as hex").required(false))
+            .setting(AppSettings::DeriveDisplayOrder)
             .get_matches();
 
         let filename = match app.value_of("filename") {
@@ -39,6 +41,7 @@ impl Arguments {
 
         let flag_map = | | {
             (
+                app.is_present("elfhead"),
                 app.is_present("program"),
                 app.is_present("section"),
                 app.is_present("disasem"),
@@ -46,15 +49,19 @@ impl Arguments {
             )
         };
         let exe_option = match flag_map() {
-            (true, _, _, _) => ExeOption::OPT_DISASEM,
-            (_, true, _, _) => ExeOption::OPT_SECT,
-            (_, _, true, _) => ExeOption::OPT_PROG,
-            (_, _, _, true) => ExeOption::OPT_SHOWALL,
+            (true, _, _, _, _) => ExeOption::OPT_ELFHEAD,
+            (_, true, _, _, _) => ExeOption::OPT_DISASEM,
+            (_, _, true, _, _) => ExeOption::OPT_SECT,
+            (_, _, _, true, _) => ExeOption::OPT_PROG,
+            (_, _, _, _, true) => ExeOption::OPT_SHOWALL,
             _ => ExeOption::OPT_DEFAULT,
         };
 
         let init_pc = app.value_of("pc")
-            .map(|x| x.parse::<u32>().expect("invalid pc"));
+            .map(|x| {
+                u32::from_str_radix(x.trim_start_matches("0x"), 16)
+                    .expect("invalid pc\nplease set value as hex (e.g. --pc=0x80000000)")
+            });
 
         Arguments {
             filename,
