@@ -16,7 +16,7 @@ pub struct Arguments {
 }
 
 impl Arguments {
-    pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
+    pub fn new() -> Arguments {
         let app = clap::app_from_crate!()
             .arg(arg!([filename] "ELF file").group("ELF"))
             .arg(arg!(--pc <init_pc> ... "entry program counter"))
@@ -32,18 +32,21 @@ impl Arguments {
             )
             .get_matches();
 
-        dbg!(app.is_present("run option"));
+        dbg!(app.value_of("pc"));
 
-        let filename: String = app.value_of("filename").unwrap().to_string();
-        let exe_option: ExeOption = if app.is_present("run option") {
+        let filename = match app.value_of("filename") {
+            Some(f) => f.to_string(),
+            None => panic!("please specify target ELF file."),
+        };
+        let exe_option = if app.is_present("run option") {
             ExeOption::OPT_DEFAULT
         } else {
             ExeOption::OPT_DEFAULT
         };
 
-        Ok(Arguments {
+        Arguments {
             filename,
             exe_option,
-        })
+        }
     }
 }

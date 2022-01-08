@@ -5,12 +5,7 @@ use rv32im_sim::system::ExeOption;
 use rv32im_sim::system::Arguments;
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-
-    let args = Arguments::new(&args).unwrap_or_else(|err| {
-        println!("problem occured while parsing arguments: {}", err);
-        std::process::exit(1);
-    });
+    let args = Arguments::new();
 
     println!("\nIn file {}", args.filename);
 
