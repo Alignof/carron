@@ -19,6 +19,7 @@ impl Arguments {
     pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
         let app = clap::app_from_crate!()
             .arg(arg!([filename] "ELF file").group("ELF"))
+            .arg(arg!(--pc <init_pc> ... "entry program counter"))
             .arg(arg!(-d --disasem ... "disassemble ELF"))
             .arg(arg!(-p --program ... "see add segments"))
             .arg(arg!(-s --section ... "see all sections"))
