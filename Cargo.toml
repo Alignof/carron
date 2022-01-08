@@ -1,8 +1,9 @@
 [package]
 name = "rv32im_sim"
-version = "0.1.0"
-authors = ["Alignof <neuromancer_wg@outlook.jp>"]
+version = "0.9.0"
+authors = ["Alignof <Alignof@outlook.com>"]
 edition = "2018"
+description = "RV32IMC simulator"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
