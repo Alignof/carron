@@ -25,7 +25,7 @@ fn main() {
         println!("elfcheck: OK\n");
 
         match args.exe_option {
-            ExeOption::OPT_NONE     => {
+            ExeOption::OPT_DEFAULT  => {
                 let mut simulator: Simulator = Simulator::new(loader); 
                 simulator.simulation();
             },

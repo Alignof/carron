@@ -2,7 +2,7 @@ use clap::{ArgGroup, arg};
 
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
-    OPT_NONE,
+    OPT_DEFAULT,
     OPT_ELFHEAD,
     OPT_PROG,
     OPT_SECT,
@@ -19,22 +19,30 @@ impl Arguments {
     pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
         let app = clap::app_from_crate!()
             .arg(arg!([filename] "ELF file").group("ELF"))
-            .arg(arg!(-d --disasem ... "disassemble ELF").requires("ELF"))
-            .arg(arg!(-p --program ... "see add segments").requires("ELF"))
-            .arg(arg!(-s --section ... "see all sections").requires("ELF"))
-            .arg(arg!(-a --all ... "see all data").requires("ELF"))
+            .arg(arg!(-d --disasem ... "disassemble ELF"))
+            .arg(arg!(-p --program ... "see add segments"))
+            .arg(arg!(-s --section ... "see all sections"))
+            .arg(arg!(-a --all ... "see all data"))
             .group(
                 ArgGroup::new("run option")
-                    .required(false)
                     .args(&["disasem", "program", "section", "all"])
+                    .requires("ELF")
+                    .required(false)
             )
             .get_matches();
 
-        dbg!(app);
+        dbg!(app.is_present("run option"));
+
+        let filename: String = app.value_of("filename").unwrap().to_string();
+        let exe_option: ExeOption = if app.is_present("run option") {
+            ExeOption::OPT_DEFAULT
+        } else {
+            ExeOption::OPT_DEFAULT
+        };
 
         Ok(Arguments {
-            filename: "/opt/riscv32/share/riscv-tests/isa/rv32ui-v-simple".to_string(),
-            exe_option: ExeOption::OPT_ELFHEAD,
+            filename,
+            exe_option,
         })
     }
 }
