@@ -6,8 +6,8 @@ pub enum ExeOption {
     OPT_ELFHEAD,
     OPT_PROG,
     OPT_SECT,
-    OPT_SHOWALL,
     OPT_DISASEM,
+    OPT_SHOWALL,
 }
 
 pub struct Arguments {
@@ -18,11 +18,11 @@ pub struct Arguments {
 impl Arguments {
     pub fn new() -> Arguments {
         let app = clap::app_from_crate!()
-            .arg(arg!([filename] "ELF file").group("ELF"))
-            .arg(arg!(--pc <init_pc> ... "entry program counter"))
-            .arg(arg!(-d --disasem ... "disassemble ELF"))
+            .arg(arg!([filename] "ELF file path").group("ELF"))
+            .arg(arg!(--pc <init_pc> ... "entry program counter").required(false))
             .arg(arg!(-p --program ... "see add segments"))
             .arg(arg!(-s --section ... "see all sections"))
+            .arg(arg!(-d --disasem ... "disassemble ELF"))
             .arg(arg!(-a --all ... "see all data"))
             .group(
                 ArgGroup::new("run option")
@@ -32,16 +32,28 @@ impl Arguments {
             )
             .get_matches();
 
-        dbg!(app.value_of("pc"));
+        dbg!(app.value_of("run option"));
 
         let filename = match app.value_of("filename") {
             Some(f) => f.to_string(),
             None => panic!("please specify target ELF file."),
         };
-        let exe_option = if app.is_present("run option") {
-            ExeOption::OPT_DEFAULT
-        } else {
-            ExeOption::OPT_DEFAULT
+
+        let flag_map = | | {
+            (
+                app.is_present("program"),
+                app.is_present("section"),
+                app.is_present("disasem"),
+                app.is_present("all")
+            )
+        };
+
+        let exe_option = match flag_map() {
+            (true, _, _, _) => ExeOption::OPT_DISASEM,
+            (_, true, _, _) => ExeOption::OPT_SECT,
+            (_, _, true, _) => ExeOption::OPT_PROG,
+            (_, _, _, true) => ExeOption::OPT_SHOWALL,
+            _ => ExeOption::OPT_DEFAULT,
         };
 
         Arguments {
