@@ -1,7 +1,4 @@
 extern crate rv32im_sim;
-extern crate clap;
-
-use clap::{App, Arg, SubCommand};
 use rv32im_sim::elfload;
 use rv32im_sim::Simulator;
 use rv32im_sim::system::ExeOption;

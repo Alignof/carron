@@ -1,3 +1,5 @@
+use clap::arg;
+
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
     OPT_NONE,
@@ -8,17 +10,6 @@ pub enum ExeOption {
     OPT_DISASEM,
 }
 
-fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
-    match option {
-        "-h" => Ok(ExeOption::OPT_ELFHEAD),
-        "-p" => Ok(ExeOption::OPT_PROG),
-        "-s" => Ok(ExeOption::OPT_SECT),
-        "-a" => Ok(ExeOption::OPT_SHOWALL),
-        "-d" => Ok(ExeOption::OPT_DISASEM),
-        _    => Err("invalid option"),
-    }
-}
-
 pub struct Arguments {
     pub filename: String,
     pub exe_option: ExeOption,
@@ -26,30 +17,16 @@ pub struct Arguments {
 
 impl Arguments {
     pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
-        if args.len() < 2 {
-            return Err("not enough arguments");
-        }
-
-        let app = clap::app_from_crate!();
-        dbg!(app);
-
-        let filename: String;
-        let exe_option: ExeOption;
-        // no option
-        if args.len() == 2 {
-            exe_option = ExeOption::OPT_NONE;
-            filename = args[1].clone();
-        } else {
-            exe_option = match parse_option(&args[1]) {
-                Ok(opt)  => opt,
-                Err(msg) => panic!("{}", msg),
-            };
-            filename = args[2].clone();
-        }
+        let app = clap::app_from_crate!()
+            .arg(arg!([filename] "filename of ELF"))
+            .arg(arg!(-d --disasem ...))
+            .arg(arg!(-p --program ...))
+            .arg(arg!(-s --section ...))
+            .arg(arg!(-a --all ...));
 
         Ok(Arguments {
-            filename,
-            exe_option,
+            filename: "/opt/riscv32/share/riscv-tests/isa/rv32ui-v-simple".to_string(),
+            exe_option: ExeOption::OPT_ELFHEAD,
         })
     }
 }
