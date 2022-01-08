@@ -13,6 +13,7 @@ pub enum ExeOption {
 pub struct Arguments {
     pub filename: String,
     pub exe_option: ExeOption,
+    pub init_pc: Option<u32>,
 }
 
 impl Arguments {
@@ -47,7 +48,6 @@ impl Arguments {
                 app.is_present("all")
             )
         };
-
         let exe_option = match flag_map() {
             (true, _, _, _) => ExeOption::OPT_DISASEM,
             (_, true, _, _) => ExeOption::OPT_SECT,
@@ -56,9 +56,13 @@ impl Arguments {
             _ => ExeOption::OPT_DEFAULT,
         };
 
+        let init_pc = app.value_of("pc")
+            .map(|x| x.parse::<u32>().expect("invalid pc"));
+
         Arguments {
             filename,
             exe_option,
+            init_pc,
         }
     }
 }
