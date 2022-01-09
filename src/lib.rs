@@ -11,9 +11,9 @@ pub struct Simulator {
 }
 
 impl Simulator {
-    pub fn new(loader: elfload::ElfLoader) -> Simulator {
+    pub fn new(loader: elfload::ElfLoader, pc_from_cli: Option<u32>) -> Simulator {
         Simulator {
-            cpu: CPU::new(loader),
+            cpu: CPU::new(loader, pc_from_cli),
         }
     }
 

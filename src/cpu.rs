@@ -47,9 +47,12 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pc_from_cli: Option<u32>) -> CPU {
         CPU {
-            pc: loader.elf_header.e_entry,
+            pc: match pc_from_cli {
+                Some(init_pc) => init_pc,
+                None => loader.elf_header.e_entry,
+            },
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
             bus: bus::Bus::new(loader),
