@@ -1,53 +1,72 @@
+use clap::{AppSettings, ArgGroup, arg};
+
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
-    OPT_NONE,
+    OPT_DEFAULT,
     OPT_ELFHEAD,
     OPT_PROG,
     OPT_SECT,
-    OPT_SHOWALL,
     OPT_DISASEM,
-}
-
-fn parse_option(option: &str) -> Result<ExeOption, &'static str> {
-    match option {
-        "-h" => Ok(ExeOption::OPT_ELFHEAD),
-        "-p" => Ok(ExeOption::OPT_PROG),
-        "-s" => Ok(ExeOption::OPT_SECT),
-        "-a" => Ok(ExeOption::OPT_SHOWALL),
-        "-d" => Ok(ExeOption::OPT_DISASEM),
-        _    => Err("invalid option"),
-    }
+    OPT_SHOWALL,
 }
 
 pub struct Arguments {
     pub filename: String,
     pub exe_option: ExeOption,
+    pub init_pc: Option<u32>,
 }
 
 impl Arguments {
-    pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
-        if args.len() < 2 {
-            return Err("not enough arguments");
-        }
+    pub fn new() -> Arguments {
+        let app = clap::app_from_crate!()
+            .arg(arg!(<filename> "ELF file path").group("ELF"))
+            .arg(arg!(-e --elfhead ... "show ELF header"))
+            .arg(arg!(-p --program ... "show all segments"))
+            .arg(arg!(-s --section ... "show all sections"))
+            .arg(arg!(-d --disasem ... "disassemble ELF"))
+            .arg(arg!(-a --all ... "show all data"))
+            .group(
+                ArgGroup::new("run option")
+                    .args(&["elfhead", "disasem", "program", "section", "all"])
+                    .required(false)
+            )
+            .arg(arg!(--pc <init_pc> ... "entry address as hex").required(false))
+            .setting(AppSettings::DeriveDisplayOrder)
+            .get_matches();
 
-        let filename: String;
-        let exe_option: ExeOption;
+        let filename = match app.value_of("filename") {
+            Some(f) => f.to_string(),
+            None => panic!("please specify target ELF file."),
+        };
 
-        // no option
-        if args.len() == 2 {
-            exe_option = ExeOption::OPT_NONE;
-            filename = args[1].clone();
-        } else {
-            exe_option = match parse_option(&args[1]) {
-                Ok(opt)  => opt,
-                Err(msg) => panic!("{}", msg),
-            };
-            filename = args[2].clone();
-        }
+        let flag_map = | | {
+            (
+                app.is_present("elfhead"),
+                app.is_present("program"),
+                app.is_present("section"),
+                app.is_present("disasem"),
+                app.is_present("all")
+            )
+        };
+        let exe_option = match flag_map() {
+            (true, _, _, _, _) => ExeOption::OPT_ELFHEAD,
+            (_, true, _, _, _) => ExeOption::OPT_DISASEM,
+            (_, _, true, _, _) => ExeOption::OPT_SECT,
+            (_, _, _, true, _) => ExeOption::OPT_PROG,
+            (_, _, _, _, true) => ExeOption::OPT_SHOWALL,
+            _ => ExeOption::OPT_DEFAULT,
+        };
 
-        Ok(Arguments {
+        let init_pc = app.value_of("pc")
+            .map(|x| {
+                u32::from_str_radix(x.trim_start_matches("0x"), 16)
+                    .expect("invalid pc\nplease set value as hex (e.g. --pc=0x80000000)")
+            });
+
+        Arguments {
             filename,
             exe_option,
-        })
+            init_pc,
+        }
     }
 }

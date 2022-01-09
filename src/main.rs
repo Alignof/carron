@@ -1,17 +1,11 @@
 extern crate rv32im_sim;
-
 use rv32im_sim::elfload;
 use rv32im_sim::Simulator;
 use rv32im_sim::system::ExeOption;
 use rv32im_sim::system::Arguments;
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-
-    let args = Arguments::new(&args).unwrap_or_else(|err| {
-        println!("problem occured while parsing arguments: {}", err);
-        std::process::exit(1);
-    });
+    let args = Arguments::new();
 
     println!("\nIn file {}", args.filename);
 
@@ -26,7 +20,7 @@ fn main() {
         println!("elfcheck: OK\n");
 
         match args.exe_option {
-            ExeOption::OPT_NONE     => {
+            ExeOption::OPT_DEFAULT  => {
                 let mut simulator: Simulator = Simulator::new(loader); 
                 simulator.simulation();
             },
