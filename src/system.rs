@@ -20,17 +20,17 @@ impl Arguments {
     pub fn new() -> Arguments {
         let app = clap::app_from_crate!()
             .arg(arg!(<filename> "ELF file path").group("ELF"))
-            .arg(arg!(-e --elfhead ... "show ELF header"))
-            .arg(arg!(-p --program ... "show all segments"))
-            .arg(arg!(-s --section ... "show all sections"))
-            .arg(arg!(-d --disasem ... "disassemble ELF"))
-            .arg(arg!(-a --all ... "show all data"))
+            .arg(arg!(-e --elfhead ... "Show ELF header"))
+            .arg(arg!(-p --program ... "Show all segments"))
+            .arg(arg!(-s --section ... "Show all sections"))
+            .arg(arg!(-d --disasem ... "Disassemble ELF"))
+            .arg(arg!(-a --all ... "Show all ELF data"))
             .group(
                 ArgGroup::new("run option")
                     .args(&["elfhead", "disasem", "program", "section", "all"])
                     .required(false)
             )
-            .arg(arg!(--pc <init_pc> ... "entry address as hex").required(false))
+            .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
             .setting(AppSettings::DeriveDisplayOrder)
             .get_matches();
 

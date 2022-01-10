@@ -32,12 +32,12 @@ ARGS:
     <filename>    ELF file path
 
 OPTIONS:
-    -e, --elfhead         show ELF header
-    -p, --program         show all segments
-    -s, --section         show all sections
-    -d, --disasem         disassemble ELF
-    -a, --all             show all data
-        --pc <init_pc>    entry address as hex
+    -e, --elfhead         Show ELF header
+    -p, --program         Show all segments
+    -s, --section         Show all sections
+    -d, --disasem         Disassemble ELF
+    -a, --all             Show all ELF data
+        --pc <init_pc>    Set entry address as hex
     -h, --help            Print help information
     -V, --version         Print version information
 ```
