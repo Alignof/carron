@@ -13,6 +13,7 @@ pub enum ExeOption {
 pub struct Arguments {
     pub filename: String,
     pub exe_option: ExeOption,
+    pub pkpath: Option<String>,
     pub init_pc: Option<u32>,
 }
 
@@ -30,6 +31,7 @@ impl Arguments {
                     .args(&["elfhead", "disasem", "program", "section", "all"])
                     .required(false)
             )
+            .arg(arg!(--pk <proxy_kernel> "Run with proxy kernel").required(false))
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
             .setting(AppSettings::DeriveDisplayOrder)
             .get_matches();
@@ -38,6 +40,8 @@ impl Arguments {
             Some(f) => f.to_string(),
             None => panic!("please specify target ELF file."),
         };
+
+        let pkpath = app.value_of("pk").map(|s| s.to_string());
 
         let flag_map = | | {
             (
@@ -66,6 +70,7 @@ impl Arguments {
         Arguments {
             filename,
             exe_option,
+            pkpath,
             init_pc,
         }
     }
