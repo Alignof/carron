@@ -56,7 +56,7 @@ impl CPU {
             },
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
-            bus: bus::Bus::new(loader),
+            bus: bus::Bus::new(loader, pk_load),
             mmu: mmu::MMU::new(),
             priv_lv: PrivilegedLevel::Machine, 
         }

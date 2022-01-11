@@ -8,7 +8,7 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader) -> Bus {
+    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>) -> Bus {
         Bus {
             dram: Dram::new(loader),
         }
