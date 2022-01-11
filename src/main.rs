@@ -11,10 +11,13 @@ fn main() {
 
     let loader = match elfload::ElfLoader::try_new(&args.filename) {
         Ok(loader) => loader,
-        Err(error) => {
-            panic!("There was a problem opening the file: {:?}", error);
-        }
+        Err(error) => panic!("There was a problem opening the file: {:?}", error),
     };
+
+    let pk_load = args.pkpath.map(|path| match elfload::ElfLoader::try_new(&path) {
+        Ok(pk) => pk,
+        Err(error) => panic!("There was a problem opening the file: {:?}", error),
+    });
 
     if loader.is_elf() {
         println!("elfcheck: OK\n");
