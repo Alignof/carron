@@ -47,7 +47,8 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader, pc_from_cli: Option<u32>) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, 
+               pc_from_cli: Option<u32>) -> CPU {
         CPU {
             pc: match pc_from_cli {
                 Some(init_pc) => init_pc,

@@ -14,7 +14,7 @@ impl Simulator {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
                pc_from_cli: Option<u32>) -> Simulator {
         Simulator {
-            cpu: CPU::new(loader, pc_from_cli),
+            cpu: CPU::new(loader, pk_load, pc_from_cli),
         }
     }
 
