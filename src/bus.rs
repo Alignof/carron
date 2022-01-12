@@ -1,10 +1,13 @@
 pub mod dram;
+pub mod mrom;
 
 use crate::elfload;
 use dram::Dram;
+use mrom::Mrom;
 
 pub struct Bus {
     pub dram: dram::Dram,
+    pub mrom: mrom::Mrom,
 }
 
 impl Bus {
@@ -16,6 +19,7 @@ impl Bus {
             } else {
                 Dram::new(loader)
             },
+            mrom: Mrom::new(),
         }
     }
 
