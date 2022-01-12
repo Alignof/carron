@@ -37,6 +37,60 @@ impl Dram {
             base_addr: vart_entry,
         }
     }
+
+    pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: elfload::ElfLoader) -> Dram {
+        const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
+        let vart_entry = pk_load.prog_headers[0].p_vaddr;
+
+        // create new dram 
+        let mut new_dram = vec![0; DRAM_SIZE as usize];
+
+        // load proxy kernel 
+        dbg!(pk_load.mem_data.len());
+        for segment in pk_load.prog_headers.iter() {
+            let dram_start = (segment.p_paddr - vart_entry) as usize;
+            let mmap_start = segment.p_offset as usize;
+            let dram_end = dram_start + segment.p_filesz as usize;
+            let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+            dbg!(dram_start);
+            dbg!(dram_end);
+            dbg!(mmap_start);
+            dbg!(mmap_end);
+
+            new_dram.splice(
+                dram_start .. dram_end,
+                pk_load.mem_data[mmap_start .. mmap_end].iter().cloned()
+            );
+        }
+
+        let final_segment = pk_load.prog_headers.last().unwrap();
+        let user_base_addr = (final_segment.p_offset + final_segment.p_filesz) as u32;
+        let align = 0x1000;
+        let user_base_addr = ((user_base_addr + (align - 1)) / align) * align;
+
+        // load user program 
+        dbg!(loader.mem_data.len());
+        for segment in loader.prog_headers.iter() {
+            let dram_start = segment.p_paddr - vart_entry + user_base_addr;
+            let mmap_start = segment.p_offset as usize;
+            let dram_end = dram_start + segment.p_filesz + user_base_addr;
+            let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+            dbg!(dram_start);
+            dbg!(dram_end);
+            dbg!(mmap_start);
+            dbg!(mmap_end);
+
+            new_dram.splice(
+                dram_start as usize .. dram_end as usize,
+                loader.mem_data[mmap_start .. mmap_end].iter().cloned()
+            );
+        }
+
+        Dram {
+            dram: new_dram,
+            base_addr: vart_entry,
+        }
+    }
 }
 
 impl Device for Dram {
