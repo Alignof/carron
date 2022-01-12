@@ -10,7 +10,12 @@ pub struct Bus {
 impl Bus {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>) -> Bus {
         Bus {
-            dram: Dram::new(loader),
+            // load proxy kernel before user program when it's given
+            dram: if let Some(pk_load) = pk_load {
+                Dram::new_with_pk(loader, pk_load)
+            } else {
+                Dram::new(loader)
+            },
         }
     }
 
