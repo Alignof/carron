@@ -11,16 +11,23 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>) -> Bus {
-        Bus {
-            // load proxy kernel before user program when it's given
-            dram: if let Some(pk_load) = pk_load {
-                Dram::new_with_pk(loader, pk_load)
-            } else {
-                Dram::new(loader)
-            },
-            mrom: Mrom::new(),
-        }
+    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>) -> (u32, Bus) {
+        // load proxy kernel before user program when it's given
+        let (entry, dram) = if let Some(ref pk_load) = pk_load {
+            Dram::new_with_pk(loader, pk_load)
+        } else {
+            Dram::new(loader)
+        };
+        let mrom = Mrom::new(entry);
+
+        let init_pc = if pk_load.is_some() {
+            mrom.base_addr
+        } else {
+            entry
+        };
+
+        // return initial pc and Bus
+        (init_pc, Bus{dram, mrom})
     }
 
     // get 1 byte
