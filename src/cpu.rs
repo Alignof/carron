@@ -39,9 +39,9 @@ pub enum TransFor {
 
 pub struct CPU {
     pub pc: u32,
+        bus: bus::Bus,
     pub regs: reg::Register,
         csrs: csr::CSRs,
-        bus: bus::Bus,
         mmu: mmu::MMU,
     pub priv_lv: PrivilegedLevel,
 }
@@ -49,14 +49,16 @@ pub struct CPU {
 impl CPU {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, 
                pc_from_cli: Option<u32>) -> CPU {
+        let (init_pc, bus) = bus::Bus::new(loader, pk_load);
+
         CPU {
             pc: match pc_from_cli {
-                Some(init_pc) => init_pc,
-                None => loader.elf_header.e_entry,
+                Some(cli_pc) => cli_pc,
+                None => init_pc,
             },
+            bus,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
-            bus: bus::Bus::new(loader, pk_load),
             mmu: mmu::MMU::new(),
             priv_lv: PrivilegedLevel::Machine, 
         }
