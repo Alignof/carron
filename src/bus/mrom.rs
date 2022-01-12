@@ -1,4 +1,3 @@
-use crate::elfload;
 use super::Device;
 
 pub struct Mrom {
@@ -7,8 +6,7 @@ pub struct Mrom {
 }
 
 impl Mrom {
-    pub fn new() -> Mrom {
-        let entry_point = 0x80000000;
+    pub fn new(entry_point: u32) -> Mrom {
         let reset_vector: Vec<u32> = vec![
             0x00000297, // auipc   t0, 0x0
             0x02028593, // addi    a1, t0, 32

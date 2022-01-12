@@ -39,7 +39,7 @@ impl Dram {
          })
     }
 
-    pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: elfload::ElfLoader) -> (u32, Dram) {
+    pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: &elfload::ElfLoader) -> (u32, Dram) {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
         let vart_entry = pk_load.prog_headers[0].p_vaddr;
 
