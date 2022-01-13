@@ -49,6 +49,7 @@ pub struct CPU {
 impl CPU {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, 
                pc_from_cli: Option<u32>) -> CPU {
+        // initialize bus and get the entry point
         let (init_pc, bus) = bus::Bus::new(loader, pk_load);
 
         CPU {
