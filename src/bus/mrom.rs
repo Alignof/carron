@@ -22,7 +22,7 @@ impl Mrom {
             // Vec<u32> -> Vec<u8>
             mrom: reset_vector
                 .iter()
-                .flat_map(|val| val.to_be_bytes().to_vec())
+                .flat_map(|val| val.to_le_bytes().to_vec())
                 .collect(),
             // https://github.com/qemu/qemu/blob/b37778b840f6dc6d1bbaf0e8e0641b3d48ad77c5/hw/riscv/virt.c#L47
             base_addr: 0x1000,
