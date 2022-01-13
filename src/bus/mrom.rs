@@ -6,6 +6,7 @@ pub struct Mrom {
 }
 
 impl Mrom {
+    #[allow(arithmetic_overflow)]
     pub fn new(entry_point: u32) -> Mrom {
         let reset_vector: Vec<u32> = vec![
             0x00000297, // auipc   t0, 0x0
@@ -15,7 +16,7 @@ impl Mrom {
             0x00028067, // jr      t0    |
             0x0,        //               |
             entry_point,// <-------------+
-            0x0,
+            entry_point >> 32,
         ];
 
         Mrom {
