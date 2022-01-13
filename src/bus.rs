@@ -20,6 +20,7 @@ impl Bus {
         };
         let mrom = Mrom::new(entry);
 
+        // set initial pc to reset vector if proxy kernel loaded 
         let init_pc = if pk_load.is_some() {
             mrom.base_addr
         } else {
@@ -32,42 +33,78 @@ impl Bus {
 
     // get 1 byte
     pub fn raw_byte(&self, addr: u32) -> u8 {
-        self.dram.raw_byte(addr)
+        if addr < self.dram.base_addr {
+            self.mrom.raw_byte(addr)
+        } else {
+            self.dram.raw_byte(addr)
+        }
     }
 
     // store
     pub fn store8(&mut self, addr: u32, data: i32) {
-        self.dram.store8(addr, data)
+        if addr < self.dram.base_addr {
+            self.mrom.store8(addr, data)
+        } else {
+            self.dram.store8(addr, data)
+        }
     }
 
     pub fn store16(&mut self, addr: u32, data: i32) {
-        self.dram.store16(addr, data)
+        if addr < self.dram.base_addr {
+            self.mrom.store16(addr, data)
+        } else {
+            self.dram.store16(addr, data)
+        }
     }
 
     pub fn store32(&mut self, addr: u32, data: i32) {
-        self.dram.store32(addr, data)
+        if addr < self.dram.base_addr {
+            self.mrom.store32(addr, data)
+        } else {
+            self.dram.store32(addr, data)
+        }
     }
 
 
     // load
     pub fn load8(&self, addr: u32) -> i32 {
-        self.dram.load8(addr)
+        if addr < self.dram.base_addr {
+            self.mrom.load8(addr)
+        } else {
+            self.dram.load8(addr)
+        }
     }
 
     pub fn load16(&self, addr: u32) -> i32 {
-        self.dram.load16(addr)
+        if addr < self.dram.base_addr {
+            self.mrom.load16(addr)
+        } else {
+            self.dram.load16(addr)
+        }
     }
 
     pub fn load32(&self, addr: u32) -> i32 {
-        self.dram.load32(addr)
+        if addr < self.dram.base_addr {
+            self.mrom.load32(addr)
+        } else {
+            self.dram.load32(addr)
+        }
     }
 
     pub fn load_u8(&self, addr: u32) -> i32 {
-        self.dram.load_u8(addr)
+        if addr < self.dram.base_addr {
+            self.mrom.load_u8(addr)
+        } else {
+            self.dram.load_u8(addr)
+        }
     }
 
     pub fn load_u16(&self, addr: u32) -> i32 {
-        self.dram.load_u16(addr)
+        if addr < self.dram.base_addr {
+            self.mrom.load_u16(addr)
+        } else {
+            self.dram.load_u16(addr)
+        }
     }
 }
 
