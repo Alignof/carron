@@ -1,5 +1,6 @@
 pub mod dram;
 pub mod mrom;
+pub mod device_tree;
 
 use crate::elfload;
 use dram::Dram;
