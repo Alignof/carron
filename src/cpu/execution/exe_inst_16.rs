@@ -54,7 +54,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
                 cpu.regs.read(inst.rs1) + cpu.regs.read(inst.rs2));
         },
         OP_C_ADDI4SPN => {
-            cpu.regs.write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap());
+            cpu.regs.write(inst.rd, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap());
         },
         OP_C_ADDI => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap());
