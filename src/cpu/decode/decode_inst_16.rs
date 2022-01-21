@@ -226,7 +226,8 @@ impl Decode for u16 {
             self.to_signed_nbit(imm16, 9)
         };
         let q1_16sp_imm = | | {
-            (self.slice(6, 2).set(&[4,6,8,7,5]) | self.slice(12, 12).set(&[9])) as i32
+            let imm16 = (self.slice(6, 2).set(&[4,6,8,7,5]) | self.slice(12, 12).set(&[9])) as i32;
+            self.to_signed_nbit(imm16, 9)
         };
         let q1_lui_imm = | | {
             (self.slice(6, 2).set(&[16,15,14,13,12]) | self.slice(12, 12).set(&[17])) as i32
