@@ -1,4 +1,5 @@
 mod dts;
+mod dtb;
 
 use super::mrom::Mrom;
 
