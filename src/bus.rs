@@ -21,6 +21,9 @@ impl Bus {
         };
         let mrom = Mrom::new(entry);
 
+        // create and load DTB
+        mrom.load_dtb(dram.base_addr);
+
         // set initial pc to reset vector if proxy kernel loaded 
         let init_pc = if pk_load.is_some() {
             mrom.base_addr

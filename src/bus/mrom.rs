@@ -25,9 +25,6 @@ impl Mrom {
             .flat_map(|val| val.to_le_bytes().to_vec())
             .collect();
 
-        // set and load Device Tree Blob
-        Self::load_dtb(&mrom);
-
         Mrom {
             mrom,
             base_addr: 0x1000,
