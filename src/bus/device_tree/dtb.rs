@@ -32,3 +32,6 @@ struct dtb_data<'a> {
     structure: Vec<fdt_node>, 
     strings: Vec<(u32, &'a str)>,
 }
+
+fn make_dtb(dts: String) -> dtb_data {
+}
