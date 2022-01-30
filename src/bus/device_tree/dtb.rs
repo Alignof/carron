@@ -1,4 +1,5 @@
 mod parse;
+mod util;
 
 use parse::FdtNodeKind;
 
