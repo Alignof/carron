@@ -27,6 +27,7 @@ struct dtb_data {
     mmap: dtb_mmap,
 }
 
+#[allow(non_camel_case_types)]
 enum FdtNodeKind {
     BEGIN_NODE = 0x1,
     END_NODE = 0x2,
@@ -35,7 +36,7 @@ enum FdtNodeKind {
     END = 0x9,
 }
 
-fn parse_node(lines: Peekable<std::str::Lines>, mmap: dtb_mmap) -> (Peekable<std::str::Lines>, dtb_mmap){
+fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
     let line = lines.next().expect("device tree is invalid");
     match line.chars().last().unwrap() {
         '{' => {
@@ -46,20 +47,18 @@ fn parse_node(lines: Peekable<std::str::Lines>, mmap: dtb_mmap) -> (Peekable<std
         },
         _ => panic!("dtb parse error!"),
     };
-
-    (lines, mmap)
 }
 
 fn make_dtb(dts: String) -> dtb_data {
     let mut mmap: dtb_mmap = dtb_mmap {
-        reserve: vec![0x0, 0x0],
-        structure: Vec::new(),
-        strings: Vec::new(),
+            reserve: vec![0x0, 0x0],
+            structure: Vec::new(),
+            strings: Vec::new(),
     };
     let mut lines = dts.lines().peekable();
 
     loop {
-        (lines, mmap) = parse_node(lines, mmap);
+        parse_node(&mut lines, &mut mmap);
         if lines.peek().is_none() {
             break;
         }
