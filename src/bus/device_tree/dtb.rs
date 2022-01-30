@@ -1,3 +1,4 @@
+#[allow(non_camel_case_types)]
 struct fdt_header {
     magic: u32,
     totalsize: u32,
@@ -11,6 +12,7 @@ struct fdt_header {
     size_dt_struct: u32,
 }
 
+#[allow(non_camel_case_types)]
 struct dtb_data {
     header: fdt_header,
     reserve: Vec<u64>,
@@ -19,12 +21,34 @@ struct dtb_data {
 }
 
 fn make_dtb(dts: String) -> dtb_data {
+    let structure: Vec<u32> = Vec::new();
+    let strings: Vec<u8> = Vec::new();
+
     for line in dts.split('\n') {
         match line.chars().last().unwrap() {
-            '{' => ,
-            ';' => {
-                for token in line.split(' ')
+            '{' => {
             },
+            ';' => {
+            },
+            _ => panic!("dtb parse error!"),
         }
+    }
+
+    dtb_data {
+        header: fdt_header {
+            magic: 0xd00dfeed,
+            totalsize: 0,
+            off_dt_struct: 0x38,
+            off_dt_strings: 0,
+            off_mem_rsvmap: 0,
+            version: 17,
+            last_comp_version: 0,
+            boot_cpuid_phys: 0,
+            size_dt_strings: 0,
+            size_dt_struct: 0,
+        },
+        reserve: vec![0x0, 0x0],
+        structure,
+        strings,
     }
 }
