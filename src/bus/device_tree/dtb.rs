@@ -1,4 +1,4 @@
-use std::iter::Peekable;
+mod parse;
 
 #[allow(non_camel_case_types)]
 struct fdt_header {
@@ -15,7 +15,7 @@ struct fdt_header {
 }
 
 #[allow(non_camel_case_types)]
-struct dtb_mmap {
+pub struct dtb_mmap {
     reserve: Vec<u64>,
     structure: Vec<u32>, 
     strings: Vec<u8>,
@@ -36,19 +36,6 @@ enum FdtNodeKind {
     END = 0x9,
 }
 
-fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
-    let line = lines.next().expect("device tree is invalid");
-    match line.chars().last().unwrap() {
-        '{' => {
-            mmap.structure.push(FdtNodeKind::BEGIN_NODE as u32);
-        },
-        ';' => {
-            mmap.structure.push(FdtNodeKind::PROP as u32);
-        },
-        _ => panic!("dtb parse error!"),
-    };
-}
-
 fn make_dtb(dts: String) -> dtb_data {
     let mut mmap: dtb_mmap = dtb_mmap {
             reserve: vec![0x0, 0x0],
@@ -58,7 +45,7 @@ fn make_dtb(dts: String) -> dtb_data {
     let mut lines = dts.lines().peekable();
 
     loop {
-        parse_node(&mut lines, &mut mmap);
+        parse::parse_node(&mut lines, &mut mmap);
         if lines.peek().is_none() {
             break;
         }
