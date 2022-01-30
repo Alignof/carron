@@ -1,3 +1,5 @@
+use std::iter::Peekable;
+
 #[allow(non_camel_case_types)]
 struct fdt_header {
     magic: u32,
@@ -13,26 +15,56 @@ struct fdt_header {
 }
 
 #[allow(non_camel_case_types)]
-struct dtb_data {
-    header: fdt_header,
+struct dtb_mmap {
     reserve: Vec<u64>,
     structure: Vec<u32>, 
     strings: Vec<u8>,
 }
 
-fn make_dtb(dts: String) -> dtb_data {
-    let structure: Vec<u32> = Vec::new();
-    let strings: Vec<u8> = Vec::new();
+#[allow(non_camel_case_types)]
+struct dtb_data {
+    header: fdt_header,
+    mmap: dtb_mmap,
+}
 
-    for line in dts.split('\n') {
-        match line.chars().last().unwrap() {
-            '{' => {
-            },
-            ';' => {
-            },
-            _ => panic!("dtb parse error!"),
+enum FdtNodeKind {
+    BEGIN_NODE = 0x1,
+    END_NODE = 0x2,
+    PROP = 0x3,
+    NOP = 0x4,
+    END = 0x9,
+}
+
+fn parse_node(lines: Peekable<std::str::Lines>, mmap: dtb_mmap) -> (Peekable<std::str::Lines>, dtb_mmap){
+    let line = lines.next().expect("device tree is invalid");
+    match line.chars().last().unwrap() {
+        '{' => {
+            mmap.structure.push(FdtNodeKind::BEGIN_NODE as u32);
+        },
+        ';' => {
+            mmap.structure.push(FdtNodeKind::PROP as u32);
+        },
+        _ => panic!("dtb parse error!"),
+    };
+
+    (lines, mmap)
+}
+
+fn make_dtb(dts: String) -> dtb_data {
+    let mut mmap: dtb_mmap = dtb_mmap {
+        reserve: vec![0x0, 0x0],
+        structure: Vec::new(),
+        strings: Vec::new(),
+    };
+    let mut lines = dts.lines().peekable();
+
+    loop {
+        (lines, mmap) = parse_node(lines, mmap);
+        if lines.peek().is_none() {
+            break;
         }
     }
+    mmap.structure.push(FdtNodeKind::END as u32);
 
     dtb_data {
         header: fdt_header {
@@ -47,8 +79,6 @@ fn make_dtb(dts: String) -> dtb_data {
             size_dt_strings: 0,
             size_dt_struct: 0,
         },
-        reserve: vec![0x0, 0x0],
-        structure,
-        strings,
+        mmap,
     }
 }
