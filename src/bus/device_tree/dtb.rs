@@ -1,5 +1,7 @@
 mod parse;
 
+use parse::FdtNodeKind;
+
 #[allow(non_camel_case_types)]
 struct fdt_header {
     magic: u32,
@@ -25,15 +27,6 @@ pub struct dtb_mmap {
 struct dtb_data {
     header: fdt_header,
     mmap: dtb_mmap,
-}
-
-#[allow(non_camel_case_types)]
-enum FdtNodeKind {
-    BEGIN_NODE = 0x1,
-    END_NODE = 0x2,
-    PROP = 0x3,
-    NOP = 0x4,
-    END = 0x9,
 }
 
 fn make_dtb(dts: String) -> dtb_data {
