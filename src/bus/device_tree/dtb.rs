@@ -11,27 +11,20 @@ struct fdt_header {
     size_dt_struct: u32,
 }
 
-struct fdt_reserve_entry {
-    address: u64,
-    size: u64,
-}
-
-struct fdt_prop {
-    len: u32,
-    nameoff: u32,
-}
-
-struct fdt_node {
-    name: String,
-    props: Vec<fdt_prop>,
-}
-
-struct dtb_data<'a> {
+struct dtb_data {
     header: fdt_header,
-    reserve: Vec<fdt_reserve_entry>,
-    structure: Vec<fdt_node>, 
-    strings: Vec<(u32, &'a str)>,
+    reserve: Vec<u64>,
+    structure: Vec<u32>, 
+    strings: Vec<u8>,
 }
 
 fn make_dtb(dts: String) -> dtb_data {
+    for line in dts.split('\n') {
+        match line.chars().last().unwrap() {
+            '{' => ,
+            ';' => {
+                for token in line.split(' ')
+            },
+        }
+    }
 }
