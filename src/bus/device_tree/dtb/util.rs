@@ -1,9 +1,8 @@
 use std::iter::Peekable;
 
-//pub fn consume<T: std::cmp::PartialEq + std::fmt::Display + Copy>
-pub fn consume<T: std::iter::Iterator + std::cmp::PartialEq + Iterator<Item = T>>
-    (token: &mut Peekable<T>, expected: &T) -> bool {
-    if token.peek() == Some(expected) {
+pub fn consume<T: std::cmp::PartialEq, U: std::iter::Iterator + Iterator<Item = T>>
+    (token: &mut Peekable<U>, expected: T) -> bool {
+    if token.peek() == Some(&expected) {
         token.next();
         true
     } else {
