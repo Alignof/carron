@@ -47,17 +47,27 @@ pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap
 }
 
 pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
-    let mut tokens = lines.next().expect("device tree is invalid").split(' ');
+    // node
+    if lines.peek().unwrap().chars().last() == Some('{') {
+        // expect node's name and "{"
+        let mut tokens = lines.next().expect("device tree is invalid").split(' ');
+        let node_name = tokens.next().expect("node name not found");
+        util::expect(tokens.next(), "{");
 
-    // expect node's name and "{"
-    let node_name = tokens.next().expect("node name not found");
-    util::expect(tokens.next(), "{");
+        loop {
+            parse_node(lines, mmap);
 
-    parse_property(lines, mmap);
+            // expect "};"
+            let last_token = lines.peek().unwrap().split(' ').last();
+            if last_token == Some("};") {
+                break;
+            }
+        }
 
-    // expect "};"
-    let mut tokens = lines.next().expect("device tree is invalid").split(' ');
-    util::expect(tokens.next(), "};");
+    // property
+    } else {
+        parse_property(lines, mmap);
+    }
 }
 
 
