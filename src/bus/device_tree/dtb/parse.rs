@@ -11,7 +11,39 @@ pub enum FdtNodeKind {
     END = 0x9,
 }
 
+pub fn parse_data(data: &str, mmap: &mut dtb_mmap) {
+    let mut data_ch = &mut data.chars();
+    match data_ch.next().unwrap() {
+        '"' => {
+            let str_data: String = data_ch
+                .skip_while(|c| *c == '"')
+                .collect::<String>();
+            util::consume(data_ch.next(), '"');
+        },
+        '<' => {
+            let int_data: u32 = data_ch
+                .skip_while(|c| *c == '>')
+                .collect::<String>()
+                .parse()
+                .expect("parsing integer error.");
+            util::consume(data_ch.next(), '>');
+        },
+        _ => panic!("prop data is invalid"),
+    }
+
+    if data_ch.last() != Some(';') {
+        panic!("{} <-- ';' expected.", data);
+    }
+}
+
 pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
+    let mut tokens = lines.next().expect("device tree is invalid").split(' ');
+    let prop_name = tokens.next().expect("prop name not found");
+
+    util::consume(tokens.next(), "=");
+
+    let raw_data = tokens.next().expect("data not found");
+    parse_data(raw_data, mmap);
 }
 
 pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
