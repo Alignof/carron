@@ -25,12 +25,12 @@ pub struct dtb_mmap {
 }
 
 #[allow(non_camel_case_types)]
-struct dtb_data {
+pub struct dtb_data {
     header: fdt_header,
     mmap: dtb_mmap,
 }
 
-fn make_dtb(dts: String) -> dtb_data {
+pub fn make_dtb(dts: String) -> dtb_data {
     let mut mmap: dtb_mmap = dtb_mmap {
             reserve: vec![0x0, 0x0],
             structure: Vec::new(),
@@ -38,11 +38,8 @@ fn make_dtb(dts: String) -> dtb_data {
     };
     let mut lines = dts.lines().peekable();
 
-    loop {
+    while lines.peek().is_some() {
         parse::parse_node(&mut lines, &mut mmap);
-        if lines.peek().is_none() {
-            break;
-        }
     }
     mmap.structure.push(FdtNodeKind::END as u32);
 
