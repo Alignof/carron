@@ -1,13 +1,15 @@
 use std::iter::{SkipWhile, Peekable};
 
-pub fn tokenize<'a, P: for<'r> std::ops::FnMut(&'r &'a str,)>(lines: &'a mut Peekable<std::str::Lines>, errmsg: &'a str)
+/*
+pub fn tokenize<'a, P: for<'r> std::ops::FnMut(&'r &'a str,) + FnOnce(&'a str) -> bool>(lines: &'a mut Peekable<std::str::Lines>, errmsg: &'a str)
     -> SkipWhile<std::str::Split<'a, char>, P> {
     lines
         .next()
         .expect(errmsg)
         .split(' ')
-        .skip_while(|t| *t == "")
+        .skip_while(|t: P| *t == "")
 }
+*/
 
 pub fn consume<T: std::cmp::PartialEq, U: std::iter::Iterator + Iterator<Item = T>>
     (token: &mut Peekable<U>, expected: T) -> bool {
