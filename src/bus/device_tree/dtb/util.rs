@@ -1,12 +1,26 @@
-use std::iter::{SkipWhile, Peekable};
+use std::iter::Peekable;
 
-pub fn tokenize<'a>(lines: &'a mut Peekable<std::str::Lines>, errmsg: &'a str)
+fn tokenize<'a>(lines: &'a mut Peekable<std::str::Lines>, errmsg: &'a str)
     -> std::str::Split<'a, char> {
-    lines
+    lines 
         .next()
         .expect(errmsg)
         .trim_left() // remove indent
         .split(' ')
+}
+
+pub fn tokenize_node<'a>(lines: &'a mut Peekable<std::str::Lines>)
+    -> std::str::Split<'a, char> {
+    let tokens = tokenize(lines, "node is invalid");
+
+    tokens
+}
+
+pub fn tokenize_prop<'a>(lines: &'a mut Peekable<std::str::Lines>)
+    -> std::str::Split<'a, char> {
+    let tokens = tokenize(lines, "property is invalid");
+
+    tokens
 }
 
 pub fn consume<T: std::cmp::PartialEq, U: std::iter::Iterator + Iterator<Item = T>>
