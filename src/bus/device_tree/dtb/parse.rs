@@ -36,13 +36,13 @@ pub fn parse_data(data: &str, mmap: &mut dtb_mmap) {
 }
 
 pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
-    let mut tokens = util::tokenize_prop(lines);
+    let mut tokens = util::tokenize(lines, "property is invalid");
     let prop_name = tokens.next().expect("prop name not found");
 
     util::expect(tokens.next(), "=");
 
-    let raw_data = tokens.next().expect("data not found");
-    parse_data(raw_data, mmap);
+    let raw_data = tokens.collect::<Vec<_>>().join("");
+    parse_data(&raw_data, mmap);
 }
 
 pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
@@ -50,7 +50,7 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
     // node
     if lines.peek().unwrap().chars().last() == Some('{') {
         // expect node's name and "{"
-        let mut tokens = util::tokenize_node(lines);
+        let mut tokens = util::tokenize(lines, "node is invalid");
         let node_name = tokens.next().expect("node name not found");
         util::expect(tokens.next(), "{");
 
@@ -60,8 +60,11 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
             // expect "};"
             let last_token = lines.peek().unwrap().split(' ').last();
             if last_token == Some("};") {
+                dbg!(&last_token);
                 break;
             }
+
+            if consume(lines, "};");
         }
 
     // property
