@@ -1,6 +1,7 @@
 mod parse;
 mod util;
 
+use std::collections::HashMap;
 use parse::FdtNodeKind;
 
 #[allow(non_camel_case_types)]
@@ -22,6 +23,8 @@ pub struct dtb_mmap {
     reserve: Vec<u64>,
     structure: Vec<u32>, 
     strings: Vec<u8>,
+    labels: HashMap<String, u32>,
+    current_label: Option<String>,
 }
 
 #[allow(non_camel_case_types)]
@@ -35,6 +38,8 @@ pub fn make_dtb(dts: String) -> dtb_data {
             reserve: vec![0x0, 0x0],
             structure: Vec::new(),
             strings: Vec::new(),
+            labels: HashMap::new(),
+            current_label: None,
     };
     let mut lines = dts.lines().peekable();
 
