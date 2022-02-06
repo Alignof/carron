@@ -5,7 +5,6 @@ pub fn tokenize<'a>(lines: &'a mut Peekable<std::str::Lines>, errmsg: &'a str)
     lines 
         .next()
         .expect(errmsg)
-        .trim_start() // remove indent
         .split(' ')
 }
 
