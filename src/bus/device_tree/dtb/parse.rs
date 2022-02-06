@@ -29,7 +29,12 @@ pub fn parse_data(data: &str, mmap: &mut dtb_mmap) {
                     if let Some(hex) = num.strip_prefix("0x") {
                         u32::from_str_radix(hex, 16).expect("parsing hex error.")
                     } else {
-                        num.parse().expect("parsing integer error.")
+                        num.parse::<u32>().unwrap_or_else(|_| {
+                            mmap.labels
+                                .get(num.trim_start_matches('&'))
+                                .expect("parsing integer error.")
+                                .clone()
+                        })
                     }
                 })
                 .collect::<Vec<u32>>();
@@ -61,9 +66,10 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
 
         let first = tokens.next().expect("node name not found");
         if util::consume(tokens, "{") {
+            mmap.current_label = None;
             let node_name = first; 
         } else {
-            let label = first;
+            mmap.current_label = Some(first.to_string());
             let node_name = tokens.next().expect("node name not found");
             util::expect(tokens.next(), "{");
         }
