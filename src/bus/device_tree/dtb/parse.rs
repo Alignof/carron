@@ -21,11 +21,18 @@ pub fn parse_data(data: &str, mmap: &mut dtb_mmap) {
                 .collect::<String>();
         },
         '<' => {
-            let int_data: u32 = data_ch
+            let int_datas: Vec<u32> = data_ch
                 .take_while(|c| *c != '>')
                 .collect::<String>()
-                .parse()
-                .expect("parsing integer error.");
+                .split(' ')
+                .map(|num| {
+                    if let Some(hex) = num.strip_prefix("0x") {
+                        u32::from_str_radix(hex, 16).expect("parsing hex error.")
+                    } else {
+                        num.parse().expect("parsing integer error.")
+                    }
+                })
+                .collect::<Vec<u32>>();
         },
         _ => panic!("prop data is invalid"),
     }
@@ -36,13 +43,13 @@ pub fn parse_data(data: &str, mmap: &mut dtb_mmap) {
 }
 
 pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
-    let mut tokens = util::tokenize(lines, "property is invalid");
+    let tokens = &mut util::tokenize(lines, "property is invalid").peekable();
     let prop_name = tokens.next().expect("prop name not found");
 
-    util::expect(tokens.next(), "=");
-
-    let raw_data = tokens.collect::<Vec<_>>().join("");
-    parse_data(&raw_data, mmap);
+    if util::consume(tokens, "=") {
+        let raw_data = tokens.collect::<Vec<_>>().join(" ");
+        parse_data(&raw_data, mmap);
+    }
 }
 
 pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
@@ -50,19 +57,24 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
     // node
     if lines.peek().unwrap().chars().last() == Some('{') {
         // expect node's name and "{"
-        let mut tokens = util::tokenize(lines, "node is invalid");
-        let node_name = tokens.next().expect("node name not found");
-        util::expect(tokens.next(), "{");
+        let tokens = &mut util::tokenize(lines, "node is invalid").peekable();
+
+        let first = tokens.next().expect("node name not found");
+        if util::consume(tokens, "{") {
+            let node_name = first; 
+        } else {
+            let label = first;
+            let node_name = tokens.next().expect("node name not found");
+            util::expect(tokens.next(), "{");
+        }
 
         loop {
             parse_node(lines, mmap);
 
-            // expect "};"
             if util::consume(lines, "};") {
                 break;
             }
         }
-
     // property
     } else {
         parse_property(lines, mmap);
