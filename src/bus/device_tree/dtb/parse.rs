@@ -58,13 +58,9 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
             parse_node(lines, mmap);
 
             // expect "};"
-            let last_token = lines.peek().unwrap().split(' ').last();
-            if last_token == Some("};") {
-                dbg!(&last_token);
+            if util::consume(lines, "};") {
                 break;
             }
-
-            if consume(lines, "};");
         }
 
     // property
