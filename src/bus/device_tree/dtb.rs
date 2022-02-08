@@ -22,7 +22,7 @@ struct fdt_header {
 pub struct dtb_mmap {
     reserve: Vec<u64>,
     structure: Vec<u32>, 
-    strings: Vec<u8>,
+    strings: Vec<String>,
     labels: HashMap<String, u32>,
     current_label: Option<String>,
 }
