@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 use super::util;
-use super::dtb_mmap;
+use super::{dtb_mmap, FdtNodeKind};
 
 pub fn parse_data(data: &str, mmap: &mut dtb_mmap) {
     dbg!(data);
@@ -57,7 +57,9 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
 
         let first = tokens.next().expect("node name not found");
         if util::consume(tokens, "{") {
+            mmap.write_nodekind(FdtNodeKind::BEGIN_NODE);
             mmap.current_label = None;
+
             let node_name = first; 
         } else {
             mmap.current_label = Some(first.to_string());

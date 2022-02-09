@@ -26,6 +26,12 @@ pub struct dtb_mmap {
     current_label: Option<String>,
 }
 
+impl dtb_mmap {
+    pub fn write_nodekind(&mut self, kind: FdtNodeKind) {
+        self.structure.push(kind as u32);
+    }
+}
+
 #[allow(non_camel_case_types)]
 pub enum FdtNodeKind {
     BEGIN_NODE = 0x1,
