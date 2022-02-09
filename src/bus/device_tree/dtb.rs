@@ -22,20 +22,42 @@ pub struct dtb_mmap {
     reserve: Vec<u64>,
     structure: Vec<u32>, 
     strings: Vec<String>,
-    labels: HashMap<String, u32>,
+    //strings: HashMap<String, u32>,  // str, offset
+    labels: HashMap<String, u32>,   // label, address-cells 
     current_label: Option<String>,
 }
 
 impl dtb_mmap {
+    fn regist_string(&mut self, name: &str) -> u32 {
+        //self.strings.entry(name.to_string()).or_insert(offset);
+        match self.strings.iter().position(|x| x == name) {
+            Some(i) => {
+                self.strings[..i]
+                    .iter()
+                    .flat_map(|s| s.chars())
+                    .count() as u32
+            },
+            None => {
+                self.strings.push(name.to_string());
+                self.strings
+                    .iter()
+                    .flat_map(|s| s.chars())
+                    .count() as u32
+            },
+        }
+    }
+
     pub fn write_nodekind(&mut self, kind: FdtNodeKind) {
         self.structure.push(kind as u32);
     }
 
+    /*
     pub fn write_nodename(&mut self, name: &str) {
-        self.structure.push(name.len()); // data len
+        self.structure.push(name.len() as u32); // data len
         self.structure.push(); // name offset
         self.structure.push(); // data
     }
+    */
 }
 
 #[allow(non_camel_case_types)]
