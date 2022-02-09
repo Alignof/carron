@@ -30,6 +30,12 @@ impl dtb_mmap {
     pub fn write_nodekind(&mut self, kind: FdtNodeKind) {
         self.structure.push(kind as u32);
     }
+
+    pub fn write_nodename(&mut self, name: &str) {
+        self.structure.push(name.len()); // data len
+        self.structure.push(); // name offset
+        self.structure.push(); // data
+    }
 }
 
 #[allow(non_camel_case_types)]
