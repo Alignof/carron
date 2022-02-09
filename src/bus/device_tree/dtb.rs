@@ -2,7 +2,6 @@ mod parse;
 mod util;
 
 use std::collections::HashMap;
-use parse::FdtNodeKind;
 
 #[allow(non_camel_case_types)]
 struct fdt_header {
@@ -25,6 +24,15 @@ pub struct dtb_mmap {
     strings: Vec<String>,
     labels: HashMap<String, u32>,
     current_label: Option<String>,
+}
+
+#[allow(non_camel_case_types)]
+pub enum FdtNodeKind {
+    BEGIN_NODE = 0x1,
+    END_NODE = 0x2,
+    PROP = 0x3,
+    NOP = 0x4,
+    END = 0x9,
 }
 
 #[allow(non_camel_case_types)]

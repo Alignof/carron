@@ -2,15 +2,6 @@ use std::iter::Peekable;
 use super::util;
 use super::dtb_mmap;
 
-#[allow(non_camel_case_types)]
-pub enum FdtNodeKind {
-    BEGIN_NODE = 0x1,
-    END_NODE = 0x2,
-    PROP = 0x3,
-    NOP = 0x4,
-    END = 0x9,
-}
-
 pub fn parse_data(data: &str, mmap: &mut dtb_mmap) {
     dbg!(data);
     let mut data_ch = &mut data.chars();
