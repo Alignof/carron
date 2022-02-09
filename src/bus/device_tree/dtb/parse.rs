@@ -42,6 +42,7 @@ pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap
     let tokens = &mut util::tokenize(lines, "property is invalid").peekable();
     let prop_name = tokens.next().expect("prop name not found");
 
+    mmap.write_nodekind(FdtNodeKind::PROP);
     if util::consume(tokens, "=") {
         let raw_data = tokens.collect::<Vec<_>>().join(" ");
         parse_data(&raw_data, mmap);
@@ -49,32 +50,36 @@ pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap
 }
 
 pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
+    // expect node's name and "{"
+    let tokens = &mut util::tokenize(lines, "node is invalid").peekable();
+
+    let first = tokens.next().expect("node name not found");
+    if util::consume(tokens, "{") {
+        mmap.write_nodekind(FdtNodeKind::BEGIN_NODE);
+        mmap.current_label = None;
+
+        let node_name = first; 
+    } else {
+        mmap.current_label = Some(first.to_string());
+        let node_name = tokens.next().expect("node name not found");
+        util::expect(tokens.next(), "{");
+    }
+
+    loop {
+        parse_line(lines, mmap);
+
+        if util::consume(lines, "};") {
+            mmap.write_nodekind(FdtNodeKind::END_NODE);
+            break;
+        }
+    }
+}
+
+pub fn parse_line(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
     dbg!(&lines.peek());
-    // node
+
     if lines.peek().unwrap().chars().last() == Some('{') {
-        // expect node's name and "{"
-        let tokens = &mut util::tokenize(lines, "node is invalid").peekable();
-
-        let first = tokens.next().expect("node name not found");
-        if util::consume(tokens, "{") {
-            mmap.write_nodekind(FdtNodeKind::BEGIN_NODE);
-            mmap.current_label = None;
-
-            let node_name = first; 
-        } else {
-            mmap.current_label = Some(first.to_string());
-            let node_name = tokens.next().expect("node name not found");
-            util::expect(tokens.next(), "{");
-        }
-
-        loop {
-            parse_node(lines, mmap);
-
-            if util::consume(lines, "};") {
-                break;
-            }
-        }
-    // property
+        parse_node(lines, mmap);
     } else {
         parse_property(lines, mmap);
     }

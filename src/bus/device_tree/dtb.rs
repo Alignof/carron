@@ -58,9 +58,9 @@ pub fn make_dtb(dts: String) -> dtb_data {
     let mut lines = dts.lines().peekable();
 
     while lines.peek().is_some() {
-        parse::parse_node(&mut lines, &mut mmap);
+        parse::parse_line(&mut lines, &mut mmap);
     }
-    mmap.structure.push(FdtNodeKind::END as u32);
+    mmap.write_nodekind(FdtNodeKind::END);
 
     dtb_data {
         header: fdt_header {
