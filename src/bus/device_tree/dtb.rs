@@ -51,13 +51,19 @@ impl dtb_mmap {
         self.structure.push(kind as u32);
     }
 
-    /*
     pub fn write_nodename(&mut self, name: &str) {
+        let offset = self.regist_string("node_name");
         self.structure.push(name.len() as u32); // data len
-        self.structure.push(); // name offset
-        self.structure.push(); // data
+        self.structure.push(offset); // prop name offset
+        self.structure.append(
+            &mut name
+                .to_string()
+                .into_bytes()
+                .chunks(4)
+                .map(|bs| u32::from_be_bytes(bs.try_into().unwrap()))
+                .collect()
+        ); // prop name offset
     }
-    */
 }
 
 #[allow(non_camel_case_types)]
