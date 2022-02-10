@@ -22,6 +22,15 @@ struct Strings {
     pub current_offset: u32,
 }
 
+impl Strings {
+    pub fn new() -> Strings {
+        Strings {
+            table: HashMap::new(),
+            current_offset: 0,
+        }
+    }
+}
+
 #[allow(non_camel_case_types)]
 pub struct dtb_mmap {
     reserve: Vec<u64>,
@@ -33,22 +42,13 @@ pub struct dtb_mmap {
 
 impl dtb_mmap {
     fn regist_string(&mut self, name: &str) -> u32 {
-        //self.strings.entry(name.to_string()).or_insert(offset);
-        match self.strings.iter().position(|x| x == name) {
-            Some(i) => {
-                self.strings[..i]
-                    .iter()
-                    .flat_map(|s| s.chars())
-                    .count() as u32
-            },
-            None => {
-                self.strings.push(name.to_string());
-                self.strings
-                    .iter()
-                    .flat_map(|s| s.chars())
-                    .count() as u32
-            },
-        }
+        let offset_of_name = self.strings.current_offset;
+        self.strings.table
+            .entry(name.to_string())
+            .or_insert(self.strings.current_offset);
+        self.strings.current_offset += name.len() as u32;
+
+        offset_of_name
     }
 
     pub fn write_nodekind(&mut self, kind: FdtNodeKind) {
@@ -89,7 +89,7 @@ pub fn make_dtb(dts: String) -> dtb_data {
     let mut mmap: dtb_mmap = dtb_mmap {
             reserve: vec![0x0, 0x0],
             structure: Vec::new(),
-            strings: Vec::new(),
+            strings: Strings::new(),
             labels: HashMap::new(),
             current_label: None,
     };
