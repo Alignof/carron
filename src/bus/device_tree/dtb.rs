@@ -17,13 +17,17 @@ struct fdt_header {
     size_dt_struct: u32,
 }
 
+struct Strings {
+    pub table: HashMap<String, u32>, // str, offset
+    pub current_offset: u32,
+}
+
 #[allow(non_camel_case_types)]
 pub struct dtb_mmap {
     reserve: Vec<u64>,
     structure: Vec<u32>, 
-    strings: Vec<String>,
-    //strings: HashMap<String, u32>,  // str, offset
-    labels: HashMap<String, u32>,   // label, address-cells 
+    strings: Strings,
+    labels: HashMap<String, u32>, // label, address-cells 
     current_label: Option<String>,
 }
 
