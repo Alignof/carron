@@ -55,6 +55,13 @@ impl dtb_mmap {
         self.structure.push(kind as u32);
     }
 
+    pub fn write_property(&mut self, name: &str, data: &mut Vec<u32>) {
+        let offset = self.regist_string(name);
+        self.structure.push(data.len() as u32 * 4); // data len
+        self.structure.push(offset); // prop name offset
+        self.structure.append(data);
+    }
+
     pub fn write_nodename(&mut self, name: &str) {
         let offset = self.regist_string("node_name");
         self.structure.push(name.len() as u32); // data len
