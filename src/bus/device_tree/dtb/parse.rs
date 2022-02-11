@@ -54,14 +54,15 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
     let tokens = &mut util::tokenize(lines, "node is invalid").peekable();
 
     let first = tokens.next().expect("node name not found");
+    mmap.write_nodekind(FdtNodeKind::BEGIN_NODE);
     if util::consume(tokens, "{") {
-        mmap.write_nodekind(FdtNodeKind::BEGIN_NODE);
+        let node_name = first;
+        mmap.write_nodename(node_name);
         mmap.current_label = None;
-
-        let node_name = first; 
     } else {
-        mmap.current_label = Some(first.to_string());
         let node_name = tokens.next().expect("node name not found");
+        mmap.write_nodename(node_name);
+        mmap.current_label = Some(first.to_string());
         util::expect(tokens.next(), "{");
     }
 
