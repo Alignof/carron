@@ -71,9 +71,12 @@ impl dtb_mmap {
                 .to_string()
                 .into_bytes()
                 .chunks(4)
-                .map(|bs| u32::from_be_bytes(bs.try_into().unwrap()))
+                .map(|bs| {
+                    // &[u8] -> [u8; 4]
+                    u32::from_be_bytes(bs.try_into().expect("from_be_bytes failed"))
+                })
                 .collect()
-        ); // prop name offset
+        );
     }
 }
 

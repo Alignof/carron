@@ -51,7 +51,8 @@ pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap
     mmap.write_nodekind(FdtNodeKind::PROP);
     if util::consume(tokens, "=") {
         let raw_data = tokens.collect::<Vec<_>>().join(" ");
-        parse_data(&raw_data, mmap);
+        let mut data_map = parse_data(&raw_data, mmap);
+        mmap.write_property(prop_name, &mut data_map);
     }
 }
 
