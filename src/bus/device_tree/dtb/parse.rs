@@ -12,7 +12,12 @@ pub fn parse_data(data: &str, mmap: &mut dtb_mmap) -> Vec<u32> {
                 .collect::<String>()
                 .into_bytes()
                 .chunks(4)
-                .map(|bs| u32::from_be_bytes(bs.try_into().unwrap()))
+                .map(|bs| {
+                    // &[u8] -> [u8; 4]
+                    let mut s = [0; 4];
+                    s[.. bs.len()].clone_from_slice(bs);
+                    u32::from_be_bytes(s)
+                })
                 .collect()
         },
         '<' => {

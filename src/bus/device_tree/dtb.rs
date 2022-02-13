@@ -73,7 +73,9 @@ impl dtb_mmap {
                 .chunks(4)
                 .map(|bs| {
                     // &[u8] -> [u8; 4]
-                    u32::from_be_bytes(bs.try_into().expect("from_be_bytes failed"))
+                    let mut s = [0; 4];
+                    s[.. bs.len()].clone_from_slice(bs);
+                    u32::from_be_bytes(s)
                 })
                 .collect()
         );
