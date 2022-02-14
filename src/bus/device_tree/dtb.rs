@@ -41,6 +41,10 @@ pub struct dtb_mmap {
 }
 
 impl dtb_mmap {
+    pub fn regist_label(&mut self, name: String, addr_cells:u32) {
+        self.labels.insert(name, addr_cells);
+    }
+
     fn regist_string(&mut self, name: &str) -> u32 {
         let offset_of_name = self.strings.current_offset;
         self.strings.table
