@@ -32,7 +32,7 @@ pub fn parse_data(data: &str, mmap: &mut dtb_mmap) -> Vec<u32> {
                         num.parse::<u32>().unwrap_or_else(|_| {
                             mmap.labels
                                 .get(num.trim_start_matches('&'))
-                                .expect("parsing integer error.")
+                                .expect("label referencing error.")
                                 .clone()
                         })
                     }
@@ -80,7 +80,7 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
     } else {
         let node_name = tokens.next().expect("node name not found");
         mmap.write_nodename(node_name);
-        mmap.current_label = Some(first.to_string());
+        mmap.current_label = Some(first.trim_end_matches(':').to_string());
         util::expect(tokens.next(), "{");
     }
 

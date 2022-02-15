@@ -41,7 +41,7 @@ pub fn make_dts(dram_addr: u32) -> String {
             ranges;
             clint@2000000 {{
               compatible = \"riscv,clint0\";
-              interrupts-extended = <&CPU0_intc 3 &CPU0_intc 7 >;
+              interrupts-extended = <&CPU0_intc 3 &CPU0_intc 7>;
               reg = <0x0 0x2000000 0x0 0xc0000>;
             }};
           }};
