@@ -63,7 +63,7 @@ impl dtb_mmap {
         let offset = self.regist_string(name);
         self.structure.push(data.len() as u32 * 4); // data len
         self.structure.push(offset); // prop name offset
-        self.structure.append(data);
+        self.structure.extend_from_slice(data);
     }
 
     pub fn write_nodename(&mut self, name: &str) {

@@ -58,6 +58,12 @@ pub fn parse_property(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap
         let raw_data = tokens.collect::<Vec<_>>().join(" ");
         let mut data_map = parse_data(&raw_data, mmap);
         mmap.write_property(prop_name, &mut data_map);
+
+        if prop_name == "#address-cells" {
+            if let Some(addr_cells) = mmap.current_label.clone() {
+                mmap.regist_label(addr_cells, data_map[0]);
+            }
+        }
     }
 }
 
