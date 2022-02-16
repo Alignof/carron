@@ -19,7 +19,7 @@ impl Bus {
         } else {
             Dram::new(loader)
         };
-        let mrom = Mrom::new(entry);
+        let mut mrom = Mrom::new(entry);
 
         // create and load DTB
         mrom.load_dtb(dram.base_addr);

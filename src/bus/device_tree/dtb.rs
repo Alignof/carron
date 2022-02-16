@@ -97,8 +97,8 @@ pub enum FdtNodeKind {
 
 #[allow(non_camel_case_types)]
 pub struct dtb_data {
-    header: fdt_header,
-    mmap: dtb_mmap,
+        header: fdt_header,
+    pub mmap: dtb_mmap,
 }
 
 pub fn make_dtb(dts: String) -> dtb_data {
@@ -127,7 +127,7 @@ pub fn make_dtb(dts: String) -> dtb_data {
         4
     );
     let size_dt_struct = util::align_size(
-        mmap.structure.len() * 8,
+        mmap.structure.len() * 8, // u64 = 8byte
         4
     );
     let totalsize = size_dt_header + size_dt_reserve + size_dt_strings + size_dt_struct;
@@ -148,3 +148,31 @@ pub fn make_dtb(dts: String) -> dtb_data {
         mmap,
     }
 }
+
+pub fn make_dtb_mmap(dtb: dtb_data) -> Vec<u8> {
+    let mut dtb_mmap: Vec<u8> = Vec::new();
+    
+    dtb_mmap.append(
+        &mut dtb.mmap.reserve
+            .iter()
+            .flat_map(|x| x.to_be_bytes())
+            .collect::<Vec<u8>>()
+    );
+
+    dtb_mmap.append(
+        &mut dtb.mmap.structure
+            .iter()
+            .flat_map(|x| x.to_be_bytes())
+            .collect::<Vec<u8>>()
+    );
+
+    dtb_mmap.append(
+        &mut dtb.mmap.strings.table.keys()
+            .cloned()
+            .flat_map(|s| s.into_bytes())
+            .collect::<Vec<u8>>()
+    );
+
+    dtb_mmap
+}
+
