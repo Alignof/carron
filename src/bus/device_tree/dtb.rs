@@ -101,7 +101,7 @@ pub struct dtb_data {
     pub mmap: dtb_mmap,
 }
 
-pub fn make_dtb(dts: String) -> dtb_data {
+pub fn make_dtb(dts: String) -> Vec<u8> {
     let mut mmap: dtb_mmap = dtb_mmap {
             reserve: vec![0x0, 0x0],
             structure: Vec::new(),
@@ -116,63 +116,38 @@ pub fn make_dtb(dts: String) -> dtb_data {
     }
     mmap.write_nodekind(FdtNodeKind::END);
 
+    let reserve = mmap.reserve
+        .iter()
+        .flat_map(|x| x.to_be_bytes())
+        .collect::<Vec<u8>>();
+
+    let structure = mmap.structure
+        .iter()
+        .flat_map(|x| x.to_be_bytes())
+        .collect::<Vec<u8>>();
+
+    let strings = mmap.strings.table.keys()
+        .cloned()
+        .flat_map(|s| s.into_bytes())
+        .collect::<Vec<u8>>();
+
     let size_dt_header = 0x28;
-    let size_dt_reserve = util::align_size(0x10, 8);
-    let size_dt_strings = util::align_size(
-        mmap.strings.table.keys()
-            .cloned()
-            .flat_map(|s| s.into_bytes())
-            .collect::<Vec<u8>>()
-            .len(),
-        4
-    );
-    let size_dt_struct = util::align_size(
-        mmap.structure.len() * 8, // u64 = 8byte
-        4
-    );
+    let size_dt_reserve = util::align_size(reserve.len(), 8);
+    let size_dt_strings = util::align_size(structure.len(), 4);
+    let size_dt_struct = util::align_size(structure.len(), 4);
     let totalsize = size_dt_header + size_dt_reserve + size_dt_strings + size_dt_struct;
 
-    dtb_data {
-        header: fdt_header {
-            magic: 0xd00dfeed,
-            totalsize,
-            off_dt_struct: size_dt_header + size_dt_reserve,
-            off_dt_strings: size_dt_header + size_dt_reserve + size_dt_strings,
-            off_mem_rsvmap: size_dt_header,
-            version: 17,
-            last_comp_version: 0,
-            boot_cpuid_phys: 0,
-            size_dt_strings,
-            size_dt_struct,
-        },
-        mmap,
-    }
-}
-
-pub fn make_dtb_mmap(dtb: dtb_data) -> Vec<u8> {
-    let mut dtb_mmap: Vec<u8> = Vec::new();
-    
-    dtb_mmap.append(
-        &mut dtb.mmap.reserve
-            .iter()
-            .flat_map(|x| x.to_be_bytes())
-            .collect::<Vec<u8>>()
-    );
-
-    dtb_mmap.append(
-        &mut dtb.mmap.structure
-            .iter()
-            .flat_map(|x| x.to_be_bytes())
-            .collect::<Vec<u8>>()
-    );
-
-    dtb_mmap.append(
-        &mut dtb.mmap.strings.table.keys()
-            .cloned()
-            .flat_map(|s| s.into_bytes())
-            .collect::<Vec<u8>>()
-    );
-
-    dtb_mmap
+    let header = fdt_header {
+        magic: 0xd00dfeed,
+        totalsize,
+        off_dt_struct: size_dt_header + size_dt_reserve,
+        off_dt_strings: size_dt_header + size_dt_reserve + size_dt_strings,
+        off_mem_rsvmap: size_dt_header,
+        version: 17,
+        last_comp_version: 0,
+        boot_cpuid_phys: 0,
+        size_dt_strings,
+        size_dt_struct,
+    };
 }
 
