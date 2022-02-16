@@ -110,6 +110,10 @@ pub fn make_dtb(dts: String) -> Vec<u8> {
     }
     mmap.write_nodekind(FdtNodeKind::END);
 
+    make_dtb_mmap(mmap)
+}
+
+fn make_dtb_mmap(mmap: dtb_mmap) -> Vec<u8> {
     let reserve = mmap.reserve
         .iter()
         .flat_map(|x| x.to_be_bytes())
