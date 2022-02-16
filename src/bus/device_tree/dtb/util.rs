@@ -24,3 +24,7 @@ pub fn expect<T: std::cmp::PartialEq + std::fmt::Display + Copy>
         panic!("dtb parse error! ('{}' not found)", expected);
     }
 }
+
+pub fn align_size(size: usize, alignment: u32) -> u32 {
+    (size as u32 + alignment - 1) & !(alignment - 1)
+}
