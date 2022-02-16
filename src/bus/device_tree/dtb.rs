@@ -95,12 +95,6 @@ pub enum FdtNodeKind {
     END = 0x9,
 }
 
-#[allow(non_camel_case_types)]
-pub struct dtb_data {
-        header: fdt_header,
-    pub mmap: dtb_mmap,
-}
-
 pub fn make_dtb(dts: String) -> Vec<u8> {
     let mut mmap: dtb_mmap = dtb_mmap {
             reserve: vec![0x0, 0x0],
@@ -133,7 +127,7 @@ pub fn make_dtb(dts: String) -> Vec<u8> {
 
     let size_dt_header = 0x28;
     let size_dt_reserve = util::align_size(reserve.len(), 8);
-    let size_dt_strings = util::align_size(structure.len(), 4);
+    let size_dt_strings = util::align_size(strings.len(), 4);
     let size_dt_struct = util::align_size(structure.len(), 4);
     let totalsize = size_dt_header + size_dt_reserve + size_dt_strings + size_dt_struct;
 
@@ -149,5 +143,7 @@ pub fn make_dtb(dts: String) -> Vec<u8> {
         size_dt_strings,
         size_dt_struct,
     };
+
+    Vec::new()
 }
 

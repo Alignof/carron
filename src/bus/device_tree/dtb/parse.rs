@@ -4,7 +4,7 @@ use super::{dtb_mmap, FdtNodeKind};
 
 pub fn parse_data(data: &str, mmap: &mut dtb_mmap) -> Vec<u32> {
     dbg!(data);
-    let mut data_ch = &mut data.chars();
+    let data_ch = &mut data.chars();
     let data_bin: Vec<u32> = match data_ch.next().unwrap() {
         '"' => {
             data_ch
