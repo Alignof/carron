@@ -41,7 +41,7 @@ impl Dram {
 
     pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: &elfload::ElfLoader) -> (u32, Dram) {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
-        let vart_entry = pk_load.prog_headers[0].p_vaddr;
+        let pk_vart_entry = pk_load.prog_headers[0].p_vaddr;
 
         // create new dram 
         let mut new_dram = vec![0; DRAM_SIZE as usize];
@@ -49,7 +49,7 @@ impl Dram {
         // load proxy kernel 
         dbg!(pk_load.mem_data.len());
         for segment in pk_load.prog_headers.iter() {
-            let dram_start = (segment.p_paddr - vart_entry) as usize;
+            let dram_start = (segment.p_paddr - pk_vart_entry) as usize;
             let mmap_start = segment.p_offset as usize;
             let dram_end = dram_start + segment.p_filesz as usize;
             let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
@@ -68,6 +68,7 @@ impl Dram {
         let user_base_addr = (final_segment.p_offset + final_segment.p_filesz) as u32;
         let align = 0x1000;
         let user_base_addr = ((user_base_addr + (align - 1)) / align) * align;
+        let vart_entry = loader.prog_headers[0].p_vaddr;
 
         // load user program 
         dbg!(loader.mem_data.len());
@@ -87,10 +88,10 @@ impl Dram {
             );
         }
 
-        (vart_entry, // entry address
+        (pk_vart_entry, // entry address
          Dram {
              dram: new_dram,
-             base_addr: vart_entry,
+             base_addr: pk_vart_entry,
          })
     }
 }

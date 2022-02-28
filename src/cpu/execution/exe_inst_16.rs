@@ -91,7 +91,8 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_JALR => {
             // calc next_pc before updated
             let next_pc = cpu.pc + INST_SIZE;
-            // setting the least-significant bit of the result to zero->vvvvvv
+            // setting the least-significant bit of 
+            // the result to zero                ->vvvvvv
             cpu.update_pc(cpu.regs.read(inst.rs1) & !0x1);
             cpu.regs.write(Some(REG_LINK), next_pc as i32); 
         },
