@@ -139,7 +139,7 @@ fn make_dtb_mmap(mmap: dtb_mmap) -> Vec<u8> {
         magic: 0xd00dfeed,
         totalsize,
         off_dt_struct: size_dt_header + size_dt_reserve,
-        off_dt_strings: size_dt_header + size_dt_reserve + size_dt_strings,
+        off_dt_strings: size_dt_header + size_dt_reserve + size_dt_struct,
         off_mem_rsvmap: size_dt_header,
         version: 16,
         last_comp_version: 16,
