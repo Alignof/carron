@@ -1,5 +1,5 @@
-mod exe_inst_16;
-mod exe_inst_32;
+mod inst_16;
+mod inst_32;
 
 use super::CPU;
 use super::instruction::Instruction;
