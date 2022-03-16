@@ -1,9 +1,9 @@
 use super::{Decode, DecodeUtil};
-use crate::cpu::instruction::{OpecodeKind, Instruction};
+use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
-    fn decode(self) -> Instruction {
+    fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
@@ -318,5 +318,9 @@ impl DecodeUtil for u32 {
         }
 
         inst
+    }
+
+    fn extension(self) -> Extensions {
+        Extensions::C
     }
 }

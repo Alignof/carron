@@ -1,10 +1,10 @@
 mod inst_16;
 mod inst_32;
 
-use super::instruction::{OpecodeKind, Instruction};
+use super::instruction::{Extensions, OpecodeKind, Instruction};
 
 pub trait Decode {
-    fn decode(self) -> Instruction;
+    fn decode(&self) -> Instruction;
     fn parse_opecode(self) -> Result<OpecodeKind, &'static str>;
     fn parse_rd(self,  opkind: &OpecodeKind) -> Option<usize>;
     fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize>;

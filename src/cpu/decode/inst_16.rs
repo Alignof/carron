@@ -2,14 +2,10 @@
 mod C_extension;
 
 use super::{Decode, DecodeUtil};
-use crate::cpu::instruction::{OpecodeKind, Instruction};
-
-enum Extensions {
-    C,
-}
+use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
 
 impl Decode for u16 {
-    fn decode(self) -> Instruction {
+    fn decode(&self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
@@ -31,31 +27,31 @@ impl Decode for u16 {
 
     fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
         match self.extension() {
-            C => C_extension::parse_opecode(self),
+            Extensions::C => C_extension::parse_opecode(self),
         }
     }
 
     fn parse_rd(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            C => C_extension::parse_rd(self, opkind),
+            Extensions::C => C_extension::parse_rd(self, opkind),
         }
     }
 
     fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            C => C_extension::parse_rs1(self, opkind),
+            Extensions::C => C_extension::parse_rs1(self, opkind),
         }
     }
 
     fn parse_rs2(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            C => C_extension::parse_rs2(self, opkind),
+            Extensions::C => C_extension::parse_rs2(self, opkind),
         }
     }
 
     fn parse_imm(self, opkind: &OpecodeKind) -> Option<i32> {
         match self.extension() {
-            C => C_extension::parse_imm(self, opkind),
+            Extensions::C => C_extension::parse_imm(self, opkind),
         }
     }
 }
