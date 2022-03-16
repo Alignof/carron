@@ -11,7 +11,12 @@ pub struct Instruction {
 }
 
 pub enum Extensions {
+    BaseI,
+    M,
+    A,
     C,
+    Zicsr,
+    Priv,
 }
 
 #[allow(non_camel_case_types)]

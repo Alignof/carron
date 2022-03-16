@@ -28,30 +28,35 @@ impl Decode for u16 {
     fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
         match self.extension() {
             Extensions::C => C_extension::parse_opecode(self),
+            _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_rd(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
             Extensions::C => C_extension::parse_rd(self, opkind),
+            _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
             Extensions::C => C_extension::parse_rs1(self, opkind),
+            _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_rs2(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
             Extensions::C => C_extension::parse_rs2(self, opkind),
+            _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_imm(self, opkind: &OpecodeKind) -> Option<i32> {
         match self.extension() {
             Extensions::C => C_extension::parse_imm(self, opkind),
+            _ => panic!("It isn't compressed instruction"),
         }
     }
 }
