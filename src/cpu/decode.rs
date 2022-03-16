@@ -1,5 +1,5 @@
-mod decode_inst_16;
-mod decode_inst_32;
+mod inst_16;
+mod inst_32;
 
 use super::instruction::{OpecodeKind, Instruction};
 
