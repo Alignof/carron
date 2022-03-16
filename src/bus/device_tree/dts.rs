@@ -1,6 +1,8 @@
 pub fn make_dts(dram_addr: u32) -> String {
     format!(
-        "/ {{
+        "/dts-v1/;
+
+        / {{
           #address-cells = <2>;
           #size-cells = <2>;
           compatible = \"ucbbar,spike-bare-dev\";
