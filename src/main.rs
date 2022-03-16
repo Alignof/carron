@@ -11,17 +11,20 @@ fn main() {
 
     let loader = match elfload::ElfLoader::try_new(&args.filename) {
         Ok(loader) => loader,
-        Err(error) => {
-            panic!("There was a problem opening the file: {:?}", error);
-        }
+        Err(error) => panic!("There was a problem opening the file: {:?}", error),
     };
+
+    let pk_load = args.pkpath.map(|path| match elfload::ElfLoader::try_new(&path) {
+        Ok(pk) => pk,
+        Err(error) => panic!("There was a problem opening the file: {:?}", error),
+    });
 
     if loader.is_elf() {
         println!("elfcheck: OK\n");
 
         match args.exe_option {
             ExeOption::OPT_DEFAULT  => {
-                let mut simulator: Simulator = Simulator::new(loader, args.init_pc); 
+                let mut simulator: Simulator = Simulator::new(loader, pk_load, args.init_pc); 
                 simulator.simulation();
             },
             ExeOption::OPT_ELFHEAD  => loader.header_show(),

@@ -25,7 +25,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
             }
         },
         OP_C_LUI => {
-            cpu.regs.write(inst.rd, inst.imm.unwrap() << 12);
+            cpu.regs.write(inst.rd, inst.imm.unwrap());
         },
         OP_C_SW => {
             if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
@@ -54,7 +54,7 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
                 cpu.regs.read(inst.rs1) + cpu.regs.read(inst.rs2));
         },
         OP_C_ADDI4SPN => {
-            cpu.regs.write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap());
+            cpu.regs.write(inst.rd, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap());
         },
         OP_C_ADDI => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap());
@@ -91,8 +91,9 @@ pub fn exe_cinst(inst: &Instruction, cpu: &mut CPU) {
         OP_C_JALR => {
             // calc next_pc before updated
             let next_pc = cpu.pc + INST_SIZE;
-            // setting the least-significant bit of the result to zero->vvvvvv
-            cpu.update_pc((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) & !0x1);
+            // setting the least-significant bit of 
+            // the result to zero                ->vvvvvv
+            cpu.update_pc(cpu.regs.read(inst.rs1) & !0x1);
             cpu.regs.write(Some(REG_LINK), next_pc as i32); 
         },
         OP_C_BEQZ => {
