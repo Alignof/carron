@@ -10,7 +10,7 @@ fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
+fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
     let sr_flag: u8 = inst.slice(11, 10) as u8;
     let lo_flag: u8 = inst.slice(6, 5) as u8;
     let mi_flag: u8 = inst.slice(11, 7) as u8;
@@ -47,7 +47,7 @@ fn quadrant1(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
 }
 
 
-fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> { 
+fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> { 
     let lo_flag: u8 = inst.slice(6, 2) as u8;
     let mi_flag: u8 = inst.slice(11, 7) as u8;
     let hi_flag: u8 = inst.slice(12, 12) as u8;
@@ -74,7 +74,7 @@ fn quadrant2(inst: &u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-pub fn parse_opecode(inst: &u16) -> Result<OpecodeKind, &'static str> {
+pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, &'static str> {
     let opmap: u8 = inst.slice(15, 13) as u8;
     let quadrant: u8  = inst.slice(1, 0) as u8;
 
@@ -86,7 +86,7 @@ pub fn parse_opecode(inst: &u16) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-pub fn parse_rd(inst: &u16, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rd(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rd: usize = (inst.slice(4, 2) + 8) as usize;
     let q1_rd: usize = (inst.slice(9, 7) + 8) as usize;
@@ -120,7 +120,7 @@ pub fn parse_rd(inst: &u16, opkind: &OpecodeKind) -> Option<usize> {
     }
 }
 
-pub fn parse_rs1(inst: &u16, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs1(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rs1: usize = (inst.slice(9, 7) + 8) as usize;
     let q1_rs1: usize = (inst.slice(9, 7) + 8) as usize;
@@ -152,7 +152,7 @@ pub fn parse_rs1(inst: &u16, opkind: &OpecodeKind) -> Option<usize> {
     }
 }
 
-pub fn parse_rs2(inst: &u16, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs2(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rs2: usize = (inst.slice(4, 2) + 8) as usize;
     let q1_rs2: usize = (inst.slice(4, 2) + 8) as usize;
@@ -174,7 +174,7 @@ pub fn parse_rs2(inst: &u16, opkind: &OpecodeKind) -> Option<usize> {
     }
 }
 
-pub fn parse_imm(inst: &u16, opkind: &OpecodeKind) -> Option<i32> {
+pub fn parse_imm(inst: u16, opkind: &OpecodeKind) -> Option<i32> {
     let q0_uimm = | | {
         (inst.slice(12, 10).set(&[5,4,3]) | inst.slice(6, 5).set(&[2,6])) as i32
     };

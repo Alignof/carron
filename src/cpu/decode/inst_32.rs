@@ -3,7 +3,7 @@ use crate::cpu::instruction::{OpecodeKind, Instruction};
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
-    fn decode(&self) -> Instruction {
+    fn decode(self) -> Instruction {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => panic!("{}, {:b}", msg, self),
@@ -23,8 +23,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_opecode(&self) -> Result<OpecodeKind, &'static str> {
-        let inst: &u32 = self;
+    fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
+        let inst: u32 = self;
         let opmap: u8  = inst.slice(6, 0) as u8;
         let funct3: u8 = inst.slice(14, 12) as u8;
         let funct5: u8 = inst.slice(24, 20) as u8;
@@ -116,8 +116,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(&self, opkind: &OpecodeKind) -> Option<usize> {
-        let inst:&u32 = self;
+    fn parse_rd(self, opkind: &OpecodeKind) -> Option<usize> {
+        let inst: u32 = self;
         let rd: usize = inst.slice(11, 7) as usize;
 
         // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
@@ -160,8 +160,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rs1(&self, opkind: &OpecodeKind) -> Option<usize> {
-        let inst:&u32 = self;
+    fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize> {
+        let inst: u32 = self;
         let rs1: usize = inst.slice(19, 15) as usize;
 
         // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
@@ -211,8 +211,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rs2(&self, opkind: &OpecodeKind) -> Option<usize> {
-        let inst:&u32 = self;
+    fn parse_rs2(self, opkind: &OpecodeKind) -> Option<usize> {
+        let inst: u32 = self;
         let rs2: usize = inst.slice(24, 20) as usize;
         let csr: usize = inst.slice(31, 20) as usize;
 
@@ -250,8 +250,8 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_imm(&self, opkind: &OpecodeKind) -> Option<i32> {
-        let inst: &u32 = self;
+    fn parse_imm(self, opkind: &OpecodeKind) -> Option<i32> {
+        let inst: u32 = self;
         let U_type = | | {
             (inst.slice(31, 12) << 12) as i32
         };
