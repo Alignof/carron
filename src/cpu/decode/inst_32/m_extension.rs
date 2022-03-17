@@ -224,6 +224,7 @@ pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
     }
 }
 
+#[allow(non_snake_case)]
 pub fn parse_imm(inst: u32, opkind: &OpecodeKind) -> Option<i32> {
     let U_type = | | {
         (inst.slice(31, 12) << 12) as i32

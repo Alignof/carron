@@ -1,4 +1,3 @@
-#[allow(non_snake_case)]
 mod base_i;
 mod m_extension;
 mod a_extension;
