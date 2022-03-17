@@ -1,5 +1,9 @@
 #[allow(non_snake_case)]
 mod BaseI_extension;
+mod M_extension;
+mod A_extension;
+mod Zicsr_extension;
+mod Priv_extension;
 
 use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
@@ -29,35 +33,55 @@ impl Decode for u32 {
     fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
         match self.extension() {
             Extensions::BaseI => BaseI_extension::parse_opecode(self),
-            _ => panic!("It isn't compressed instruction"),
+            Extensions::M => M_extension::parse_opecode(self),
+            Extensions::A => A_extension::parse_opecode(self),
+            Extensions::Zicsr => Zicsr_extension::parse_opecode(self),
+            Extensions::Priv => Priv_extension::parse_opecode(self),
+            _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_rd(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
             Extensions::BaseI => BaseI_extension::parse_rd(self, opkind),
-            _ => panic!("It isn't compressed instruction"),
+            Extensions::M => M_extension::parse_rd(self, opkind),
+            Extensions::A => A_extension::parse_rd(self, opkind),
+            Extensions::Zicsr => Zicsr_extension::parse_rd(self, opkind),
+            Extensions::Priv => Priv_extension::parse_rd(self, opkind),
+            _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
             Extensions::BaseI => BaseI_extension::parse_rs1(self, opkind),
-            _ => panic!("It isn't compressed instruction"),
+            Extensions::M => M_extension::parse_rs1(self, opkind),
+            Extensions::A => A_extension::parse_rs1(self, opkind),
+            Extensions::Zicsr => Zicsr_extension::parse_rs1(self, opkind),
+            Extensions::Priv => Priv_extension::parse_rs1(self, opkind),
+            _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_rs2(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
             Extensions::BaseI => BaseI_extension::parse_rs2(self, opkind),
-            _ => panic!("It isn't compressed instruction"),
+            Extensions::M => M_extension::parse_rs2(self, opkind),
+            Extensions::A => A_extension::parse_rs2(self, opkind),
+            Extensions::Zicsr => Zicsr_extension::parse_rs2(self, opkind),
+            Extensions::Priv => Priv_extension::parse_rs2(self, opkind),
+            _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_imm(self, opkind: &OpecodeKind) -> Option<i32> {
         match self.extension() {
             Extensions::BaseI => BaseI_extension::parse_imm(self, opkind),
-            _ => panic!("It isn't compressed instruction"),
+            Extensions::M => M_extension::parse_imm(self, opkind),
+            Extensions::A => A_extension::parse_imm(self, opkind),
+            Extensions::Zicsr => Zicsr_extension::parse_imm(self, opkind),
+            Extensions::Priv => Priv_extension::parse_imm(self, opkind),
+            _ => panic!("This instruction does not matched any extensions."),
         }
     }
 }
@@ -80,6 +104,7 @@ impl DecodeUtil for u32 {
         let opmap: u8  = self.slice(6, 0) as u8;
         let funct3: u8 = self.slice(14, 12) as u8;
         let funct7: u8 = self.slice(31, 25) as u8;
+
         match opmap {
             0b0101111 => Extensions::M,
             0b0111011 => Extensions::A,
