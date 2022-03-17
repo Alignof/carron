@@ -10,6 +10,15 @@ pub struct Instruction {
     pub is_compressed: bool,
 }
 
+pub enum Extensions {
+    BaseI,
+    M,
+    A,
+    C,
+    Zicsr,
+    Priv,
+}
+
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
 pub enum OpecodeKind {
