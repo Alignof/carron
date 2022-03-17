@@ -29,7 +29,7 @@ pub fn parse_rd(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
         OpecodeKind::OP_CSRRWI	=> Some(rd),
         OpecodeKind::OP_CSRRSI	=> Some(rd),
         OpecodeKind::OP_CSRRCI	=> Some(rd),
-        _ => None,
+        _ => panic!("rd not found in csr instruction"),
     }
 }
 
@@ -44,7 +44,7 @@ pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
         OpecodeKind::OP_CSRRWI	=> Some(rs1),
         OpecodeKind::OP_CSRRSI	=> Some(rs1),
         OpecodeKind::OP_CSRRCI	=> Some(rs1),
-        _ => None,
+        _ => panic!("rs1 not found in csr instruction"),
     }
 }
 
@@ -58,11 +58,11 @@ pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
         OpecodeKind::OP_CSRRWI	=> Some(csr),
         OpecodeKind::OP_CSRRSI	=> Some(csr),
         OpecodeKind::OP_CSRRCI	=> Some(csr),
-        _ => None,
+        _ => panic!("rs2 not found in csr instruction"),
     }
 }
 
-pub fn parse_imm(inst: u32, _opkind: &OpecodeKind) -> Option<i32> {
+pub fn parse_imm(_inst: u32, _opkind: &OpecodeKind) -> Option<i32> {
     None
 }
 

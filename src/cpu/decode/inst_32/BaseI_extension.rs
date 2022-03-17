@@ -166,7 +166,6 @@ pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
 
 pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
     let rs2: usize = inst.slice(24, 20) as usize;
-    let csr: usize = inst.slice(31, 20) as usize;
 
     // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
     // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
