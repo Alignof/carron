@@ -76,17 +76,8 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
                     0b00001 => Ok(OpecodeKind::OP_EBREAK),
                     _ => Err("opecode decoding failed"),
                 }
-                0b0001000 => Ok(OpecodeKind::OP_SRET),
-                0b0011000 => Ok(OpecodeKind::OP_MRET),
-                0b0001001 => Ok(OpecodeKind::OP_SFENCE_VMA),
                 _ => Err("opecode decoding failed"),
             },
-            0b001 => Ok(OpecodeKind::OP_CSRRW),
-            0b010 => Ok(OpecodeKind::OP_CSRRS),
-            0b011 => Ok(OpecodeKind::OP_CSRRC),
-            0b101 => Ok(OpecodeKind::OP_CSRRWI),
-            0b110 => Ok(OpecodeKind::OP_CSRRSI),
-            0b111 => Ok(OpecodeKind::OP_CSRRCI),
             _     => Err("opecode decoding failed"),
         },
         _         => Err("opecode decoding failed"),
@@ -126,12 +117,6 @@ pub fn parse_rd(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
         OpecodeKind::OP_SRA		=> Some(rd),
         OpecodeKind::OP_OR		=> Some(rd),
         OpecodeKind::OP_AND		=> Some(rd),
-        OpecodeKind::OP_CSRRW	=> Some(rd),
-        OpecodeKind::OP_CSRRS	=> Some(rd),
-        OpecodeKind::OP_CSRRC	=> Some(rd),
-        OpecodeKind::OP_CSRRWI	=> Some(rd),
-        OpecodeKind::OP_CSRRSI	=> Some(rd),
-        OpecodeKind::OP_CSRRCI	=> Some(rd),
         _ => None,
     }
 }
@@ -175,13 +160,6 @@ pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
         OpecodeKind::OP_SRA		=> Some(rs1),
         OpecodeKind::OP_OR		=> Some(rs1),
         OpecodeKind::OP_AND		=> Some(rs1),
-        OpecodeKind::OP_CSRRW	=> Some(rs1),
-        OpecodeKind::OP_CSRRS	=> Some(rs1),
-        OpecodeKind::OP_CSRRC	=> Some(rs1),
-        OpecodeKind::OP_CSRRWI	=> Some(rs1),
-        OpecodeKind::OP_CSRRSI	=> Some(rs1),
-        OpecodeKind::OP_CSRRCI	=> Some(rs1),
-        OpecodeKind::OP_SFENCE_VMA	=> Some(rs1),
         _ => None,
     }
 }
@@ -213,13 +191,6 @@ pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
         OpecodeKind::OP_SRA		=> Some(rs2),
         OpecodeKind::OP_OR		=> Some(rs2),
         OpecodeKind::OP_AND		=> Some(rs2),
-        OpecodeKind::OP_SFENCE_VMA	=> Some(rs2),
-        OpecodeKind::OP_CSRRW	=> Some(csr),
-        OpecodeKind::OP_CSRRS	=> Some(csr),
-        OpecodeKind::OP_CSRRC	=> Some(csr),
-        OpecodeKind::OP_CSRRWI	=> Some(csr),
-        OpecodeKind::OP_CSRRSI	=> Some(csr),
-        OpecodeKind::OP_CSRRCI	=> Some(csr),
         _ => None,
     }
 }
