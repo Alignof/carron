@@ -1,9 +1,9 @@
 #[allow(non_snake_case)]
-mod BaseI_extension;
-mod M_extension;
-mod A_extension;
-mod Zicsr_extension;
-mod Priv_extension;
+mod base_i;
+mod m_extension;
+mod a_extension;
+mod zicsr_extension;
+mod priv_extension;
 
 use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
@@ -32,55 +32,55 @@ impl Decode for u32 {
 
     fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
         match self.extension() {
-            Extensions::BaseI => BaseI_extension::parse_opecode(self),
-            Extensions::M => M_extension::parse_opecode(self),
-            Extensions::A => A_extension::parse_opecode(self),
-            Extensions::Zicsr => Zicsr_extension::parse_opecode(self),
-            Extensions::Priv => Priv_extension::parse_opecode(self),
+            Extensions::BaseI => base_i::parse_opecode(self),
+            Extensions::M => m_extension::parse_opecode(self),
+            Extensions::A => a_extension::parse_opecode(self),
+            Extensions::Zicsr => zicsr_extension::parse_opecode(self),
+            Extensions::Priv => priv_extension::parse_opecode(self),
             _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_rd(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            Extensions::BaseI => BaseI_extension::parse_rd(self, opkind),
-            Extensions::M => M_extension::parse_rd(self, opkind),
-            Extensions::A => A_extension::parse_rd(self, opkind),
-            Extensions::Zicsr => Zicsr_extension::parse_rd(self, opkind),
-            Extensions::Priv => Priv_extension::parse_rd(self, opkind),
+            Extensions::BaseI => base_i::parse_rd(self, opkind),
+            Extensions::M => m_extension::parse_rd(self, opkind),
+            Extensions::A => a_extension::parse_rd(self, opkind),
+            Extensions::Zicsr => zicsr_extension::parse_rd(self, opkind),
+            Extensions::Priv => priv_extension::parse_rd(self, opkind),
             _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            Extensions::BaseI => BaseI_extension::parse_rs1(self, opkind),
-            Extensions::M => M_extension::parse_rs1(self, opkind),
-            Extensions::A => A_extension::parse_rs1(self, opkind),
-            Extensions::Zicsr => Zicsr_extension::parse_rs1(self, opkind),
-            Extensions::Priv => Priv_extension::parse_rs1(self, opkind),
+            Extensions::BaseI => base_i::parse_rs1(self, opkind),
+            Extensions::M => m_extension::parse_rs1(self, opkind),
+            Extensions::A => a_extension::parse_rs1(self, opkind),
+            Extensions::Zicsr => zicsr_extension::parse_rs1(self, opkind),
+            Extensions::Priv => priv_extension::parse_rs1(self, opkind),
             _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_rs2(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            Extensions::BaseI => BaseI_extension::parse_rs2(self, opkind),
-            Extensions::M => M_extension::parse_rs2(self, opkind),
-            Extensions::A => A_extension::parse_rs2(self, opkind),
-            Extensions::Zicsr => Zicsr_extension::parse_rs2(self, opkind),
-            Extensions::Priv => Priv_extension::parse_rs2(self, opkind),
+            Extensions::BaseI => base_i::parse_rs2(self, opkind),
+            Extensions::M => m_extension::parse_rs2(self, opkind),
+            Extensions::A => a_extension::parse_rs2(self, opkind),
+            Extensions::Zicsr => zicsr_extension::parse_rs2(self, opkind),
+            Extensions::Priv => priv_extension::parse_rs2(self, opkind),
             _ => panic!("This instruction does not matched any extensions."),
         }
     }
 
     fn parse_imm(self, opkind: &OpecodeKind) -> Option<i32> {
         match self.extension() {
-            Extensions::BaseI => BaseI_extension::parse_imm(self, opkind),
-            Extensions::M => M_extension::parse_imm(self, opkind),
-            Extensions::A => A_extension::parse_imm(self, opkind),
-            Extensions::Zicsr => Zicsr_extension::parse_imm(self, opkind),
-            Extensions::Priv => Priv_extension::parse_imm(self, opkind),
+            Extensions::BaseI => base_i::parse_imm(self, opkind),
+            Extensions::M => m_extension::parse_imm(self, opkind),
+            Extensions::A => a_extension::parse_imm(self, opkind),
+            Extensions::Zicsr => zicsr_extension::parse_imm(self, opkind),
+            Extensions::Priv => priv_extension::parse_imm(self, opkind),
             _ => panic!("This instruction does not matched any extensions."),
         }
     }
