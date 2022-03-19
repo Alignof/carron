@@ -22,6 +22,7 @@ pub enum Extensions {
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
 pub enum OpecodeKind {
+//== Base Integer Instruction == 
     OP_LUI,
     OP_AUIPC,
     OP_JAL,
@@ -62,7 +63,7 @@ pub enum OpecodeKind {
     OP_FENCE,
     OP_ECALL,
     OP_EBREAK,
-//== CSR Instruction == 
+//== Zicsr Extension == 
     OP_CSRRW,
     OP_CSRRS,
     OP_CSRRC,
@@ -73,7 +74,19 @@ pub enum OpecodeKind {
     OP_SRET,
     OP_MRET,
     OP_SFENCE_VMA,
-//== compressed Instruction == 
+//== A Extension == 
+    OP_LR_W,
+    OP_SC_W,
+    OP_AMOSWAP_W,
+    OP_AMOADD_W,
+    OP_AMOXOR_W,
+    OP_AMOAND_W,
+    OP_AMOOR_W,
+    OP_AMOMIN_W,
+    OP_AMOMAX_W,
+    OP_AMOMINU_W,
+    OP_AMOMAXU_W,
+//== C Extension == 
     OP_C_ADDI4SPN,
     OP_C_LW,
     OP_C_SW,
@@ -163,6 +176,17 @@ impl Instruction {
             OP_SRET         => "sret",
             OP_MRET         => "mret",
             OP_SFENCE_VMA   => "sfence.vma",
+            OP_LR_W			=> "lr.w",
+            OP_SC_W			=> "sc.w",
+            OP_AMOSWAP_W	=> "amoswap.w",
+            OP_AMOADD_W		=> "amoadd.w",
+            OP_AMOXOR_W		=> "amoxor.w",
+            OP_AMOAND_W		=> "amoand.w",
+            OP_AMOOR_W		=> "amoor.w",
+            OP_AMOMIN_W		=> "amomin.w",
+            OP_AMOMAX_W		=> "amomax.w",
+            OP_AMOMINU_W	=> "amominu.w",
+            OP_AMOMAXU_W	=> "amomaxu.w",
             OP_C_ADDI4SPN   => "C.addi4spn",
             OP_C_LW         => "C.lw",
             OP_C_SW         => "C.sw",
