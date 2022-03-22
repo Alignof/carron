@@ -245,6 +245,42 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
                 cpu.exception(except_pc, TrapCause::IllegalInst);
             }
         },
+        OP_LR_W => {
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1)) {
+                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+            }
+            panic!("not yet implemented: OP_LR_W");
+		},
+        OP_SC_W => {
+            panic!("not yet implemented: OP_SC_W");
+		},
+        OP_AMOSWAP_W => {
+            panic!("not yet implemented: AMOSWAP_W");
+		},
+        OP_AMOADD_W => {
+            panic!("not yet implemented: AMOADD_W");
+		},
+        OP_AMOXOR_W => {
+            panic!("not yet implemented: AMOXOR_W");
+		},
+        OP_AMOAND_W => {
+            panic!("not yet implemented: AMOAND_W");
+		},
+        OP_AMOOR_W => {
+            panic!("not yet implemented: AMOOR_W");
+		},
+        OP_AMOMIN_W => {
+            panic!("not yet implemented: AMOMIN_W");
+		},
+        OP_AMOMAX_W => {
+            panic!("not yet implemented: AMOMAX_W");
+		},
+        OP_AMOMINU_W => {
+            panic!("not yet implemented: AMOINU_W");
+		},
+        OP_AMOMAXU_W => {
+            panic!("not yet implemented: AMOAXU_W");
+		},
         _ => panic!("not a full instruction"),
     }
 
