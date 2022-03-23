@@ -305,16 +305,36 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
             }
 		},
         OP_AMOMIN_W => {
-            panic!("not yet implemented: AMOMIN_W");
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1)) {
+                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+                let store_addr = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1))
+                    .expect("transition address failed in AMO");
+                cpu.bus.store32(store_addr, std::cmp::min(cpu.regs.read(inst.rd), cpu.regs.read(inst.rs2)));
+            }
 		},
         OP_AMOMAX_W => {
-            panic!("not yet implemented: AMOMAX_W");
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1)) {
+                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+                let store_addr = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1))
+                    .expect("transition address failed in AMO");
+                cpu.bus.store32(store_addr, std::cmp::max(cpu.regs.read(inst.rd), cpu.regs.read(inst.rs2)));
+            }
 		},
         OP_AMOMINU_W => {
-            panic!("not yet implemented: AMOINU_W");
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1)) {
+                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+                let store_addr = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1))
+                    .expect("transition address failed in AMO");
+                cpu.bus.store32(store_addr, std::cmp::min(cpu.regs.read(inst.rd) as u32, cpu.regs.read(inst.rs2) as u32) as i32);
+            }
 		},
         OP_AMOMAXU_W => {
-            panic!("not yet implemented: AMOAXU_W");
+            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1)) {
+                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+                let store_addr = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1))
+                    .expect("transition address failed in AMO");
+                cpu.bus.store32(store_addr, std::cmp::max(cpu.regs.read(inst.rd) as u32, cpu.regs.read(inst.rs2) as u32) as i32);
+            }
 		},
         _ => panic!("not a full instruction"),
     }
