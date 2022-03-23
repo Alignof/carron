@@ -247,6 +247,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         },
         OP_LR_W => {
             if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1)) {
+                let _rl = inst.imm.unwrap() & 0x1;
+                let _aq = inst.imm.unwrap() >> 1 & 0x1;
                 cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
                 // --TODO--
                 // and store rs1 address to cache
@@ -257,6 +259,8 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
                 // --TODO--
                 // cache value == rs1 --> store rs2 to rs1 and assign zero to rd
                 // cache value != rs1 --> ignore and assign non-zero to rd
+                let _rl = inst.imm.unwrap() & 0x1;
+                let _aq = inst.imm.unwrap() >> 1 & 0x1;
                 cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
             }
 		},
