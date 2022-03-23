@@ -105,8 +105,8 @@ impl DecodeUtil for u32 {
         let funct7: u8 = self.slice(31, 25) as u8;
 
         match opmap {
-            0b0101111 => Extensions::M,
-            0b0111011 => Extensions::A,
+            0b0101111 => Extensions::A,
+            0b0110011 => Extensions::M,
             0b1110011 => match funct3 {
                 0b000 => match funct7 {
                     0b0000000 => Extensions::BaseI,
