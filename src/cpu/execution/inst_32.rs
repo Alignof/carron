@@ -248,11 +248,17 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
         OP_LR_W => {
             if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1)) {
                 cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+                // --TODO--
+                // and store rs1 address to cache
             }
-            panic!("not yet implemented: OP_LR_W");
 		},
         OP_SC_W => {
-            panic!("not yet implemented: OP_SC_W");
+            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+                // --TODO--
+                // cache value == rs1 --> store rs2 to rs1 and assign zero to rd
+                // cache value != rs1 --> ignore and assign non-zero to rd
+                cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+            }
 		},
         OP_AMOSWAP_W => {
             panic!("not yet implemented: AMOSWAP_W");
