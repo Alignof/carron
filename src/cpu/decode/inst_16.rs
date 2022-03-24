@@ -1,5 +1,5 @@
 #[allow(non_snake_case)]
-mod C_extension;
+mod c_extension;
 
 use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
@@ -26,35 +26,35 @@ impl Decode for u16 {
 
     fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
         match self.extension() {
-            Extensions::C => C_extension::parse_opecode(self),
+            Extensions::C => c_extension::parse_opecode(self),
             _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_rd(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            Extensions::C => C_extension::parse_rd(self, opkind),
+            Extensions::C => c_extension::parse_rd(self, opkind),
             _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            Extensions::C => C_extension::parse_rs1(self, opkind),
+            Extensions::C => c_extension::parse_rs1(self, opkind),
             _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_rs2(self, opkind: &OpecodeKind) -> Option<usize> {
         match self.extension() {
-            Extensions::C => C_extension::parse_rs2(self, opkind),
+            Extensions::C => c_extension::parse_rs2(self, opkind),
             _ => panic!("It isn't compressed instruction"),
         }
     }
 
     fn parse_imm(self, opkind: &OpecodeKind) -> Option<i32> {
         match self.extension() {
-            Extensions::C => C_extension::parse_imm(self, opkind),
+            Extensions::C => c_extension::parse_imm(self, opkind),
             _ => panic!("It isn't compressed instruction"),
         }
     }
