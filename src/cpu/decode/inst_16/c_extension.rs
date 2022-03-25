@@ -200,13 +200,13 @@ pub fn parse_imm(inst: u16, opkind: &OpecodeKind) -> Option<i32> {
         let imm16 = (inst.slice(6, 2).set(&[7,6,2,1,5]) | inst.slice(12, 10).set(&[8,4,3])) as i32;
         inst.to_signed_nbit(imm16, 9)
     };
-    let q1_16sp_imm = | | {
+    let q1_16sp_nzimm = | | {
         let imm16 = (inst.slice(6, 2).set(&[4,6,8,7,5]) | inst.slice(12, 12).set(&[9])) as i32;
-        inst.to_signed_nbit(imm16, 9)
+        inst.to_signed_nbit(imm16, 10)
     };
     let q1_lui_imm = | | {
         let imm16 = (inst.slice(6, 2).set(&[16,15,14,13,12]) | inst.slice(12, 12).set(&[17])) as i32;
-        inst.to_signed_nbit(imm16, 17)
+        inst.to_signed_nbit(imm16, 18)
     };
     let q2_imm = | | {
         (inst.slice(6, 2).set(&[4,3,2,1,0]) | inst.slice(12, 12).set(&[5])) as i32
@@ -228,7 +228,7 @@ pub fn parse_imm(inst: u16, opkind: &OpecodeKind) -> Option<i32> {
         OpecodeKind::OP_C_ADDI      => Some(q1_nzimm()),
         OpecodeKind::OP_C_JAL       => Some(q1_j_imm()),
         OpecodeKind::OP_C_LI        => Some(q1_imm()),
-        OpecodeKind::OP_C_ADDI16SP  => Some(q1_16sp_imm()),
+        OpecodeKind::OP_C_ADDI16SP  => Some(q1_16sp_nzimm()),
         OpecodeKind::OP_C_LUI       => Some(q1_lui_imm()),
         OpecodeKind::OP_C_SRLI      => Some(q1_nzuimm()),
         OpecodeKind::OP_C_SRAI      => Some(q1_nzuimm()),
