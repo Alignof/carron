@@ -78,3 +78,26 @@ impl DecodeUtil for u16 {
         Extensions::C
     }
 }
+
+#[cfg(test)]
+#[allow(unused_variables)]
+mod decode_16 {
+    use super::*;
+
+    #[test]
+    fn parsing_compressed_opecode_test() {
+        use OpecodeKind::*;
+        let test_16 = |inst_16: u16, _op: OpecodeKind, _rd: Option<u8>| {
+            let op_16 = inst_16.parse_opecode().unwrap();
+            assert!(matches!(&op_16, _op));
+            assert!(matches!(inst_16.parse_rd(&op_16), _rd));
+        };
+
+        test_16(0b0000000000000001, OP_C_NOP, None);
+        test_16(0b0000000010000001, OP_C_ADDI, Some(0));
+        test_16(0b0110000100000001, OP_C_ADDI16SP, None);
+        test_16(0b0110001110000001, OP_C_LUI, None);
+        test_16(0b1000001011000001, OP_C_SRAI, Some(0));
+        test_16(0b1000010011000001, OP_C_ANDI, None);
+    }
+}
