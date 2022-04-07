@@ -78,15 +78,15 @@ mod tests {
 
 	#[test]
 	fn program_header_test() {
-		let loader = match ElfLoader::try_new("example_elf") {
+		let loader = match ElfLoader::try_new("./return_42") {
 			Ok(loader) => loader,
 			Err(error) => {
 				panic!("There was a problem opening the file: {:?}", error);
 			}
 		};
 
-		assert_eq!(loader.prog_headers[0].p_type, 6);
-		assert_eq!(loader.prog_headers[0].p_flags, 4);
+		assert_eq!(loader.prog_headers[0].p_type, 1);
+		assert_eq!(loader.prog_headers[0].p_flags, 5);
 	}
 }
 
