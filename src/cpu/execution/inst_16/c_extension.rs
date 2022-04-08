@@ -131,7 +131,7 @@ mod exe_16 {
         let mut cpu = CPU::new(dummy_elf, None, None);
 
         exec(
-            &Instruction{
+            &Instruction {
                 opc: OP_C_LI,
                 rd: Some(10),
                 rs1: None,

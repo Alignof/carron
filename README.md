@@ -1,6 +1,6 @@
 # RV32IM\_simulator
 [![Rust](https://github.com/Alignof/rv32im_simulator/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/rv32im_simulator/actions/workflows/rust.yml)  
-RV32IM simulator in rust
+RV32IMC simulator in rust
 
 ## Feature
 This simulator parses an ELF file that supports rv32imc and simulate execution environment of it.  
@@ -8,8 +8,10 @@ The simulator passed riscv-tests shown below.
 
 - [x] rv32ui-p
 - [x] rv32ui-v
-- [ ] rv32si-p
-- [ ] rv32si-v
+- [x] rv32uc-p
+- [ ] rv32uc-v
+- [ ] rv32ua-p
+- [ ] rv32ua-v
 
 ## Install
 ```zsh
