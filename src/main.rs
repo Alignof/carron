@@ -28,10 +28,10 @@ fn main() {
                 simulator.simulation();
             },
             ExeOption::OPT_ELFHEAD  => loader.header_show(),
-            ExeOption::OPT_PROG     => loader.dump_segment(),
-            ExeOption::OPT_SECT     => loader.dump_section(),
-            ExeOption::OPT_SHOWALL  => loader.show_all_header(),
             ExeOption::OPT_DISASEM  => loader.dump_section(),
+            ExeOption::OPT_SECT     => loader.dump_section(),
+            ExeOption::OPT_PROG     => loader.dump_segment(),
+            ExeOption::OPT_SHOWALL  => loader.show_all_header(),
         };
     } else {
         panic!("This file is not an ELF.");
