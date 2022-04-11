@@ -91,6 +91,7 @@ impl CPU {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
+            self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
 
