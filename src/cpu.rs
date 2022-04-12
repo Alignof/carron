@@ -69,8 +69,8 @@ impl CPU {
         self.pc = (self.pc as i32 + addval) as u32;
     }
 
-    pub fn update_pc(&mut self, newval: i32) {
-        self.pc = newval as u32;
+    pub fn update_pc(&mut self, newpc: i32) {
+        self.pc = newpc as u32;
     }
 
     pub fn exception(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {

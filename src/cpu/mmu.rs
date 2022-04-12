@@ -20,7 +20,7 @@ impl MMU {
         }
     }
 
-    fn update_data(&mut self, satp: u32) {
+    fn update_ppn_and_mode(&mut self, satp: u32) {
         self.ppn = (satp & 0x3FFFFF) as u32;
         self.trans_mode = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
@@ -101,7 +101,7 @@ impl MMU {
                       dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<u32, TrapCause> {
 
         // update trans_mode and ppn
-        self.update_data(satp);
+        self.update_ppn_and_mode(satp);
 
         match priv_lv {
             PrivilegedLevel::Supervisor |
