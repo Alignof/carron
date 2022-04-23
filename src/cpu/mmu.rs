@@ -34,7 +34,7 @@ impl MMU {
         let pte_w = pte >> 2 & 0x1;
 
         // check the PTE validity
-        if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
+        if pte_v == 0 || (pte_w == 1 && pte_r == 0) {
             println!("invalid pte: {:x}", pte);
             return Err(TrapCause::InstPageFault);
         }
@@ -57,6 +57,11 @@ impl MMU {
         let pte_u = pte >> 4 & 0x1;
         let pte_a = pte >> 6 & 0x1;
         let pte_d = pte >> 7 & 0x1;
+
+        if pte_w == 1 && pte_r == 0 {
+            println!("invalid pte_w and pte_r: {:x}", pte);
+            return Err(TrapCause::InstPageFault);
+        }
 
         // check the U bit
         if priv_lv == &PrivilegedLevel::User && pte_u != 1 {
