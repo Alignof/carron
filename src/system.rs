@@ -54,9 +54,9 @@ impl Arguments {
         };
         let exe_option = match flag_map() {
             (true, _, _, _, _) => ExeOption::OPT_ELFHEAD,
-            (_, true, _, _, _) => ExeOption::OPT_DISASEM,
+            (_, true, _, _, _) => ExeOption::OPT_PROG,
             (_, _, true, _, _) => ExeOption::OPT_SECT,
-            (_, _, _, true, _) => ExeOption::OPT_PROG,
+            (_, _, _, true, _) => ExeOption::OPT_DISASEM,
             (_, _, _, _, true) => ExeOption::OPT_SHOWALL,
             _ => ExeOption::OPT_DEFAULT,
         };

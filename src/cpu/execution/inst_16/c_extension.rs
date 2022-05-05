@@ -115,3 +115,31 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
         _ => panic!("not a compressed Instruction"),
     }
 }
+
+#[cfg(test)]
+mod exe_16 {
+    use crate::elfload;
+    use crate::CPU;
+    use crate::cpu::instruction::Instruction;
+    use crate::cpu::instruction::OpecodeKind::*;
+    use crate::cpu::execution::inst_16::c_extension::exec;
+
+    #[test]
+    fn c_extension_test() {
+        let dummy_elf = elfload::ElfLoader::try_new("./return_42")
+            .expect("creating dummy_elf failed");
+        let mut cpu = CPU::new(dummy_elf, None, None);
+
+        exec(
+            &Instruction {
+                opc: OP_C_LI,
+                rd: Some(10),
+                rs1: None,
+                rs2: None,
+                imm: Some(42),
+            },
+            &mut cpu
+        );
+        assert_eq!(cpu.regs.read(Some(10)), 42);
+    }
+}

@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn elf_header_test() {
-        let loader = match ElfLoader::try_new("example_elf") {
+        let loader = match ElfLoader::try_new("./return_42") {
             Ok(loader) => loader,
             Err(error) => {
                 panic!("There was a problem opening the file: {:?}", error);
@@ -133,7 +133,7 @@ mod tests {
 
         assert!(loader.is_elf());
         assert_eq!(loader.elf_header.e_type, 2);
-        assert_eq!(loader.elf_header.e_flags, 5);
+        assert_eq!(loader.elf_header.e_flags, 1);
         assert_eq!(loader.elf_header.e_version, 1);
         assert_eq!(loader.elf_header.e_machine, 243);
     }

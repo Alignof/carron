@@ -20,7 +20,7 @@ impl MMU {
         }
     }
 
-    fn update_data(&mut self, satp: u32) {
+    fn update_ppn_and_mode(&mut self, satp: u32) {
         self.ppn = (satp & 0x3FFFFF) as u32;
         self.trans_mode = match satp >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
@@ -28,15 +28,24 @@ impl MMU {
         };
     }
 
-    fn check_pte_validity(&self, pte: i32) -> Result<u32, TrapCause>{
+    fn check_pte_validity(&self, purpose: &TransFor, pte: i32) -> Result<u32, TrapCause>{
         let pte_v = pte & 0x1;
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
+        let trap_cause = |purpose: &TransFor| {
+            match purpose {
+                TransFor::Fetch => TrapCause::InstPageFault,
+                TransFor::Load => TrapCause::LoadPageFault,
+                TransFor::Store => TrapCause::StorePageFault,
+                _ => panic!("unknown TransFor"),
+            }
+        };
+
 
         // check the PTE validity
         if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
             println!("invalid pte: {:x}", pte);
-            return Err(TrapCause::InstPageFault);
+            return Err(trap_cause(purpose));
         }
 
         Ok(pte as u32)
@@ -57,16 +66,29 @@ impl MMU {
         let pte_u = pte >> 4 & 0x1;
         let pte_a = pte >> 6 & 0x1;
         let pte_d = pte >> 7 & 0x1;
+        let trap_cause = |purpose: &TransFor| {
+            match purpose {
+                TransFor::Fetch => TrapCause::InstPageFault,
+                TransFor::Load => TrapCause::LoadPageFault,
+                TransFor::Store => TrapCause::StorePageFault,
+                _ => panic!("unknown TransFor"),
+            }
+        };
+
+        if pte_w == 1 && pte_r == 0 {
+            println!("invalid pte_w and pte_r: {:x}", pte);
+            return Err(TrapCause::InstPageFault);
+        }
 
         // check the U bit
         if priv_lv == &PrivilegedLevel::User && pte_u != 1 {
             println!("invalid pte_u: {:x}", pte);
-            return Err(TrapCause::InstPageFault);
+            return Err(trap_cause(purpose));
         }
 
         if pte_a == 0 {
             println!("invalid pte_a: {:x}", pte);
-            return Err(TrapCause::InstPageFault);
+            return Err(trap_cause(purpose));
         }
 
         // check the PTE field according to translate purpose 
@@ -100,8 +122,16 @@ impl MMU {
     pub fn trans_addr(&mut self, purpose: TransFor, addr: u32, satp: u32, 
                       dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<u32, TrapCause> {
 
+        let trap_cause = |purpose: &TransFor| {
+            match purpose {
+                TransFor::Fetch => TrapCause::InstPageFault,
+                TransFor::Load => TrapCause::LoadPageFault,
+                TransFor::Store => TrapCause::StorePageFault,
+                _ => panic!("unknown TransFor"),
+            }
+        };
         // update trans_mode and ppn
-        self.update_data(satp);
+        self.update_ppn_and_mode(satp);
 
         match priv_lv {
             PrivilegedLevel::Supervisor |
@@ -119,7 +149,7 @@ impl MMU {
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
+                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr)) {
                             Ok(pte) => pte,
                             Err(cause) => {
                                 return Err(cause) // exception
@@ -133,7 +163,7 @@ impl MMU {
                         let PPN0 = if self.is_leaf_pte(PTE) {
                                 // check misaligned superpage
                                 if (PTE >> 10 & 0x3FF) != 0 {
-                                    return Err(TrapCause::InstPageFault) // exception
+                                    return Err(trap_cause(&purpose)) // exception
                                 }
 
                                 // check leaf pte and return PPN0
@@ -147,7 +177,7 @@ impl MMU {
                                 println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
                                 println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                          PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                                let PTE = match self.check_pte_validity(dram.load32(PTE_addr)) {
+                                let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr)) {
                                     Ok(pte) => pte,
                                     Err(cause) => {
                                         return Err(cause) // exception
@@ -158,7 +188,7 @@ impl MMU {
 
                                 // check PTE to be leaf
                                 if !self.is_leaf_pte(PTE) {
-                                    return Err(TrapCause::InstPageFault) // exception
+                                    return Err(trap_cause(&purpose)) // exception
                                 }
 
                                 // check leaf pte and return PPN0
