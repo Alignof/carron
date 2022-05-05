@@ -4,6 +4,7 @@ use crate::cpu::instruction::{Instruction, OpecodeKind};
 pub fn exec(inst: &Instruction, cpu: &mut CPU) {
     match inst.opc {
         OpecodeKind::OP_CSRRW => {
+            // ???
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2) as i32);
             cpu.csrs.write(inst.rs2, cpu.regs.read(inst.rs1));
         },
