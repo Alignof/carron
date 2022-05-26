@@ -35,6 +35,11 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
                 0b11 => PrivilegedLevel::Machine,
                 _ => panic!("invalid PrivilegedLevel"),
             };
+
+            cpu.csrs.bitset(CSRname::mstatus.wrap(), ((cpu.csrs.read(CSRname::mstatus.wrap()) >> 7 & 1) as i32) << 3); // mstatus.MIE = mstatus.MPIE
+            cpu.csrs.bitset(CSRname::mstatus.wrap(), 1 << 7); // sstatus.MPIE = 1
+            cpu.csrs.bitclr(CSRname::mstatus.wrap(), 1 << 11); // sstatus.MPP = 0
+
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
             cpu.update_pc(new_pc);
         },
