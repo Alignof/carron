@@ -15,12 +15,12 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             dbg!(&cpu.priv_lv);
             dbg_hex::dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
 
-            if cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::TVM) == 0 {
-                let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
-                cpu.update_pc(new_pc as i32);
-            } else {
+            if cpu.csrs.read(Some(0x300)) >> 22 & 1 == 1 { // mstatus.TSR == 1
                 let except_pc = cpu.pc as i32;
                 cpu.exception(except_pc, TrapCause::IllegalInst);
+            } else {
+                let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
+                cpu.update_pc(new_pc as i32);
             }
         },
         OpecodeKind::OP_MRET => {
