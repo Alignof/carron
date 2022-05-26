@@ -1,6 +1,7 @@
 use crate::bus::Device;
 use crate::bus::dram::Dram;
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
+use crate::cpu::csr::{CSRs, CSRname};
 
 pub enum AddrTransMode {
     Bare,
@@ -20,9 +21,9 @@ impl MMU {
         }
     }
 
-    fn update_ppn_and_mode(&mut self, satp: u32) {
-        self.ppn = (satp & 0x3FFFFF) as u32;
-        self.trans_mode = match satp >> 31 & 0x1 {
+    fn update_ppn_and_mode(&mut self, csrs: &CSRs) {
+        self.ppn = (csrs.read(CSRname::satp.wrap()) & 0x3FFFFF) as u32;
+        self.trans_mode = match csrs.read(CSRname::satp.wrap()) >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
         };
@@ -119,7 +120,7 @@ impl MMU {
     }
 
     #[allow(non_snake_case)]
-    pub fn trans_addr(&mut self, purpose: TransFor, addr: u32, satp: u32, 
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: u32, csrs: &CSRs, 
                       dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<u32, TrapCause> {
 
         let trap_cause = |purpose: &TransFor| {
@@ -131,7 +132,7 @@ impl MMU {
             }
         };
         // update trans_mode and ppn
-        self.update_ppn_and_mode(satp);
+        self.update_ppn_and_mode(csrs);
 
         match priv_lv {
             PrivilegedLevel::Supervisor |
