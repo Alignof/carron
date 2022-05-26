@@ -15,12 +15,16 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             dbg!(&cpu.priv_lv);
             dbg_hex::dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
 
-            if cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::TVM) == 0 {
-                let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
-                cpu.update_pc(new_pc as i32);
-            } else {
+            cpu.csrs.bitset(CSRname::sstatus.wrap(), ((cpu.csrs.read(CSRname::sstatus.wrap()) >> 5 & 1) as i32) << 1); // sstatus.SIE = sstatus.SPIE
+            cpu.csrs.bitset(CSRname::sstatus.wrap(), 1 << 5);// sstatus.SPIE = 1
+            cpu.csrs.bitclr(CSRname::sstatus.wrap(), 1 << 8); // sstatus.SPP = 0
+
+            if cpu.csrs.read(CSRname::mstatus.wrap()) >> 22 & 1 == 1 { // mstatus.TSR == 1
                 let except_pc = cpu.pc as i32;
                 cpu.exception(except_pc, TrapCause::IllegalInst);
+            } else {
+                let new_pc = cpu.csrs.read(CSRname::sepc.wrap());
+                cpu.update_pc(new_pc as i32);
             }
         },
         OpecodeKind::OP_MRET => {
@@ -31,6 +35,11 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
                 0b11 => PrivilegedLevel::Machine,
                 _ => panic!("invalid PrivilegedLevel"),
             };
+
+            cpu.csrs.bitset(CSRname::mstatus.wrap(), ((cpu.csrs.read(CSRname::mstatus.wrap()) >> 7 & 1) as i32) << 3); // mstatus.MIE = mstatus.MPIE
+            cpu.csrs.bitset(CSRname::mstatus.wrap(), 1 << 7); // sstatus.MPIE = 1
+            cpu.csrs.bitclr(CSRname::mstatus.wrap(), 1 << 11); // sstatus.MPP = 0
+
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
             cpu.update_pc(new_pc);
         },
