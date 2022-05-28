@@ -61,50 +61,58 @@ impl MMU {
     }
 
     fn pmp(&self, purpose: TransFor, addr: u32, csrs: &CSRs) -> Result<u32, TrapCause> {
+        let pmp_r = pmpcfg & 0x1;
+        let pmp_w = pmpcfg >> 1 & 0x1;
+        let pmp_x = pmpcfg >> 2 & 0x1;
+        let pmp_a = pmpcfg >> 3 & 0x3;
         let pmpaddrs = [0x3B0, 0x3B1, 0x3B2, 0x3B3, 0x3B4, 0x3B5, 0x3B6, 0x3B7, 0x3B8, 0x3B9, 0x3BA, 0x3BB, 0x3BC, 0x3BD, 0x3BE, 0x3BF];
         let get_pmpcfg = |pmpnum| {
             let cfgnum = pmpnum / 4;
             let cfgoff = pmpnum % 4;
-
             csrs.read(Some(0x3A0 + cfgnum)) >> (4 * cfgoff)
         };
 
-        for index in 1 .. pmpaddrs.len() { // pmpaddr0 ~ pmpaddr1
-            if (index == 0 && 0 <= addr && addr < csrs.read(Some(pmpaddrs[index]))) ||
-               (index != 0 && csrs.read(Some(pmpaddrs[index-1])) <= addr && addr < csrs.read(Some(pmpaddrs[index]))) {
+        match pmp_a {
+            0b00 => Ok(addr),
+            0b01 => {
+                let addr = addr >> 2; // addr[:2]
+                for index in 1 .. pmpaddrs.len() { // pmpaddr0 ~ pmpaddr15
+                    if (index == 0 && 0 <= addr && addr < csrs.read(Some(pmpaddrs[index]))) ||
+                       (index != 0 && csrs.read(Some(pmpaddrs[index-1])) <= addr && addr < csrs.read(Some(pmpaddrs[index]))) {
 
-                let pmpcfg = get_pmpcfg(index);
-                let pmp_r = pmpcfg & 0x1;
-                let pmp_w = pmpcfg >> 1 & 0x1;
-                let pmp_x = pmpcfg >> 2 & 0x1;
-                let pmp_a = pmpcfg >> 3 & 0x3;
+                        let pmpcfg = get_pmpcfg(index);
+                        match purpose {
+                            TransFor::Fetch => {
+                                if pmp_x != 1 {
+                                    println!("invalid pmp_x: {:x}", pmpcfg);
+                                    return Err(TrapCause::InstPageFault);
+                                }
+                            },
+                            TransFor::Load => {
+                                if pmp_r != 1 {
+                                    println!("invalid pmp_r: {:x}", pmpcfg);
+                                    return Err(TrapCause::LoadPageFault);
+                                }
+                            },
+                            TransFor::Store => {
+                                if pmp_w != 1 {
+                                    println!("invalid pmp_w: {:x}", pmpcfg);
+                                    return Err(TrapCause::StorePageFault);
+                                }
+                            },
+                            _ => Ok(addr),
+                        }
 
-                match purpose {
-                    TransFor::Fetch => {
-                        if pmp_x != 1 {
-                            println!("invalid pmp_x: {:x}", pmpcfg);
-                            return Err(TrapCause::InstPageFault);
-                        }
-                    },
-                    TransFor::Load => {
-                        if pmp_r != 1 {
-                            println!("invalid pmp_r: {:x}", pmpcfg);
-                            return Err(TrapCause::LoadPageFault);
-                        }
-                    },
-                    TransFor::Store => {
-                        if pmp_w != 1 {
-                            println!("invalid pmp_w: {:x}", pmpcfg);
-                            return Err(TrapCause::StorePageFault);
-                        }
-                    },
-                    _ => (),
+                        break;
+                    }
                 }
-
-                break;
-            }
+            },
+            0b10 => {
+                if (addr >> 2 & 0x1 == 0)
+            },
+            0b11 => {
+            },
         }
-        Ok(addr)
     }
 
     fn check_leaf_pte(&self, purpose: &TransFor, priv_lv: &PrivilegedLevel, pte: u32) -> Result<u32, TrapCause> {
