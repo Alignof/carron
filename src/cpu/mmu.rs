@@ -38,7 +38,7 @@ impl MMU {
                 TransFor::Fetch => TrapCause::InstPageFault,
                 TransFor::Load => TrapCause::LoadPageFault,
                 TransFor::Store => TrapCause::StorePageFault,
-                _ => panic!("unknown TransFor"),
+                TransFor::Deleg => TrapCause::InstPageFault,
             }
         };
 
@@ -60,11 +60,32 @@ impl MMU {
         pte_r == 1 || pte_w == 1 || pte_x == 1
     }
 
-    fn pmp(&self, purpose: TransFor, addr: u32, csrs: &CSRs) -> Result<u32, TrapCause> {
-        let pmp_r = pmpcfg & 0x1;
-        let pmp_w = pmpcfg >> 1 & 0x1;
-        let pmp_x = pmpcfg >> 2 & 0x1;
-        let pmp_a = pmpcfg >> 3 & 0x3;
+    fn check_pmp(&self, purpose: TransFor, addr: u32, pmpcfg: u32, pmp_r: u32, pmp_w: u32, pmp_x: u32) -> Result<u32, TrapCause> {
+        match purpose {
+            TransFor::Fetch | TransFor::Deleg => {
+                if pmp_x != 1 {
+                    println!("invalid pmp_x: {:x}", pmpcfg);
+                    return Err(TrapCause::InstPageFault);
+                }
+            },
+            TransFor::Load => {
+                if pmp_r != 1 {
+                    println!("invalid pmp_r: {:x}", pmpcfg);
+                    return Err(TrapCause::LoadPageFault);
+                }
+            },
+            TransFor::Store => {
+                if pmp_w != 1 {
+                    println!("invalid pmp_w: {:x}", pmpcfg);
+                    return Err(TrapCause::StorePageFault);
+                }
+            },
+        }
+
+        Ok(addr)
+    }
+
+    fn pmp(&self, purpose: TransFor, addr: u32, priv_lv: &PrivilegedLevel, csrs: &CSRs) -> Result<u32, TrapCause> {
         let pmpaddrs = [0x3B0, 0x3B1, 0x3B2, 0x3B3, 0x3B4, 0x3B5, 0x3B6, 0x3B7, 0x3B8, 0x3B9, 0x3BA, 0x3BB, 0x3BC, 0x3BD, 0x3BE, 0x3BF];
         let get_pmpcfg = |pmpnum| {
             let cfgnum = pmpnum / 4;
@@ -72,46 +93,45 @@ impl MMU {
             csrs.read(Some(0x3A0 + cfgnum)) >> (4 * cfgoff)
         };
 
-        match pmp_a {
-            0b00 => Ok(addr),
-            0b01 => {
-                let addr = addr >> 2; // addr[:2]
-                for index in 1 .. pmpaddrs.len() { // pmpaddr0 ~ pmpaddr15
-                    if (index == 0 && 0 <= addr && addr < csrs.read(Some(pmpaddrs[index]))) ||
-                       (index != 0 && csrs.read(Some(pmpaddrs[index-1])) <= addr && addr < csrs.read(Some(pmpaddrs[index]))) {
-
-                        let pmpcfg = get_pmpcfg(index);
-                        match purpose {
-                            TransFor::Fetch => {
-                                if pmp_x != 1 {
-                                    println!("invalid pmp_x: {:x}", pmpcfg);
-                                    return Err(TrapCause::InstPageFault);
-                                }
-                            },
-                            TransFor::Load => {
-                                if pmp_r != 1 {
-                                    println!("invalid pmp_r: {:x}", pmpcfg);
-                                    return Err(TrapCause::LoadPageFault);
-                                }
-                            },
-                            TransFor::Store => {
-                                if pmp_w != 1 {
-                                    println!("invalid pmp_w: {:x}", pmpcfg);
-                                    return Err(TrapCause::StorePageFault);
-                                }
-                            },
-                            _ => Ok(addr),
-                        }
-
-                        break;
+        for index in 0 .. pmpaddrs.len() { // pmpaddr0 ~ pmpaddr15
+            let pmpcfg = get_pmpcfg(index);
+            let pmp_r = pmpcfg & 0x1;
+            let pmp_w = pmpcfg >> 1 & 0x1;
+            let pmp_x = pmpcfg >> 2 & 0x1;
+            let pmp_a = pmpcfg >> 3 & 0x3;
+            match pmp_a {
+                0b00 => return Ok(addr),
+                0b01 => {
+                    let addr_aligned = addr >> 2; // addr[:2]
+                    if (index == 0 && addr_aligned < csrs.read(Some(pmpaddrs[index]))) ||
+                       (index != 0 && csrs.read(Some(pmpaddrs[index-1])) <= addr_aligned && addr_aligned < csrs.read(Some(pmpaddrs[index]))) {
+                           return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
                     }
-                }
-            },
-            0b10 => {
-                if (addr >> 2 & 0x1 == 0)
-            },
-            0b11 => {
-            },
+                },
+                0b10 => {
+                    // wip
+                },
+                0b11 => {
+                    // wip
+                },
+                _ => panic!("pmp_a does not matched"),
+            }
+        }
+
+        if priv_lv == &PrivilegedLevel::Machine {
+            Ok(addr) 
+        } else {
+            Err(match purpose {
+                TransFor::Fetch | TransFor::Deleg => {
+                    TrapCause::InstPageFault
+                },
+                TransFor::Load => {
+                    TrapCause::LoadPageFault
+                },
+                TransFor::Store => {
+                    TrapCause::StorePageFault
+                },
+            })
         }
     }
 
@@ -127,7 +147,7 @@ impl MMU {
                 TransFor::Fetch => TrapCause::InstPageFault,
                 TransFor::Load => TrapCause::LoadPageFault,
                 TransFor::Store => TrapCause::StorePageFault,
-                _ => panic!("unknown TransFor"),
+                TransFor::Deleg => TrapCause::InstPageFault,
             }
         };
 
@@ -149,7 +169,7 @@ impl MMU {
 
         // check the PTE field according to translate purpose 
         match purpose {
-            TransFor::Fetch => {
+            TransFor::Fetch | TransFor::Deleg => {
                 if pte_x != 1 {
                     println!("invalid pte_x: {:x}", pte);
                     return Err(TrapCause::InstPageFault);
@@ -167,7 +187,6 @@ impl MMU {
                     return Err(TrapCause::StorePageFault);
                 }
             },
-            _ => (),
         }
 
         println!("PPN0: 0x{:x}", pte >> 10 & 0x3FF);
@@ -183,7 +202,7 @@ impl MMU {
                 TransFor::Fetch => TrapCause::InstPageFault,
                 TransFor::Load => TrapCause::LoadPageFault,
                 TransFor::Store => TrapCause::StorePageFault,
-                _ => panic!("unknown TransFor"),
+                TransFor::Deleg => TrapCause::InstPageFault,
             }
         };
         // update trans_mode and ppn
@@ -258,12 +277,12 @@ impl MMU {
                                  addr, PPN1 << 22 | PPN0 << 12 | page_off);
 
                         // check pmp and return transrated address
-                        self.pmp(purpose, PPN1 << 22 | PPN0 << 12 | page_off, csrs)
+                        self.pmp(purpose, PPN1 << 22 | PPN0 << 12 | page_off, priv_lv, csrs)
                     },
                 }
             },
             // return raw address if privileged level is Machine
-            _ => self.pmp(purpose, addr, csrs),
+            _ => self.pmp(purpose, addr, priv_lv, csrs),
         }
     }
 }
