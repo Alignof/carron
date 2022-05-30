@@ -104,8 +104,7 @@ impl CPU {
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Option<u32> {
         match self.mmu.trans_addr(
-            purpose, addr as u32, self.csrs.read(CSRname::satp.wrap()),
-            &self.bus.dram, &self.priv_lv) {
+            purpose, addr as u32, &self.csrs, &self.bus.dram, &self.priv_lv) {
 
             Ok(addr) => {
                 Some(addr)
