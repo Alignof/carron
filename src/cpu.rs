@@ -81,13 +81,7 @@ impl CPU {
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap());
         let medeleg = self.csrs.read(CSRname::medeleg.wrap());
-        if (medeleg & 1 << mcause) == 0 {
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
-            self.priv_lv = PrivilegedLevel::Machine;
-
-            let new_pc = self.csrs.read(CSRname::mtvec.wrap()) as i32;
-            self.update_pc(new_pc as i32);
-        } else {
+        if self.priv_lv != PrivilegedLevel::Machine && (medeleg & 1 << mcause) != 0 {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
@@ -96,6 +90,12 @@ impl CPU {
             self.priv_lv = PrivilegedLevel::Supervisor;
 
             let new_pc = self.csrs.read(CSRname::stvec.wrap()) as i32;
+            self.update_pc(new_pc as i32);
+        } else {
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+            self.priv_lv = PrivilegedLevel::Machine;
+
+            let new_pc = self.csrs.read(CSRname::mtvec.wrap()) as i32;
             self.update_pc(new_pc as i32);
         }
 
