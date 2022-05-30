@@ -101,18 +101,32 @@ impl MMU {
             let pmp_a = pmpcfg >> 3 & 0x3;
             match pmp_a {
                 0b00 => return Ok(addr),
-                0b01 => {
+                0b01 => { // TOR
                     let addr_aligned = addr >> 2; // addr[:2]
                     if (index == 0 && addr_aligned < csrs.read(Some(pmpaddrs[index]))) ||
                        (index != 0 && csrs.read(Some(pmpaddrs[index-1])) <= addr_aligned && addr_aligned < csrs.read(Some(pmpaddrs[index]))) {
                            return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
                     }
                 },
-                0b10 => {
-                    // wip
+                0b10 => { // NA4
+                    let addr_aligned = addr >> 2; // addr[:2]
+                    if addr_aligned == csrs.read(Some(pmpaddrs[index])) {
+                        return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
+                    }
                 },
-                0b11 => {
-                    // wip
+                0b11 => { // NAPOT
+                    let mut addr_aligned = addr >> 2; // addr[:2]
+                    let mut pmpaddr = csrs.read(Some(pmpaddrs[index]));
+                    while pmpaddr & 0x1 == 1 {
+                        pmpaddr >>= 1;
+                        addr_aligned >>= 1;
+                    }
+                    pmpaddr >>= 1;
+                    addr_aligned >>= 1;
+
+                    if addr_aligned == pmpaddr {
+                        return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
+                    }
                 },
                 _ => panic!("pmp_a does not matched"),
             }
