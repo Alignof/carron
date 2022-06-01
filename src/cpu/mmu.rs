@@ -170,10 +170,26 @@ impl MMU {
         }
 
         // check the U bit
-        let sum = csrs.read_xstatus(&PrivilegedLevel::Supervisor, Xstatus::SUM);
-        if (pte_u == 0 && priv_lv == &PrivilegedLevel::User) || 
-           (sum == 0 && pte_u == 1 && priv_lv == &PrivilegedLevel::Supervisor) {
+        if pte_u == 0 && priv_lv == &PrivilegedLevel::User {
             println!("invalid pte_u: {:x}", pte);
+            return Err(trap_cause(purpose));
+        }
+        match purpose {
+            TransFor::Load | TransFor::Store => {
+                let sum = csrs.read_xstatus(priv_lv, Xstatus::SUM);
+                if sum == 0 && pte_u == 1 && priv_lv == &PrivilegedLevel::Supervisor {
+                    dbg!(priv_lv);
+                    println!("invalid pte_u: {:x}", pte);
+                    return Err(trap_cause(purpose));
+                }
+            },
+            _ => (),
+        }
+        
+        // check the X and R bit
+        let mxr = csrs.read_xstatus(priv_lv, Xstatus::MXR);
+        if (mxr == 0 && pte_r == 0) || (mxr == 1 && pte_r == 1 && pte_x == 1) {
+            println!("invalid pte_r or pte_x: {:x}", pte);
             return Err(trap_cause(purpose));
         }
         
