@@ -120,10 +120,9 @@ impl MMU {
 
     fn is_leaf_pte(&self, pte: u32) -> bool {
         let pte_r = pte >> 1 & 0x1;
-        let pte_w = pte >> 2 & 0x1;
         let pte_x = pte >> 3 & 0x1;
 
-        pte_r == 1 || pte_w == 1 || pte_x == 1
+        pte_r == 1 || pte_x == 1
     }
 
     fn check_pte_validity(&self, purpose: &TransFor, pte: u32) -> Result<u32, TrapCause>{
@@ -146,7 +145,7 @@ impl MMU {
             return Err(trap_cause(purpose));
         }
 
-        Ok(pte as u32)
+        Ok(pte)
     }
 
     fn check_leaf_pte(&self, purpose: &TransFor, priv_lv: &PrivilegedLevel, csrs: &CSRs, pte: u32) -> Result<u32, TrapCause> {
@@ -268,7 +267,7 @@ impl MMU {
                         // complete the trans addr if PTE is the leaf
                         let PPN0 = if self.is_leaf_pte(PTE) {
                                 // check misaligned superpage
-                                if (PTE >> 10 & 0x3FF) != 0 {
+                                if (PTE >> 10 & 0x1FF) != 0 {
                                     return Err(trap_cause(&purpose)) // exception
                                 }
 
