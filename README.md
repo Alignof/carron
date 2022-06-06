@@ -9,7 +9,7 @@ The simulator passed riscv-tests shown below.
 - [x] rv32ui-p
 - [x] rv32ui-v
 - [x] rv32uc-p
-- [ ] rv32uc-v
+- [x] rv32uc-v
 - [ ] rv32ua-p
 - [ ] rv32ua-v
 
@@ -23,7 +23,7 @@ cargo build --release
 ## Usage
 ```zsh
 ./rv32im_sim --help
-rv32im_sim 0.9.0
+rv32im_sim 0.9.1
 n.takana <Alignof@outlook.com>
 RV32IMC simulator
 
