@@ -39,20 +39,27 @@ pub enum TransFor {
 
 pub struct CPU {
     pub pc: u32,
+        bus: bus::Bus,
     pub regs: reg::Register,
         csrs: csr::CSRs,
-        bus: bus::Bus,
         mmu: mmu::MMU,
     pub priv_lv: PrivilegedLevel,
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, 
+               pc_from_cli: Option<u32>) -> CPU {
+        // initialize bus and get the entry point
+        let (init_pc, bus) = bus::Bus::new(loader, pk_load);
+
         CPU {
-            pc: loader.elf_header.e_entry,
+            pc: match pc_from_cli {
+                Some(cli_pc) => cli_pc,
+                None => init_pc,
+            },
+            bus,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
-            bus: bus::Bus::new(loader),
             mmu: mmu::MMU::new(),
             priv_lv: PrivilegedLevel::Machine, 
         }
@@ -62,8 +69,8 @@ impl CPU {
         self.pc = (self.pc as i32 + addval) as u32;
     }
 
-    pub fn update_pc(&mut self, newval: i32) {
-        self.pc = newval as u32;
+    pub fn update_pc(&mut self, newpc: i32) {
+        self.pc = newpc as u32;
     }
 
     pub fn exception(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
@@ -74,20 +81,21 @@ impl CPU {
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap());
         let medeleg = self.csrs.read(CSRname::medeleg.wrap());
-        if (medeleg & 1 << mcause) == 0 {
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
-            self.priv_lv = PrivilegedLevel::Machine;
-
-            let new_pc = self.csrs.read(CSRname::mtvec.wrap()) as i32;
-            self.update_pc(new_pc as i32);
-        } else {
+        if self.priv_lv != PrivilegedLevel::Machine && (medeleg & 1 << mcause) != 0 {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
+            self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
 
             let new_pc = self.csrs.read(CSRname::stvec.wrap()) as i32;
+            self.update_pc(new_pc as i32);
+        } else {
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+            self.priv_lv = PrivilegedLevel::Machine;
+
+            let new_pc = self.csrs.read(CSRname::mtvec.wrap()) as i32;
             self.update_pc(new_pc as i32);
         }
 
@@ -96,8 +104,7 @@ impl CPU {
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Option<u32> {
         match self.mmu.trans_addr(
-            purpose, addr as u32, self.csrs.read(CSRname::satp.wrap()),
-            &self.bus.dram, &self.priv_lv) {
+            purpose, addr as u32, &self.csrs, &self.bus.dram, &self.priv_lv) {
 
             Ok(addr) => {
                 Some(addr)
