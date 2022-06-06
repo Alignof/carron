@@ -112,10 +112,7 @@ impl CPU {
             Err(cause) => {
                 dbg!(cause);
                 self.exception(addr, cause);
-                match self.mmu.trans_addr(TransFor::Deleg, self.pc, &self.csrs, &self.bus.dram, &self.priv_lv) {
-                    Ok(addr) => Some(addr),
-                    Err(_cause) => None,
-                }
+                None
             },
         }
     }
