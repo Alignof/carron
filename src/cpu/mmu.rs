@@ -1,7 +1,7 @@
 use crate::bus::Device;
 use crate::bus::dram::Dram;
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
-use crate::cpu::csr::{CSRs, CSRname};
+use crate::cpu::csr::{CSRs, CSRname, Xstatus};
 
 pub enum AddrTransMode {
     Bare,
@@ -27,37 +27,6 @@ impl MMU {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
         };
-    }
-
-    fn check_pte_validity(&self, purpose: &TransFor, pte: i32) -> Result<u32, TrapCause>{
-        let pte_v = pte & 0x1;
-        let pte_r = pte >> 1 & 0x1;
-        let pte_w = pte >> 2 & 0x1;
-        let trap_cause = |purpose: &TransFor| {
-            match purpose {
-                TransFor::Fetch => TrapCause::InstPageFault,
-                TransFor::Load => TrapCause::LoadPageFault,
-                TransFor::Store => TrapCause::StorePageFault,
-                TransFor::Deleg => TrapCause::InstPageFault,
-            }
-        };
-
-
-        // check the PTE validity
-        if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
-            println!("invalid pte: {:x}", pte);
-            return Err(trap_cause(purpose));
-        }
-
-        Ok(pte as u32)
-    }
-
-    fn is_leaf_pte(&self, pte: u32) -> bool {
-        let pte_r = pte >> 1 & 0x1;
-        let pte_w = pte >> 2 & 0x1;
-        let pte_x = pte >> 3 & 0x1;
-
-        pte_r == 1 || pte_w == 1 || pte_x == 1
     }
 
     fn check_pmp(&self, purpose: TransFor, addr: u32, pmpcfg: u32, pmp_r: u32, pmp_w: u32, pmp_x: u32) -> Result<u32, TrapCause> {
@@ -149,7 +118,37 @@ impl MMU {
         }
     }
 
-    fn check_leaf_pte(&self, purpose: &TransFor, priv_lv: &PrivilegedLevel, pte: u32) -> Result<u32, TrapCause> {
+    fn is_leaf_pte(&self, pte: u32) -> bool {
+        let pte_r = pte >> 1 & 0x1;
+        let pte_x = pte >> 3 & 0x1;
+
+        pte_r == 1 || pte_x == 1
+    }
+
+    fn check_pte_validity(&self, purpose: &TransFor, pte: u32) -> Result<u32, TrapCause>{
+        let pte_v = pte & 0x1;
+        let pte_r = pte >> 1 & 0x1;
+        let pte_w = pte >> 2 & 0x1;
+        let trap_cause = |purpose: &TransFor| {
+            match purpose {
+                TransFor::Fetch => TrapCause::InstPageFault,
+                TransFor::Load => TrapCause::LoadPageFault,
+                TransFor::Store => TrapCause::StorePageFault,
+                TransFor::Deleg => TrapCause::InstPageFault,
+            }
+        };
+
+
+        // check the PTE validity
+        if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
+            println!("invalid pte: {:x}", pte);
+            return Err(trap_cause(purpose));
+        }
+
+        Ok(pte)
+    }
+
+    fn check_leaf_pte(&self, purpose: &TransFor, priv_lv: &PrivilegedLevel, csrs: &CSRs, pte: u32) -> Result<u32, TrapCause> {
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
         let pte_x = pte >> 3 & 0x1;
@@ -165,17 +164,34 @@ impl MMU {
             }
         };
 
-        if pte_w == 1 && pte_r == 0 {
-            println!("invalid pte_w and pte_r: {:x}", pte);
-            return Err(TrapCause::InstPageFault);
+        if let Err(e) = self.check_pte_validity(purpose, pte) {
+            return Err(e);
         }
 
         // check the U bit
-        if priv_lv == &PrivilegedLevel::User && pte_u != 1 {
+        if pte_u == 0 && priv_lv == &PrivilegedLevel::User {
             println!("invalid pte_u: {:x}", pte);
             return Err(trap_cause(purpose));
         }
-
+        match purpose {
+            TransFor::Load | TransFor::Store => {
+                let sum = csrs.read_xstatus(priv_lv, Xstatus::SUM);
+                if sum == 0 && pte_u == 1 && priv_lv == &PrivilegedLevel::Supervisor {
+                    dbg!(priv_lv);
+                    println!("invalid pte_u: {:x}", pte);
+                    return Err(trap_cause(purpose));
+                }
+            },
+            _ => (),
+        }
+        
+        // check the X and R bit
+        let mxr = csrs.read_xstatus(priv_lv, Xstatus::MXR);
+        if (mxr == 0 && pte_r == 0) || (mxr == 1 && pte_r == 1 && pte_x == 1) {
+            println!("invalid pte_r or pte_x: {:x}", pte);
+            return Err(trap_cause(purpose));
+        }
+        
         if pte_a == 0 {
             println!("invalid pte_a: {:x}", pte);
             return Err(trap_cause(purpose));
@@ -238,7 +254,7 @@ impl MMU {
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr)) {
+                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr) as u32) {
                             Ok(pte) => pte,
                             Err(cause) => {
                                 return Err(cause) // exception
@@ -251,12 +267,12 @@ impl MMU {
                         // complete the trans addr if PTE is the leaf
                         let PPN0 = if self.is_leaf_pte(PTE) {
                                 // check misaligned superpage
-                                if (PTE >> 10 & 0x3FF) != 0 {
+                                if (PTE >> 10 & 0x1FF) != 0 {
                                     return Err(trap_cause(&purpose)) // exception
                                 }
 
                                 // check leaf pte and return PPN0
-                                match self.check_leaf_pte(&purpose, priv_lv, PTE) {
+                                match self.check_leaf_pte(&purpose, priv_lv, csrs, PTE) {
                                     Ok(_) => VPN0,
                                     Err(cause) => return Err(cause),
                                 }
@@ -266,7 +282,7 @@ impl MMU {
                                 println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
                                 println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                          PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                                let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr)) {
+                                let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr) as u32) {
                                     Ok(pte) => pte,
                                     Err(cause) => {
                                         return Err(cause) // exception
@@ -277,11 +293,11 @@ impl MMU {
 
                                 // check PTE to be leaf
                                 if !self.is_leaf_pte(PTE) {
-                                    return Err(trap_cause(&purpose)) // exception
+                                    return Err(trap_cause(&purpose)) // misaligned superpage
                                 }
 
                                 // check leaf pte and return PPN0
-                                match self.check_leaf_pte(&purpose, priv_lv, PTE) {
+                                match self.check_leaf_pte(&purpose, priv_lv, csrs, PTE) {
                                     Ok(PTE) => PTE >> 10 & 0x3FF,
                                     Err(cause) => return Err(cause),
                                 }
