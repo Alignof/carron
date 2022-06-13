@@ -35,6 +35,10 @@ jobs:
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/simplewhale:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/simplewhale:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/simplewhale:buildcache,mode=max
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/rv32_tests:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/rv32_tests:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/rv32_tests:buildcache,mode=max
+      -
+        name: Run test 
+        run: |
+          docker run --volume "$(pwd):/data" ${{ secrets.DOCKER_HUB_USERNAME }}/rv32_tests:latest
