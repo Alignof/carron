@@ -8,6 +8,7 @@ test_kinds=(
     "rv32uc-v"
 )
 
+exit_status=0
 for test_kind in ${test_kinds[@]}; do
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
         if [ ${test_kind: -1} = "p" ]; then
@@ -21,8 +22,11 @@ for test_kind in ${test_kinds[@]}; do
         if [ $result = 1 ]; then
             echo "$test_name ${ESC}[32;1m ... passed ${ESC}[m"
         else
-            echo "$test_name ${ESC}[31;1m ... failed ${ESC}[m"
+            echo "$test_name ${ESC}[31;1m ... failed ${ESC}[m";
+            exit_status=1;
         fi
 
     done;
 done;
+
+exit $exit_status
