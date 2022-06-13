@@ -52,8 +52,8 @@ impl ProgramHeader {
 		new_prog
 	}
 
-    pub fn is_executable(&self) -> bool {
-        self.p_flags & 0x1 == 0x1
+    pub fn is_loadable(&self) -> bool {
+        self.p_type == 0x1
     }
 
 	pub fn show(&self, id: usize) {

@@ -54,7 +54,7 @@ impl ElfLoader {
 
     pub fn get_entry_point(&self) -> Result<u32, ()> {
         for segment in self.prog_headers.iter() {
-            if segment.is_executable() {
+            if segment.is_loadable() {
                 return Ok(segment.p_paddr);
             }
         }

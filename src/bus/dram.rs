@@ -19,7 +19,7 @@ impl Dram {
 
         // load elf memory mapping 
         for segment in loader.prog_headers.iter() {
-            if segment.is_executable() {
+            if segment.is_loadable() {
                 let dram_start = (segment.p_paddr - virt_entry) as usize;
                 let mmap_start = (segment.p_offset) as usize;
                 let dram_end = dram_start + segment.p_filesz as usize;
@@ -57,7 +57,7 @@ impl Dram {
         // load proxy kernel 
         dbg!(pk_load.mem_data.len());
         for segment in pk_load.prog_headers.iter() {
-            if segment.is_executable() {
+            if segment.is_loadable() {
                 let dram_start = (segment.p_paddr - pk_virt_entry) as usize;
                 let mmap_start = segment.p_offset as usize;
                 let dram_end = dram_start + segment.p_filesz as usize;
@@ -86,7 +86,7 @@ impl Dram {
         // load user program 
         dbg!(loader.mem_data.len());
         for segment in loader.prog_headers.iter() {
-            if segment.is_executable() {
+            if segment.is_loadable() {
                 let dram_start = segment.p_paddr - virt_entry + user_base_addr;
                 let mmap_start = segment.p_offset as usize;
                 let dram_end = dram_start + segment.p_filesz + user_base_addr;
