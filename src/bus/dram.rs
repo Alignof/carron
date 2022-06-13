@@ -9,39 +9,47 @@ pub struct Dram {
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> (u32, Dram) {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
-        let vart_entry = loader.prog_headers[0].p_vaddr;
+        let virt_entry = match loader.get_entry_point() {
+            Ok(addr) => addr,
+            Err(()) => panic!("entry point not found."),
+        };
 
         // create new dram 
         let mut new_dram = vec![0; DRAM_SIZE as usize];
 
         // load elf memory mapping 
         for segment in loader.prog_headers.iter() {
-            let dram_start = (segment.p_paddr - vart_entry) as usize;
-            let mmap_start = (segment.p_offset) as usize;
-            let dram_end = dram_start + segment.p_filesz as usize;
-            let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-            dbg!(loader.mem_data.len());
-            dbg!(dram_start);
-            dbg!(dram_end);
-            dbg!(mmap_start);
-            dbg!(mmap_end);
+            if segment.is_executable() {
+                let dram_start = (segment.p_paddr - virt_entry) as usize;
+                let mmap_start = (segment.p_offset) as usize;
+                let dram_end = dram_start + segment.p_filesz as usize;
+                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+                dbg!(loader.mem_data.len());
+                dbg!(dram_start);
+                dbg!(dram_end);
+                dbg!(mmap_start);
+                dbg!(mmap_end);
 
-            new_dram.splice(
-                dram_start .. dram_end,
-                loader.mem_data[mmap_start .. mmap_end].iter().cloned()
-            );
+                new_dram.splice(
+                    dram_start .. dram_end,
+                    loader.mem_data[mmap_start .. mmap_end].iter().cloned()
+                );
+            }
         }
 
-        (vart_entry, // entry address
+        (virt_entry, // entry address
          Dram {
              dram: new_dram,
-             base_addr: vart_entry,
+             base_addr: virt_entry,
          })
     }
 
     pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: &elfload::ElfLoader) -> (u32, Dram) {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
-        let pk_vart_entry = pk_load.prog_headers[0].p_vaddr;
+        let pk_virt_entry = match pk_load.get_entry_point() {
+            Ok(addr) => addr,
+            Err(()) => panic!("entry point not found."),
+        };
 
         // create new dram 
         let mut new_dram = vec![0; DRAM_SIZE as usize];
@@ -49,49 +57,56 @@ impl Dram {
         // load proxy kernel 
         dbg!(pk_load.mem_data.len());
         for segment in pk_load.prog_headers.iter() {
-            let dram_start = (segment.p_paddr - pk_vart_entry) as usize;
-            let mmap_start = segment.p_offset as usize;
-            let dram_end = dram_start + segment.p_filesz as usize;
-            let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-            dbg!(dram_start);
-            dbg!(dram_end);
-            dbg!(mmap_start);
-            dbg!(mmap_end);
+            if segment.is_executable() {
+                let dram_start = (segment.p_paddr - pk_virt_entry) as usize;
+                let mmap_start = segment.p_offset as usize;
+                let dram_end = dram_start + segment.p_filesz as usize;
+                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+                dbg!(dram_start);
+                dbg!(dram_end);
+                dbg!(mmap_start);
+                dbg!(mmap_end);
 
-            new_dram.splice(
-                dram_start .. dram_end,
-                pk_load.mem_data[mmap_start .. mmap_end].iter().cloned()
-            );
+                new_dram.splice(
+                    dram_start .. dram_end,
+                    pk_load.mem_data[mmap_start .. mmap_end].iter().cloned()
+                );
+            }
         }
 
         let final_segment = pk_load.prog_headers.last().unwrap();
         let user_base_addr = (final_segment.p_offset + final_segment.p_filesz) as u32;
         let align = 0x1000;
         let user_base_addr = ((user_base_addr + (align - 1)) / align) * align;
-        let vart_entry = loader.prog_headers[0].p_vaddr;
+        let virt_entry = match loader.get_entry_point() {
+            Ok(addr) => addr,
+            Err(()) => panic!("entry point not found."),
+        };
 
         // load user program 
         dbg!(loader.mem_data.len());
         for segment in loader.prog_headers.iter() {
-            let dram_start = segment.p_paddr - vart_entry + user_base_addr;
-            let mmap_start = segment.p_offset as usize;
-            let dram_end = dram_start + segment.p_filesz + user_base_addr;
-            let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-            dbg!(dram_start);
-            dbg!(dram_end);
-            dbg!(mmap_start);
-            dbg!(mmap_end);
+            if segment.is_executable() {
+                let dram_start = segment.p_paddr - virt_entry + user_base_addr;
+                let mmap_start = segment.p_offset as usize;
+                let dram_end = dram_start + segment.p_filesz + user_base_addr;
+                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+                dbg!(dram_start);
+                dbg!(dram_end);
+                dbg!(mmap_start);
+                dbg!(mmap_end);
 
-            new_dram.splice(
-                dram_start as usize .. dram_end as usize,
-                loader.mem_data[mmap_start .. mmap_end].iter().cloned()
-            );
+                new_dram.splice(
+                    dram_start as usize .. dram_end as usize,
+                    loader.mem_data[mmap_start .. mmap_end].iter().cloned()
+                );
+            }
         }
 
-        (pk_vart_entry, // entry address
+        (pk_virt_entry, // entry address
          Dram {
              dram: new_dram,
-             base_addr: pk_vart_entry,
+             base_addr: pk_virt_entry,
          })
     }
 }
