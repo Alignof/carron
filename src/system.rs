@@ -15,6 +15,8 @@ pub struct Arguments {
     pub exe_option: ExeOption,
     pub pkpath: Option<String>,
     pub init_pc: Option<u32>,
+    pub bpoint: Option<u32>,
+    pub rreg: Option<usize>,
 }
 
 impl Arguments {
@@ -33,6 +35,8 @@ impl Arguments {
             )
             .arg(arg!(--pk <proxy_kernel> "Run with proxy kernel").required(false))
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
+            .arg(arg!(--break_point <address> ... "Set break point as hex").required(false))
+            .arg(arg!(--result_reg <register_number> ... "Set result register").required(false))
             .setting(AppSettings::DeriveDisplayOrder)
             .get_matches();
 
@@ -67,11 +71,24 @@ impl Arguments {
                     .expect("invalid pc\nplease set value as hex (e.g. --pc=0x80000000)")
             });
 
+        let bpoint = app.value_of("break_point")
+            .map(|x| {
+                u32::from_str_radix(x.trim_start_matches("0x"), 16)
+                    .expect("invalid break point\nplease set value as hex (e.g. --pc=0x80000000)")
+            });
+
+        let rreg = app.value_of("result_reg")
+            .map(|x| {
+                x.parse().unwrap()
+            });
+
         Arguments {
             filename,
             exe_option,
             pkpath,
             init_pc,
+            bpoint,
+            rreg,
         }
     }
 }
