@@ -52,6 +52,16 @@ impl ElfLoader {
         self.elf_header.is_elf()
     }
 
+    pub fn get_entry_point(&self) -> Result<u32, ()> {
+        for segment in self.prog_headers.iter() {
+            if segment.is_executable() {
+                return Ok(segment.p_paddr);
+            }
+        }
+
+        Err(())
+    }
+
     pub fn header_show(&self) {
         self.elf_header.show();
     }
