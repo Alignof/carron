@@ -52,6 +52,10 @@ impl ProgramHeader {
 		new_prog
 	}
 
+    pub fn is_executable(&self) -> bool {
+        self.p_flags & 0x1 == 0x1
+    }
+
 	pub fn show(&self, id: usize) {
 		println!("============== program header {}==============", id + 1);
 		println!("p_type:\t\t{}",	get_segment_type_name(self.p_type));
