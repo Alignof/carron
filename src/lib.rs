@@ -8,13 +8,17 @@ use cpu::fetch::fetch;
 
 pub struct Simulator {
     pub cpu: cpu::CPU,
+    break_point: Option<u32>,
+    result_reg: Option<usize>,
 }
 
 impl Simulator {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
-               pc_from_cli: Option<u32>) -> Simulator {
+               pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Simulator {
         Simulator {
             cpu: CPU::new(loader, pk_load, pc_from_cli),
+            break_point,
+            result_reg,
         }
     }
 
@@ -23,8 +27,6 @@ impl Simulator {
 
         // rv32ui-p: 0x80000044, gp(3)
         // rv32ui-v: 0xffc02308, a0(10)
-        let break_point: Option<u32> = Some(0xffc02308);
-        let reg_result = 10;
 
         loop {
             fetch(&mut self.cpu)
@@ -32,8 +34,12 @@ impl Simulator {
                 .execution(&mut self.cpu);
 
             // debug code
-            if break_point.unwrap_or(u32::MAX) == self.cpu.pc {
-                std::process::exit(self.cpu.regs.read(Some(reg_result)));
+            if self.break_point.unwrap_or(u32::MAX) == self.cpu.pc {
+                if self.result_reg.is_some() {
+                    std::process::exit(self.cpu.regs.read(self.result_reg));
+                } else {
+                    std::process::exit(0);
+                }
             }
         }
     }

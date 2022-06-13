@@ -24,7 +24,9 @@ fn main() {
 
         match args.exe_option {
             ExeOption::OPT_DEFAULT  => {
-                let mut simulator: Simulator = Simulator::new(loader, pk_load, args.init_pc); 
+                let mut simulator: Simulator = Simulator::new(
+                    loader, pk_load, args.init_pc, args.bpoint, args.rreg,
+                ); 
                 simulator.simulation();
             },
             ExeOption::OPT_ELFHEAD  => loader.header_show(),
