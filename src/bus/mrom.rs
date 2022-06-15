@@ -33,20 +33,8 @@ impl Mrom {
 }
 
 impl Device for Mrom {
-    // address to raw index
-    fn addr2index(&self, addr: u32) -> usize {
-        if addr < self.base_addr {
-            panic!("invalid address for mrom: {}", addr);
-        }
-
-        (addr - self.base_addr) as usize
-    }
-
-    // get 1 byte
-    fn raw_byte(&self, addr: u32) -> u8 {
-        let addr = self.addr2index(addr);
-        self.mrom[addr]
-    }
+    // set 1 byte
+    fn store_byte(&self, addr: u32, data: u8) {}
 
     // store
     fn store8(&mut self, _addr: u32, _data: i32) {
@@ -62,34 +50,38 @@ impl Device for Mrom {
     }
 
 
+    // get 1 byte
+    fn load_byte(&self, addr: u32) -> u8 {
+        if addr < self.base_addr {
+            panic!("invalid address for mrom: {}", addr);
+        }
+
+        self.mrom[addr - self.base_addr]
+    }
+
     // load
     fn load8(&self, addr: u32) -> i32 {
-        let addr = self.addr2index(addr);
-        self.mrom[addr] as i8 as i32
+        self.load_byte(addr) as i8 as i32
     }
 
     fn load16(&self, addr: u32) -> i32 {
-        let addr = self.addr2index(addr);
-        ((self.mrom[addr + 1] as u16) << 8 |
-         (self.mrom[addr + 0] as u16)) as i16 as i32
+        ((self.load_byte(addr + 1) as u16) << 8 |
+         (self.load_byte(addr + 0) as u16)) as i16 as i32
     }
 
     fn load32(&self, addr: u32) -> i32 {
-        let addr = self.addr2index(addr);
-        ((self.mrom[addr + 3] as u32) << 24 |
-         (self.mrom[addr + 2] as u32) << 16 |
-         (self.mrom[addr + 1] as u32) <<  8 |
-         (self.mrom[addr + 0] as u32)) as i32
+        ((self.load_byte(addr + 3) as u32) << 24 |
+         (self.load_byte(addr + 2) as u32) << 16 |
+         (self.load_byte(addr + 1) as u32) <<  8 |
+         (self.load_byte(addr + 0) as u32)) as i32
     }
 
     fn load_u8(&self, addr: u32) -> i32 {
-        let addr = self.addr2index(addr);
-        self.mrom[addr] as i32
+        self.load_byte(addr) as i32
     }
 
     fn load_u16(&self, addr: u32) -> i32 {
-        let addr = self.addr2index(addr);
-        ((self.mrom[addr + 1] as u32) << 8 |
-         (self.mrom[addr + 0] as u32)) as i32
+        ((self.load_byte(addr + 1) as u32) << 8 |
+         (self.load_byte(addr + 0) as u32)) as i32
     }
 }

@@ -36,11 +36,11 @@ impl Bus {
     }
 
     // get 1 byte
-    pub fn raw_byte(&self, addr: u32) -> u8 {
+    pub fn load_byte(&self, addr: u32) -> u8 {
         if addr < self.dram.base_addr {
-            self.mrom.raw_byte(addr)
+            self.mrom.load_byte(addr)
         } else {
-            self.dram.raw_byte(addr)
+            self.dram.load_byte(addr)
         }
     }
 
@@ -113,11 +113,11 @@ impl Bus {
 }
 
 pub trait Device {
-    fn addr2index(&self, addr: u32) -> usize;
-    fn raw_byte(&self, addr: u32) -> u8;
+    fn store_byte(&self, addr: u32, data: u8);
     fn store8(&mut self, addr: u32, data: i32);
     fn store16(&mut self, addr: u32, data: i32);
     fn store32(&mut self, addr: u32, data: i32);
+    fn load_byte(&self, addr: u32) -> u8;
     fn load8(&self, addr: u32) -> i32;
     fn load16(&self, addr: u32) -> i32;
     fn load32(&self, addr: u32) -> i32;
