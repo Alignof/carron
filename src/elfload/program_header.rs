@@ -1,7 +1,7 @@
 use super::ElfHeader;
 use super::get_u32;
 
-fn get_segment_type_name(segment_type:u32) -> &'static str {
+fn get_segment_type_name(segment_type: u32) -> &'static str {
 	match segment_type {
 		0 => "PT_NULL",
 		1 => "PT_LOAD",
@@ -28,7 +28,7 @@ pub struct ProgramHeader {
 }
 
 impl ProgramHeader {
-	pub fn new(mmap: &[u8], elf_header:&ElfHeader) -> Vec<ProgramHeader> {
+	pub fn new(mmap: &[u8], elf_header: &ElfHeader) -> Vec<ProgramHeader> {
 		let mut new_prog = Vec::new();
 
 		for segment_num in 0 .. elf_header.e_phnum {

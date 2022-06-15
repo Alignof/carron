@@ -1,83 +1,67 @@
 use crate::elfload;
 use super::Device;
 
+struct Segment {
+    start: u32,
+    end: u32,
+    data: Vec<u8>,
+}
+
 pub struct Dram {
-        dram: Vec<u8>,
-    pub base_addr: u32,
+    dram: Vec<Segment>,
 }
 
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> (u32, Dram) {
-        const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
+        let new_dram: Vec<Segment>;
         let virt_entry = match loader.get_entry_point() {
             Ok(addr) => addr,
             Err(()) => panic!("entry point not found."),
         };
 
-        // create new dram 
-        let mut new_dram = vec![0; DRAM_SIZE as usize];
-
         // load elf memory mapping 
         for segment in loader.prog_headers.iter() {
-            if segment.is_loadable() {
-                let dram_start = (segment.p_paddr - virt_entry) as usize;
-                let mmap_start = (segment.p_offset) as usize;
-                let dram_end = dram_start + segment.p_filesz as usize;
-                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-                dbg!(loader.mem_data.len());
-                dbg!(dram_start);
-                dbg!(dram_end);
-                dbg!(mmap_start);
-                dbg!(mmap_end);
+            let start = segment.p_offset;
+            let end = segment.p_offset + segment.p_filesz;
 
-                new_dram.splice(
-                    dram_start .. dram_end,
-                    loader.mem_data[mmap_start .. mmap_end].iter().cloned()
-                );
-            }
+            new_dram.push(
+                Segment {
+                    start,
+                    end,
+                    data: loader.mem_data[start .. end].iter().cloned()
+                }
+            );
         }
 
         (virt_entry, // entry address
          Dram {
              dram: new_dram,
-             base_addr: virt_entry,
          })
     }
 
     pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: &elfload::ElfLoader) -> (u32, Dram) {
-        const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
+        let new_dram: Vec<Segment>;
         let pk_virt_entry = match pk_load.get_entry_point() {
             Ok(addr) => addr,
             Err(()) => panic!("entry point not found."),
         };
 
-        // create new dram 
-        let mut new_dram = vec![0; DRAM_SIZE as usize];
 
         // load proxy kernel 
         dbg!(pk_load.mem_data.len());
         for segment in pk_load.prog_headers.iter() {
-            if segment.is_loadable() {
-                let dram_start = (segment.p_paddr - pk_virt_entry) as usize;
-                let mmap_start = segment.p_offset as usize;
-                let dram_end = dram_start + segment.p_filesz as usize;
-                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-                dbg!(dram_start);
-                dbg!(dram_end);
-                dbg!(mmap_start);
-                dbg!(mmap_end);
+            let start = segment.p_offset;
+            let end = segment.p_offset + segment.p_filesz;
 
-                new_dram.splice(
-                    dram_start .. dram_end,
-                    pk_load.mem_data[mmap_start .. mmap_end].iter().cloned()
-                );
-            }
+            new_dram.push(
+                Segment {
+                    start,
+                    end,
+                    data: pk_load.mem_data[start .. end].iter().cloned()
+                }
+            );
         }
 
-        let final_segment = pk_load.prog_headers.last().unwrap();
-        let user_base_addr = (final_segment.p_offset + final_segment.p_filesz) as u32;
-        let align = 0x1000;
-        let user_base_addr = ((user_base_addr + (align - 1)) / align) * align;
         let virt_entry = match loader.get_entry_point() {
             Ok(addr) => addr,
             Err(()) => panic!("entry point not found."),
@@ -86,21 +70,16 @@ impl Dram {
         // load user program 
         dbg!(loader.mem_data.len());
         for segment in loader.prog_headers.iter() {
-            if segment.is_loadable() {
-                let dram_start = segment.p_paddr - virt_entry + user_base_addr;
-                let mmap_start = segment.p_offset as usize;
-                let dram_end = dram_start + segment.p_filesz + user_base_addr;
-                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-                dbg!(dram_start);
-                dbg!(dram_end);
-                dbg!(mmap_start);
-                dbg!(mmap_end);
+            let start = segment.p_offset;
+            let end = segment.p_offset + segment.p_filesz;
 
-                new_dram.splice(
-                    dram_start as usize .. dram_end as usize,
-                    loader.mem_data[mmap_start .. mmap_end].iter().cloned()
-                );
-            }
+            new_dram.push(
+                Segment {
+                    start,
+                    end,
+                    data: loader.mem_data[start .. end].iter().cloned()
+                }
+            );
         }
 
         (pk_virt_entry, // entry address
@@ -184,11 +163,11 @@ impl Device for Dram {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
+    const DRAM_SIZE: usize = 1024 * 1024 * 128; // 2^27
 
     #[test]
     fn load_store_u8_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0 };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -208,7 +187,7 @@ mod tests {
 
     #[test]
     fn load_store_8_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0 };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
             Dram::store8(dram, addr, data);
@@ -227,7 +206,7 @@ mod tests {
 
     #[test]
     fn load_store_16_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0 };
         let mut addr = 0;
         let mut test_16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -247,7 +226,7 @@ mod tests {
 
     #[test]
     fn load_store_u16_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0 };
         let mut addr = 0;
         let mut test_u16 = |data: i32| {
             Dram::store16(dram, addr, data);
@@ -269,7 +248,7 @@ mod tests {
     #[test]
     #[allow(overflowing_literals)]
     fn load_store_32_test() {
-        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE as usize], base_addr: 0 };
+        let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0 };
         let mut addr = 0;
         let mut test_32 = |data: i32| {
             Dram::store32(dram, addr, data);
