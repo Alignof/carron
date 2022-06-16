@@ -1,8 +1,8 @@
-extern crate rv32im_sim;
-use rv32im_sim::elfload;
-use rv32im_sim::Simulator;
-use rv32im_sim::system::ExeOption;
-use rv32im_sim::system::Arguments;
+extern crate carron;
+use carron::elfload;
+use carron::Emulator;
+use carron::system::ExeOption;
+use carron::system::Arguments;
 
 fn main() {
     let args = Arguments::new();
@@ -24,8 +24,10 @@ fn main() {
 
         match args.exe_option {
             ExeOption::OPT_DEFAULT  => {
-                let mut simulator: Simulator = Simulator::new(loader, pk_load, args.init_pc); 
-                simulator.simulation();
+                let mut emulator: Emulator = Emulator::new(
+                    loader, pk_load, args.init_pc, args.bpoint, args.rreg,
+                ); 
+                emulator.emulation();
             },
             ExeOption::OPT_ELFHEAD  => loader.header_show(),
             ExeOption::OPT_DISASEM  => loader.dump_section(),

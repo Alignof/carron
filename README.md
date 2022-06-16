@@ -1,10 +1,11 @@
-# RV32IM\_simulator
-[![Rust](https://github.com/Alignof/rv32im_simulator/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/rv32im_simulator/actions/workflows/rust.yml)  
-RV32IMC simulator in rust
+# carron
+[![Rust](https://github.com/Alignof/carron/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rust.yml)
+[![rv32_tests](https://github.com/Alignof/carron/actions/workflows/rv32_tests.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rv32_tests.yml)
+RV32IAMC emulator in rust
 
 ## Feature
-This simulator parses an ELF file that supports rv32imc and simulate execution environment of it.  
-The simulator passed riscv-tests shown below.
+This emulator parses an ELF file that supports rv32imc and emulate execution environment of it.  
+The emulator passed riscv-tests shown below.
 
 - [x] rv32ui-p
 - [x] rv32ui-v
@@ -15,31 +16,34 @@ The simulator passed riscv-tests shown below.
 
 ## Install
 ```zsh
-git clone https://github.com/Alignof/rv32im_simulator.git
-cd rv32im_simulator
+git clone https://github.com/Alignof/carron.git
+cd carron
 cargo build --release
 ```
 
 ## Usage
 ```zsh
-./rv32im_sim --help
-rv32im_sim 0.9.1
+$ ./carron --help
+carron 0.9.2
 n.takana <Alignof@outlook.com>
-RV32IMC simulator
+RV32IMAC emulator
 
 USAGE:
-    rv32im_sim [OPTIONS] <filename>
+    carron [OPTIONS] <filename>
 
 ARGS:
     <filename>    ELF file path
 
 OPTIONS:
-    -e, --elfhead         Show ELF header
-    -p, --program         Show all segments
-    -s, --section         Show all sections
-    -d, --disasem         Disassemble ELF
-    -a, --all             Show all ELF data
-        --pc <init_pc>    Set entry address as hex
-    -h, --help            Print help information
-    -V, --version         Print version information
+    -e, --elfhead                         Show ELF header
+    -p, --program                         Show all segments
+    -s, --section                         Show all sections
+    -d, --disasem                         Disassemble ELF
+    -a, --all                             Show all ELF data
+        --pk <proxy_kernel>               Run with proxy kernel
+        --pc <init_pc>                    Set entry address as hex
+        --break_point <address>           Set break point as hex
+        --result_reg <register_number>    Set result register
+    -h, --help                            Print help information
+    -V, --version                         Print version information
 ```
