@@ -6,6 +6,7 @@ mod reg;
 mod mmu;
 mod instruction;
 
+use std::collections::HashSet;
 use crate::bus;
 use crate::elfload;
 use csr::CSRname;
@@ -43,6 +44,7 @@ pub struct CPU {
     pub regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
+        reservation_set: HashSet<u32>,
     pub priv_lv: PrivilegedLevel,
 }
 
@@ -61,6 +63,7 @@ impl CPU {
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
             mmu: mmu::MMU::new(),
+            reservation_set: HashSet::new(),
             priv_lv: PrivilegedLevel::Machine, 
         }
     }

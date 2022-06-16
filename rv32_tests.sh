@@ -6,6 +6,7 @@ test_kinds=(
     "rv32ui-v"
     "rv32uc-p"
     "rv32uc-v"
+    "rv32ua-p"
 )
 
 exit_status=0
