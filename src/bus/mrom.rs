@@ -34,7 +34,9 @@ impl Mrom {
 
 impl Device for Mrom {
     // set 1 byte
-    fn store_byte(&self, addr: u32, data: u8) {}
+    fn store_byte(&mut self, _addr: u32, _data: u8) {
+        panic!("mrom is read only.");
+    }
 
     // store
     fn store8(&mut self, _addr: u32, _data: i32) {
@@ -56,7 +58,7 @@ impl Device for Mrom {
             panic!("invalid address for mrom: {}", addr);
         }
 
-        self.mrom[addr - self.base_addr]
+        self.mrom[(addr - self.base_addr) as usize]
     }
 
     // load

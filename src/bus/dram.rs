@@ -8,12 +8,13 @@ struct Segment {
 }
 
 pub struct Dram {
-    dram: Vec<Segment>,
+        dram: Vec<Segment>,
+    pub base_addr: u32,
 }
 
 impl Dram {
     pub fn new(loader: elfload::ElfLoader) -> (u32, Dram) {
-        let new_dram: Vec<Segment>;
+        let mut new_dram: Vec<Segment> = Vec::new();
         let virt_entry = match loader.get_entry_point() {
             Ok(addr) => addr,
             Err(()) => panic!("entry point not found."),
@@ -21,26 +22,38 @@ impl Dram {
 
         // load elf memory mapping 
         for segment in loader.prog_headers.iter() {
-            let start = segment.p_offset;
-            let end = segment.p_offset + segment.p_filesz;
+            if segment.is_loadable() {
+                let seg_size = ((segment.p_memsz + (segment.p_align - 1)) / segment.p_align) * segment.p_align;
+                let dram_start = segment.p_paddr;
+                let dram_end = segment.p_paddr + seg_size;
+                let mmap_start = segment.p_offset;
+                let mmap_end = segment.p_offset + segment.p_filesz;
+                dbg_hex::dbg_hex!(dram_start + seg_size);
+                let mut data: Vec<u8> = vec![0; seg_size as usize];
+                data.splice(
+                    0 .. segment.p_filesz as usize,
+                    loader.mem_data[mmap_start as usize .. mmap_end as usize].iter().cloned(),
+                );
 
-            new_dram.push(
-                Segment {
-                    start,
-                    end,
-                    data: loader.mem_data[start as usize .. end as usize].to_vec()
-                }
-            );
+                new_dram.push(
+                    Segment {
+                        start: dram_start,
+                        end: dram_end,
+                        data, 
+                    }
+                );
+            }
         }
 
         (virt_entry, // entry address
          Dram {
              dram: new_dram,
+             base_addr: virt_entry,
          })
     }
 
     pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: &elfload::ElfLoader) -> (u32, Dram) {
-        let new_dram: Vec<Segment>;
+        let mut new_dram: Vec<Segment> = Vec::new();
         let pk_virt_entry = match pk_load.get_entry_point() {
             Ok(addr) => addr,
             Err(()) => panic!("entry point not found."),
@@ -50,16 +63,25 @@ impl Dram {
         // load proxy kernel 
         dbg!(pk_load.mem_data.len());
         for segment in pk_load.prog_headers.iter() {
-            let start = segment.p_offset;
-            let end = segment.p_offset + segment.p_filesz;
+            if segment.is_loadable() {
+                let dram_start = segment.p_paddr;
+                let dram_end = segment.p_paddr + segment.p_filesz;
+                let mmap_start = segment.p_offset;
+                let mmap_end = segment.p_offset + segment.p_filesz;
+                let mut data: Vec<u8> = vec![0; segment.p_memsz as usize];
+                data.splice(
+                    dram_start as usize .. dram_end as usize,
+                    pk_load.mem_data[mmap_start as usize .. mmap_end as usize].iter().cloned(),
+                );
 
-            new_dram.push(
-                Segment {
-                    start,
-                    end,
-                    data: loader.mem_data[start as usize .. end as usize].to_vec()
-                }
-            );
+                new_dram.push(
+                    Segment {
+                        start: dram_start,
+                        end: dram_end,
+                        data, 
+                    }
+                );
+            }
         }
 
         let virt_entry = match loader.get_entry_point() {
@@ -70,35 +92,46 @@ impl Dram {
         // load user program 
         dbg!(loader.mem_data.len());
         for segment in loader.prog_headers.iter() {
-            let start = segment.p_offset;
-            let end = segment.p_offset + segment.p_filesz;
+            if segment.is_loadable() {
+                let dram_start = segment.p_paddr;
+                let dram_end = segment.p_paddr + segment.p_filesz;
+                let mmap_start = segment.p_offset;
+                let mmap_end = segment.p_offset + segment.p_filesz;
+                let mut data: Vec<u8> = vec![0; segment.p_memsz as usize];
+                data.splice(
+                    dram_start as usize .. dram_end as usize,
+                    loader.mem_data[mmap_start as usize .. mmap_end as usize].iter().cloned(),
+                );
 
-            new_dram.push(
-                Segment {
-                    start,
-                    end,
-                    data: loader.mem_data[start as usize .. end as usize].to_vec()
-                }
-            );
+                new_dram.push(
+                    Segment {
+                        start: dram_start,
+                        end: dram_end,
+                        data, 
+                    }
+                );
+            }
         }
 
         (pk_virt_entry, // entry address
          Dram {
              dram: new_dram,
+             base_addr: virt_entry,
          })
     }
 }
 
 impl Device for Dram {
     // set 1 byte
-    fn store_byte(&self, addr: u32, data: u8) {
-        for seg in self.dram {
-            if seg.start <= addr && seg.end <= seg.end {
-                seg[addr - seg.start] = data;
+    fn store_byte(&mut self, addr: u32, data: u8) {
+        for seg in &mut self.dram {
+            if seg.start <= addr && addr <= seg.end {
+                seg.data[(addr - seg.start) as usize] = data;
                 return;
             }
         }
-        panic!("invalid address for Dram: {}", addr);
+
+        panic!("invalid address for Dram: 0x{:x}", addr);
     }
 
     // store
@@ -120,12 +153,12 @@ impl Device for Dram {
 
     // get 1 byte
     fn load_byte(&self, addr: u32) -> u8 {
-        for seg in self.dram {
-            if seg.start <= addr && seg.end <= seg.end {
-                return seg[addr - seg.start];
+        for seg in &self.dram {
+            if seg.start <= addr && addr <= seg.end {
+                return seg.data[(addr - seg.start) as usize];
             }
         }
-        panic!("invalid address for Dram: {}", addr);
+        panic!("invalid address for Dram: 0x{:x}", addr);
     }
 
     // load

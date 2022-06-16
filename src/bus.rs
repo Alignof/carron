@@ -113,7 +113,7 @@ impl Bus {
 }
 
 pub trait Device {
-    fn store_byte(&self, addr: u32, data: u8);
+    fn store_byte(&mut self, addr: u32, data: u8);
     fn store8(&mut self, addr: u32, data: i32);
     fn store16(&mut self, addr: u32, data: i32);
     fn store32(&mut self, addr: u32, data: i32);
