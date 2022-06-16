@@ -1,6 +1,7 @@
-# RV32IM\_simulator
-[![Rust](https://github.com/Alignof/rv32im_simulator/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/rv32im_simulator/actions/workflows/rust.yml)  
-RV32IMC simulator in rust
+# carron
+[![Rust](https://github.com/Alignof/carron/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rust.yml)
+[![rv32_tests](https://github.com/Alignof/carron/actions/workflows/rv32_tests.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rv32_tests.yml)
+RV32IAMC simulator in rust
 
 ## Feature
 This simulator parses an ELF file that supports rv32imc and simulate execution environment of it.  
@@ -22,10 +23,10 @@ cargo build --release
 
 ## Usage
 ```zsh
-./rv32im_sim --help
+$ ./carron --help
 rv32im_sim 0.9.1
 n.takana <Alignof@outlook.com>
-RV32IMC simulator
+RV32IMAC simulator
 
 USAGE:
     rv32im_sim [OPTIONS] <filename>

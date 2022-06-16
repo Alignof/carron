@@ -1,8 +1,8 @@
-extern crate rv32im_sim;
-use rv32im_sim::elfload;
-use rv32im_sim::Simulator;
-use rv32im_sim::system::ExeOption;
-use rv32im_sim::system::Arguments;
+extern crate carron;
+use carron::elfload;
+use carron::Simulator;
+use carron::system::ExeOption;
+use carron::system::Arguments;
 
 fn main() {
     let args = Arguments::new();
