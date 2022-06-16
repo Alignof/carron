@@ -1,6 +1,6 @@
 extern crate carron;
 use carron::elfload;
-use carron::Simulator;
+use carron::Emulator;
 use carron::system::ExeOption;
 use carron::system::Arguments;
 
@@ -24,10 +24,10 @@ fn main() {
 
         match args.exe_option {
             ExeOption::OPT_DEFAULT  => {
-                let mut simulator: Simulator = Simulator::new(
+                let mut emulator: Emulator = Emulator::new(
                     loader, pk_load, args.init_pc, args.bpoint, args.rreg,
                 ); 
-                simulator.simulation();
+                emulator.emulation();
             },
             ExeOption::OPT_ELFHEAD  => loader.header_show(),
             ExeOption::OPT_DISASEM  => loader.dump_section(),

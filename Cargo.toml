@@ -3,7 +3,7 @@ name = "carron"
 version = "0.9.2"
 authors = ["n.takana <Alignof@outlook.com>"]
 edition = "2021"
-description = "RV32IMAC simulator"
+description = "RV32IMAC emulator"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

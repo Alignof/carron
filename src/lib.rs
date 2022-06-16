@@ -6,23 +6,23 @@ pub mod elfload;
 use cpu::CPU;
 use cpu::fetch::fetch;
 
-pub struct Simulator {
+pub struct Emulator {
     pub cpu: cpu::CPU,
     break_point: Option<u32>,
     result_reg: Option<usize>,
 }
 
-impl Simulator {
+impl Emulator {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
-               pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Simulator {
-        Simulator {
+               pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Emulator {
+        Emulator {
             cpu: CPU::new(loader, pk_load, pc_from_cli),
             break_point,
             result_reg,
         }
     }
 
-    pub fn simulation(&mut self) {
+    pub fn emulation(&mut self) {
         use crate::cpu::execution::Execution;
 
         // rv32ui-p: 0x80000044, gp(3)
