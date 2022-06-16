@@ -8,18 +8,23 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
                 let _rl = inst.imm.unwrap() & 0x1;
                 let _aq = inst.imm.unwrap() >> 1 & 0x1;
                 cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
-                // --TODO--
-                // and store rs1 address to cache
+                cpu.reservation_set.insert((load_addr as usize, cpu.bus.load32(load_addr)));
             }
 		},
         OpecodeKind::OP_SC_W => {
             if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                // --TODO--
                 // cache value == rs1 --> store rs2 to rs1 and assign zero to rd
                 // cache value != rs1 --> ignore and assign non-zero to rd
-                let _rl = inst.imm.unwrap() & 0x1;
-                let _aq = inst.imm.unwrap() >> 1 & 0x1;
-                cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+                if cpu.reservation_set.contains(&(store_addr as usize, cpu.bus.load32(store_addr))) {
+                    let _rl = inst.imm.unwrap() & 0x1;
+                    let _aq = inst.imm.unwrap() >> 1 & 0x1;
+                    cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+                    cpu.regs.write(inst.rd, 0);
+                } else {
+                    cpu.regs.write(inst.rd, 1);
+                }
+
+                cpu.reservation_set.clear();
             }
 		},
         OpecodeKind::OP_AMOSWAP_W => {
