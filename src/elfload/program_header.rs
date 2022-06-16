@@ -22,9 +22,9 @@ pub struct ProgramHeader {
     pub p_vaddr: u32,
     pub p_paddr: u32,
     pub p_filesz: u32,
-        p_memsz: u32,
+    pub p_memsz: u32,
         p_flags: u32,
-        p_align: u32,
+    pub p_align: u32,
 }
 
 impl ProgramHeader {
