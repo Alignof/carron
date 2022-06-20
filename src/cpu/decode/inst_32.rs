@@ -105,7 +105,10 @@ impl DecodeUtil for u32 {
 
         match opmap {
             0b0101111 => Extensions::A,
-            0b0110011 => Extensions::M,
+            0b0110011 => match funct7 {
+                0b0000001 => Extensions::M,
+                _ => Extensions::BaseI,
+            },
             0b1110011 => match funct3 {
                 0b000 => match funct7 {
                     0b0000000 => Extensions::BaseI,
