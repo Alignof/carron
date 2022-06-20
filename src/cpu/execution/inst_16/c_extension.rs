@@ -24,12 +24,12 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             cpu.regs.write(inst.rd, inst.imm.unwrap());
         },
         OpecodeKind::OP_C_SW => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
             }
         },
         OpecodeKind::OP_C_SWSP => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) {
                 cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
             }
         },

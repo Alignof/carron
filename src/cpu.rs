@@ -6,6 +6,7 @@ mod reg;
 mod mmu;
 mod instruction;
 
+use std::collections::HashSet;
 use crate::bus;
 use crate::elfload;
 use csr::CSRname;
@@ -18,7 +19,7 @@ pub enum TrapCause {
     MmodeEcall = 11,
     InstPageFault = 12,
     LoadPageFault = 13,
-    StorePageFault = 15,
+    StoreAMOPageFault = 15,
 }
 
 #[derive(Debug, PartialEq)]
@@ -33,7 +34,7 @@ pub enum PrivilegedLevel {
 pub enum TransFor {
     Fetch,
     Load,
-    Store,
+    StoreAMO,
     Deleg,
 }
 
@@ -43,6 +44,7 @@ pub struct CPU {
     pub regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
+    pub reservation_set: HashSet<(usize, i32)>,
     pub priv_lv: PrivilegedLevel,
 }
 
@@ -61,6 +63,7 @@ impl CPU {
             regs: reg::Register::new(),
             csrs: csr::CSRs::new(),
             mmu: mmu::MMU::new(),
+            reservation_set: HashSet::new(),
             priv_lv: PrivilegedLevel::Machine, 
         }
     }
