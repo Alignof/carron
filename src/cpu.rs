@@ -44,7 +44,7 @@ pub struct CPU {
     pub regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
-    pub reservation_set: HashSet<usize>,
+    pub reservation_set: HashSet<(usize, i32)>,
     pub priv_lv: PrivilegedLevel,
 }
 
