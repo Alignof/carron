@@ -1,7 +1,7 @@
 # carron
 [![Rust](https://github.com/Alignof/carron/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rust.yml)
 [![rv32_tests](https://github.com/Alignof/carron/actions/workflows/rv32_tests.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rv32_tests.yml)  
-RV32IAMC emulator in rust
+RV32IMAC emulator in rust
 
 ## Feature
 This emulator parses an ELF file that supports rv32imc and emulate execution environment of it.  
