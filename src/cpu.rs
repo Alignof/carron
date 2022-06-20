@@ -19,7 +19,7 @@ pub enum TrapCause {
     MmodeEcall = 11,
     InstPageFault = 12,
     LoadPageFault = 13,
-    StorePageFault = 15,
+    StoreAMOPageFault = 15,
 }
 
 #[derive(Debug, PartialEq)]
@@ -34,7 +34,7 @@ pub enum PrivilegedLevel {
 pub enum TransFor {
     Fetch,
     Load,
-    Store,
+    StoreAMO,
     Deleg,
 }
 

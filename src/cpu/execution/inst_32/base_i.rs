@@ -78,17 +78,17 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             }
         },
         OpecodeKind::OP_SB => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
             }
         },
         OpecodeKind::OP_SH => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
             }
         },
         OpecodeKind::OP_SW => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::Store, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
+            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
                 cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
             }
         },

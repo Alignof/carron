@@ -43,10 +43,10 @@ impl MMU {
                     return Err(TrapCause::LoadPageFault);
                 }
             },
-            TransFor::Store => {
+            TransFor::StoreAMO => {
                 if pmp_w != 1 {
                     println!("invalid pmp_w: {:x}", pmpcfg);
-                    return Err(TrapCause::StorePageFault);
+                    return Err(TrapCause::StoreAMOPageFault);
                 }
             },
         }
@@ -111,8 +111,8 @@ impl MMU {
                 TransFor::Load => {
                     TrapCause::LoadPageFault
                 },
-                TransFor::Store => {
-                    TrapCause::StorePageFault
+                TransFor::StoreAMO => {
+                    TrapCause::StoreAMOPageFault
                 },
             })
         }
@@ -133,7 +133,7 @@ impl MMU {
             match purpose {
                 TransFor::Fetch => TrapCause::InstPageFault,
                 TransFor::Load => TrapCause::LoadPageFault,
-                TransFor::Store => TrapCause::StorePageFault,
+                TransFor::StoreAMO => TrapCause::StoreAMOPageFault,
                 TransFor::Deleg => TrapCause::InstPageFault,
             }
         };
@@ -159,7 +159,7 @@ impl MMU {
             match purpose {
                 TransFor::Fetch => TrapCause::InstPageFault,
                 TransFor::Load => TrapCause::LoadPageFault,
-                TransFor::Store => TrapCause::StorePageFault,
+                TransFor::StoreAMO => TrapCause::StoreAMOPageFault,
                 TransFor::Deleg => TrapCause::InstPageFault,
             }
         };
@@ -174,7 +174,7 @@ impl MMU {
             return Err(trap_cause(purpose));
         }
         match purpose {
-            TransFor::Load | TransFor::Store => {
+            TransFor::Load | TransFor::StoreAMO => {
                 let sum = csrs.read_xstatus(priv_lv, Xstatus::SUM);
                 if sum == 0 && pte_u == 1 && priv_lv == &PrivilegedLevel::Supervisor {
                     dbg!(priv_lv);
@@ -211,10 +211,10 @@ impl MMU {
                     return Err(TrapCause::LoadPageFault);
                 }
             },
-            TransFor::Store => {
+            TransFor::StoreAMO => {
                 if pte_w != 1 || pte_d == 0 {
                     println!("invalid pte_w: {:x}", pte);
-                    return Err(TrapCause::StorePageFault);
+                    return Err(TrapCause::StoreAMOPageFault);
                 }
             },
         }
@@ -231,7 +231,7 @@ impl MMU {
             match purpose {
                 TransFor::Fetch => TrapCause::InstPageFault,
                 TransFor::Load => TrapCause::LoadPageFault,
-                TransFor::Store => TrapCause::StorePageFault,
+                TransFor::StoreAMO => TrapCause::StoreAMOPageFault,
                 TransFor::Deleg => TrapCause::InstPageFault,
             }
         };
