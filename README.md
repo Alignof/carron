@@ -11,8 +11,8 @@ The emulator passed riscv-tests shown below.
 - [x] rv32ui-v
 - [x] rv32uc-p
 - [x] rv32uc-v
-- [ ] rv32ua-p
-- [ ] rv32ua-v
+- [x] rv32ua-p
+- [x] rv32ua-v
 
 ## Install
 ```zsh
