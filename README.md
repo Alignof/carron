@@ -9,6 +9,8 @@ The emulator passed riscv-tests shown below.
 
 - [x] rv32ui-p
 - [x] rv32ui-v
+- [x] rv32um-p
+- [x] rv32um-v
 - [x] rv32uc-p
 - [x] rv32uc-v
 - [x] rv32ua-p
@@ -24,7 +26,7 @@ cargo build --release
 ## Usage
 ```zsh
 $ ./carron --help
-carron 0.9.2
+carron 0.9.3
 n.takana <Alignof@outlook.com>
 RV32IMAC emulator
 

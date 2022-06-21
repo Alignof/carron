@@ -2,6 +2,8 @@
 
 test_dir=/opt/riscv32/share/riscv-tests/isa/
 test_kinds=(
+    "rv32um-p"
+    "rv32um-v"
     "rv32ui-p"
     "rv32ui-v"
     "rv32uc-p"
