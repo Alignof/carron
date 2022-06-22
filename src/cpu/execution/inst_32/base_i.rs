@@ -172,6 +172,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
                     PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
+                    PrivilegedLevel::Machine => TrapCause::MmodeEcall,
                     _ => panic!("cannot enviroment call in current privileged mode."),
                 }
             );

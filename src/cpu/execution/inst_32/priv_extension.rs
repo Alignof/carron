@@ -16,7 +16,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             dbg_hex::dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
 
             cpu.csrs.bitset(CSRname::sstatus.wrap(), (cpu.csrs.read_xstatus(&PrivilegedLevel::Supervisor, Xstatus::SPIE) << 1) as i32); // sstatus.SIE = sstatus.SPIE
-            cpu.csrs.bitset(CSRname::sstatus.wrap(), 1 << 5);// sstatus.SPIE = 1
+            cpu.csrs.bitset(CSRname::sstatus.wrap(), 1 << 5); // sstatus.SPIE = 1
             cpu.csrs.bitclr(CSRname::sstatus.wrap(), 1 << 8); // sstatus.SPP = 0
 
             if cpu.csrs.read(CSRname::mstatus.wrap()) >> 22 & 1 == 1 { // mstatus.TSR == 1
