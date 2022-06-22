@@ -15,7 +15,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             dbg!(&cpu.priv_lv);
             dbg_hex::dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap()));
 
-            cpu.csrs.bitset(CSRname::sstatus.wrap(), ((cpu.csrs.read(CSRname::sstatus.wrap()) >> 5 & 1) as i32) << 1); // sstatus.SIE = sstatus.SPIE
+            cpu.csrs.bitset(CSRname::sstatus.wrap(), (cpu.csrs.read_xstatus(&PrivilegedLevel::Supervisor, Xstatus::SPIE) << 1) as i32); // sstatus.SIE = sstatus.SPIE
             cpu.csrs.bitset(CSRname::sstatus.wrap(), 1 << 5);// sstatus.SPIE = 1
             cpu.csrs.bitclr(CSRname::sstatus.wrap(), 1 << 8); // sstatus.SPP = 0
 
@@ -36,7 +36,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
                 _ => panic!("invalid PrivilegedLevel"),
             };
 
-            cpu.csrs.bitset(CSRname::mstatus.wrap(), ((cpu.csrs.read(CSRname::mstatus.wrap()) >> 7 & 1) as i32) << 3); // mstatus.MIE = mstatus.MPIE
+            cpu.csrs.bitset(CSRname::mstatus.wrap(), (cpu.csrs.read_xstatus(&PrivilegedLevel::Machine, Xstatus::MPIE) << 3) as i32); // mstatus.MIE = mstatus.MPIE
             cpu.csrs.bitset(CSRname::mstatus.wrap(), 1 << 7); // sstatus.MPIE = 1
             cpu.csrs.bitclr(CSRname::mstatus.wrap(), 1 << 11); // sstatus.MPP = 0
 
