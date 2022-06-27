@@ -37,8 +37,8 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             };
 
             cpu.csrs.bitset(CSRname::mstatus.wrap(), (cpu.csrs.read_xstatus(&PrivilegedLevel::Machine, Xstatus::MPIE) << 3) as i32); // mstatus.MIE = mstatus.MPIE
-            cpu.csrs.bitset(CSRname::mstatus.wrap(), 1 << 7); // sstatus.MPIE = 1
-            cpu.csrs.bitclr(CSRname::mstatus.wrap(), 1 << 11); // sstatus.MPP = 0
+            cpu.csrs.bitset(CSRname::mstatus.wrap(), 1 << 7); // mstatus.MPIE = 1
+            cpu.csrs.bitclr(CSRname::mstatus.wrap(), 0b11 << 11); // mstatus.MPP = 0
 
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap()) as i32;
             cpu.update_pc(new_pc);
