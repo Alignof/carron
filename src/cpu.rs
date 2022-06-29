@@ -63,7 +63,7 @@ impl CPU {
             },
             bus,
             regs: reg::Register::new(),
-            csrs: csr::CSRs::new(),
+            csrs: csr::CSRs::new().init(),
             mmu: mmu::MMU::new(),
             reservation_set: HashSet::new(),
             priv_lv: PrivilegedLevel::Machine, 

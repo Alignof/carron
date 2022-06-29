@@ -11,6 +11,11 @@ impl CSRs {
         }
     }
 
+    pub fn init(mut self) -> Self {
+        self.write(CSRname::misa.wrap(), 0x40141105);
+        self
+    }
+
     pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
         let mask = src as u32;
         if mask != 0 {
@@ -77,6 +82,7 @@ pub enum CSRname {
     stval    = 0x143,
     satp     = 0x180,
     mstatus  = 0x300,
+    misa     = 0x301,
     medeleg  = 0x302,
     mtvec    = 0x305,
     mscratch = 0x340, 
