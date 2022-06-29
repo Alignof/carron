@@ -1,5 +1,5 @@
 use crate::CPU;
-use crate::cpu::{TransFor, TrapCause, PrivilegedLevel};
+use crate::cpu::{TransFor, TrapCause};
 use crate::cpu::csr::CSRname;
 
 impl CPU {
@@ -13,6 +13,9 @@ impl CPU {
             0x2 => {
                 let tdata2 = self.csrs.read(CSRname::tdata2.wrap());
                 let match_mode = tdata1 >> 7 & 0xF;
+                /*
+                 * disable privilege check (because user mode stil enable at rv32mi-p)
+                 *
                 let mode_m = tdata1 >> 6 & 0x1;
                 let mode_s = tdata1 >> 4 & 0x1;
                 let mode_u = tdata1 >> 3 & 0x1;
@@ -22,28 +25,35 @@ impl CPU {
                    self.priv_lv == PrivilegedLevel::User && mode_u == 0x0 {
                        return Ok(addr);
                 } 
+                */
 
                 if match_mode != 0x0 {
                     panic!("this match mode is not supported");
                 }
 
+                dbg_hex::dbg_hex!(addr);
+                dbg_hex::dbg_hex!(tdata2);
+                dbg_hex::dbg_hex!(tdata1 >> 18 & 0x1);
                 match purpose {
                     TransFor::Fetch | TransFor::Deleg => {
-                        if addr == tdata2 && tdata1 >> 2 & 0x1 == 1 {
+                        let fetch_mask = tdata1 >> 2 & 0x1;
+                        if addr == tdata2 && fetch_mask == 1 {
                             self.exception(addr as i32, TrapCause::Breakpoint);
                             return Err(());
                         }
                         Ok(addr)
                     },
                     TransFor::Load => {
-                        if addr == tdata2 && tdata1 & 0x1 == 1 {
+                        let load_mask = tdata1 & 0x1;
+                        if addr == tdata2 && load_mask == 1 {
                             self.exception(addr as i32, TrapCause::Breakpoint);
                             return Err(());
                         }
                         Ok(addr)
                     },
                     TransFor::StoreAMO => {
-                        if addr == tdata2 && tdata1 >> 1 & 0x1 == 1 {
+                        let store_mask = tdata1 >> 1 & 0x1;
+                        if addr == tdata2 && store_mask == 1 {
                             self.exception(addr as i32, TrapCause::Breakpoint);
                             return Err(());
                         }

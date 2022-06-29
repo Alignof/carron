@@ -83,6 +83,8 @@ pub enum CSRname {
     mepc     = 0x341, 
     mcause   = 0x342,
     mtval    = 0x343,
+    tdata1   = 0x7a1,
+    tdata2   = 0x7a2,
 }
 
 pub enum Xstatus {

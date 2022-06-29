@@ -4,6 +4,7 @@ pub mod execution;
 pub mod csr;
 mod reg;
 mod mmu;
+mod breakpoint;
 mod instruction;
 
 use std::collections::HashSet;
@@ -14,6 +15,7 @@ use csr::CSRname;
 #[derive(Copy, Clone, Debug)]
 pub enum TrapCause {
     IllegalInst = 2,
+    Breakpoint = 3,
     UmodeEcall = 8,
     SmodeEcall = 9,
     MmodeEcall = 11,
@@ -79,7 +81,6 @@ impl CPU {
     pub fn exception(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
         self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
-        self.csrs.bitclr(CSRname::mstatus.wrap(), 0x3 << 11);
 
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap());
@@ -106,15 +107,20 @@ impl CPU {
     }
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Option<u32> {
+        let addr = match self.check_breakpoint(&purpose, addr as u32) {
+            Ok(a) => a,
+            Err(()) => return None,
+        };
+
         match self.mmu.trans_addr(
-            purpose, addr as u32, &self.csrs, &self.bus.dram, &self.priv_lv) {
+            purpose, addr, &self.csrs, &self.bus.dram, &self.priv_lv) {
 
             Ok(addr) => {
                 Some(addr)
             },
             Err(cause) => {
                 dbg!(cause);
-                self.exception(addr, cause);
+                self.exception(addr as i32, cause);
                 None
             },
         }
