@@ -1,7 +1,16 @@
-use crate::cpu::CPU;
+use crate::cpu::{CPU, TrapCause};
+use crate::cpu::csr::{CSRname};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exec(inst: &Instruction, cpu: &mut CPU) {
+    if Some(0xc00) <= inst.rs2 && inst.rs2 <= Some(0xc1f) {
+        let ctren = cpu.csrs.read(CSRname::mcounteren.wrap());
+        if ctren >> (inst.rs2.unwrap() - 0xc00) & 0x1 == 1 {
+            cpu.exception(cpu.pc as i32, TrapCause::IllegalInst);
+            return;
+        }
+    }
+
     match inst.opc {
         OpecodeKind::OP_CSRRW => {
             let rs1 = cpu.regs.read(inst.rs1) as i32;
