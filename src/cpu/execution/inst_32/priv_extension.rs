@@ -2,7 +2,7 @@ use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::csr::{CSRname, Xstatus};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), String> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
             cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::SPP) {
@@ -52,5 +52,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
         },
         _ => panic!("not an privileged extension"),
     }
+
+    Ok(())
 }
 

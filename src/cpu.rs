@@ -106,22 +106,19 @@ impl CPU {
         println!("new pc:0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Option<u32> {
-        let addr = match self.check_breakpoint(&purpose, addr as u32) {
-            Ok(a) => a,
-            Err(()) => return None,
-        };
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, String> {
+        let addr = self.check_breakpoint(&purpose, addr as u32)?;
 
         match self.mmu.trans_addr(
             purpose, addr, &self.csrs, &self.bus.dram, &self.priv_lv) {
 
             Ok(addr) => {
-                Some(addr)
+                Ok(addr)
             },
             Err(cause) => {
                 dbg!(cause);
                 self.exception(addr as i32, cause);
-                None
+                Err(format!("address transration failed: {:?}", cause))
             },
         }
     }

@@ -2,12 +2,12 @@ use crate::cpu::{CPU, TrapCause};
 use crate::cpu::csr::{CSRname};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), String> {
     if Some(0xc00) <= inst.rs2 && inst.rs2 <= Some(0xc1f) {
         let ctren = cpu.csrs.read(CSRname::mcounteren.wrap());
         if ctren >> (inst.rs2.unwrap() - 0xc00) & 0x1 == 1 {
             cpu.exception(cpu.pc as i32, TrapCause::IllegalInst);
-            return;
+            return Err("CSR error".to_string());
         }
     }
 
@@ -41,5 +41,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
         },
         _ => panic!("not an Zicsr extension"),
     }
+
+    Ok(())
 }
 

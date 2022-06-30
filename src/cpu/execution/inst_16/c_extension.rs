@@ -1,7 +1,7 @@
 use crate::cpu::{CPU, TransFor};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), String> {
     const INST_SIZE: u32 = 2;
     const REG_SP: usize = 2;
     const REG_LINK: usize = 1;
@@ -11,27 +11,23 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             cpu.regs.write(inst.rd, inst.imm.unwrap());
         },
         OpecodeKind::OP_C_LW => {
-            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
-            }
+            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
         },
         OpecodeKind::OP_C_LWSP => {
-            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) {
-                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
-            }
+            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap())?;
+            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
         },
         OpecodeKind::OP_C_LUI => {
             cpu.regs.write(inst.rd, inst.imm.unwrap());
         },
         OpecodeKind::OP_C_SW => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
-            }
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_C_SWSP => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap()) {
-                cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
-            }
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap())?;
+            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_C_SLLI => {
             cpu.regs.write(inst.rd,
@@ -114,6 +110,8 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
         OpecodeKind::OP_C_NOP => {/* NOP */},
         _ => panic!("not a compressed Instruction"),
     }
+
+    Ok(())
 }
 
 #[cfg(test)]

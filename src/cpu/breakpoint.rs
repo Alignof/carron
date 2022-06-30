@@ -3,7 +3,7 @@ use crate::cpu::{TransFor, TrapCause};
 use crate::cpu::csr::CSRname;
 
 impl CPU {
-    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, ()> {
+    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, String> {
         let tdata1 = self.csrs.read(CSRname::tdata1.wrap());
         let trigger_type = tdata1 >> 28 & 0xF;
 
@@ -39,7 +39,7 @@ impl CPU {
                         let fetch_mask = tdata1 >> 2 & 0x1;
                         if addr == tdata2 && fetch_mask == 1 {
                             self.exception(addr as i32, TrapCause::Breakpoint);
-                            return Err(());
+                            return Err("Breakpoint exception (fetch)".to_string())
                         }
                         Ok(addr)
                     },
@@ -47,7 +47,7 @@ impl CPU {
                         let load_mask = tdata1 & 0x1;
                         if addr == tdata2 && load_mask == 1 {
                             self.exception(addr as i32, TrapCause::Breakpoint);
-                            return Err(());
+                            return Err("Breakpoint exception (load)".to_string())
                         }
                         Ok(addr)
                     },
@@ -55,7 +55,7 @@ impl CPU {
                         let store_mask = tdata1 >> 1 & 0x1;
                         if addr == tdata2 && store_mask == 1 {
                             self.exception(addr as i32, TrapCause::Breakpoint);
-                            return Err(());
+                            return Err("Breakpoint exception (store/AMO)".to_string())
                         }
                         Ok(addr)
                     },
