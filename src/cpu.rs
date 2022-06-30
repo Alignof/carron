@@ -83,8 +83,8 @@ impl CPU {
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
 
         // check Machine Trap Delegation Registers
-        let mcause = self.csrs.read(CSRname::mcause.wrap());
-        let medeleg = self.csrs.read(CSRname::medeleg.wrap());
+        let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
+        let medeleg = self.csrs.read(CSRname::medeleg.wrap()).unwrap();
         if self.priv_lv != PrivilegedLevel::Machine && (medeleg & 1 << mcause) != 0 {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
@@ -93,32 +93,29 @@ impl CPU {
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
 
-            let new_pc = self.csrs.read(CSRname::stvec.wrap()) as i32;
+            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
             self.update_pc(new_pc as i32);
         } else {
             self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Machine;
 
-            let new_pc = self.csrs.read(CSRname::mtvec.wrap()) as i32;
+            let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
             self.update_pc(new_pc as i32);
         }
 
         println!("new pc:0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, String> {
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<i32>, TrapCause, String)> {
         let addr = self.check_breakpoint(&purpose, addr as u32)?;
 
         match self.mmu.trans_addr(
             purpose, addr, &self.csrs, &self.bus.dram, &self.priv_lv) {
 
-            Ok(addr) => {
-                Ok(addr)
-            },
+            Ok(addr) => Ok(addr),
             Err(cause) => {
                 dbg!(cause);
-                self.exception(addr as i32, cause);
-                Err(format!("address transration failed: {:?}", cause))
+                Err((Some(addr as i32), cause, format!("address transration failed: {:?}", cause)))
             },
         }
     }

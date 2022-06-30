@@ -1,4 +1,4 @@
-use crate::cpu::PrivilegedLevel;
+use crate::cpu::{PrivilegedLevel, TrapCause};
 
 pub struct CSRs {
     csrs: [u32; 4096],
@@ -34,8 +34,20 @@ impl CSRs {
         self.csrs[dist.unwrap()] = src as u32;
     }
 
-    pub fn read(&self, src: Option<usize>) -> u32 {
-        self.csrs[src.unwrap()]
+    pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
+        let addr = src.unwrap();
+        if 0xc00 <= addr && addr <= 0xc1f {
+            let ctren = self.read(CSRname::mcounteren.wrap())?;
+            if ctren >> (addr - 0xc00) & 0x1 == 1 {
+                return Err((
+                    None,
+                    TrapCause::IllegalInst,
+                    "mcounteren bit is clear, but attempt reading".to_string()
+                ));
+            }
+        }
+
+        Ok(self.csrs[addr])
     }
 
     pub fn read_xstatus(&self, priv_lv: &PrivilegedLevel, xfield: Xstatus) -> u32 {

@@ -22,8 +22,8 @@ impl MMU {
     }
 
     fn update_ppn_and_mode(&mut self, csrs: &CSRs) {
-        self.ppn = (csrs.read(CSRname::satp.wrap()) & 0x3FFFFF) as u32;
-        self.trans_mode = match csrs.read(CSRname::satp.wrap()) >> 31 & 0x1 {
+        self.ppn = (csrs.read(CSRname::satp.wrap()).unwrap() & 0x3FFFFF) as u32;
+        self.trans_mode = match csrs.read(CSRname::satp.wrap()).unwrap() >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
         };
@@ -59,7 +59,7 @@ impl MMU {
         let get_pmpcfg = |pmpnum| {
             let cfgnum = pmpnum / 4;
             let cfgoff = pmpnum % 4;
-            csrs.read(Some(0x3A0 + cfgnum)) >> (4 * cfgoff)
+            csrs.read(Some(0x3A0 + cfgnum)).unwrap() >> (4 * cfgoff)
         };
 
         for index in 0 .. pmpaddrs.len() { // pmpaddr0 ~ pmpaddr15
@@ -72,20 +72,20 @@ impl MMU {
                 0b00 => return Ok(addr),
                 0b01 => { // TOR
                     let addr_aligned = addr >> 2; // addr[:2]
-                    if (index == 0 && addr_aligned < csrs.read(Some(pmpaddrs[index]))) ||
-                       (index != 0 && csrs.read(Some(pmpaddrs[index-1])) <= addr_aligned && addr_aligned < csrs.read(Some(pmpaddrs[index]))) {
+                    if (index == 0 && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap()) ||
+                       (index != 0 && csrs.read(Some(pmpaddrs[index-1])).unwrap() <= addr_aligned && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap()) {
                            return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
                     }
                 },
                 0b10 => { // NA4
                     let addr_aligned = addr >> 2; // addr[:2]
-                    if addr_aligned == csrs.read(Some(pmpaddrs[index])) {
+                    if addr_aligned == csrs.read(Some(pmpaddrs[index])).unwrap() {
                         return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
                     }
                 },
                 0b11 => { // NAPOT
                     let mut addr_aligned = addr >> 2; // addr[:2]
-                    let mut pmpaddr = csrs.read(Some(pmpaddrs[index]));
+                    let mut pmpaddr = csrs.read(Some(pmpaddrs[index])).unwrap();
                     while pmpaddr & 0x1 == 1 {
                         pmpaddr >>= 1;
                         addr_aligned >>= 1;

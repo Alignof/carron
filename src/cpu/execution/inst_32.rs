@@ -4,10 +4,10 @@ mod m_extension;
 mod priv_extension;
 mod zicsr_extension;
 
-use crate::cpu::CPU;
+use crate::cpu::{CPU, TrapCause};
 use crate::cpu::instruction::{Instruction, Extensions};
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), String> {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
     const INST_SIZE: u32 = 4;
 
     // store previous program counter for excluding branch case

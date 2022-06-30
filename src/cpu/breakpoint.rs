@@ -3,15 +3,15 @@ use crate::cpu::{TransFor, TrapCause};
 use crate::cpu::csr::CSRname;
 
 impl CPU {
-    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, String> {
-        let tdata1 = self.csrs.read(CSRname::tdata1.wrap());
+    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, (Option<i32>, TrapCause, String)> {
+        let tdata1 = self.csrs.read(CSRname::tdata1.wrap())?;
         let trigger_type = tdata1 >> 28 & 0xF;
 
         match trigger_type {
             0x0 => Ok(addr),
             0x1 => panic!("SiFive address match trigger is not implemented."),
             0x2 => {
-                let tdata2 = self.csrs.read(CSRname::tdata2.wrap());
+                let tdata2 = self.csrs.read(CSRname::tdata2.wrap())?;
                 let match_mode = tdata1 >> 7 & 0xF;
                 /*
                  * disable privilege check (because user mode stil enable at rv32mi-p)
@@ -38,24 +38,33 @@ impl CPU {
                     TransFor::Fetch | TransFor::Deleg => {
                         let fetch_mask = tdata1 >> 2 & 0x1;
                         if addr == tdata2 && fetch_mask == 1 {
-                            self.exception(addr as i32, TrapCause::Breakpoint);
-                            return Err("Breakpoint exception (fetch)".to_string())
+                            return Err((
+                                Some(addr as i32),
+                                TrapCause::Breakpoint,
+                                "Breakpoint exception (fetch)".to_string()
+                            ))
                         }
                         Ok(addr)
                     },
                     TransFor::Load => {
                         let load_mask = tdata1 & 0x1;
                         if addr == tdata2 && load_mask == 1 {
-                            self.exception(addr as i32, TrapCause::Breakpoint);
-                            return Err("Breakpoint exception (load)".to_string())
+                            return Err((
+                                Some(addr as i32),
+                                TrapCause::Breakpoint,
+                                "Breakpoint exception (load)".to_string()
+                            ))
                         }
                         Ok(addr)
                     },
                     TransFor::StoreAMO => {
                         let store_mask = tdata1 >> 1 & 0x1;
                         if addr == tdata2 && store_mask == 1 {
-                            self.exception(addr as i32, TrapCause::Breakpoint);
-                            return Err("Breakpoint exception (store/AMO)".to_string())
+                            return Err((
+                                Some(addr as i32),
+                                TrapCause::Breakpoint,
+                                "Breakpoint exception (store/AMO)".to_string()
+                            ))
                         }
                         Ok(addr)
                     },

@@ -5,14 +5,19 @@ mod zicsr_extension;
 mod priv_extension;
 
 use super::{Decode, DecodeUtil};
+use crate::cpu::TrapCause;
 use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
-    fn decode(&self) -> Result<Instruction, String> {
+    fn decode(&self) -> Result<Instruction, (Option<i32>, TrapCause, String)> {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
-            Err(msg) => return Err(format!("{}, {:b}", msg, self)),
+            Err(msg) => return Err((
+                None,
+                TrapCause::IllegalInst,
+                format!("{}, {:b}", msg, self)
+            )),
         };
         let new_rd:  Option<usize>  = self.parse_rd(&new_opc);
         let new_rs1: Option<usize>  = self.parse_rs1(&new_opc);

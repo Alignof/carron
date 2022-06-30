@@ -1,7 +1,7 @@
 use crate::cpu::{CPU, PrivilegedLevel, TransFor, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), String> {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
     const INST_SIZE: u32 = 4;
 
     match inst.opc {

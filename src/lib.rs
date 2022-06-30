@@ -3,7 +3,7 @@ pub mod cpu;
 pub mod bus;
 pub mod elfload;
 
-use cpu::CPU;
+use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
 
 pub struct Emulator {
@@ -22,7 +22,7 @@ impl Emulator {
         }
     }
 
-    fn exec_one_cycle(&mut self) -> Result<(), String> {
+    fn exec_one_cycle(&mut self) -> Result<(), (Option<i32>, TrapCause, String)> {
         use crate::cpu::execution::Execution;
         fetch(&mut self.cpu)?
             .decode()?
@@ -36,7 +36,10 @@ impl Emulator {
         loop {
             match self.exec_one_cycle() {
                 Ok(()) => (),
-                Err(msg) => eprintln!("{}", msg),
+                Err((addr, cause, msg)) => {
+                    self.cpu.exception(addr.unwrap_or(self.cpu.pc as i32), cause);
+                    eprintln!("{}", msg);
+                },
             }
 
             // debug code

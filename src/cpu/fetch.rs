@@ -1,8 +1,8 @@
 use dbg_hex::dbg_hex;
-use super::TransFor;
+use super::{TransFor, TrapCause};
 use super::decode::Decode;
 
-pub fn fetch(cpu: &mut super::CPU) -> Result<Box<dyn Decode>, String> {
+pub fn fetch(cpu: &mut super::CPU) -> Result<Box<dyn Decode>, (Option<i32>, TrapCause, String)> {
     dbg_hex!(cpu.pc);
     let index_pc: u32 = cpu.trans_addr(TransFor::Fetch, cpu.pc as i32)?;
     let is_cinst: bool = cpu.bus.raw_byte(index_pc) & 0x3 != 0x3;
