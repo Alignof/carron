@@ -16,6 +16,18 @@ impl CSRs {
         self
     }
 
+    fn check_accessible(&self, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
+        if dist >= 4096 {
+            return Err((
+                None,
+                TrapCause::IllegalInst,
+                format!("csr size is 4096, but you accessed {}", dist)
+            ));
+        }
+
+        Ok(())
+    }
+
     pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
         let mask = src as u32;
         if mask != 0 {
@@ -35,10 +47,11 @@ impl CSRs {
     }
 
     pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
-        let addr = src.unwrap();
-        if 0xc00 <= addr && addr <= 0xc1f {
+        let dist = src.unwrap();
+        self.check_accessible(dist)?;
+        if 0xc00 <= dist && dist <= 0xc1f {
             let ctren = self.read(CSRname::mcounteren.wrap())?;
-            if ctren >> (addr - 0xc00) & 0x1 == 1 {
+            if ctren >> (dist - 0xc00) & 0x1 == 1 {
                 return Err((
                     None,
                     TrapCause::IllegalInst,
@@ -47,7 +60,7 @@ impl CSRs {
             }
         }
 
-        Ok(self.csrs[addr])
+        Ok(self.csrs[dist])
     }
 
     pub fn read_xstatus(&self, priv_lv: &PrivilegedLevel, xfield: Xstatus) -> u32 {
