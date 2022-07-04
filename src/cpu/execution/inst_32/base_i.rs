@@ -170,7 +170,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
             );
         },
         OpecodeKind::OP_EBREAK => {
-            panic!("not yet implemented: OP_EBREAK");
+            cpu.exception(cpu.pc as i32, TrapCause::Breakpoint);
         },
         _ => panic!("not an Base extension"),
     }
