@@ -2,6 +2,7 @@ use crate::cpu::{CPU, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
+    cpu.csrs.check_accessible(&cpu.priv_lv, inst.rs2.unwrap())?;
     match inst.opc {
         OpecodeKind::OP_CSRRW => {
             let rs1 = cpu.regs.read(inst.rs1) as i32;

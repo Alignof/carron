@@ -16,13 +16,36 @@ impl CSRs {
         self
     }
 
-    fn check_accessible(&self, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
+    pub fn check_accessible(&self, priv_lv: &PrivilegedLevel, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
         if dist >= 4096 {
             return Err((
                 None,
                 TrapCause::IllegalInst,
                 format!("csr size is 4096, but you accessed {}", dist)
             ));
+        }
+
+        match priv_lv {
+            PrivilegedLevel::User => {
+                if (0x100 <= dist && dist <= 0x180) ||
+                   (0x300 <= dist && dist <= 0x344) {
+                    return Err((
+                        None,
+                        TrapCause::IllegalInst,
+                        format!("You are in User mode but accessed {}", dist)
+                    ));
+                }
+            },
+            PrivilegedLevel::Supervisor => {
+                if 0x300 <= dist && dist <= 0x344 {
+                    return Err((
+                        None,
+                        TrapCause::IllegalInst,
+                        format!("You are in Supervisor mode but accessed {}", dist)
+                    ));
+                }
+            },
+            _ => (),
         }
 
         Ok(())
@@ -48,7 +71,6 @@ impl CSRs {
 
     pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
         let dist = src.unwrap();
-        self.check_accessible(dist)?;
         if 0xc00 <= dist && dist <= 0xc1f {
             let ctren = self.read(CSRname::mcounteren.wrap())?;
             if ctren >> (dist - 0xc00) & 0x1 == 1 {
