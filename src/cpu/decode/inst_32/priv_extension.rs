@@ -1,5 +1,6 @@
 use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
+use crate::cpu::TrapCause;
 
 pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
     let opmap: u8  = inst.slice(6, 0) as u8;
@@ -20,29 +21,29 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-pub fn parse_rd(_inst: u32, _opkind: &OpecodeKind) -> Option<usize> {
-    None
+pub fn parse_rd(_inst: u32, _opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+    Ok(None)
 }
 
-pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     let rs1: usize = inst.slice(19, 15) as usize;
 
     match opkind {
-        OpecodeKind::OP_SFENCE_VMA	=> Some(rs1),
-        _ => None,
+        OpecodeKind::OP_SFENCE_VMA	=> Ok(Some(rs1)),
+        _ => Ok(None),
     }
 }
 
-pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     let rs2: usize = inst.slice(24, 20) as usize;
 
     match opkind {
-        OpecodeKind::OP_SFENCE_VMA	=> Some(rs2),
-        _ => None,
+        OpecodeKind::OP_SFENCE_VMA	=> Ok(Some(rs2)),
+        _ => Ok(None),
     }
 }
 
-pub fn parse_imm(_inst: u32, _opkind: &OpecodeKind) -> Option<i32> {
-    None
+pub fn parse_imm(_inst: u32, _opkind: &OpecodeKind) -> Result<Option<i32>, (Option<i32>, TrapCause, String)> {
+    Ok(None)
 }
 
