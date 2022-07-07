@@ -48,6 +48,17 @@ impl CSRs {
             _ => (),
         }
 
+        if 0xc00 <= dist && dist <= 0xc1f {
+            let ctren = self.read(CSRname::mcounteren.wrap())?;
+            if ctren >> (dist - 0xc00) & 0x1 == 1 {
+                return Err((
+                    None,
+                    TrapCause::IllegalInst,
+                    "mcounteren bit is clear, but attempt reading".to_string()
+                ));
+            }
+        }
+
         Ok(())
     }
 
@@ -71,17 +82,6 @@ impl CSRs {
 
     pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
         let dist = src.unwrap();
-        if 0xc00 <= dist && dist <= 0xc1f {
-            let ctren = self.read(CSRname::mcounteren.wrap())?;
-            if ctren >> (dist - 0xc00) & 0x1 == 1 {
-                return Err((
-                    None,
-                    TrapCause::IllegalInst,
-                    "mcounteren bit is clear, but attempt reading".to_string()
-                ));
-            }
-        }
-
         Ok(self.csrs[dist])
     }
 
