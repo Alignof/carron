@@ -1,4 +1,5 @@
 use crate::cpu::{CPU, TrapCause};
+use crate::cpu::csr::CSRname;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
@@ -32,6 +33,12 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
             cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as i32);
         },
         _ => panic!("not an Zicsr extension"),
+    }
+
+    if inst.rs2 == CSRname::misa.wrap() && cpu.csrs.read(CSRname::misa.wrap())? >> 2 & 0x1 == 0 {
+        if cpu.pc % 4 != 0 {
+            cpu.csrs.bitset(inst.rs2, 0b100);
+        }
     }
 
     Ok(())
