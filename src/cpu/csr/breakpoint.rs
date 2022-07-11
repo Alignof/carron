@@ -1,6 +1,32 @@
 use crate::CPU;
 use crate::cpu::{TransFor, TrapCause};
-use crate::cpu::csr::CSRname;
+use crate::cpu::csr::{CSRs, CSRname};
+
+pub struct Triggers {
+    pub tselect: usize,
+    pub tdata1: [u32; 8],
+    pub tdata2: [u32; 8],
+}
+
+impl CSRs {
+    pub fn update_triggers(&mut self, dist: usize, src: i32) {
+        match dist {
+            0x7a0 => { // tselect
+                let tgr_index = src as usize;
+                self.triggers.tselect = tgr_index;
+                self.csrs[CSRname::tdata1 as usize] = self.triggers.tdata1[tgr_index];
+                self.csrs[CSRname::tdata2 as usize] = self.triggers.tdata2[tgr_index];
+            },
+            0x7a1 => { // tdata1
+                self.triggers.tdata1[self.triggers.tselect] = src as u32;
+            },
+            0x7a2 => { // tdata2
+                self.triggers.tdata2[self.triggers.tselect] = src as u32;
+            },
+            _ => (),
+        }
+    }
+}
 
 impl CPU {
     pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, (Option<i32>, TrapCause, String)> {
@@ -36,8 +62,8 @@ impl CPU {
                 dbg_hex::dbg_hex!(tdata1 >> 18 & 0x1);
                 match purpose {
                     TransFor::Fetch | TransFor::Deleg => {
-                        let fetch_mask = tdata1 >> 2 & 0x1;
-                        if addr == tdata2 && fetch_mask == 1 {
+                        let fetch_bit = tdata1 >> 2 & 0x1;
+                        if addr == tdata2 && fetch_bit == 1 {
                             return Err((
                                 Some(addr as i32),
                                 TrapCause::Breakpoint,
@@ -47,8 +73,8 @@ impl CPU {
                         Ok(addr)
                     },
                     TransFor::Load => {
-                        let load_mask = tdata1 & 0x1;
-                        if addr == tdata2 && load_mask == 1 {
+                        let load_bit = tdata1 & 0x1;
+                        if addr == tdata2 && load_bit == 1 {
                             return Err((
                                 Some(addr as i32),
                                 TrapCause::Breakpoint,
@@ -58,8 +84,8 @@ impl CPU {
                         Ok(addr)
                     },
                     TransFor::StoreAMO => {
-                        let store_mask = tdata1 >> 1 & 0x1;
-                        if addr == tdata2 && store_mask == 1 {
+                        let store_bit = tdata1 >> 1 & 0x1;
+                        if addr == tdata2 && store_bit == 1 {
                             return Err((
                                 Some(addr as i32),
                                 TrapCause::Breakpoint,

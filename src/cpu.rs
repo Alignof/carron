@@ -4,7 +4,6 @@ pub mod execution;
 pub mod csr;
 mod reg;
 mod mmu;
-mod breakpoint;
 mod instruction;
 
 use std::collections::HashSet;
