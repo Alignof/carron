@@ -1,13 +1,22 @@
+mod breakpoint;
+
 use crate::cpu::{PrivilegedLevel, TrapCause};
+use crate::cpu::csr::breakpoint::{Triggers};
 
 pub struct CSRs {
     csrs: [u32; 4096],
+    triggers: Triggers,
 }
 
 impl CSRs {
     pub fn new() -> CSRs {
         CSRs {
             csrs: [0; 4096],
+            triggers: Triggers {
+                tselect: 0,
+                tdata1: [0; 8],
+                tdata2: [0; 8],
+            },
         }
     }
 
@@ -78,6 +87,7 @@ impl CSRs {
 
     pub fn write(&mut self, dist: Option<usize>, src: i32) {
         self.csrs[dist.unwrap()] = src as u32;
+        self.update_triggers(dist.unwrap(), src);
     }
 
     pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
@@ -137,6 +147,7 @@ pub enum CSRname {
     mepc       = 0x341, 
     mcause     = 0x342,
     mtval      = 0x343,
+    tselect    = 0x7a0,
     tdata1     = 0x7a1,
     tdata2     = 0x7a2,
 }
