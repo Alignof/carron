@@ -90,9 +90,22 @@ impl CSRs {
         self.update_triggers(dist.unwrap(), src);
     }
 
+    fn read_xepc(&self, dist: usize) -> Result<u32, (Option<i32>, TrapCause, String)> {
+        if self.csrs[CSRname::misa as usize] >> 2 & 0x1 == 1 {
+            // C extension enabled (IALIGN = 16)
+            Ok(self.csrs[dist] & !0b01)
+        } else {
+            // C extension disabled (IALIGN = 32)
+            Ok(self.csrs[dist] & !0b11)
+        }
+    }
+
     pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
         let dist = src.unwrap();
-        Ok(self.csrs[dist])
+        match dist {
+            0x341 | 0x141 => self.read_xepc(dist),
+            _ => Ok(self.csrs[dist]),
+        }
     }
 
     pub fn read_xstatus(&self, priv_lv: &PrivilegedLevel, xfield: Xstatus) -> u32 {
