@@ -14,7 +14,7 @@ impl Decode for u32 {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => return Err((
-                None,
+                Some(*self as i32),
                 TrapCause::IllegalInst,
                 format!("{}, {:b}", msg, self)
             )),
