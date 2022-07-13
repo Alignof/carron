@@ -79,6 +79,10 @@ pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, &'static str> {
     let opmap: u8 = inst.slice(15, 13) as u8;
     let quadrant: u8  = inst.slice(1, 0) as u8;
 
+    if inst == 0b0000000000000000 {
+        return Err("invalid instruction");
+    }
+
     match quadrant {
         0b00 => quadrant0(&opmap),
         0b01 => quadrant1(inst, &opmap),
