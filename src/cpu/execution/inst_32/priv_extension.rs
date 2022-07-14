@@ -5,7 +5,7 @@ use crate::cpu::csr::{CSRname, Xstatus};
 pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
-            cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::SPP) {
+            cpu.priv_lv = match cpu.csrs.read_xstatus(&PrivilegedLevel::Supervisor, Xstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
@@ -28,7 +28,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
             }
         },
         OpecodeKind::OP_MRET => {
-            cpu.priv_lv = match cpu.csrs.read_xstatus(&cpu.priv_lv, Xstatus::MPP) {
+            cpu.priv_lv = match cpu.csrs.read_xstatus(&PrivilegedLevel::Machine, Xstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
