@@ -136,6 +136,35 @@ impl CSRs {
             Xstatus::SD     => self.csrs[xstatus] >> 31 & 0x1,
         }
     } 
+
+    pub fn write_xstatus(&mut self, priv_lv: &PrivilegedLevel, xfield: Xstatus, data: u32) {
+        let xstatus: usize = match priv_lv {
+            PrivilegedLevel::Machine => CSRname::mstatus as usize,
+            PrivilegedLevel::Supervisor => CSRname::sstatus as usize,
+            PrivilegedLevel::User => CSRname::ustatus as usize,
+            _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+        };
+
+        match xfield {
+            Xstatus::UIE    => self.csrs[xstatus] = (data & 0x1) <<  0,
+            Xstatus::SIE    => self.csrs[xstatus] = (data & 0x1) <<  1,
+            Xstatus::MIE    => self.csrs[xstatus] = (data & 0x1) <<  3,
+            Xstatus::UPIE   => self.csrs[xstatus] = (data & 0x1) <<  4,
+            Xstatus::SPIE   => self.csrs[xstatus] = (data & 0x1) <<  5,
+            Xstatus::MPIE   => self.csrs[xstatus] = (data & 0x1) <<  7,
+            Xstatus::SPP    => self.csrs[xstatus] = (data & 0x1) <<  8,
+            Xstatus::MPP    => self.csrs[xstatus] = (data & 0x3) << 11,
+            Xstatus::FS     => self.csrs[xstatus] = (data & 0x3) << 13,
+            Xstatus::XS     => self.csrs[xstatus] = (data & 0x3) << 15,
+            Xstatus::MPRV   => self.csrs[xstatus] = (data & 0x1) << 17,
+            Xstatus::SUM    => self.csrs[xstatus] = (data & 0x1) << 18,
+            Xstatus::MXR    => self.csrs[xstatus] = (data & 0x1) << 19,
+            Xstatus::TVM    => self.csrs[xstatus] = (data & 0x1) << 20,
+            Xstatus::TW     => self.csrs[xstatus] = (data & 0x1) << 21,
+            Xstatus::TSR    => self.csrs[xstatus] = (data & 0x1) << 22,
+            Xstatus::SD     => self.csrs[xstatus] = (data & 0x1) << 31,
+        }
+    } 
 }
 
 #[allow(non_camel_case_types)]
