@@ -9,7 +9,7 @@ mod instruction;
 use std::collections::HashSet;
 use crate::bus;
 use crate::elfload;
-use csr::CSRname;
+use csr::{CSRname, Xstatus};
 
 #[derive(Copy, Clone, Debug)]
 pub enum TrapCause {
@@ -23,7 +23,7 @@ pub enum TrapCause {
     StoreAMOPageFault = 15,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
@@ -96,6 +96,13 @@ impl CPU {
             self.update_pc(new_pc as i32);
         } else {
             self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+            self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
+                PrivilegedLevel::Machine,
+                Xstatus::MPIE,
+                self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)
+            );
+            self.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MIE, 0b0); // msatus.MIE = 0
+            self.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u32); // set prev_priv to MPP
             self.priv_lv = PrivilegedLevel::Machine;
 
             let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
@@ -109,7 +116,7 @@ impl CPU {
         let addr = self.check_breakpoint(&purpose, addr as u32)?;
 
         match self.mmu.trans_addr(
-            purpose, addr, &self.csrs, &self.bus.dram, &self.priv_lv) {
+            purpose, addr, &self.csrs, &self.bus.dram, self.priv_lv) {
 
             Ok(addr) => Ok(addr),
             Err(cause) => {
