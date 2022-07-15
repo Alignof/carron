@@ -25,7 +25,7 @@ impl CSRs {
         self
     }
 
-    pub fn check_accessible(&self, priv_lv: &PrivilegedLevel, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
+    pub fn check_accessible(&self, priv_lv: PrivilegedLevel, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
         if dist >= 4096 {
             return Err((
                 None,
@@ -108,7 +108,7 @@ impl CSRs {
         }
     }
 
-    pub fn read_xstatus(&self, priv_lv: &PrivilegedLevel, xfield: Xstatus) -> u32 {
+    pub fn read_xstatus(&self, priv_lv: PrivilegedLevel, xfield: Xstatus) -> u32 {
         let xstatus: usize = match priv_lv {
             PrivilegedLevel::Machine => CSRname::mstatus as usize,
             PrivilegedLevel::Supervisor => CSRname::sstatus as usize,
@@ -137,7 +137,7 @@ impl CSRs {
         }
     } 
 
-    pub fn write_xstatus(&mut self, priv_lv: &PrivilegedLevel, xfield: Xstatus, data: u32) {
+    pub fn write_xstatus(&mut self, priv_lv: PrivilegedLevel, xfield: Xstatus, data: u32) {
         let xstatus: usize = match priv_lv {
             PrivilegedLevel::Machine => CSRname::mstatus as usize,
             PrivilegedLevel::Supervisor => CSRname::sstatus as usize,
