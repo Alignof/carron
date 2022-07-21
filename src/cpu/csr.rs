@@ -183,6 +183,7 @@ pub enum CSRname {
     mstatus    = 0x300,
     misa       = 0x301,
     medeleg    = 0x302,
+    mideleg    = 0x303,
     mtvec      = 0x305,
     mcounteren = 0x306,
     mscratch   = 0x340, 
