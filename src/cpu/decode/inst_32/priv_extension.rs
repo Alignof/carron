@@ -8,9 +8,9 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
     let funct7: u8 = inst.slice(31, 25) as u8;
 
     match inst {
-        0b000100000010000000000000011100011 => Ok(OpecodeKind::OP_SRET),
-        0b001100000010000000000000011100011 => Ok(OpecodeKind::OP_MRET),
-        0b000100000101000000000000011100011 => Ok(OpecodeKind::OP_WFI),
+        0b00010000001000000000000001110011 => Ok(OpecodeKind::OP_SRET),
+        0b00110000001000000000000001110011 => Ok(OpecodeKind::OP_MRET),
+        0b00010000010100000000000001110011 => Ok(OpecodeKind::OP_WFI),
         _ => {
             match funct7 {
                 0b0001001 => Ok(OpecodeKind::OP_SFENCE_VMA),

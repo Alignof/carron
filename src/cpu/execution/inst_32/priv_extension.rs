@@ -52,6 +52,9 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap())? as i32;
             cpu.update_pc(new_pc);
         },
+        OpecodeKind::OP_WFI => {
+            /* nop */
+        },
         OpecodeKind::OP_SFENCE_VMA => {
             // nop (pipeline are not yet implemented)
             if cpu.csrs.read_xstatus(cpu.priv_lv, Xstatus::TVM) != 0 {
