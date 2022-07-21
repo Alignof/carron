@@ -21,6 +21,7 @@ pub enum TrapCause {
     InstPageFault = 12,
     LoadPageFault = 13,
     StoreAMOPageFault = 15,
+    MachineSoftwareInterrupt = (1 << 31) + 0,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -77,6 +78,38 @@ impl CPU {
         self.pc = newpc as u32;
     }
 
+    fn interrupt(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
+        self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
+        self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
+
+        // check Machine Trap Delegation Registers
+        let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
+        let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
+        if self.priv_lv != PrivilegedLevel::Machine && (mideleg & 1 << mcause) != 0 {
+            dbg!("delegated");
+            self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
+            self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr);
+            self.priv_lv = PrivilegedLevel::Supervisor;
+
+            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
+            self.update_pc(new_pc as i32);
+        } else {
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+            self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
+                PrivilegedLevel::Machine,
+                Xstatus::MPIE,
+                self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)
+            );
+            self.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MIE, 0b0); // msatus.MIE = 0
+            self.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u32); // set prev_priv to MPP
+            self.priv_lv = PrivilegedLevel::Machine;
+
+            let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
+            self.update_pc(new_pc as i32);
+        }
+    }
+
     pub fn exception(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
         self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
@@ -108,8 +141,26 @@ impl CPU {
             let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
             self.update_pc(new_pc as i32);
         }
+    }
 
-        println!("new pc:0x{:x}", self.pc);
+    pub fn trap(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
+        match cause_of_trap {
+            TrapCause::IllegalInst |
+            TrapCause::Breakpoint |
+            TrapCause::UmodeEcall |
+            TrapCause::SmodeEcall |
+            TrapCause::MmodeEcall |
+            TrapCause::InstPageFault |
+            TrapCause::LoadPageFault |
+            TrapCause::StoreAMOPageFault => {
+                self.exception(tval_addr, cause_of_trap);
+            },
+            TrapCause::MachineSoftwareInterrupt => {
+                self.interrupt(tval_addr, cause_of_trap);
+            },
+        }
+
+        eprintln!("new pc:0x{:x}", self.pc);
     }
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<i32>, TrapCause, String)> {
