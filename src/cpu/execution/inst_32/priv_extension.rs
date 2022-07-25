@@ -5,6 +5,14 @@ use crate::cpu::csr::{CSRname, Xstatus};
 pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
+            if cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TSR) == 1 {
+                return Err((
+                    Some(cpu.bus.load32(cpu.pc)),
+                    TrapCause::IllegalInst,
+                    format!("exec sret but mstatus.TSR == 1")
+                ));
+            }
+
             cpu.priv_lv = match cpu.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
@@ -56,10 +64,8 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
             /* nop */
         },
         OpecodeKind::OP_SFENCE_VMA => {
-            // nop (pipeline are not yet implemented)
-            if cpu.csrs.read_xstatus(cpu.priv_lv, Xstatus::TVM) != 0 {
-                let except_pc = cpu.pc as i32;
-                cpu.exception(except_pc, TrapCause::IllegalInst);
+            if cpu.priv_lv == PrivilegedLevel::Supervisor && cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM) == 1 {
+                cpu.exception(cpu.bus.load32(cpu.pc), TrapCause::IllegalInst);
             }
         },
         _ => panic!("not an privileged extension"),
