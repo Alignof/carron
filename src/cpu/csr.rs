@@ -1,14 +1,28 @@
-use crate::cpu::PrivilegedLevel;
+mod breakpoint;
+
+use crate::cpu::{PrivilegedLevel, TrapCause};
+use crate::cpu::csr::breakpoint::{Triggers};
 
 pub struct CSRs {
     csrs: [u32; 4096],
+    triggers: Triggers,
 }
 
 impl CSRs {
     pub fn new() -> CSRs {
         CSRs {
             csrs: [0; 4096],
+            triggers: Triggers {
+                tselect: 0,
+                tdata1: [0; 8],
+                tdata2: [0; 8],
+            },
         }
+    }
+
+    pub fn init(mut self) -> Self {
+        self.write(CSRname::misa.wrap(), 0x40141105);
+        self
     }
 
     pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
@@ -27,13 +41,28 @@ impl CSRs {
 
     pub fn write(&mut self, dist: Option<usize>, src: i32) {
         self.csrs[dist.unwrap()] = src as u32;
+        self.update_triggers(dist.unwrap(), src);
     }
 
-    pub fn read(&self, src: Option<usize>) -> u32 {
-        self.csrs[src.unwrap()]
+    fn read_xepc(&self, dist: usize) -> Result<u32, (Option<i32>, TrapCause, String)> {
+        if self.csrs[CSRname::misa as usize] >> 2 & 0x1 == 1 {
+            // C extension enabled (IALIGN = 16)
+            Ok(self.csrs[dist] & !0b01)
+        } else {
+            // C extension disabled (IALIGN = 32)
+            Ok(self.csrs[dist] & !0b11)
+        }
     }
 
-    pub fn read_xstatus(&self, priv_lv: &PrivilegedLevel, xfield: Xstatus) -> u32 {
+    pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
+        let dist = src.unwrap();
+        match dist {
+            0x341 | 0x141 => self.read_xepc(dist),
+            _ => Ok(self.csrs[dist]),
+        }
+    }
+
+    pub fn read_xstatus(&self, priv_lv: PrivilegedLevel, xfield: Xstatus) -> u32 {
         let xstatus: usize = match priv_lv {
             PrivilegedLevel::Machine => CSRname::mstatus as usize,
             PrivilegedLevel::Supervisor => CSRname::sstatus as usize,
@@ -61,28 +90,65 @@ impl CSRs {
             Xstatus::SD     => self.csrs[xstatus] >> 31 & 0x1,
         }
     } 
+
+    pub fn write_xstatus(&mut self, priv_lv: PrivilegedLevel, xfield: Xstatus, data: u32) {
+        let xstatus: usize = match priv_lv {
+            PrivilegedLevel::Machine => CSRname::mstatus as usize,
+            PrivilegedLevel::Supervisor => CSRname::sstatus as usize,
+            PrivilegedLevel::User => CSRname::ustatus as usize,
+            _ => panic!("PrivilegedLevel 0x3 is Reserved."),
+        };
+
+        match xfield {
+            Xstatus::UIE    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 <<  0)) | ((data & 0x1) <<  0),
+            Xstatus::SIE    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 <<  1)) | ((data & 0x1) <<  1),
+            Xstatus::MIE    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 <<  3)) | ((data & 0x1) <<  3),
+            Xstatus::UPIE   => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 <<  4)) | ((data & 0x1) <<  4),
+            Xstatus::SPIE   => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 <<  5)) | ((data & 0x1) <<  5),
+            Xstatus::MPIE   => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 <<  7)) | ((data & 0x1) <<  7),
+            Xstatus::SPP    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 <<  8)) | ((data & 0x1) <<  8),
+            Xstatus::MPP    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x3 << 11)) | ((data & 0x3) << 11),
+            Xstatus::FS     => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x3 << 13)) | ((data & 0x3) << 13),
+            Xstatus::XS     => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x3 << 15)) | ((data & 0x3) << 15),
+            Xstatus::MPRV   => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 << 17)) | ((data & 0x1) << 17),
+            Xstatus::SUM    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 << 18)) | ((data & 0x1) << 18),
+            Xstatus::MXR    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 << 19)) | ((data & 0x1) << 19),
+            Xstatus::TVM    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 << 20)) | ((data & 0x1) << 20),
+            Xstatus::TW     => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 << 21)) | ((data & 0x1) << 21),
+            Xstatus::TSR    => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 << 22)) | ((data & 0x1) << 22),
+            Xstatus::SD     => self.csrs[xstatus] = (self.csrs[xstatus] & !(0x1 << 31)) | ((data & 0x1) << 31),
+        }
+    } 
 }
 
 #[allow(non_camel_case_types)]
 pub enum CSRname {
-    ustatus  = 0x000,
-    utvec    = 0x005,
-    uepc     = 0x041,
-    ucause   = 0x042,
-    sstatus  = 0x100,
-    stvec    = 0x105,
-    sscratch = 0x140, 
-    sepc     = 0x141, 
-    scause   = 0x142,
-    stval    = 0x143,
-    satp     = 0x180,
-    mstatus  = 0x300,
-    medeleg  = 0x302,
-    mtvec    = 0x305,
-    mscratch = 0x340, 
-    mepc     = 0x341, 
-    mcause   = 0x342,
-    mtval    = 0x343,
+    ustatus    = 0x000,
+    utvec      = 0x005,
+    uepc       = 0x041,
+    ucause     = 0x042,
+    sstatus    = 0x100,
+    stvec      = 0x105,
+    sscratch   = 0x140, 
+    sepc       = 0x141, 
+    scause     = 0x142,
+    stval      = 0x143,
+    satp       = 0x180,
+    mstatus    = 0x300,
+    misa       = 0x301,
+    medeleg    = 0x302,
+    mideleg    = 0x303,
+    mie        = 0x304,
+    mtvec      = 0x305,
+    mcounteren = 0x306,
+    mscratch   = 0x340, 
+    mepc       = 0x341, 
+    mcause     = 0x342,
+    mtval      = 0x343,
+    mip        = 0x344,
+    tselect    = 0x7a0,
+    tdata1     = 0x7a1,
+    tdata2     = 0x7a2,
 }
 
 pub enum Xstatus {

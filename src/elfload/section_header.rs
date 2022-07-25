@@ -106,14 +106,14 @@ impl SectionHeader {
                 dump_head += 2;
 
                 print!("{:<04x}\t\t", mdump);
-                inst.print_myself();
+                inst.unwrap().print_myself();
             }else{
                 let mdump = get_u32(mmap, dump_head as usize);
                 let inst  = mdump.decode();
                 dump_head += 4;
 
                 print!("{:<08x}\t", mdump);
-                inst.print_myself();
+                inst.unwrap().print_myself();
             }
             println!();
         }

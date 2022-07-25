@@ -22,8 +22,8 @@ impl MMU {
     }
 
     fn update_ppn_and_mode(&mut self, csrs: &CSRs) {
-        self.ppn = (csrs.read(CSRname::satp.wrap()) & 0x3FFFFF) as u32;
-        self.trans_mode = match csrs.read(CSRname::satp.wrap()) >> 31 & 0x1 {
+        self.ppn = (csrs.read(CSRname::satp.wrap()).unwrap() & 0x3FFFFF) as u32;
+        self.trans_mode = match csrs.read(CSRname::satp.wrap()).unwrap() >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
         };
@@ -54,12 +54,12 @@ impl MMU {
         Ok(addr)
     }
 
-    fn pmp(&self, purpose: TransFor, addr: u32, priv_lv: &PrivilegedLevel, csrs: &CSRs) -> Result<u32, TrapCause> {
+    fn pmp(&self, purpose: TransFor, addr: u32, priv_lv: PrivilegedLevel, csrs: &CSRs) -> Result<u32, TrapCause> {
         let pmpaddrs = [0x3B0, 0x3B1, 0x3B2, 0x3B3, 0x3B4, 0x3B5, 0x3B6, 0x3B7, 0x3B8, 0x3B9, 0x3BA, 0x3BB, 0x3BC, 0x3BD, 0x3BE, 0x3BF];
         let get_pmpcfg = |pmpnum| {
             let cfgnum = pmpnum / 4;
             let cfgoff = pmpnum % 4;
-            csrs.read(Some(0x3A0 + cfgnum)) >> (4 * cfgoff)
+            csrs.read(Some(0x3A0 + cfgnum)).unwrap() >> (4 * cfgoff)
         };
 
         for index in 0 .. pmpaddrs.len() { // pmpaddr0 ~ pmpaddr15
@@ -72,20 +72,20 @@ impl MMU {
                 0b00 => return Ok(addr),
                 0b01 => { // TOR
                     let addr_aligned = addr >> 2; // addr[:2]
-                    if (index == 0 && addr_aligned < csrs.read(Some(pmpaddrs[index]))) ||
-                       (index != 0 && csrs.read(Some(pmpaddrs[index-1])) <= addr_aligned && addr_aligned < csrs.read(Some(pmpaddrs[index]))) {
+                    if (index == 0 && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap()) ||
+                       (index != 0 && csrs.read(Some(pmpaddrs[index-1])).unwrap() <= addr_aligned && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap()) {
                            return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
                     }
                 },
                 0b10 => { // NA4
                     let addr_aligned = addr >> 2; // addr[:2]
-                    if addr_aligned == csrs.read(Some(pmpaddrs[index])) {
+                    if addr_aligned == csrs.read(Some(pmpaddrs[index])).unwrap() {
                         return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
                     }
                 },
                 0b11 => { // NAPOT
                     let mut addr_aligned = addr >> 2; // addr[:2]
-                    let mut pmpaddr = csrs.read(Some(pmpaddrs[index]));
+                    let mut pmpaddr = csrs.read(Some(pmpaddrs[index])).unwrap();
                     while pmpaddr & 0x1 == 1 {
                         pmpaddr >>= 1;
                         addr_aligned >>= 1;
@@ -101,7 +101,7 @@ impl MMU {
             }
         }
 
-        if priv_lv == &PrivilegedLevel::Machine {
+        if priv_lv == PrivilegedLevel::Machine {
             Ok(addr) 
         } else {
             Err(match purpose {
@@ -148,7 +148,7 @@ impl MMU {
         Ok(pte)
     }
 
-    fn check_leaf_pte(&self, purpose: &TransFor, priv_lv: &PrivilegedLevel, csrs: &CSRs, pte: u32) -> Result<u32, TrapCause> {
+    fn check_leaf_pte(&self, purpose: &TransFor, priv_lv: PrivilegedLevel, csrs: &CSRs, pte: u32) -> Result<u32, TrapCause> {
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
         let pte_x = pte >> 3 & 0x1;
@@ -169,14 +169,14 @@ impl MMU {
         }
 
         // check the U bit
-        if pte_u == 0 && priv_lv == &PrivilegedLevel::User {
+        if pte_u == 0 && priv_lv == PrivilegedLevel::User {
             println!("invalid pte_u: {:x}", pte);
             return Err(trap_cause(purpose));
         }
         match purpose {
             TransFor::Load | TransFor::StoreAMO => {
                 let sum = csrs.read_xstatus(priv_lv, Xstatus::SUM);
-                if sum == 0 && pte_u == 1 && priv_lv == &PrivilegedLevel::Supervisor {
+                if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
                     dbg!(priv_lv);
                     println!("invalid pte_u: {:x}", pte);
                     return Err(trap_cause(purpose));
@@ -225,7 +225,7 @@ impl MMU {
 
     #[allow(non_snake_case)]
     pub fn trans_addr(&mut self, purpose: TransFor, addr: u32, csrs: &CSRs, 
-                      dram: &Dram, priv_lv: &PrivilegedLevel) -> Result<u32, TrapCause> {
+                      dram: &Dram, priv_lv: PrivilegedLevel) -> Result<u32, TrapCause> {
 
         let trap_cause = |purpose: &TransFor| {
             match purpose {

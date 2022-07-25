@@ -1,15 +1,16 @@
 mod inst_16;
 mod inst_32;
 
+use super::TrapCause;
 use super::instruction::{Extensions, OpecodeKind, Instruction};
 
 pub trait Decode {
-    fn decode(&self) -> Instruction;
+    fn decode(&self) -> Result<Instruction, (Option<i32>, TrapCause, String)>;
     fn parse_opecode(self) -> Result<OpecodeKind, &'static str>;
-    fn parse_rd(self,  opkind: &OpecodeKind) -> Option<usize>;
-    fn parse_rs1(self, opkind: &OpecodeKind) -> Option<usize>;
-    fn parse_rs2(self, opkind: &OpecodeKind) -> Option<usize>;
-    fn parse_imm(self, opkind: &OpecodeKind) -> Option<i32>;
+    fn parse_rd(self,  opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)>;
+    fn parse_rs1(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)>;
+    fn parse_rs2(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)>;
+    fn parse_imm(self, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<i32>, TrapCause, String)>;
 }
 
 pub trait DecodeUtil {

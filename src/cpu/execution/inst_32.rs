@@ -4,21 +4,21 @@ mod m_extension;
 mod priv_extension;
 mod zicsr_extension;
 
-use crate::cpu::CPU;
+use crate::cpu::{CPU, TrapCause};
 use crate::cpu::instruction::{Instruction, Extensions};
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
     const INST_SIZE: u32 = 4;
 
     // store previous program counter for excluding branch case
     let prev_pc = cpu.pc;
 
     match inst.opc_to_extension() {
-        Extensions::BaseI => base_i::exec(inst, cpu),
-        Extensions::A => a_extension::exec(inst, cpu),
-        Extensions::M => m_extension::exec(inst, cpu),
-        Extensions::Priv => priv_extension::exec(inst, cpu),
-        Extensions::Zicsr => zicsr_extension::exec(inst, cpu),
+        Extensions::BaseI => base_i::exec(inst, cpu)?,
+        Extensions::A => a_extension::exec(inst, cpu)?,
+        Extensions::M => m_extension::exec(inst, cpu)?,
+        Extensions::Priv => priv_extension::exec(inst, cpu)?,
+        Extensions::Zicsr => zicsr_extension::exec(inst, cpu)?,
         _ => panic!("not a full size instruction."),
     }
 
@@ -26,4 +26,6 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) {
     if cpu.pc == prev_pc {
         cpu.add2pc(INST_SIZE as i32);
     }
+
+    Ok(())
 }

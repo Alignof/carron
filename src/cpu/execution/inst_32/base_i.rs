@@ -1,7 +1,7 @@
 use crate::cpu::{CPU, PrivilegedLevel, TransFor, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
     const INST_SIZE: u32 = 4;
 
     match inst.opc {
@@ -53,44 +53,36 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
             } 
         },
         OpecodeKind::OP_LB => {
-            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.regs.write(inst.rd, cpu.bus.load8(load_addr));
-            }
+            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.regs.write(inst.rd, cpu.bus.load8(load_addr));
         },
         OpecodeKind::OP_LH => {
-            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.regs.write(inst.rd, cpu.bus.load16(load_addr));
-            }
+            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.regs.write(inst.rd, cpu.bus.load16(load_addr));
         },
         OpecodeKind::OP_LW => {
-            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
-            }
+            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
         },
         OpecodeKind::OP_LBU => {
-            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr));
-            }
+            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr));
         },
         OpecodeKind::OP_LHU => {
-            if let Some(load_addr) = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr));
-            }
+            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr));
         },
         OpecodeKind::OP_SB => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
-            }
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_SH => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
-            }
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_SW => {
-            if let Some(store_addr) = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap()) {
-                cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
-            }
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_ADDI => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs1) + inst.imm.unwrap());
@@ -172,14 +164,17 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) {
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
                     PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
+                    PrivilegedLevel::Machine => TrapCause::MmodeEcall,
                     _ => panic!("cannot enviroment call in current privileged mode."),
                 }
             );
         },
         OpecodeKind::OP_EBREAK => {
-            panic!("not yet implemented: OP_EBREAK");
+            cpu.exception(cpu.pc as i32, TrapCause::Breakpoint);
         },
         _ => panic!("not an Base extension"),
     }
+
+    Ok(())
 }
 
