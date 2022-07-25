@@ -7,7 +7,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
         OpecodeKind::OP_SRET => {
             if cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TSR) == 1 {
                 return Err((
-                    Some(cpu.bus.load32(cpu.pc)),
+                    Some(cpu.bus.load32(cpu.pc)?),
                     TrapCause::IllegalInst,
                     format!("exec sret but mstatus.TSR == 1")
                 ));
@@ -65,7 +65,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
         },
         OpecodeKind::OP_SFENCE_VMA => {
             if cpu.priv_lv == PrivilegedLevel::Supervisor && cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM) == 1 {
-                cpu.exception(cpu.bus.load32(cpu.pc), TrapCause::IllegalInst);
+                cpu.exception(cpu.bus.load32(cpu.pc)?, TrapCause::IllegalInst);
             }
         },
         _ => panic!("not an privileged extension"),

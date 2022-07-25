@@ -3,9 +3,10 @@ use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
+    let invalid_instruction = Some(cpu.bus.load32(cpu.pc)?);
     if dist >= 4096 {
         return Err((
-                Some(cpu.bus.load32(cpu.pc)),
+                invalid_instruction,
                 TrapCause::IllegalInst,
                 format!("csr size is 4096, but you accessed {}", dist)
         ));
@@ -15,7 +16,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
         PrivilegedLevel::User => {
             if (0x100 <= dist && dist <= 0x180) || (0x300 <= dist && dist <= 0x344) {
                     return Err((
-                        Some(cpu.bus.load32(cpu.pc)),
+                        invalid_instruction,
                         TrapCause::IllegalInst,
                         format!("You are in User mode but accessed {}", dist)
                     ));
@@ -24,7 +25,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
         PrivilegedLevel::Supervisor => {
             if 0x300 <= dist && dist <= 0x344 {
                 return Err((
-                    Some(cpu.bus.load32(cpu.pc)),
+                    invalid_instruction,
                     TrapCause::IllegalInst,
                     format!("You are in Supervisor mode but accessed {}", dist)
                 ));
@@ -32,7 +33,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
 
             if dist == CSRname::satp as usize && cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM) == 1 {
                 return Err((
-                    Some(cpu.bus.load32(cpu.pc)),
+                    invalid_instruction,
                     TrapCause::IllegalInst,
                     format!("mstatsu.TVM == 1 but accessed satp")
                 ));
@@ -45,7 +46,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
         let ctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
         if ctren >> (dist - 0xc00) & 0x1 == 1 {
             return Err((
-                Some(cpu.bus.load32(cpu.pc)),
+                invalid_instruction,
                 TrapCause::IllegalInst,
                 "mcounteren bit is clear, but attempt reading".to_string()
             ));

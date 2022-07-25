@@ -1,4 +1,5 @@
 use super::Device;
+use crate::TrapCause;
 
 pub struct Mrom {
     pub mrom: Vec<u8>,
@@ -49,47 +50,59 @@ impl Device for Mrom {
     }
 
     // store
-    fn store8(&mut self, _addr: u32, _data: i32) {
-        panic!("mrom is read only.");
+    fn store8(&mut self, addr: u32, _data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+        Err((
+            Some(addr as i32),
+            TrapCause::StoreAMOPageFault,
+            "mrom is read only.".to_string()
+        ))
     }
 
-    fn store16(&mut self, _addr: u32, _data: i32) {
-        panic!("mrom is read only.");
+    fn store16(&mut self, addr: u32, _data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+        Err((
+            Some(addr as i32),
+            TrapCause::StoreAMOPageFault,
+            "mrom is read only.".to_string()
+        ))
     }
 
-    fn store32(&mut self, _addr: u32, _data: i32) {
-        panic!("mrom is read only.");
+    fn store32(&mut self, addr: u32, _data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+        Err((
+            Some(addr as i32),
+            TrapCause::StoreAMOPageFault,
+            "mrom is read only.".to_string()
+        ))
     }
 
 
     // load
-    fn load8(&self, addr: u32) -> i32 {
+    fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        self.mrom[addr] as i8 as i32
+        Ok(self.mrom[addr] as i8 as i32)
     }
 
-    fn load16(&self, addr: u32) -> i32 {
+    fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        ((self.mrom[addr + 1] as u16) << 8 |
-         (self.mrom[addr + 0] as u16)) as i16 as i32
+        Ok(((self.mrom[addr + 1] as u16) << 8 |
+         (self.mrom[addr + 0] as u16)) as i16 as i32)
     }
 
-    fn load32(&self, addr: u32) -> i32 {
+    fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        ((self.mrom[addr + 3] as u32) << 24 |
+        Ok(((self.mrom[addr + 3] as u32) << 24 |
          (self.mrom[addr + 2] as u32) << 16 |
          (self.mrom[addr + 1] as u32) <<  8 |
-         (self.mrom[addr + 0] as u32)) as i32
+         (self.mrom[addr + 0] as u32)) as i32)
     }
 
-    fn load_u8(&self, addr: u32) -> i32 {
+    fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        self.mrom[addr] as i32
+        Ok(self.mrom[addr] as i32)
     }
 
-    fn load_u16(&self, addr: u32) -> i32 {
+    fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        ((self.mrom[addr + 1] as u32) << 8 |
-         (self.mrom[addr + 0] as u32)) as i32
+        Ok(((self.mrom[addr + 1] as u32) << 8 |
+         (self.mrom[addr + 0] as u32)) as i32)
     }
 }

@@ -254,7 +254,7 @@ impl MMU {
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr) as u32) {
+                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr).unwrap() as u32) {
                             Ok(pte) => pte,
                             Err(cause) => {
                                 return Err(cause) // exception
@@ -282,7 +282,7 @@ impl MMU {
                                 println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
                                 println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                          PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                                let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr) as u32) {
+                                let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr).unwrap() as u32) {
                                     Ok(pte) => pte,
                                     Err(cause) => {
                                         return Err(cause) // exception
