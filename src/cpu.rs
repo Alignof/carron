@@ -21,7 +21,8 @@ pub enum TrapCause {
     InstPageFault = 12,
     LoadPageFault = 13,
     StoreAMOPageFault = 15,
-    MachineSoftwareInterrupt = (1 << 31) + 0,
+    MachineSoftwareInterrupt = (1 << 31) + 3,
+    SupervisorSoftwareInterrupt = (1 << 31) + 1,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -78,6 +79,62 @@ impl CPU {
         self.pc = newpc as u32;
     }
 
+    pub fn check_interrupt(&self) -> Result<(), (Option<i32>, TrapCause, String)> {
+        const MSIP: u32 = 3;
+        const SSIP: u32 = 1;
+        let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
+        let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
+        let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
+        let is_interrupt_enabled = |bit: u32| {
+            (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
+        };
+        //dbg_hex::dbg_hex!(mie);
+        //dbg_hex::dbg_hex!(mip);
+        //dbg_hex::dbg_hex!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE));
+
+        match self.priv_lv {
+            PrivilegedLevel::Machine => {
+                if self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE) == 1 {
+                    if is_interrupt_enabled(MSIP) {
+                        return Err((
+                            None,
+                            TrapCause::MachineSoftwareInterrupt,
+                            "machine software interrupt".to_string()
+                        ));
+                    }
+                    if is_interrupt_enabled(SSIP) {
+                        return Err((
+                            None,
+                            TrapCause::SupervisorSoftwareInterrupt,
+                            "supervisor software interrupt".to_string()
+                        ));
+                    }
+                }
+            },
+            PrivilegedLevel::Supervisor => {
+                if is_interrupt_enabled(MSIP) {
+                    return Err((
+                        None,
+                        TrapCause::MachineSoftwareInterrupt,
+                        "machine software interrupt".to_string()
+                    ));
+                }
+                if self.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MIE) == 1 {
+                    if is_interrupt_enabled(SSIP) {
+                        return Err((
+                            None,
+                            TrapCause::SupervisorSoftwareInterrupt,
+                            "supervisor software interrupt".to_string()
+                        ));
+                    }
+                }
+            },
+            _ => (),
+        }
+
+        Ok(())
+    }
+
     fn interrupt(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
         self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
@@ -105,7 +162,12 @@ impl CPU {
             self.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u32); // set prev_priv to MPP
             self.priv_lv = PrivilegedLevel::Machine;
 
-            let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
+            let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
+            let new_pc = if mtvec & 0b1 == 1 {
+                (mtvec - 1) + 4 * cause_of_trap as i32
+            } else {
+                mtvec
+            };
             self.update_pc(new_pc as i32);
         }
     }
@@ -155,7 +217,8 @@ impl CPU {
             TrapCause::StoreAMOPageFault => {
                 self.exception(tval_addr, cause_of_trap);
             },
-            TrapCause::MachineSoftwareInterrupt => {
+            TrapCause::MachineSoftwareInterrupt |
+            TrapCause::SupervisorSoftwareInterrupt => {
                 self.interrupt(tval_addr, cause_of_trap);
             },
         }
