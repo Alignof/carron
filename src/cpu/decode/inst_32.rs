@@ -139,10 +139,10 @@ mod decode_32 {
                        rs1: Option<usize>, rs2: Option<usize>, imm: Option<i32>| {
             let op_32 = inst_32.parse_opecode().unwrap();
             assert!(matches!(&op_32, op));
-            assert_eq!(inst_32.parse_rd(&op_32), rd);
-            assert_eq!(inst_32.parse_rs1(&op_32), rs1);
-            assert_eq!(inst_32.parse_rs2(&op_32), rs2);
-            assert_eq!(inst_32.parse_imm(&op_32), imm);
+            assert_eq!(inst_32.parse_rd(&op_32).unwrap(), rd);
+            assert_eq!(inst_32.parse_rs1(&op_32).unwrap(), rs1);
+            assert_eq!(inst_32.parse_rs2(&op_32).unwrap(), rs2);
+            assert_eq!(inst_32.parse_imm(&op_32).unwrap(), imm);
         };
 
         test_32(0b10000000000000000000000010110111,

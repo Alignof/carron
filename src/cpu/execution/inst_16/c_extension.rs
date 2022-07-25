@@ -137,7 +137,7 @@ mod exe_16 {
                 imm: Some(42),
             },
             &mut cpu
-        );
+        ).unwrap();
         assert_eq!(cpu.regs.read(Some(10)), 42);
     }
 }

@@ -25,52 +25,6 @@ impl CSRs {
         self
     }
 
-    pub fn check_accessible(&self, priv_lv: PrivilegedLevel, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
-        if dist >= 4096 {
-            return Err((
-                None,
-                TrapCause::IllegalInst,
-                format!("csr size is 4096, but you accessed {}", dist)
-            ));
-        }
-
-        match priv_lv {
-            PrivilegedLevel::User => {
-                if (0x100 <= dist && dist <= 0x180) ||
-                   (0x300 <= dist && dist <= 0x344) {
-                    return Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("You are in User mode but accessed {}", dist)
-                    ));
-                }
-            },
-            PrivilegedLevel::Supervisor => {
-                if 0x300 <= dist && dist <= 0x344 {
-                    return Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("You are in Supervisor mode but accessed {}", dist)
-                    ));
-                }
-            },
-            _ => (),
-        }
-
-        if 0xc00 <= dist && dist <= 0xc1f {
-            let ctren = self.read(CSRname::mcounteren.wrap())?;
-            if ctren >> (dist - 0xc00) & 0x1 == 1 {
-                return Err((
-                    None,
-                    TrapCause::IllegalInst,
-                    "mcounteren bit is clear, but attempt reading".to_string()
-                ));
-            }
-        }
-
-        Ok(())
-    }
-
     pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
         let mask = src as u32;
         if mask != 0 {
