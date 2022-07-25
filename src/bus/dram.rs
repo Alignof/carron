@@ -4,6 +4,7 @@ use super::Device;
 pub struct Dram {
         dram: Vec<u8>,
     pub base_addr: u32,
+        size: usize,
 }
 
 impl Dram {
@@ -24,11 +25,6 @@ impl Dram {
                 let mmap_start = (segment.p_offset) as usize;
                 let dram_end = dram_start + segment.p_filesz as usize;
                 let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-                dbg!(loader.mem_data.len());
-                dbg!(dram_start);
-                dbg!(dram_end);
-                dbg!(mmap_start);
-                dbg!(mmap_end);
 
                 new_dram.splice(
                     dram_start .. dram_end,
@@ -37,10 +33,12 @@ impl Dram {
             }
         }
 
+        let dram_size = new_dram.len();
         (virt_entry, // entry address
          Dram {
              dram: new_dram,
              base_addr: virt_entry,
+             size: dram_size,
          })
     }
 
@@ -55,17 +53,12 @@ impl Dram {
         let mut new_dram = vec![0; DRAM_SIZE as usize];
 
         // load proxy kernel 
-        dbg!(pk_load.mem_data.len());
         for segment in pk_load.prog_headers.iter() {
             if segment.is_loadable() {
                 let dram_start = (segment.p_paddr - pk_virt_entry) as usize;
                 let mmap_start = segment.p_offset as usize;
                 let dram_end = dram_start + segment.p_filesz as usize;
                 let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-                dbg!(dram_start);
-                dbg!(dram_end);
-                dbg!(mmap_start);
-                dbg!(mmap_end);
 
                 new_dram.splice(
                     dram_start .. dram_end,
@@ -84,17 +77,12 @@ impl Dram {
         };
 
         // load user program 
-        dbg!(loader.mem_data.len());
         for segment in loader.prog_headers.iter() {
             if segment.is_loadable() {
                 let dram_start = segment.p_paddr - virt_entry + user_base_addr;
                 let mmap_start = segment.p_offset as usize;
                 let dram_end = dram_start + segment.p_filesz + user_base_addr;
                 let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
-                dbg!(dram_start);
-                dbg!(dram_end);
-                dbg!(mmap_start);
-                dbg!(mmap_end);
 
                 new_dram.splice(
                     dram_start as usize .. dram_end as usize,
@@ -103,10 +91,12 @@ impl Dram {
             }
         }
 
+        let dram_size = new_dram.len();
         (pk_virt_entry, // entry address
          Dram {
              dram: new_dram,
              base_addr: pk_virt_entry,
+             size: dram_size,
          })
     }
 }

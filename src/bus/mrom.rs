@@ -4,6 +4,7 @@ use crate::TrapCause;
 pub struct Mrom {
     pub mrom: Vec<u8>,
     pub base_addr: u32,
+        size: usize,
 }
 
 impl Mrom {
@@ -26,9 +27,11 @@ impl Mrom {
             .flat_map(|val| val.to_le_bytes().to_vec())
             .collect();
 
+        let mrom_size = mrom.len();
         Mrom {
             mrom,
             base_addr: 0x1000,
+            size: mrom_size
         }
     }
 }
