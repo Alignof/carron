@@ -8,7 +8,7 @@ pub struct Dram {
 }
 
 impl Dram {
-    pub fn new(loader: elfload::ElfLoader) -> (u32, Dram) {
+    pub fn new(loader: elfload::ElfLoader) -> Dram {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
         let virt_entry = match loader.get_entry_point() {
             Ok(addr) => addr,
@@ -34,15 +34,14 @@ impl Dram {
         }
 
         let dram_size = new_dram.len();
-        (virt_entry, // entry address
-         Dram {
-             dram: new_dram,
-             base_addr: virt_entry,
-             size: dram_size,
-         })
+        Dram {
+            dram: new_dram,
+            base_addr: virt_entry,
+            size: dram_size,
+        }
     }
 
-    pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: &elfload::ElfLoader) -> (u32, Dram) {
+    pub fn new_with_pk(loader: elfload::ElfLoader, pk_load: &elfload::ElfLoader) -> Dram {
         const DRAM_SIZE: u32 = 1024 * 1024 * 128; // 2^27
         let pk_virt_entry = match pk_load.get_entry_point() {
             Ok(addr) => addr,
@@ -92,47 +91,50 @@ impl Dram {
         }
 
         let dram_size = new_dram.len();
-        (pk_virt_entry, // entry address
-         Dram {
-             dram: new_dram,
-             base_addr: pk_virt_entry,
-             size: dram_size,
-         })
+        Dram {
+            dram: new_dram,
+            base_addr: pk_virt_entry,
+            size: dram_size,
+        }
     }
 }
 
 impl Device for Dram {
     // address to raw index
-    fn addr2index(&self, addr: u32) -> usize {
-        if addr < self.base_addr {
-            panic!("invalid address for Dram: {}", addr);
+    fn addr2index(&self, addr: u32, cause: TrapCause) -> Result<usize, (Option<i32>, TrapCause, String)> {
+        if self.base_addr <= addr && addr <= self.base_addr + self.size as u32 {
+            Ok((addr - self.base_addr) as usize)
+        } else {
+            Err((
+                Some(addr as i32),
+                cause,
+                format!("addr is out of range")
+            ))
         }
-
-        (addr - self.base_addr) as usize
     }
 
     // get 1 byte
     fn raw_byte(&self, addr: u32) -> u8 {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::InstPageFault).unwrap();
         self.dram[addr]
     }
 
     // store
     fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::StoreAMOPageFault)?;
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
         Ok(())
     }
 
     fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::StoreAMOPageFault)?;
         self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
         Ok(())
     }
 
     fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::StoreAMOPageFault)?;
         self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
         self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
         self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
@@ -143,18 +145,18 @@ impl Device for Dram {
 
     // load
     fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(self.dram[addr] as i8 as i32)
     }
 
     fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(((self.dram[addr + 1] as u16) << 8 |
          (self.dram[addr + 0] as u16)) as i16 as i32)
     }
 
     fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(((self.dram[addr + 3] as u32) << 24 |
          (self.dram[addr + 2] as u32) << 16 |
          (self.dram[addr + 1] as u32) <<  8 |
@@ -162,12 +164,12 @@ impl Device for Dram {
     }
 
     fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(self.dram[addr] as i32)
     }
 
     fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(((self.dram[addr + 1] as u32) << 8 |
          (self.dram[addr + 0] as u32)) as i32)
     }

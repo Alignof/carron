@@ -38,17 +38,21 @@ impl Mrom {
 
 impl Device for Mrom {
     // address to raw index
-    fn addr2index(&self, addr: u32) -> usize {
-        if addr < self.base_addr {
-            panic!("invalid address for mrom: {}", addr);
+    fn addr2index(&self, addr: u32, _cause: TrapCause) -> Result<usize, (Option<i32>, TrapCause, String)> {
+        if self.base_addr <= addr && addr <= self.base_addr + self.size as u32 {
+            Ok((addr - self.base_addr) as usize)
+        } else {
+            Err((
+                Some(addr as i32),
+                TrapCause::LoadPageFault,
+                format!("addr is out of range 0x{:x}/0x{:x}", addr, self.base_addr + self.size as u32)
+            ))
         }
-
-        (addr - self.base_addr) as usize
     }
 
     // get 1 byte
     fn raw_byte(&self, addr: u32) -> u8 {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::InstPageFault).unwrap();
         self.mrom[addr]
     }
 
@@ -80,18 +84,18 @@ impl Device for Mrom {
 
     // load
     fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(self.mrom[addr] as i8 as i32)
     }
 
     fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(((self.mrom[addr + 1] as u16) << 8 |
          (self.mrom[addr + 0] as u16)) as i16 as i32)
     }
 
     fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(((self.mrom[addr + 3] as u32) << 24 |
          (self.mrom[addr + 2] as u32) << 16 |
          (self.mrom[addr + 1] as u32) <<  8 |
@@ -99,12 +103,12 @@ impl Device for Mrom {
     }
 
     fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(self.mrom[addr] as i32)
     }
 
     fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
+        let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
         Ok(((self.mrom[addr + 1] as u32) << 8 |
          (self.mrom[addr + 0] as u32)) as i32)
     }

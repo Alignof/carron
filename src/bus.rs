@@ -14,12 +14,12 @@ pub struct Bus {
 impl Bus {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>) -> (u32, Bus) {
         // load proxy kernel before user program when it's given
-        let (entry, dram) = if let Some(ref pk_load) = pk_load {
+        let dram = if let Some(ref pk_load) = pk_load {
             Dram::new_with_pk(loader, pk_load)
         } else {
             Dram::new(loader)
         };
-        let mut mrom = Mrom::new(entry);
+        let mut mrom = Mrom::new(dram.base_addr);
 
         // create and load DTB
         mrom.load_dtb(dram.base_addr);
@@ -28,7 +28,7 @@ impl Bus {
         let init_pc = if pk_load.is_some() {
             mrom.base_addr
         } else {
-            entry
+            dram.base_addr
         };
 
         // return initial pc and Bus
@@ -113,7 +113,7 @@ impl Bus {
 }
 
 pub trait Device {
-    fn addr2index(&self, addr: u32) -> usize;
+    fn addr2index(&self, addr: u32, cause: TrapCause) -> Result<usize, (Option<i32>, TrapCause, String)>;
     fn raw_byte(&self, addr: u32) -> u8;
     fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
     fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
