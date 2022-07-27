@@ -34,6 +34,10 @@ impl Mrom {
             size: mrom_size
         }
     }
+
+    pub fn set_size(&mut self) {
+        self.size = self.mrom.len();
+    }
 }
 
 impl Device for Mrom {
@@ -45,7 +49,7 @@ impl Device for Mrom {
             Err((
                 Some(addr as i32),
                 TrapCause::LoadPageFault,
-                format!("addr is out of range 0x{:x}/0x{:x}", addr, self.base_addr + self.size as u32)
+                format!("addr is out of mrom address space 0x{:x}/0x{:x}", addr, self.base_addr + self.size as u32)
             ))
         }
     }

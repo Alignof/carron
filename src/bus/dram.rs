@@ -108,7 +108,7 @@ impl Device for Dram {
             Err((
                 Some(addr as i32),
                 cause,
-                format!("addr is out of range")
+                format!("addr is out of dram address space 0x{:x}/0x{:x}", addr, self.base_addr + self.size as u32)
             ))
         }
     }
