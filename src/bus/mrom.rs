@@ -65,7 +65,7 @@ impl Device for Mrom {
         Err((
             Some(addr as i32),
             TrapCause::StoreAMOPageFault,
-            "mrom is read only.".to_string()
+            format!("mrom is read only: {:x}", addr)
         ))
     }
 
@@ -73,7 +73,7 @@ impl Device for Mrom {
         Err((
             Some(addr as i32),
             TrapCause::StoreAMOPageFault,
-            "mrom is read only.".to_string()
+            format!("mrom is read only: {:x}", addr)
         ))
     }
 
@@ -81,7 +81,7 @@ impl Device for Mrom {
         Err((
             Some(addr as i32),
             TrapCause::StoreAMOPageFault,
-            "mrom is read only.".to_string()
+            format!("mrom is read only: {:x}", addr)
         ))
     }
 

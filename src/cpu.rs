@@ -88,9 +88,6 @@ impl CPU {
         let is_interrupt_enabled = |bit: u32| {
             (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
         };
-        //dbg_hex::dbg_hex!(mie);
-        //dbg_hex::dbg_hex!(mip);
-        //dbg_hex::dbg_hex!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE));
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {
