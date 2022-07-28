@@ -28,8 +28,8 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
                 Xstatus::SIE,
                 cpu.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPIE)
             );
-            cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPIE, 0b1); // msatus.SPIE = 1
-            cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, 0b00); // msatus.SPP = 0
+            cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPIE, 0b1); // ssatus.SPIE = 1
+            cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, 0b00); // ssatus.SPP = 0
 
             if cpu.csrs.read(CSRname::mstatus.wrap())? >> 22 & 1 == 1 { // mstatus.TSR == 1
                 let except_pc = cpu.pc as i32;

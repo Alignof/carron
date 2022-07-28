@@ -37,7 +37,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("mstatsu.TVM == 1 but accessed satp")
+                    format!("mstatus.TVM == 1 but accessed satp")
                 ));
             }
         },
