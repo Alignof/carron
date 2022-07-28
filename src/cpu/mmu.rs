@@ -175,9 +175,8 @@ impl MMU {
         }
         match purpose {
             TransFor::Load | TransFor::StoreAMO => {
-                let sum = csrs.read_xstatus(priv_lv, Xstatus::SUM);
+                let sum = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SUM);
                 if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
-                    dbg!(priv_lv);
                     println!("invalid pte_u: {:x}", pte);
                     return Err(trap_cause(purpose));
                 }
@@ -186,7 +185,7 @@ impl MMU {
         }
         
         // check the X and R bit
-        let mxr = csrs.read_xstatus(priv_lv, Xstatus::MXR);
+        let mxr = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MXR);
         if (mxr == 0 && pte_r == 0) || (mxr == 1 && pte_r == 1 && pte_x == 1) {
             println!("invalid pte_r or pte_x: {:x}", pte);
             return Err(trap_cause(purpose));
