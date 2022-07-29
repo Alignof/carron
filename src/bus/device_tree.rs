@@ -8,6 +8,7 @@ impl Mrom {
         let dts: String = dts::make_dts(dram_addr).replace("  ", "");
         let dtb: Vec<u8> = dtb::make_dtb(dts);
         self.mrom.extend(dtb);
+        self.set_size();
     }
 }
 

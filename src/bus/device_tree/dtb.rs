@@ -50,7 +50,7 @@ impl dtb_mmap {
     }
 
     fn regist_string(&mut self, name: &str) -> u32 {
-        let name = format!("{}\0", name.to_string());
+        let name = format!("{}\0", name);
         let offset_of_name = self.strings.current_offset;
         *self.strings.table
             .entry(name.clone())
@@ -65,7 +65,7 @@ impl dtb_mmap {
     }
 
     pub fn write_property(&mut self, name: &str, data: &mut Vec<u32>, size: u32) {
-        self.write_nodekind(FdtNodeKind::PROP);
+        self.write_nodekind(FdtNodeKind::Prop);
         let offset = self.regist_string(name);
         self.structure.push(size); // data len
         self.structure.push(offset); // prop name offset
@@ -80,7 +80,6 @@ impl dtb_mmap {
 
         self.structure.append(
             &mut format!("{name}\0")
-                .to_string()
                 .into_bytes()
                 .chunks(4)
                 .map(|bs| {
@@ -94,13 +93,13 @@ impl dtb_mmap {
     }
 }
 
-#[allow(non_camel_case_types, dead_code)]
+#[allow(dead_code)]
 pub enum FdtNodeKind {
-    BEGIN_NODE = 0x1,
-    END_NODE = 0x2,
-    PROP = 0x3,
-    NOP = 0x4,
-    END = 0x9,
+    BeginNode = 0x1,
+    EndNode = 0x2,
+    Prop = 0x3,
+    Nop = 0x4,
+    End = 0x9,
 }
 
 pub fn make_dtb(dts: String) -> Vec<u8> {
@@ -120,7 +119,7 @@ pub fn make_dtb(dts: String) -> Vec<u8> {
     while lines.peek().is_some() {
         parse::parse_line(&mut lines, &mut mmap);
     }
-    mmap.write_nodekind(FdtNodeKind::END);
+    mmap.write_nodekind(FdtNodeKind::End);
 
     make_dtb_mmap(mmap)
 }
@@ -139,7 +138,7 @@ fn make_dtb_mmap(mmap: dtb_mmap) -> Vec<u8> {
     let mut str_table = mmap.strings.table
         .iter()
         .collect::<Vec<(&String, &u32)>>();
-    str_table.sort_by(|a, b| a.1.cmp(&b.1));
+    str_table.sort_by(|a, b| a.1.cmp(b.1));
     let strings = str_table
         .iter()
         .cloned()

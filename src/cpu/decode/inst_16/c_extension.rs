@@ -1,5 +1,6 @@
 use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
+use crate::cpu::TrapCause;
 
 fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
     match opmap {
@@ -78,6 +79,10 @@ pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, &'static str> {
     let opmap: u8 = inst.slice(15, 13) as u8;
     let quadrant: u8  = inst.slice(1, 0) as u8;
 
+    if inst == 0b0000000000000000 {
+        return Err("invalid instruction");
+    }
+
     match quadrant {
         0b00 => quadrant0(&opmap),
         0b01 => quadrant1(inst, &opmap),
@@ -86,7 +91,7 @@ pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-pub fn parse_rd(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rd(inst: u16, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rd: usize = (inst.slice(4, 2) + 8) as usize;
     let q1_rd: usize = (inst.slice(9, 7) + 8) as usize;
@@ -95,32 +100,32 @@ pub fn parse_rd(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
 
     match opkind {
         // Quadrant 0
-        OpecodeKind::OP_C_ADDI4SPN  => Some(q0_rd),
-        OpecodeKind::OP_C_LW        => Some(q0_rd),
+        OpecodeKind::OP_C_ADDI4SPN  => Ok(Some(q0_rd)),
+        OpecodeKind::OP_C_LW        => Ok(Some(q0_rd)),
         // Quadrant 1
-        OpecodeKind::OP_C_SRLI      => Some(q1_rd),
-        OpecodeKind::OP_C_SRAI      => Some(q1_rd),
-        OpecodeKind::OP_C_ANDI      => Some(q1_rd),
-        OpecodeKind::OP_C_SUB       => Some(q1_rd),
-        OpecodeKind::OP_C_XOR       => Some(q1_rd),
-        OpecodeKind::OP_C_OR        => Some(q1_rd),
-        OpecodeKind::OP_C_AND       => Some(q1_rd),
-        OpecodeKind::OP_C_LI        => Some(q1_wide_rd),
-        OpecodeKind::OP_C_LUI       => Some(q1_wide_rd),
-        OpecodeKind::OP_C_ADDI      => Some(q1_wide_rd),
+        OpecodeKind::OP_C_SRLI      => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_SRAI      => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_ANDI      => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_SUB       => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_XOR       => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_OR        => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_AND       => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_LI        => Ok(Some(q1_wide_rd)),
+        OpecodeKind::OP_C_LUI       => Ok(Some(q1_wide_rd)),
+        OpecodeKind::OP_C_ADDI      => Ok(Some(q1_wide_rd)),
         // Quadrant 2
-        OpecodeKind::OP_C_SLLI      => Some(q2_rd),
-        OpecodeKind::OP_C_LWSP      => Some(q2_rd),
-        OpecodeKind::OP_C_JR        => Some(q2_rd),
-        OpecodeKind::OP_C_MV        => Some(q2_rd),
-        OpecodeKind::OP_C_EBREAK    => Some(q2_rd),
-        OpecodeKind::OP_C_JALR      => Some(q2_rd),
-        OpecodeKind::OP_C_ADD       => Some(q2_rd),
-        _ => None,
+        OpecodeKind::OP_C_SLLI      => Ok(Some(q2_rd)),
+        OpecodeKind::OP_C_LWSP      => Ok(Some(q2_rd)),
+        OpecodeKind::OP_C_JR        => Ok(Some(q2_rd)),
+        OpecodeKind::OP_C_MV        => Ok(Some(q2_rd)),
+        OpecodeKind::OP_C_EBREAK    => Ok(Some(q2_rd)),
+        OpecodeKind::OP_C_JALR      => Ok(Some(q2_rd)),
+        OpecodeKind::OP_C_ADD       => Ok(Some(q2_rd)),
+        _ => Ok(None),
     }
 }
 
-pub fn parse_rs1(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs1(inst: u16, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rs1: usize = (inst.slice(9, 7) + 8) as usize;
     let q1_rs1: usize = (inst.slice(9, 7) + 8) as usize;
@@ -129,30 +134,30 @@ pub fn parse_rs1(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
 
     match opkind {
         // Quadrant 0
-        OpecodeKind::OP_C_LW        => Some(q0_rs1),
-        OpecodeKind::OP_C_SW        => Some(q0_rs1),
+        OpecodeKind::OP_C_LW        => Ok(Some(q0_rs1)),
+        OpecodeKind::OP_C_SW        => Ok(Some(q0_rs1)),
         // Quadrant 1
-        OpecodeKind::OP_C_ADDI      => Some(q1_addi_rs1),
-        OpecodeKind::OP_C_ADDI16SP  => Some(q1_addi_rs1),
-        OpecodeKind::OP_C_SRLI      => Some(q1_rs1),
-        OpecodeKind::OP_C_SRAI      => Some(q1_rs1),
-        OpecodeKind::OP_C_ANDI      => Some(q1_rs1),
-        OpecodeKind::OP_C_SUB       => Some(q1_rs1),
-        OpecodeKind::OP_C_XOR       => Some(q1_rs1),
-        OpecodeKind::OP_C_OR        => Some(q1_rs1),
-        OpecodeKind::OP_C_AND       => Some(q1_rs1),
-        OpecodeKind::OP_C_BEQZ      => Some(q1_rs1),
-        OpecodeKind::OP_C_BNEZ      => Some(q1_rs1),
+        OpecodeKind::OP_C_ADDI      => Ok(Some(q1_addi_rs1)),
+        OpecodeKind::OP_C_ADDI16SP  => Ok(Some(q1_addi_rs1)),
+        OpecodeKind::OP_C_SRLI      => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_SRAI      => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_ANDI      => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_SUB       => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_XOR       => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_OR        => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_AND       => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_BEQZ      => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_BNEZ      => Ok(Some(q1_rs1)),
         // Quadrant 2
-        OpecodeKind::OP_C_SLLI      => Some(q2_rs1),
-        OpecodeKind::OP_C_JR        => Some(q2_rs1),
-        OpecodeKind::OP_C_JALR      => Some(q2_rs1),
-        OpecodeKind::OP_C_ADD       => Some(q2_rs1),
-        _ => None,
+        OpecodeKind::OP_C_SLLI      => Ok(Some(q2_rs1)),
+        OpecodeKind::OP_C_JR        => Ok(Some(q2_rs1)),
+        OpecodeKind::OP_C_JALR      => Ok(Some(q2_rs1)),
+        OpecodeKind::OP_C_ADD       => Ok(Some(q2_rs1)),
+        _ => Ok(None),
     }
 }
 
-pub fn parse_rs2(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs2(inst: u16, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rs2: usize = (inst.slice(4, 2) + 8) as usize;
     let q1_rs2: usize = (inst.slice(4, 2) + 8) as usize;
@@ -160,21 +165,21 @@ pub fn parse_rs2(inst: u16, opkind: &OpecodeKind) -> Option<usize> {
 
     match opkind {
         // Quadrant 0
-        OpecodeKind::OP_C_SW    => Some(q0_rs2),
+        OpecodeKind::OP_C_SW    => Ok(Some(q0_rs2)),
         // Quadrant 1
-        OpecodeKind::OP_C_SUB   => Some(q1_rs2),
-        OpecodeKind::OP_C_XOR   => Some(q1_rs2),
-        OpecodeKind::OP_C_OR    => Some(q1_rs2),
-        OpecodeKind::OP_C_AND   => Some(q1_rs2),
+        OpecodeKind::OP_C_SUB   => Ok(Some(q1_rs2)),
+        OpecodeKind::OP_C_XOR   => Ok(Some(q1_rs2)),
+        OpecodeKind::OP_C_OR    => Ok(Some(q1_rs2)),
+        OpecodeKind::OP_C_AND   => Ok(Some(q1_rs2)),
         // Quadrant 2
-        OpecodeKind::OP_C_MV    => Some(q2_rs2),
-        OpecodeKind::OP_C_ADD   => Some(q2_rs2),
-        OpecodeKind::OP_C_SWSP  => Some(q2_rs2),
-        _ => None,
+        OpecodeKind::OP_C_MV    => Ok(Some(q2_rs2)),
+        OpecodeKind::OP_C_ADD   => Ok(Some(q2_rs2)),
+        OpecodeKind::OP_C_SWSP  => Ok(Some(q2_rs2)),
+        _ => Ok(None),
     }
 }
 
-pub fn parse_imm(inst: u16, opkind: &OpecodeKind) -> Option<i32> {
+pub fn parse_imm(inst: u16, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<i32>, TrapCause, String)> {
     let q0_uimm = | | {
         (inst.slice(12, 10).set(&[5,4,3]) | inst.slice(6, 5).set(&[2,6])) as i32
     };
@@ -220,27 +225,27 @@ pub fn parse_imm(inst: u16, opkind: &OpecodeKind) -> Option<i32> {
 
     match opkind {
         // Quadrant0
-        OpecodeKind::OP_C_ADDI4SPN  => Some(q0_nzuimm()),
-        OpecodeKind::OP_C_LW        => Some(q0_uimm()),
-        OpecodeKind::OP_C_SW        => Some(q0_uimm()),
+        OpecodeKind::OP_C_ADDI4SPN  => Ok(Some(q0_nzuimm())),
+        OpecodeKind::OP_C_LW        => Ok(Some(q0_uimm())),
+        OpecodeKind::OP_C_SW        => Ok(Some(q0_uimm())),
         // Quadrant1
-        OpecodeKind::OP_C_NOP       => Some(q1_nzimm()),
-        OpecodeKind::OP_C_ADDI      => Some(q1_nzimm()),
-        OpecodeKind::OP_C_JAL       => Some(q1_j_imm()),
-        OpecodeKind::OP_C_LI        => Some(q1_imm()),
-        OpecodeKind::OP_C_ADDI16SP  => Some(q1_16sp_nzimm()),
-        OpecodeKind::OP_C_LUI       => Some(q1_lui_imm()),
-        OpecodeKind::OP_C_SRLI      => Some(q1_nzuimm()),
-        OpecodeKind::OP_C_SRAI      => Some(q1_nzuimm()),
-        OpecodeKind::OP_C_ANDI      => Some(q1_imm()),
-        OpecodeKind::OP_C_J         => Some(q1_j_imm()),
-        OpecodeKind::OP_C_BEQZ      => Some(q1_b_imm()),
-        OpecodeKind::OP_C_BNEZ      => Some(q1_b_imm()),
+        OpecodeKind::OP_C_NOP       => Ok(Some(q1_nzimm())),
+        OpecodeKind::OP_C_ADDI      => Ok(Some(q1_nzimm())),
+        OpecodeKind::OP_C_JAL       => Ok(Some(q1_j_imm())),
+        OpecodeKind::OP_C_LI        => Ok(Some(q1_imm())),
+        OpecodeKind::OP_C_ADDI16SP  => Ok(Some(q1_16sp_nzimm())),
+        OpecodeKind::OP_C_LUI       => Ok(Some(q1_lui_imm())),
+        OpecodeKind::OP_C_SRLI      => Ok(Some(q1_nzuimm())),
+        OpecodeKind::OP_C_SRAI      => Ok(Some(q1_nzuimm())),
+        OpecodeKind::OP_C_ANDI      => Ok(Some(q1_imm())),
+        OpecodeKind::OP_C_J         => Ok(Some(q1_j_imm())),
+        OpecodeKind::OP_C_BEQZ      => Ok(Some(q1_b_imm())),
+        OpecodeKind::OP_C_BNEZ      => Ok(Some(q1_b_imm())),
         // Quadrant2
-        OpecodeKind::OP_C_SLLI      => Some(q2_imm()),
-        OpecodeKind::OP_C_LWSP      => Some(q2_lwsp_imm()),
-        OpecodeKind::OP_C_SWSP      => Some(q2_swsp_imm()),
-        _ => None,
+        OpecodeKind::OP_C_SLLI      => Ok(Some(q2_imm())),
+        OpecodeKind::OP_C_LWSP      => Ok(Some(q2_lwsp_imm())),
+        OpecodeKind::OP_C_SWSP      => Ok(Some(q2_swsp_imm())),
+        _ => Ok(None),
     }
 }
 

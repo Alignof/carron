@@ -36,3 +36,9 @@ impl Register {
         }
     }
 }
+
+impl Default for Register {
+    fn default() -> Self {
+        Self::new()
+    }
+}

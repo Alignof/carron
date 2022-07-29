@@ -2,7 +2,7 @@ pub mod dram;
 pub mod mrom;
 pub mod device_tree;
 
-use crate::elfload;
+use crate::{elfload, TrapCause};
 use dram::Dram;
 use mrom::Mrom;
 
@@ -14,12 +14,12 @@ pub struct Bus {
 impl Bus {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>) -> (u32, Bus) {
         // load proxy kernel before user program when it's given
-        let (entry, dram) = if let Some(ref pk_load) = pk_load {
+        let dram = if let Some(ref pk_load) = pk_load {
             Dram::new_with_pk(loader, pk_load)
         } else {
             Dram::new(loader)
         };
-        let mut mrom = Mrom::new(entry);
+        let mut mrom = Mrom::new(dram.base_addr);
 
         // create and load DTB
         mrom.load_dtb(dram.base_addr);
@@ -28,7 +28,7 @@ impl Bus {
         let init_pc = if pk_load.is_some() {
             mrom.base_addr
         } else {
-            entry
+            dram.base_addr
         };
 
         // return initial pc and Bus
@@ -45,7 +45,7 @@ impl Bus {
     }
 
     // store
-    pub fn store8(&mut self, addr: u32, data: i32) {
+    pub fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.store8(addr, data)
         } else {
@@ -53,7 +53,7 @@ impl Bus {
         }
     }
 
-    pub fn store16(&mut self, addr: u32, data: i32) {
+    pub fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.store16(addr, data)
         } else {
@@ -61,7 +61,7 @@ impl Bus {
         }
     }
 
-    pub fn store32(&mut self, addr: u32, data: i32) {
+    pub fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.store32(addr, data)
         } else {
@@ -71,7 +71,7 @@ impl Bus {
 
 
     // load
-    pub fn load8(&self, addr: u32) -> i32 {
+    pub fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.load8(addr)
         } else {
@@ -79,7 +79,7 @@ impl Bus {
         }
     }
 
-    pub fn load16(&self, addr: u32) -> i32 {
+    pub fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.load16(addr)
         } else {
@@ -87,7 +87,7 @@ impl Bus {
         }
     }
 
-    pub fn load32(&self, addr: u32) -> i32 {
+    pub fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.load32(addr)
         } else {
@@ -95,7 +95,7 @@ impl Bus {
         }
     }
 
-    pub fn load_u8(&self, addr: u32) -> i32 {
+    pub fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.load_u8(addr)
         } else {
@@ -103,7 +103,7 @@ impl Bus {
         }
     }
 
-    pub fn load_u16(&self, addr: u32) -> i32 {
+    pub fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         if addr < self.dram.base_addr {
             self.mrom.load_u16(addr)
         } else {
@@ -113,15 +113,15 @@ impl Bus {
 }
 
 pub trait Device {
-    fn addr2index(&self, addr: u32) -> usize;
+    fn addr2index(&self, addr: u32, cause: TrapCause) -> Result<usize, (Option<i32>, TrapCause, String)>;
     fn raw_byte(&self, addr: u32) -> u8;
-    fn store8(&mut self, addr: u32, data: i32);
-    fn store16(&mut self, addr: u32, data: i32);
-    fn store32(&mut self, addr: u32, data: i32);
-    fn load8(&self, addr: u32) -> i32;
-    fn load16(&self, addr: u32) -> i32;
-    fn load32(&self, addr: u32) -> i32;
-    fn load_u8(&self, addr: u32) -> i32;
-    fn load_u16(&self, addr: u32) -> i32;
+    fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
+    fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
+    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
+    fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
+    fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
+    fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
+    fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
+    fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
 }
 

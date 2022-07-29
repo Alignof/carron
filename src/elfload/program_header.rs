@@ -37,7 +37,7 @@ impl ProgramHeader {
 
 			new_prog.push(
 				ProgramHeader {
-					p_type:   get_u32(mmap, segment_start +  0),
+					p_type:   get_u32(mmap, segment_start),
 					p_offset: get_u32(mmap, segment_start +  4),
 					p_vaddr:  get_u32(mmap, segment_start +  8),
 					p_paddr:  get_u32(mmap, segment_start + 12),

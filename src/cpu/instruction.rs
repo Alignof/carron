@@ -72,6 +72,7 @@ pub enum OpecodeKind {
 //== privileged Instruction == 
     OP_SRET,
     OP_MRET,
+    OP_WFI,
     OP_SFENCE_VMA,
 //== M Extension == 
     OP_MUL,
@@ -190,6 +191,7 @@ impl Instruction {
             OpecodeKind::OP_CSRRCI		=> Extensions::Zicsr,
             OpecodeKind::OP_SRET		=> Extensions::Priv,
             OpecodeKind::OP_MRET		=> Extensions::Priv,
+            OpecodeKind::OP_WFI         => Extensions::Priv,
             OpecodeKind::OP_SFENCE_VMA	=> Extensions::Priv,
             OpecodeKind::OP_MUL			=> Extensions::M,
             OpecodeKind::OP_MULH		=> Extensions::M,
@@ -290,6 +292,7 @@ impl Instruction {
             OpecodeKind::OP_CSRRCI		=> "csrrci",
             OpecodeKind::OP_SRET        => "sret",
             OpecodeKind::OP_MRET        => "mret",
+            OpecodeKind::OP_WFI         => "wfi",
             OpecodeKind::OP_SFENCE_VMA  => "sfence.vma",
             OpecodeKind::OP_MUL			=> "mul",
             OpecodeKind::OP_MULH		=> "mulh",

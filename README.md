@@ -4,9 +4,11 @@
 RV32IMAC emulator in rust
 
 ## Feature
-This emulator parses an ELF file that supports rv32imc and emulate execution environment of it.  
+This emulator parses an ELF file that supports rv32imac and emulate execution environment of it.  
 The emulator passed riscv-tests shown below.
 
+- [x] rv32mi-p
+- [x] rv32si-p
 - [x] rv32ui-p
 - [x] rv32ui-v
 - [x] rv32um-p
@@ -26,7 +28,7 @@ cargo build --release
 ## Usage
 ```zsh
 $ ./carron --help
-carron 0.9.3
+carron 0.9.4
 n.takana <Alignof@outlook.com>
 RV32IMAC emulator
 

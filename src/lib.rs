@@ -3,7 +3,7 @@ pub mod cpu;
 pub mod bus;
 pub mod elfload;
 
-use cpu::CPU;
+use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
 
 pub struct Emulator {
@@ -22,18 +22,29 @@ impl Emulator {
         }
     }
 
-    pub fn emulation(&mut self) {
+    fn exec_one_cycle(&mut self) -> Result<(), (Option<i32>, TrapCause, String)> {
         use crate::cpu::execution::Execution;
+    
+        self.cpu.check_interrupt()?;
 
+        fetch(&mut self.cpu)?
+            .decode()?
+            .execution(&mut self.cpu)
+    }
+
+    pub fn emulation(&mut self) {
         // rv32ui-p: 0x80000044, gp(3)
         // rv32ui-v: 0xffc02308, a0(10)
 
         loop {
-            fetch(&mut self.cpu)
-                .decode()
-                .execution(&mut self.cpu);
+            match self.exec_one_cycle() {
+                Ok(()) => (),
+                Err((addr, cause, msg)) => {
+                    self.cpu.trap(addr.unwrap_or(self.cpu.pc as i32), cause);
+                    eprintln!("{}", msg);
+                },
+            }
 
-            // debug code
             if self.break_point.unwrap_or(u32::MAX) == self.cpu.pc {
                 if self.result_reg.is_some() {
                     std::process::exit(self.cpu.regs.read(self.result_reg));
@@ -44,3 +55,4 @@ impl Emulator {
         }
     }
 } 
+

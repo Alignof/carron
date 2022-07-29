@@ -92,3 +92,9 @@ impl Arguments {
         }
     }
 }
+
+impl Default for Arguments {
+    fn default() -> Self {
+        Self::new()
+    }
+}

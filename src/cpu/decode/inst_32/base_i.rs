@@ -1,5 +1,6 @@
 use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
+use crate::cpu::TrapCause;
 
 pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
     let opmap: u8  = inst.slice(6, 0) as u8;
@@ -84,118 +85,118 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-pub fn parse_rd(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rd(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     let rd: usize = inst.slice(11, 7) as usize;
 
     // B(EQ|NE|LT|GE|LTU|GEU), S(B|H|W), ECALL, EBREAK
     match opkind {
-        OpecodeKind::OP_LUI		=> Some(rd),
-        OpecodeKind::OP_AUIPC	=> Some(rd),
-        OpecodeKind::OP_JAL		=> Some(rd),
-        OpecodeKind::OP_JALR	=> Some(rd),
-        OpecodeKind::OP_LB		=> Some(rd),
-        OpecodeKind::OP_LH		=> Some(rd),
-        OpecodeKind::OP_LW		=> Some(rd),
-        OpecodeKind::OP_LBU		=> Some(rd),
-        OpecodeKind::OP_LHU		=> Some(rd),
-        OpecodeKind::OP_ADDI	=> Some(rd),
-        OpecodeKind::OP_SLTI	=> Some(rd),
-        OpecodeKind::OP_SLTIU	=> Some(rd),
-        OpecodeKind::OP_XORI	=> Some(rd),
-        OpecodeKind::OP_ORI		=> Some(rd),
-        OpecodeKind::OP_ANDI	=> Some(rd),
-        OpecodeKind::OP_SLLI	=> Some(rd),
-        OpecodeKind::OP_SRLI	=> Some(rd),
-        OpecodeKind::OP_SRAI	=> Some(rd),
-        OpecodeKind::OP_ADD		=> Some(rd),
-        OpecodeKind::OP_SUB		=> Some(rd),
-        OpecodeKind::OP_SLL		=> Some(rd),
-        OpecodeKind::OP_SLT		=> Some(rd),
-        OpecodeKind::OP_SLTU	=> Some(rd),
-        OpecodeKind::OP_XOR		=> Some(rd),
-        OpecodeKind::OP_SRL		=> Some(rd),
-        OpecodeKind::OP_SRA		=> Some(rd),
-        OpecodeKind::OP_OR		=> Some(rd),
-        OpecodeKind::OP_AND		=> Some(rd),
-        _ => None,
+        OpecodeKind::OP_LUI		=> Ok(Some(rd)),
+        OpecodeKind::OP_AUIPC	=> Ok(Some(rd)),
+        OpecodeKind::OP_JAL		=> Ok(Some(rd)),
+        OpecodeKind::OP_JALR	=> Ok(Some(rd)),
+        OpecodeKind::OP_LB		=> Ok(Some(rd)),
+        OpecodeKind::OP_LH		=> Ok(Some(rd)),
+        OpecodeKind::OP_LW		=> Ok(Some(rd)),
+        OpecodeKind::OP_LBU		=> Ok(Some(rd)),
+        OpecodeKind::OP_LHU		=> Ok(Some(rd)),
+        OpecodeKind::OP_ADDI	=> Ok(Some(rd)),
+        OpecodeKind::OP_SLTI	=> Ok(Some(rd)),
+        OpecodeKind::OP_SLTIU	=> Ok(Some(rd)),
+        OpecodeKind::OP_XORI	=> Ok(Some(rd)),
+        OpecodeKind::OP_ORI		=> Ok(Some(rd)),
+        OpecodeKind::OP_ANDI	=> Ok(Some(rd)),
+        OpecodeKind::OP_SLLI	=> Ok(Some(rd)),
+        OpecodeKind::OP_SRLI	=> Ok(Some(rd)),
+        OpecodeKind::OP_SRAI	=> Ok(Some(rd)),
+        OpecodeKind::OP_ADD		=> Ok(Some(rd)),
+        OpecodeKind::OP_SUB		=> Ok(Some(rd)),
+        OpecodeKind::OP_SLL		=> Ok(Some(rd)),
+        OpecodeKind::OP_SLT		=> Ok(Some(rd)),
+        OpecodeKind::OP_SLTU	=> Ok(Some(rd)),
+        OpecodeKind::OP_XOR		=> Ok(Some(rd)),
+        OpecodeKind::OP_SRL		=> Ok(Some(rd)),
+        OpecodeKind::OP_SRA		=> Ok(Some(rd)),
+        OpecodeKind::OP_OR		=> Ok(Some(rd)),
+        OpecodeKind::OP_AND		=> Ok(Some(rd)),
+        _ => Ok(None),
     }
 }
 
-pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     let rs1: usize = inst.slice(19, 15) as usize;
 
     // LUI, AUIPC, JAL, FENCE, ECALL, EBREAK
     match opkind {
-        OpecodeKind::OP_JALR	=> Some(rs1),
-        OpecodeKind::OP_BEQ		=> Some(rs1),
-        OpecodeKind::OP_BNE		=> Some(rs1),
-        OpecodeKind::OP_BLT		=> Some(rs1),
-        OpecodeKind::OP_BGE		=> Some(rs1),
-        OpecodeKind::OP_BLTU	=> Some(rs1),
-        OpecodeKind::OP_BGEU	=> Some(rs1),
-        OpecodeKind::OP_LB		=> Some(rs1),
-        OpecodeKind::OP_LH		=> Some(rs1),
-        OpecodeKind::OP_LW		=> Some(rs1),
-        OpecodeKind::OP_LBU		=> Some(rs1),
-        OpecodeKind::OP_LHU		=> Some(rs1),
-        OpecodeKind::OP_SB		=> Some(rs1),
-        OpecodeKind::OP_SH		=> Some(rs1),
-        OpecodeKind::OP_SW		=> Some(rs1),
-        OpecodeKind::OP_ADDI	=> Some(rs1),
-        OpecodeKind::OP_SLTI	=> Some(rs1),
-        OpecodeKind::OP_SLTIU	=> Some(rs1),
-        OpecodeKind::OP_XORI	=> Some(rs1),
-        OpecodeKind::OP_ORI		=> Some(rs1),
-        OpecodeKind::OP_ANDI	=> Some(rs1),
-        OpecodeKind::OP_SLLI	=> Some(rs1),
-        OpecodeKind::OP_SRLI	=> Some(rs1),
-        OpecodeKind::OP_SRAI	=> Some(rs1),
-        OpecodeKind::OP_ADD		=> Some(rs1),
-        OpecodeKind::OP_SUB		=> Some(rs1),
-        OpecodeKind::OP_SLL		=> Some(rs1),
-        OpecodeKind::OP_SLT		=> Some(rs1),
-        OpecodeKind::OP_SLTU	=> Some(rs1),
-        OpecodeKind::OP_XOR		=> Some(rs1),
-        OpecodeKind::OP_SRL		=> Some(rs1),
-        OpecodeKind::OP_SRA		=> Some(rs1),
-        OpecodeKind::OP_OR		=> Some(rs1),
-        OpecodeKind::OP_AND		=> Some(rs1),
-        _ => None,
+        OpecodeKind::OP_JALR	=> Ok(Some(rs1)),
+        OpecodeKind::OP_BEQ		=> Ok(Some(rs1)),
+        OpecodeKind::OP_BNE		=> Ok(Some(rs1)),
+        OpecodeKind::OP_BLT		=> Ok(Some(rs1)),
+        OpecodeKind::OP_BGE		=> Ok(Some(rs1)),
+        OpecodeKind::OP_BLTU	=> Ok(Some(rs1)),
+        OpecodeKind::OP_BGEU	=> Ok(Some(rs1)),
+        OpecodeKind::OP_LB		=> Ok(Some(rs1)),
+        OpecodeKind::OP_LH		=> Ok(Some(rs1)),
+        OpecodeKind::OP_LW		=> Ok(Some(rs1)),
+        OpecodeKind::OP_LBU		=> Ok(Some(rs1)),
+        OpecodeKind::OP_LHU		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SB		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SH		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SW		=> Ok(Some(rs1)),
+        OpecodeKind::OP_ADDI	=> Ok(Some(rs1)),
+        OpecodeKind::OP_SLTI	=> Ok(Some(rs1)),
+        OpecodeKind::OP_SLTIU	=> Ok(Some(rs1)),
+        OpecodeKind::OP_XORI	=> Ok(Some(rs1)),
+        OpecodeKind::OP_ORI		=> Ok(Some(rs1)),
+        OpecodeKind::OP_ANDI	=> Ok(Some(rs1)),
+        OpecodeKind::OP_SLLI	=> Ok(Some(rs1)),
+        OpecodeKind::OP_SRLI	=> Ok(Some(rs1)),
+        OpecodeKind::OP_SRAI	=> Ok(Some(rs1)),
+        OpecodeKind::OP_ADD		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SUB		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SLL		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SLT		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SLTU	=> Ok(Some(rs1)),
+        OpecodeKind::OP_XOR		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SRL		=> Ok(Some(rs1)),
+        OpecodeKind::OP_SRA		=> Ok(Some(rs1)),
+        OpecodeKind::OP_OR		=> Ok(Some(rs1)),
+        OpecodeKind::OP_AND		=> Ok(Some(rs1)),
+        _ => Ok(None),
     }
 }
 
-pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Option<usize> {
+pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
     let rs2: usize = inst.slice(24, 20) as usize;
 
     // LUI, AUIPC, JAL, JALR L(B|H|W|BU|HU),
     // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI,
     // FENCE, ECALL, EBREAK
     match opkind {
-        OpecodeKind::OP_BEQ		=> Some(rs2),
-        OpecodeKind::OP_BNE		=> Some(rs2),
-        OpecodeKind::OP_BLT		=> Some(rs2),
-        OpecodeKind::OP_BGE		=> Some(rs2),
-        OpecodeKind::OP_BLTU	=> Some(rs2),
-        OpecodeKind::OP_BGEU	=> Some(rs2),
-        OpecodeKind::OP_SB		=> Some(rs2),
-        OpecodeKind::OP_SH		=> Some(rs2),
-        OpecodeKind::OP_SW		=> Some(rs2),
-        OpecodeKind::OP_ADD		=> Some(rs2),
-        OpecodeKind::OP_SUB		=> Some(rs2),
-        OpecodeKind::OP_SLL		=> Some(rs2),
-        OpecodeKind::OP_SLT		=> Some(rs2),
-        OpecodeKind::OP_SLTU	=> Some(rs2),
-        OpecodeKind::OP_XOR		=> Some(rs2),
-        OpecodeKind::OP_SRL		=> Some(rs2),
-        OpecodeKind::OP_SRA		=> Some(rs2),
-        OpecodeKind::OP_OR		=> Some(rs2),
-        OpecodeKind::OP_AND		=> Some(rs2),
-        _ => None,
+        OpecodeKind::OP_BEQ		=> Ok(Some(rs2)),
+        OpecodeKind::OP_BNE		=> Ok(Some(rs2)),
+        OpecodeKind::OP_BLT		=> Ok(Some(rs2)),
+        OpecodeKind::OP_BGE		=> Ok(Some(rs2)),
+        OpecodeKind::OP_BLTU	=> Ok(Some(rs2)),
+        OpecodeKind::OP_BGEU	=> Ok(Some(rs2)),
+        OpecodeKind::OP_SB		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SH		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SW		=> Ok(Some(rs2)),
+        OpecodeKind::OP_ADD		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SUB		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SLL		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SLT		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SLTU	=> Ok(Some(rs2)),
+        OpecodeKind::OP_XOR		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SRL		=> Ok(Some(rs2)),
+        OpecodeKind::OP_SRA		=> Ok(Some(rs2)),
+        OpecodeKind::OP_OR		=> Ok(Some(rs2)),
+        OpecodeKind::OP_AND		=> Ok(Some(rs2)),
+        _ => Ok(None),
     }
 }
 
 #[allow(non_snake_case)]
-pub fn parse_imm(inst: u32, opkind: &OpecodeKind) -> Option<i32> {
+pub fn parse_imm(inst: u32, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<i32>, TrapCause, String)> {
     let U_type = | | {
         (inst.slice(31, 12) << 12) as i32
     };
@@ -218,34 +219,46 @@ pub fn parse_imm(inst: u32, opkind: &OpecodeKind) -> Option<i32> {
     };
 
     match opkind {
-        OpecodeKind::OP_LUI		=> Some(U_type()),
-        OpecodeKind::OP_AUIPC	=> Some(U_type()),
-        OpecodeKind::OP_JAL		=> Some(J_type()),
-        OpecodeKind::OP_JALR	=> Some(I_type()),
-        OpecodeKind::OP_BEQ		=> Some(B_type()),
-        OpecodeKind::OP_BNE		=> Some(B_type()),
-        OpecodeKind::OP_BLT		=> Some(B_type()),
-        OpecodeKind::OP_BGE		=> Some(B_type()),
-        OpecodeKind::OP_BLTU	=> Some(B_type()),
-        OpecodeKind::OP_BGEU	=> Some(B_type()),
-        OpecodeKind::OP_LB		=> Some(I_type()),
-        OpecodeKind::OP_LH		=> Some(I_type()),
-        OpecodeKind::OP_LW		=> Some(I_type()),
-        OpecodeKind::OP_LBU		=> Some(I_type()),
-        OpecodeKind::OP_LHU		=> Some(I_type()),
-        OpecodeKind::OP_SB		=> Some(S_type()),
-        OpecodeKind::OP_SH		=> Some(S_type()),
-        OpecodeKind::OP_SW		=> Some(S_type()),
-        OpecodeKind::OP_ADDI	=> Some(I_type()),
-        OpecodeKind::OP_SLTI	=> Some(I_type()),
-        OpecodeKind::OP_SLTIU	=> Some(I_type()),
-        OpecodeKind::OP_XORI	=> Some(I_type()),
-        OpecodeKind::OP_ORI		=> Some(I_type()),
-        OpecodeKind::OP_ANDI	=> Some(I_type()),
-        OpecodeKind::OP_SLLI	=> Some(I_type()),
-        OpecodeKind::OP_SRLI	=> Some(I_type()),
-        OpecodeKind::OP_SRAI	=> Some(I_type()),
-        _ => None,
+        OpecodeKind::OP_LUI		=> Ok(Some(U_type())),
+        OpecodeKind::OP_AUIPC	=> Ok(Some(U_type())),
+        OpecodeKind::OP_JAL		=> Ok(Some(J_type())),
+        OpecodeKind::OP_JALR	=> Ok(Some(I_type())),
+        OpecodeKind::OP_BEQ		=> Ok(Some(B_type())),
+        OpecodeKind::OP_BNE		=> Ok(Some(B_type())),
+        OpecodeKind::OP_BLT		=> Ok(Some(B_type())),
+        OpecodeKind::OP_BGE		=> Ok(Some(B_type())),
+        OpecodeKind::OP_BLTU	=> Ok(Some(B_type())),
+        OpecodeKind::OP_BGEU	=> Ok(Some(B_type())),
+        OpecodeKind::OP_LB		=> Ok(Some(I_type())),
+        OpecodeKind::OP_LH		=> Ok(Some(I_type())),
+        OpecodeKind::OP_LW		=> Ok(Some(I_type())),
+        OpecodeKind::OP_LBU		=> Ok(Some(I_type())),
+        OpecodeKind::OP_LHU		=> Ok(Some(I_type())),
+        OpecodeKind::OP_SB		=> Ok(Some(S_type())),
+        OpecodeKind::OP_SH		=> Ok(Some(S_type())),
+        OpecodeKind::OP_SW		=> Ok(Some(S_type())),
+        OpecodeKind::OP_ADDI	=> Ok(Some(I_type())),
+        OpecodeKind::OP_SLTI	=> Ok(Some(I_type())),
+        OpecodeKind::OP_SLTIU	=> Ok(Some(I_type())),
+        OpecodeKind::OP_XORI	=> Ok(Some(I_type())),
+        OpecodeKind::OP_ORI		=> Ok(Some(I_type())),
+        OpecodeKind::OP_ANDI	=> Ok(Some(I_type())),
+        OpecodeKind::OP_SLLI	|
+        OpecodeKind::OP_SRLI	=> {
+            if inst.slice(31, 25) == 0 {
+                Ok(Some(I_type()))
+            } else {
+                Err((None, TrapCause::IllegalInst, "invalid shamt[5] in srli or slli".to_string()))
+            }
+        },
+        OpecodeKind::OP_SRAI	=> {
+            if inst.slice(31, 25) == 0b0100000 {
+                Ok(Some(I_type()))
+            } else {
+                Err((None, TrapCause::IllegalInst, "invalid shamt[5] in srai".to_string()))
+            }
+        },
+        _ => Ok(None),
     }
 }
 
