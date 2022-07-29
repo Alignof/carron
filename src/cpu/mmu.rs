@@ -175,9 +175,8 @@ impl MMU {
         }
         match purpose {
             TransFor::Load | TransFor::StoreAMO => {
-                let sum = csrs.read_xstatus(priv_lv, Xstatus::SUM);
+                let sum = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SUM);
                 if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
-                    dbg!(priv_lv);
                     println!("invalid pte_u: {:x}", pte);
                     return Err(trap_cause(purpose));
                 }
@@ -186,7 +185,7 @@ impl MMU {
         }
         
         // check the X and R bit
-        let mxr = csrs.read_xstatus(priv_lv, Xstatus::MXR);
+        let mxr = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MXR);
         if (mxr == 0 && pte_r == 0) || (mxr == 1 && pte_r == 1 && pte_x == 1) {
             println!("invalid pte_r or pte_x: {:x}", pte);
             return Err(trap_cause(purpose));
@@ -254,7 +253,7 @@ impl MMU {
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         println!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr) as u32) {
+                        let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr).unwrap() as u32) {
                             Ok(pte) => pte,
                             Err(cause) => {
                                 return Err(cause) // exception
@@ -282,7 +281,7 @@ impl MMU {
                                 println!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
                                 println!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                          PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
-                                let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr) as u32) {
+                                let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr).unwrap() as u32) {
                                     Ok(pte) => pte,
                                     Err(cause) => {
                                         return Err(cause) // exception

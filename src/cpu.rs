@@ -33,7 +33,7 @@ pub enum PrivilegedLevel {
     Machine = 0b11,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TransFor {
     Fetch,
     Load,
@@ -88,9 +88,6 @@ impl CPU {
         let is_interrupt_enabled = |bit: u32| {
             (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
         };
-        //dbg_hex::dbg_hex!(mie);
-        //dbg_hex::dbg_hex!(mip);
-        //dbg_hex::dbg_hex!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE));
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {
@@ -228,9 +225,21 @@ impl CPU {
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<i32>, TrapCause, String)> {
         let addr = self.check_breakpoint(&purpose, addr as u32)?;
+        let mut trans_priv = self.priv_lv;
+
+        if (purpose == TransFor::Load || purpose == TransFor::StoreAMO) &&
+           self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MPRV) == 1 {
+                trans_priv = match self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP) {
+                    0b00 => PrivilegedLevel::User,
+                    0b01 => PrivilegedLevel::Supervisor,
+                    0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
+                    0b11 => PrivilegedLevel::Machine,
+                    _ => panic!("invalid PrivilegedLevel"),
+               }
+        }
 
         match self.mmu.trans_addr(
-            purpose, addr, &self.csrs, &self.bus.dram, self.priv_lv) {
+            purpose, addr, &self.csrs, &self.bus.dram, trans_priv) {
 
             Ok(addr) => Ok(addr),
             Err(cause) => {

@@ -12,22 +12,22 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
         },
         OpecodeKind::OP_C_LW => {
             let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
-            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         },
         OpecodeKind::OP_C_LWSP => {
             let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap())?;
-            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr));
+            cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         },
         OpecodeKind::OP_C_LUI => {
             cpu.regs.write(inst.rd, inst.imm.unwrap());
         },
         OpecodeKind::OP_C_SW => {
             let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
-            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         },
         OpecodeKind::OP_C_SWSP => {
             let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap())?;
-            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2));
+            cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         },
         OpecodeKind::OP_C_SLLI => {
             cpu.regs.write(inst.rd,
