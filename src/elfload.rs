@@ -9,11 +9,13 @@ use section_header::SectionHeader;
 use program_header::ProgramHeader;
 
 
+#[allow(clippy::identity_op)]
 pub fn get_u16(mmap: &[u8], index: usize) -> u16 {
     (mmap[index + 1] as u16) << 8 |
     (mmap[index + 0] as u16)
 }
 
+#[allow(clippy::identity_op)]
 pub fn get_u32(mmap: &[u8], index: usize) -> u32 {
     (mmap[index + 3] as u32) << 24 |
     (mmap[index + 2] as u32) << 16 |
@@ -52,14 +54,14 @@ impl ElfLoader {
         self.elf_header.is_elf()
     }
 
-    pub fn get_entry_point(&self) -> Result<u32, ()> {
+    pub fn get_entry_point(&self) -> Option<u32> {
         for segment in self.prog_headers.iter() {
             if segment.is_loadable() {
-                return Ok(segment.p_paddr);
+                return Some(segment.p_paddr);
             }
         }
 
-        Err(())
+        None
     }
 
     pub fn header_show(&self) {

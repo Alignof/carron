@@ -52,16 +52,12 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, 
-               pc_from_cli: Option<u32>) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, pc_from_cli: Option<u32>) -> CPU {
         // initialize bus and get the entry point
         let (init_pc, bus) = bus::Bus::new(loader, pk_load);
 
         CPU {
-            pc: match pc_from_cli {
-                Some(cli_pc) => cli_pc,
-                None => init_pc,
-            },
+            pc: pc_from_cli.unwrap_or(init_pc),
             bus,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new().init(),
@@ -72,7 +68,7 @@ impl CPU {
     }
 
     pub fn add2pc(&mut self, addval: i32) {
-        self.pc = (self.pc as i32 + addval) as u32;
+        self.pc += addval as u32;
     }
 
     pub fn update_pc(&mut self, newpc: i32) {
@@ -116,14 +112,12 @@ impl CPU {
                         "machine software interrupt".to_string()
                     ));
                 }
-                if self.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MIE) == 1 {
-                    if is_interrupt_enabled(SSIP) {
-                        return Err((
-                            None,
-                            TrapCause::SupervisorSoftwareInterrupt,
-                            "supervisor software interrupt".to_string()
-                        ));
-                    }
+                if self.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MIE) == 1 && is_interrupt_enabled(SSIP) {
+                    return Err((
+                        None,
+                        TrapCause::SupervisorSoftwareInterrupt,
+                        "supervisor software interrupt".to_string()
+                    ));
                 }
             },
             _ => (),

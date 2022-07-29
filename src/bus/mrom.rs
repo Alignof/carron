@@ -40,6 +40,7 @@ impl Mrom {
     }
 }
 
+#[allow(clippy::identity_op)]
 impl Device for Mrom {
     // address to raw index
     fn addr2index(&self, addr: u32, _cause: TrapCause) -> Result<usize, (Option<i32>, TrapCause, String)> {
@@ -94,16 +95,20 @@ impl Device for Mrom {
 
     fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
-        Ok(((self.mrom[addr + 1] as u16) << 8 |
-         (self.mrom[addr + 0] as u16)) as i16 as i32)
+        Ok((
+         (self.mrom[addr + 1] as u16) << 8 |
+         (self.mrom[addr + 0] as u16)
+        ) as i16 as i32)
     }
 
     fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
-        Ok(((self.mrom[addr + 3] as u32) << 24 |
+        Ok((
+         (self.mrom[addr + 3] as u32) << 24 |
          (self.mrom[addr + 2] as u32) << 16 |
          (self.mrom[addr + 1] as u32) <<  8 |
-         (self.mrom[addr + 0] as u32)) as i32)
+         (self.mrom[addr + 0] as u32)
+        ) as i32)
     }
 
     fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
@@ -113,7 +118,9 @@ impl Device for Mrom {
 
     fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
         let addr = self.addr2index(addr, TrapCause::LoadPageFault)?;
-        Ok(((self.mrom[addr + 1] as u32) << 8 |
-         (self.mrom[addr + 0] as u32)) as i32)
+        Ok((
+         (self.mrom[addr + 1] as u32) << 8 |
+         (self.mrom[addr + 0] as u32)
+        ) as i32)
     }
 }

@@ -9,7 +9,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
                 return Err((
                     Some(cpu.bus.load32(cpu.pc)?),
                     TrapCause::IllegalInst,
-                    format!("exec sret but mstatus.TSR == 1")
+                    "exec sret but mstatus.TSR == 1".to_string()
                 ));
             }
 

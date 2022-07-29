@@ -12,6 +12,7 @@ pub struct CSRs {
     triggers: Triggers,
 }
 
+#[allow(clippy::identity_op)]
 impl CSRs {
     pub fn new() -> CSRs {
         CSRs {
@@ -139,6 +140,12 @@ impl CSRs {
             Xstatus::SD     => self.csrs[xstatus] = ((self.csrs[xstatus] & !(0x1 << 31)) | ((data & 0x1) << 31)) & mask,
         }
     } 
+}
+
+impl Default for CSRs {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[allow(non_camel_case_types)]

@@ -3,9 +3,7 @@ use super::util;
 use super::{dtb_mmap, FdtNodeKind};
 
 pub fn parse_data(data: &str, mmap: &mut dtb_mmap) -> (Vec<u32>, u32) {
-    dbg!(data);
-
-    if data.chars().last().unwrap() != ';' {
+    if !data.ends_with(';') {
         panic!("{} <-- ';' expected.", data);
     }
 
@@ -49,10 +47,9 @@ pub fn parse_data(data: &str, mmap: &mut dtb_mmap) -> (Vec<u32>, u32) {
                         u32::from_str_radix(hex, 16).expect("parsing hex error.")
                     } else {
                         num.parse::<u32>().unwrap_or_else(|_| {
-                            mmap.labels
+                            *mmap.labels
                                 .get(num.trim_start_matches('&'))
                                 .expect("label referencing error.")
-                                .clone()
                         })
                     }
                 })
@@ -94,7 +91,7 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
     let tokens = &mut util::tokenize(lines, "node is invalid").peekable();
 
     let first = tokens.next().expect("node name not found");
-    mmap.write_nodekind(FdtNodeKind::BEGIN_NODE);
+    mmap.write_nodekind(FdtNodeKind::BeginNode);
     if util::consume(tokens, "{") {
         let node_name = first;
         mmap.write_nodename(node_name);
@@ -120,17 +117,15 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
                 mmap.strings.phandle_value += 1;
             }
 
-            mmap.write_nodekind(FdtNodeKind::END_NODE);
+            mmap.write_nodekind(FdtNodeKind::EndNode);
             break;
         }
     }
 }
 
 pub fn parse_line(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
-    dbg!(&lines.peek());
-
     if !util::consume(lines, "") {
-        if lines.peek().unwrap().chars().last() == Some('{') {
+        if lines.peek().unwrap().ends_with('{') {
             parse_node(lines, mmap);
         } else {
             parse_property(lines, mmap);

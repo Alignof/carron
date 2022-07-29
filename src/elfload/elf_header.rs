@@ -74,7 +74,7 @@ impl ElfHeader {
         const ELF_HEADER_START: usize = 16;
         ElfHeader {
             e_ident:    ElfIdentification::new(mmap),
-            e_type:     get_u16(mmap, ELF_HEADER_START +  0),
+            e_type:     get_u16(mmap, ELF_HEADER_START),
             e_machine:  get_u16(mmap, ELF_HEADER_START +  2),
             e_version:  get_u32(mmap, ELF_HEADER_START +  4),
             e_entry:    get_u32(mmap, ELF_HEADER_START +  8),

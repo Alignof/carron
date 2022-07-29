@@ -55,7 +55,7 @@ impl MMU {
     }
 
     fn pmp(&self, purpose: TransFor, addr: u32, priv_lv: PrivilegedLevel, csrs: &CSRs) -> Result<u32, TrapCause> {
-        let pmpaddrs = [0x3B0, 0x3B1, 0x3B2, 0x3B3, 0x3B4, 0x3B5, 0x3B6, 0x3B7, 0x3B8, 0x3B9, 0x3BA, 0x3BB, 0x3BC, 0x3BD, 0x3BE, 0x3BF];
+        let pmpaddrs: Vec<usize> = (0x3B0..0x3BF).collect();
         let get_pmpcfg = |pmpnum| {
             let cfgnum = pmpnum / 4;
             let cfgoff = pmpnum % 4;

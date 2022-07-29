@@ -16,7 +16,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
 
     match cpu.priv_lv {
         PrivilegedLevel::User => {
-            if (0x100 <= dist && dist <= 0x180) || (0x300 <= dist && dist <= 0x344) {
+            if (0x100..=0x180).contains(&dist) || (0x300..=0x344).contains(&dist) {
                     return Err((
                         invalid_instruction,
                         TrapCause::IllegalInst,
@@ -25,7 +25,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
                 }
         },
         PrivilegedLevel::Supervisor => {
-            if 0x300 <= dist && dist <= 0x344 {
+            if (0x300..=0x344).contains(&dist) {
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
@@ -37,14 +37,14 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("mstatus.TVM == 1 but accessed satp")
+                    "mstatus.TVM == 1 but accessed satp".to_string()
                 ));
             }
         },
         _ => (),
     }
 
-    if 0xc00 <= dist && dist <= 0xc1f {
+    if (0xc00..=0xc1f).contains(&dist) {
         let ctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
         if ctren >> (dist - 0xc00) & 0x1 == 1 {
             return Err((
@@ -92,10 +92,8 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
         _ => panic!("not an Zicsr extension"),
     }
 
-    if inst.rs2 == CSRname::misa.wrap() && cpu.csrs.read(CSRname::misa.wrap())? >> 2 & 0x1 == 0 {
-        if cpu.pc % 4 != 0 {
-            cpu.csrs.bitset(inst.rs2, 0b100);
-        }
+    if inst.rs2 == CSRname::misa.wrap() && cpu.csrs.read(CSRname::misa.wrap())? >> 2 & 0x1 == 0 && cpu.pc % 4 != 0 {
+        cpu.csrs.bitset(inst.rs2, 0b100);
     }
 
     Ok(())
