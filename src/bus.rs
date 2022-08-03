@@ -1,14 +1,17 @@
-pub mod dram;
 pub mod mrom;
+pub mod clint;
+pub mod dram;
 pub mod device_tree;
 
 use crate::{elfload, TrapCause};
-use dram::Dram;
 use mrom::Mrom;
+use clint::Clint;
+use dram::Dram;
 
 pub struct Bus {
-    pub dram: dram::Dram,
     pub mrom: mrom::Mrom,
+    pub clint: clint::Clint,
+    pub dram: dram::Dram,
 }
 
 impl Bus {
@@ -20,6 +23,7 @@ impl Bus {
             Dram::new(loader)
         };
         let mut mrom = Mrom::new(dram.base_addr);
+        let clint = Clint::new();
 
         // create and load DTB
         mrom.load_dtb(dram.base_addr);
@@ -32,88 +36,157 @@ impl Bus {
         };
 
         // return initial pc and Bus
-        (init_pc, Bus{dram, mrom})
+        (init_pc, Bus{mrom, clint, dram})
     }
 
     // get 1 byte
     pub fn raw_byte(&self, addr: u32) -> u8 {
-        if addr < self.dram.base_addr {
+        if self.mrom.in_range(addr) {
             self.mrom.raw_byte(addr)
-        } else {
+        } else if self.clint.in_range(addr){
+            self.clint.raw_byte(addr)
+        } else if self.dram.in_range(addr){
             self.dram.raw_byte(addr)
+        } else {
+            panic!("bus.raw_byte() failed")
         }
     }
 
     // store
     pub fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
-            self.mrom.store8(addr, data)
+        if self.mrom.in_range(addr) {
+            self.mrom.store8(addr)
+        } else if self.clint.in_range(addr){
+            self.clint.store8(addr)
+        } else if self.dram.in_range(addr){
+            self.dram.store8(addr)
         } else {
-            self.dram.store8(addr, data)
+            Err((
+                Some(addr),
+                TrapCause::StoreAMOPageFault,
+                "addr out of range at store8".to_string()
+            ))
         }
     }
 
     pub fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
-            self.mrom.store16(addr, data)
+        if self.mrom.in_range(addr) {
+            self.mrom.store16(addr)
+        } else if self.clint.in_range(addr){
+            self.clint.store16(addr)
+        } else if self.dram.in_range(addr){
+            self.dram.store16(addr)
         } else {
-            self.dram.store16(addr, data)
+            Err((
+                Some(addr),
+                TrapCause::StoreAMOPageFault,
+                "addr out of range at store16".to_string()
+            ))
         }
     }
 
     pub fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
-            self.mrom.store32(addr, data)
+        if self.mrom.in_range(addr) {
+            self.mrom.store32(addr)
+        } else if self.clint.in_range(addr){
+            self.clint.store32(addr)
+        } else if self.dram.in_range(addr){
+            self.dram.store32(addr)
         } else {
-            self.dram.store32(addr, data)
+            Err((
+                Some(addr),
+                TrapCause::StoreAMOPageFault,
+                "addr out of range at store32".to_string()
+            ))
         }
     }
 
 
     // load
     pub fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
+        if self.mrom.in_range(addr) {
             self.mrom.load8(addr)
-        } else {
+        } else if self.clint.in_range(addr){
+            self.clint.load8(addr)
+        } else if self.dram.in_range(addr){
             self.dram.load8(addr)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::LoadPageFault,
+                "addr out of range at load8".to_string()
+            ))
         }
     }
 
     pub fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
+        if self.mrom.in_range(addr) {
             self.mrom.load16(addr)
-        } else {
+        } else if self.clint.in_range(addr){
+            self.clint.load16(addr)
+        } else if self.dram.in_range(addr){
             self.dram.load16(addr)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::LoadPageFault,
+                "addr out of range at load16".to_string()
+            ))
         }
     }
 
     pub fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
+        if self.mrom.in_range(addr) {
             self.mrom.load32(addr)
-        } else {
+        } else if self.clint.in_range(addr){
+            self.clint.load32(addr)
+        } else if self.dram.in_range(addr){
             self.dram.load32(addr)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::LoadPageFault,
+                "addr out of range at load32".to_string()
+            ))
         }
     }
 
     pub fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
+        if self.mrom.in_range(addr) {
             self.mrom.load_u8(addr)
-        } else {
+        } else if self.clint.in_range(addr){
+            self.clint.load_u8(addr)
+        } else if self.dram.in_range(addr){
             self.dram.load_u8(addr)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::LoadPageFault,
+                "addr out of range at load_u8".to_string()
+            ))
         }
     }
 
     pub fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
-        if addr < self.dram.base_addr {
+        if self.mrom.in_range(addr) {
             self.mrom.load_u16(addr)
-        } else {
+        } else if self.clint.in_range(addr){
+            self.clint.load_u16(addr)
+        } else if self.dram.in_range(addr){
             self.dram.load_u16(addr)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::LoadPageFault,
+                "addr out of range at load_u16".to_string()
+            ))
         }
     }
 }
 
 pub trait Device {
-    fn addr2index(&self, addr: u32, cause: TrapCause) -> Result<usize, (Option<i32>, TrapCause, String)>;
+    fn in_range(&self, addr: u32) -> bool;
+    fn addr2index(&self, addr: u32) -> usize;
     fn raw_byte(&self, addr: u32) -> u8;
     fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
     fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;

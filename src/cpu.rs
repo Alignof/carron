@@ -238,7 +238,7 @@ impl CPU {
             Ok(addr) => Ok(addr),
             Err(cause) => {
                 dbg!(cause);
-                Err((Some(addr as i32), cause, format!("address transration failed: {:?}", cause)))
+                Err((Some(addr), cause, format!("address transration failed: {:?}", cause)))
             },
         }
     }
