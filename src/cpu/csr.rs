@@ -61,7 +61,7 @@ impl CSRs {
         self.update_triggers(dist.unwrap(), src);
     }
 
-    fn read_xepc(&self, dist: usize) -> Result<u32, (Option<i32>, TrapCause, String)> {
+    fn read_xepc(&self, dist: usize) -> Result<u32, (Option<u32>, TrapCause, String)> {
         if self.csrs[CSRname::misa as usize] >> 2 & 0x1 == 1 {
             // C extension enabled (IALIGN = 16)
             Ok(self.csrs[dist] & !0b01)
@@ -71,7 +71,7 @@ impl CSRs {
         }
     }
 
-    pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
+    pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let dist = src.unwrap();
         match dist {
             0x000  => Ok(self.csrs[0x300] & UMASK),

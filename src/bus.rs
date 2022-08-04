@@ -53,13 +53,13 @@ impl Bus {
     }
 
     // store
-    pub fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    pub fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
-            self.mrom.store8(addr)
+            self.mrom.store8(addr, data)
         } else if self.clint.in_range(addr){
-            self.clint.store8(addr)
+            self.clint.store8(addr, data)
         } else if self.dram.in_range(addr){
-            self.dram.store8(addr)
+            self.dram.store8(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -69,13 +69,13 @@ impl Bus {
         }
     }
 
-    pub fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    pub fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
-            self.mrom.store16(addr)
+            self.mrom.store16(addr, data)
         } else if self.clint.in_range(addr){
-            self.clint.store16(addr)
+            self.clint.store16(addr, data)
         } else if self.dram.in_range(addr){
-            self.dram.store16(addr)
+            self.dram.store16(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -85,13 +85,13 @@ impl Bus {
         }
     }
 
-    pub fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    pub fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
-            self.mrom.store32(addr)
+            self.mrom.store32(addr, data)
         } else if self.clint.in_range(addr){
-            self.clint.store32(addr)
+            self.clint.store32(addr, data)
         } else if self.dram.in_range(addr){
-            self.dram.store32(addr)
+            self.dram.store32(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -103,7 +103,7 @@ impl Bus {
 
 
     // load
-    pub fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    pub fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load8(addr)
         } else if self.clint.in_range(addr){
@@ -119,7 +119,7 @@ impl Bus {
         }
     }
 
-    pub fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    pub fn load16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load16(addr)
         } else if self.clint.in_range(addr){
@@ -135,7 +135,7 @@ impl Bus {
         }
     }
 
-    pub fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    pub fn load32(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load32(addr)
         } else if self.clint.in_range(addr){
@@ -151,7 +151,7 @@ impl Bus {
         }
     }
 
-    pub fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    pub fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load_u8(addr)
         } else if self.clint.in_range(addr){
@@ -167,7 +167,7 @@ impl Bus {
         }
     }
 
-    pub fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    pub fn load_u16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load_u16(addr)
         } else if self.clint.in_range(addr){
@@ -188,13 +188,13 @@ pub trait Device {
     fn in_range(&self, addr: u32) -> bool;
     fn addr2index(&self, addr: u32) -> usize;
     fn raw_byte(&self, addr: u32) -> u8;
-    fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
-    fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
-    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)>;
-    fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
-    fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
-    fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
-    fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
-    fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)>;
+    fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)>;
+    fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)>;
+    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)>;
+    fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
+    fn load16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
+    fn load32(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
+    fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
+    fn load_u16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
 }
 

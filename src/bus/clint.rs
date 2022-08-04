@@ -39,7 +39,7 @@ impl Device for Clint {
     }
 
     // store
-    fn store8(&mut self, addr: u32, _data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn store8(&mut self, addr: u32, _data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
@@ -47,7 +47,7 @@ impl Device for Clint {
         ))
     }
 
-    fn store16(&mut self, addr: u32, _data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn store16(&mut self, addr: u32, _data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
@@ -55,7 +55,7 @@ impl Device for Clint {
         ))
     }
 
-    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.clint[addr + 3] = ((data >> 24) & 0xFF) as u8;
         self.clint[addr + 2] = ((data >> 16) & 0xFF) as u8;
@@ -66,7 +66,7 @@ impl Device for Clint {
 
 
     // load
-    fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
@@ -74,7 +74,7 @@ impl Device for Clint {
         ))
     }
 
-    fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
@@ -82,7 +82,7 @@ impl Device for Clint {
         ))
     }
 
-    fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load32(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
          (self.clint[addr + 3] as u32) << 24 |
@@ -92,7 +92,7 @@ impl Device for Clint {
         ) as i32)
     }
 
-    fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
@@ -100,7 +100,7 @@ impl Device for Clint {
         ))
     }
 
-    fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load_u16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,

@@ -75,7 +75,7 @@ impl CPU {
         self.pc = newpc as u32;
     }
 
-    pub fn check_interrupt(&self) -> Result<(), (Option<i32>, TrapCause, String)> {
+    pub fn check_interrupt(&self) -> Result<(), (Option<u32>, TrapCause, String)> {
         const MSIP: u32 = 3;
         const SSIP: u32 = 1;
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
@@ -196,7 +196,7 @@ impl CPU {
         }
     }
 
-    pub fn trap(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
+    pub fn trap(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
         match cause_of_trap {
             TrapCause::IllegalInst |
             TrapCause::Breakpoint |
@@ -206,18 +206,18 @@ impl CPU {
             TrapCause::InstPageFault |
             TrapCause::LoadPageFault |
             TrapCause::StoreAMOPageFault => {
-                self.exception(tval_addr, cause_of_trap);
+                self.exception(tval_addr as i32, cause_of_trap);
             },
             TrapCause::MachineSoftwareInterrupt |
             TrapCause::SupervisorSoftwareInterrupt => {
-                self.interrupt(tval_addr, cause_of_trap);
+                self.interrupt(tval_addr as i32, cause_of_trap);
             },
         }
 
         eprintln!("new pc:0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<i32>, TrapCause, String)> {
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.check_breakpoint(&purpose, addr as u32)?;
         let mut trans_priv = self.priv_lv;
 

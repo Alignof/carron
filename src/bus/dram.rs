@@ -115,20 +115,20 @@ impl Device for Dram {
     }
 
     // store
-    fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.dram[addr] = (data & 0xFF) as u8;
         Ok(())
     }
 
-    fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
         Ok(())
     }
 
-    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
         self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
@@ -139,12 +139,12 @@ impl Device for Dram {
 
 
     // load
-    fn load8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok(self.dram[addr] as i8 as i32)
     }
 
-    fn load16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
          (self.dram[addr + 1] as u16) << 8 |
@@ -152,7 +152,7 @@ impl Device for Dram {
         ) as i16 as i32)
     }
 
-    fn load32(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load32(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
          (self.dram[addr + 3] as u32) << 24 |
@@ -162,12 +162,12 @@ impl Device for Dram {
         ) as i32)
     }
 
-    fn load_u8(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok(self.dram[addr] as i32)
     }
 
-    fn load_u16(&self, addr: u32) -> Result<i32, (Option<i32>, TrapCause, String)> {
+    fn load_u16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
          (self.dram[addr + 1] as u32) << 8 |
