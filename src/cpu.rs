@@ -75,9 +75,12 @@ impl CPU {
         self.pc = newpc as u32;
     }
 
-    pub fn check_interrupt(&self) -> Result<(), (Option<u32>, TrapCause, String)> {
+    pub fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
         const MSIP: u32 = 3;
         const SSIP: u32 = 1;
+        const MTIP: u32 = 7;
+        const MTIME: u32 = 0x0200_BFF8;
+        const MTIMECMP: u32 = 0x0200_4000;
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
@@ -88,6 +91,24 @@ impl CPU {
         match self.priv_lv {
             PrivilegedLevel::Machine => {
                 if self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE) == 1 {
+                    if is_interrupt_enabled(MTIP) {
+                        let mtime: u64 = (self.bus.load32(MTIME + 4).unwrap() as u64) << 32 |
+                            self.bus.load32(MTIME).unwrap() as u64;
+                        let mtimecmp: u64 = (self.bus.load32(MTIMECMP + 4).unwrap() as u64) << 32 |
+                            self.bus.load32(MTIMECMP).unwrap() as u64;
+
+                        if mtime >= mtimecmp {
+                            return Err((
+                                None,
+                                TrapCause::MachineSoftwareInterrupt,
+                                "machine software interrupt".to_string()
+                            ));
+                        } else {
+                            // mtime += 1
+                            self.bus.store32(MTIME, (mtime+1 | 0xFFFF_FFFF) as i32).unwrap();
+                            self.bus.store32(MTIME, (mtime+1 >> 32 | 0xFFFF_FFFF) as i32).unwrap();
+                        }
+                    }
                     if is_interrupt_enabled(MSIP) {
                         return Err((
                             None,
@@ -105,6 +126,24 @@ impl CPU {
                 }
             },
             PrivilegedLevel::Supervisor => {
+                if is_interrupt_enabled(MTIP) {
+                    let mtime: u64 = (self.bus.load32(MTIME + 4).unwrap() as u64) << 32 |
+                        self.bus.load32(MTIME).unwrap() as u64;
+                    let mtimecmp: u64 = (self.bus.load32(MTIMECMP + 4).unwrap() as u64) << 32 |
+                        self.bus.load32(MTIMECMP).unwrap() as u64;
+
+                    if mtime >= mtimecmp {
+                        return Err((
+                            None,
+                            TrapCause::MachineSoftwareInterrupt,
+                            "machine software interrupt".to_string()
+                        ));
+                    } else {
+                        // mtime += 1
+                        self.bus.store32(MTIME, (mtime+1 | 0xFFFF_FFFF) as i32).unwrap();
+                        self.bus.store32(MTIME, (mtime+1 >> 32 | 0xFFFF_FFFF) as i32).unwrap();
+                    }
+                }
                 if is_interrupt_enabled(MSIP) {
                     return Err((
                         None,
