@@ -142,11 +142,11 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
         },
         OpecodeKind::OP_SRL => {
             cpu.regs.write(inst.rd,
-                ((cpu.regs.read(inst.rs1) as u32)  >> cpu.regs.read(inst.rs2)) as i32);
+                ((cpu.regs.read(inst.rs1) as u32) >> cpu.regs.read(inst.rs2)) as i32);
         },
         OpecodeKind::OP_SRA => {
             cpu.regs.write(inst.rd,
-                (cpu.regs.read(inst.rs1) as i32)  >> cpu.regs.read(inst.rs2));
+                (cpu.regs.read(inst.rs1) as i32) >> cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_OR => {
             cpu.regs.write(inst.rd,
