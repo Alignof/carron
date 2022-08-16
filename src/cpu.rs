@@ -22,6 +22,7 @@ pub enum TrapCause {
     LoadPageFault = 13,
     StoreAMOPageFault = 15,
     MachineSoftwareInterrupt = (1 << 31) + 3,
+    MachineTimerInterrupt = (1 << 31) + 7,
     SupervisorSoftwareInterrupt = (1 << 31) + 1,
 }
 
@@ -82,35 +83,41 @@ impl CPU {
         const MTIME: u32 = 0x0200_BFF8;
         const MTIMECMP: u32 = 0x0200_4000;
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
-        let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
-        let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
         let mtime: u64 = (self.bus.load32(MTIME + 4).unwrap() as u64) << 32 |
             self.bus.load32(MTIME).unwrap() as u64;
         let mtimecmp: u64 = (self.bus.load32(MTIMECMP + 4).unwrap() as u64) << 32 |
             self.bus.load32(MTIMECMP).unwrap() as u64;
+
+        if (mie >> MTIP) & 0b1 == 1 && mtime >= mtimecmp {
+            self.csrs.write(CSRname::mip.wrap(), 1 << MTIP)
+        }
+
+        let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
+        let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
         let is_interrupt_enabled = |bit: u32| {
             (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
         };
 
         dbg_hex::dbg_hex!(mtime);
         dbg_hex::dbg_hex!(mtimecmp);
-        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mstatus.wrap()).unwrap());
+        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mie.wrap()).unwrap());
+        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mip.wrap()).unwrap());
 
         // mtime += 1
-        self.bus.store32(MTIME, (mtime+1 | 0xFFFF_FFFF) as i32).unwrap();
-        self.bus.store32(MTIME, (mtime+1 >> 32 | 0xFFFF_FFFF) as i32).unwrap();
+        self.bus.store32(MTIME, (mtime+1 & 0xFFFF_FFFF) as i32).unwrap();
+        self.bus.store32(MTIME+4, (mtime+1 >> 32 & 0xFFFF_FFFF) as i32).unwrap();
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {
                 if dbg!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)) == 1 {
                     if is_interrupt_enabled(MTIP) {
-                        if mtime >= mtimecmp {
-                            return Err((
-                                None,
-                                TrapCause::MachineSoftwareInterrupt,
-                                "machine software interrupt".to_string()
-                            ));
-                        }
+                        // TODO: bit clear when mtimecmp written
+                        self.csrs.bitclr(CSRname::mip.wrap(), 1<<7);
+                        return Err((
+                            None,
+                            TrapCause::MachineTimerInterrupt,
+                            "machine timer interrupt".to_string()
+                        ));
                     }
                     if is_interrupt_enabled(MSIP) {
                         return Err((
@@ -130,13 +137,13 @@ impl CPU {
             },
             PrivilegedLevel::Supervisor => {
                 if is_interrupt_enabled(MTIP) {
-                    if mtime >= mtimecmp {
-                        return Err((
-                            None,
-                            TrapCause::MachineSoftwareInterrupt,
-                            "machine software interrupt".to_string()
-                        ));
-                    }
+                    // TODO: bit clear when mtimecmp written
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1<<7);
+                    return Err((
+                        None,
+                        TrapCause::MachineTimerInterrupt,
+                        "machine timer interrupt".to_string()
+                    ));
                 }
                 if is_interrupt_enabled(MSIP) {
                     return Err((
@@ -154,14 +161,14 @@ impl CPU {
                 }
             },
             PrivilegedLevel::User => {
-                if is_interrupt_enabled(MTIP) {
-                    if mtime >= mtimecmp {
-                        return Err((
-                            None,
-                            TrapCause::MachineSoftwareInterrupt,
-                            "machine software interrupt".to_string()
-                        ));
-                    }
+                if dbg!(is_interrupt_enabled(MTIP)) {
+                    // TODO: bit clear when mtimecmp written
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1<<7);
+                    return Err((
+                        None,
+                        TrapCause::MachineTimerInterrupt,
+                        "machine timer interrupt".to_string()
+                    ));
                 }
                 if is_interrupt_enabled(MSIP) {
                     return Err((
@@ -266,6 +273,7 @@ impl CPU {
             TrapCause::StoreAMOPageFault => {
                 self.exception(tval_addr as i32, cause_of_trap);
             },
+            TrapCause::MachineTimerInterrupt |
             TrapCause::MachineSoftwareInterrupt |
             TrapCause::SupervisorSoftwareInterrupt => {
                 self.interrupt(tval_addr as i32, cause_of_trap);
