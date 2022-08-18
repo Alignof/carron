@@ -112,7 +112,7 @@ impl CPU {
                 if dbg!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)) == 1 {
                     if is_interrupt_enabled(MTIP) {
                         // TODO: bit clear when mtimecmp written
-                        self.csrs.bitclr(CSRname::mip.wrap(), 1<<7);
+                        self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                         return Err((
                             None,
                             TrapCause::MachineTimerInterrupt,
@@ -138,7 +138,7 @@ impl CPU {
             PrivilegedLevel::Supervisor => {
                 if is_interrupt_enabled(MTIP) {
                     // TODO: bit clear when mtimecmp written
-                    self.csrs.bitclr(CSRname::mip.wrap(), 1<<7);
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                     return Err((
                         None,
                         TrapCause::MachineTimerInterrupt,
@@ -163,7 +163,7 @@ impl CPU {
             PrivilegedLevel::User => {
                 if dbg!(is_interrupt_enabled(MTIP)) {
                     // TODO: bit clear when mtimecmp written
-                    self.csrs.bitclr(CSRname::mip.wrap(), 1<<7);
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                     return Err((
                         None,
                         TrapCause::MachineTimerInterrupt,
