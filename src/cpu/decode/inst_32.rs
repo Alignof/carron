@@ -10,11 +10,11 @@ use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
-    fn decode(&self) -> Result<Instruction, (Option<i32>, TrapCause, String)> {
+    fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)> {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => return Err((
-                Some(*self as i32),
+                Some(*self),
                 TrapCause::IllegalInst,
                 format!("{}, {:b}", msg, self)
             )),
@@ -44,7 +44,7 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+    fn parse_rd(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rd(self, opkind),
             Extensions::M => m_extension::parse_rd(self, opkind),
@@ -55,7 +55,7 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rs1(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+    fn parse_rs1(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs1(self, opkind),
             Extensions::M => m_extension::parse_rs1(self, opkind),
@@ -66,7 +66,7 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rs2(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+    fn parse_rs2(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs2(self, opkind),
             Extensions::M => m_extension::parse_rs2(self, opkind),
@@ -77,7 +77,7 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_imm(self, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<i32>, TrapCause, String)> {
+    fn parse_imm(self, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_imm(self, opkind),
             Extensions::M => m_extension::parse_imm(self, opkind),

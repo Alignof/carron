@@ -22,6 +22,7 @@ pub enum TrapCause {
     LoadPageFault = 13,
     StoreAMOPageFault = 15,
     MachineSoftwareInterrupt = (1 << 31) + 3,
+    MachineTimerInterrupt = (1 << 31) + 7,
     SupervisorSoftwareInterrupt = (1 << 31) + 1,
 }
 
@@ -75,19 +76,49 @@ impl CPU {
         self.pc = newpc as u32;
     }
 
-    pub fn check_interrupt(&self) -> Result<(), (Option<i32>, TrapCause, String)> {
+    pub fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
         const MSIP: u32 = 3;
         const SSIP: u32 = 1;
+        const MTIP: u32 = 7;
+        const MTIME: u32 = 0x0200_BFF8;
+        const MTIMECMP: u32 = 0x0200_4000;
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
+        let mtime: u64 = (self.bus.load32(MTIME + 4).unwrap() as u64) << 32 |
+            self.bus.load32(MTIME).unwrap() as u64;
+        let mtimecmp: u64 = (self.bus.load32(MTIMECMP + 4).unwrap() as u64) << 32 |
+            self.bus.load32(MTIMECMP).unwrap() as u64;
+
+        if (mie >> MTIP) & 0b1 == 1 && mtime >= mtimecmp {
+            self.csrs.write(CSRname::mip.wrap(), 1 << MTIP)
+        }
+
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
         let is_interrupt_enabled = |bit: u32| {
             (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
         };
 
+        dbg_hex::dbg_hex!(mtime);
+        dbg_hex::dbg_hex!(mtimecmp);
+        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mie.wrap()).unwrap());
+        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mip.wrap()).unwrap());
+
+        // mtime += 1
+        self.bus.store32(MTIME, (mtime+1 & 0xFFFF_FFFF) as i32).unwrap();
+        self.bus.store32(MTIME+4, (mtime+1 >> 32 & 0xFFFF_FFFF) as i32).unwrap();
+
         match self.priv_lv {
             PrivilegedLevel::Machine => {
-                if self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE) == 1 {
+                if dbg!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)) == 1 {
+                    if is_interrupt_enabled(MTIP) {
+                        // TODO: bit clear when mtimecmp written
+                        self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+                        return Err((
+                            None,
+                            TrapCause::MachineTimerInterrupt,
+                            "machine timer interrupt".to_string()
+                        ));
+                    }
                     if is_interrupt_enabled(MSIP) {
                         return Err((
                             None,
@@ -105,6 +136,15 @@ impl CPU {
                 }
             },
             PrivilegedLevel::Supervisor => {
+                if is_interrupt_enabled(MTIP) {
+                    // TODO: bit clear when mtimecmp written
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+                    return Err((
+                        None,
+                        TrapCause::MachineTimerInterrupt,
+                        "machine timer interrupt".to_string()
+                    ));
+                }
                 if is_interrupt_enabled(MSIP) {
                     return Err((
                         None,
@@ -113,6 +153,31 @@ impl CPU {
                     ));
                 }
                 if self.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MIE) == 1 && is_interrupt_enabled(SSIP) {
+                    return Err((
+                        None,
+                        TrapCause::SupervisorSoftwareInterrupt,
+                        "supervisor software interrupt".to_string()
+                    ));
+                }
+            },
+            PrivilegedLevel::User => {
+                if dbg!(is_interrupt_enabled(MTIP)) {
+                    // TODO: bit clear when mtimecmp written
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+                    return Err((
+                        None,
+                        TrapCause::MachineTimerInterrupt,
+                        "machine timer interrupt".to_string()
+                    ));
+                }
+                if is_interrupt_enabled(MSIP) {
+                    return Err((
+                        None,
+                        TrapCause::MachineSoftwareInterrupt,
+                        "machine software interrupt".to_string()
+                    ));
+                }
+                if is_interrupt_enabled(SSIP) {
                     return Err((
                         None,
                         TrapCause::SupervisorSoftwareInterrupt,
@@ -196,7 +261,7 @@ impl CPU {
         }
     }
 
-    pub fn trap(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
+    pub fn trap(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
         match cause_of_trap {
             TrapCause::IllegalInst |
             TrapCause::Breakpoint |
@@ -206,18 +271,19 @@ impl CPU {
             TrapCause::InstPageFault |
             TrapCause::LoadPageFault |
             TrapCause::StoreAMOPageFault => {
-                self.exception(tval_addr, cause_of_trap);
+                self.exception(tval_addr as i32, cause_of_trap);
             },
+            TrapCause::MachineTimerInterrupt |
             TrapCause::MachineSoftwareInterrupt |
             TrapCause::SupervisorSoftwareInterrupt => {
-                self.interrupt(tval_addr, cause_of_trap);
+                self.interrupt(tval_addr as i32, cause_of_trap);
             },
         }
 
         eprintln!("new pc:0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<i32>, TrapCause, String)> {
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.check_breakpoint(&purpose, addr as u32)?;
         let mut trans_priv = self.priv_lv;
 
@@ -238,7 +304,7 @@ impl CPU {
             Ok(addr) => Ok(addr),
             Err(cause) => {
                 dbg!(cause);
-                Err((Some(addr as i32), cause, format!("address transration failed: {:?}", cause)))
+                Err((Some(addr), cause, format!("address transration failed: {:?}", cause)))
             },
         }
     }

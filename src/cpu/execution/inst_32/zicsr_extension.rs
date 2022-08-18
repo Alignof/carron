@@ -2,9 +2,9 @@ use crate::cpu::{CPU, PrivilegedLevel, TrapCause, TransFor};
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, TrapCause, String)> {
+fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<u32>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, cpu.pc as i32)?;
-    let invalid_instruction = Some(cpu.bus.load32(inst_addr)?);
+    let invalid_instruction = Some(cpu.bus.load32(inst_addr)? as u32);
 
     if dist >= 4096 {
         return Err((
@@ -58,7 +58,7 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<i32>, Trap
     Ok(())
 }
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
     check_accessible(cpu, inst.rs2.unwrap())?;
 
     match inst.opc {

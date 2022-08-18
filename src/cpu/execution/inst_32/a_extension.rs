@@ -1,7 +1,7 @@
 use crate::cpu::{CPU, TransFor, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_LR_W => {
             let load_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))?;

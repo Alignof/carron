@@ -29,7 +29,7 @@ impl CSRs {
 }
 
 impl CPU {
-    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, (Option<i32>, TrapCause, String)> {
+    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         for trigger_num in 0 .. self.csrs.triggers.tselect + 1 { 
             let tdata1 = self.csrs.triggers.tdata1[trigger_num];
             let trigger_type = tdata1 >> 28 & 0xF;
@@ -60,7 +60,7 @@ impl CPU {
                             let fetch_bit = tdata1 >> 2 & 0x1;
                             if addr == tdata2 && fetch_bit == 1 {
                                 return Err((
-                                    Some(addr as i32),
+                                    Some(addr),
                                     TrapCause::Breakpoint,
                                     "Breakpoint exception (fetch)".to_string()
                                 ))
@@ -70,7 +70,7 @@ impl CPU {
                             let load_bit = tdata1 & 0x1;
                             if addr == tdata2 && load_bit == 1 {
                                 return Err((
-                                    Some(addr as i32),
+                                    Some(addr),
                                     TrapCause::Breakpoint,
                                     "Breakpoint exception (load)".to_string()
                                 ))
@@ -80,7 +80,7 @@ impl CPU {
                             let store_bit = tdata1 >> 1 & 0x1;
                             if addr == tdata2 && store_bit == 1 {
                                 return Err((
-                                    Some(addr as i32),
+                                    Some(addr),
                                     TrapCause::Breakpoint,
                                     "Breakpoint exception (store/AMO)".to_string()
                                 ))

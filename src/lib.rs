@@ -22,7 +22,7 @@ impl Emulator {
         }
     }
 
-    fn exec_one_cycle(&mut self) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
         use crate::cpu::execution::Execution;
     
         self.cpu.check_interrupt()?;
@@ -40,7 +40,7 @@ impl Emulator {
             match self.exec_one_cycle() {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
-                    self.cpu.trap(addr.unwrap_or(self.cpu.pc as i32), cause);
+                    self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
                     eprintln!("{}", msg);
                 },
             }

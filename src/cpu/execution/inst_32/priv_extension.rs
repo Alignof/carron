@@ -2,12 +2,12 @@ use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::csr::{CSRname, Xstatus};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
             if cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TSR) == 1 {
                 return Err((
-                    Some(cpu.bus.load32(cpu.pc)?),
+                    Some(cpu.bus.load32(cpu.pc)? as u32),
                     TrapCause::IllegalInst,
                     "exec sret but mstatus.TSR == 1".to_string()
                 ));
