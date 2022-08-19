@@ -76,6 +76,10 @@ impl CPU {
         self.pc = newpc as u32;
     }
 
+    pub fn check_tohost(&self, tohost_addr: u32) -> bool {
+        self.bus.load32(tohost_addr).expect("load tohost addr failed") != 0
+    }
+
     pub fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
         const MSIP: u32 = 3;
         const SSIP: u32 = 1;
@@ -98,18 +102,13 @@ impl CPU {
             (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
         };
 
-        dbg_hex::dbg_hex!(mtime);
-        dbg_hex::dbg_hex!(mtimecmp);
-        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mie.wrap()).unwrap());
-        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mip.wrap()).unwrap());
-
         // mtime += 1
         self.bus.store32(MTIME, (mtime+1 & 0xFFFF_FFFF) as i32).unwrap();
         self.bus.store32(MTIME+4, (mtime+1 >> 32 & 0xFFFF_FFFF) as i32).unwrap();
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {
-                if dbg!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)) == 1 {
+                if self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE) == 1 {
                     if is_interrupt_enabled(MTIP) {
                         // TODO: bit clear when mtimecmp written
                         self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
@@ -161,7 +160,7 @@ impl CPU {
                 }
             },
             PrivilegedLevel::User => {
-                if dbg!(is_interrupt_enabled(MTIP)) {
+                if is_interrupt_enabled(MTIP) {
                     // TODO: bit clear when mtimecmp written
                     self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                     return Err((

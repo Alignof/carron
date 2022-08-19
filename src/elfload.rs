@@ -30,7 +30,7 @@ pub fn is_cinst(mmap: &[u8], index: usize) -> bool {
 pub struct ElfLoader {
     pub elf_header: ElfHeader,
     pub prog_headers: Vec<ProgramHeader>,
-        sect_headers: Vec<SectionHeader>,
+    pub sect_headers: Vec<SectionHeader>,
     pub mem_data: Mmap,
 }
 

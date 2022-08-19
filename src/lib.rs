@@ -8,6 +8,7 @@ use cpu::fetch::fetch;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,
+    tohost_addr: Option<u32>,
     break_point: Option<u32>,
     result_reg: Option<usize>,
 }
@@ -15,8 +16,18 @@ pub struct Emulator {
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
                pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Emulator {
+        let tohost_addr = loader.sect_headers.iter()
+            .find_map(|s| {
+                if s.sh_name == ".tohost" {
+                    Some(s.sh_addr)
+                } else {
+                    None
+                }
+            });
+
         Emulator {
             cpu: CPU::new(loader, pk_load, pc_from_cli),
+            tohost_addr,
             break_point,
             result_reg,
         }
@@ -45,7 +56,20 @@ impl Emulator {
                 },
             }
 
-            if self.break_point.unwrap_or(u32::MAX) == self.cpu.pc {
+            let mut return_to_host = false;
+            if let Some(tohost_addr) = self.tohost_addr {
+                if self.cpu.check_tohost(tohost_addr) {
+                    return_to_host = true;
+                }
+            }
+
+            if let Some(break_point) = self.break_point {
+                if break_point == self.cpu.pc {
+                    return_to_host = true;
+                }
+            }
+
+            if return_to_host {
                 if self.result_reg.is_some() {
                     std::process::exit(self.cpu.regs.read(self.result_reg));
                 } else {
