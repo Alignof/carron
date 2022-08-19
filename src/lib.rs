@@ -16,14 +16,12 @@ pub struct Emulator {
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
                pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Emulator {
-        let tohost_addr = loader.sect_headers.iter()
-            .find_map(|s| {
-                if s.sh_name == ".tohost" {
-                    Some(s.sh_addr)
-                } else {
-                    None
-                }
-            });
+
+        let tohost_addr = if let Some(ref pk) = pk_load {
+            pk.get_tohost_addr()
+        } else {
+            loader.get_tohost_addr()
+        };
 
         Emulator {
             cpu: CPU::new(loader, pk_load, pc_from_cli),

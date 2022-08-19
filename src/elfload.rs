@@ -64,6 +64,40 @@ impl ElfLoader {
         None
     }
 
+    pub fn get_tohost_addr(&self) -> Option<u32> {
+        let symtab = self.sect_headers.iter()
+            .find_map(|s| {
+                if s.sh_name == ".symtab" {
+                    return Some(s);
+                }
+                None
+            });
+        let strtab = self.sect_headers.iter()
+            .find_map(|s| {
+                if s.sh_name == ".strtab" {
+                    return Some(s);
+                }
+                None
+            });
+
+        if let (Some(symtab), Some(strtab)) = (symtab, strtab) {
+            const ST_SIZE: usize = 16;
+            for symtab_off in (symtab.sh_offset .. symtab.sh_offset + symtab.sh_size).step_by(ST_SIZE) {
+                let st_name_off = get_u32(&self.mem_data, symtab_off as usize);
+                let st_name = &self.mem_data[(strtab.sh_offset + st_name_off) as usize ..]
+                    .iter()
+                    .take_while(|c| **c as char != '\0')
+                    .map(|c| *c as char)
+                    .collect::<String>();
+
+                if st_name == "tohost" {
+                    return Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                }
+            }
+        }
+        None
+    }
+
     pub fn header_show(&self) {
         self.elf_header.show();
     }
