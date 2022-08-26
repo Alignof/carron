@@ -44,7 +44,7 @@ pub enum TransFor {
 
 pub struct CPU {
     pub pc: u32,
-        bus: bus::Bus,
+    pub bus: bus::Bus,
     pub regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
@@ -74,10 +74,6 @@ impl CPU {
 
     pub fn update_pc(&mut self, newpc: i32) {
         self.pc = newpc as u32;
-    }
-
-    pub fn check_tohost(&self, tohost_addr: u32) -> bool {
-        self.bus.load32(tohost_addr).expect("load tohost addr failed") != 0
     }
 
     pub fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
