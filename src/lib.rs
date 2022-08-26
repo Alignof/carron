@@ -2,6 +2,7 @@ pub mod system;
 pub mod cpu;
 pub mod bus;
 pub mod elfload;
+mod fesvr;
 
 use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
@@ -56,7 +57,7 @@ impl Emulator {
 
             let mut return_to_host = false;
             if let Some(tohost_addr) = self.tohost_addr {
-                if self.cpu.check_tohost(tohost_addr) {
+                if self.check_tohost(tohost_addr) {
                     return_to_host = true;
                 }
             }
