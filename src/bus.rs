@@ -101,6 +101,22 @@ impl Bus {
         }
     }
 
+    pub fn store64(&mut self, addr: u32, data: i64) -> Result<(), (Option<u32>, TrapCause, String)> {
+        if self.mrom.in_range(addr) {
+            self.mrom.store64(addr, data)
+        } else if self.clint.in_range(addr){
+            self.clint.store64(addr, data)
+        } else if self.dram.in_range(addr){
+            self.dram.store64(addr, data)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::StoreAMOPageFault,
+                "addr out of range at store64".to_string()
+            ))
+        }
+    }
+
 
     // load
     pub fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
@@ -151,6 +167,22 @@ impl Bus {
         }
     }
 
+    pub fn load64(&self, addr: u32) -> Result<i64, (Option<u32>, TrapCause, String)> {
+        if self.mrom.in_range(addr) {
+            self.mrom.load64(addr)
+        } else if self.clint.in_range(addr){
+            self.clint.load64(addr)
+        } else if self.dram.in_range(addr){
+            self.dram.load64(addr)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::LoadPageFault,
+                "addr out of range at load64".to_string()
+            ))
+        }
+    }
+
     pub fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load_u8(addr)
@@ -191,9 +223,11 @@ pub trait Device {
     fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)>;
     fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)>;
     fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)>;
+    fn store64(&mut self, addr: u32, data: i64) -> Result<(), (Option<u32>, TrapCause, String)>;
     fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
     fn load16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
     fn load32(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
+    fn load64(&self, addr: u32) -> Result<i64, (Option<u32>, TrapCause, String)>;
     fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
     fn load_u16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)>;
 }

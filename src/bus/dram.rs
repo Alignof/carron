@@ -137,6 +137,18 @@ impl Device for Dram {
         Ok(())
     }
 
+    fn store64(&mut self, addr: u32, data: i64) -> Result<(), (Option<u32>, TrapCause, String)> {
+        let addr = self.addr2index(addr);
+        self.dram[addr + 7] = ((data >> 56) & 0xFF) as u8;
+        self.dram[addr + 6] = ((data >> 48) & 0xFF) as u8;
+        self.dram[addr + 5] = ((data >> 40) & 0xFF) as u8;
+        self.dram[addr + 4] = ((data >> 32) & 0xFF) as u8;
+        self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[addr + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[addr + 0] = ((data >>  0) & 0xFF) as u8;
+        Ok(())
+    }
 
     // load
     fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
@@ -160,6 +172,20 @@ impl Device for Dram {
          (self.dram[addr + 1] as u32) <<  8 |
          (self.dram[addr + 0] as u32)
         ) as i32)
+    }
+
+    fn load64(&self, addr: u32) -> Result<i64, (Option<u32>, TrapCause, String)> {
+        let addr = self.addr2index(addr);
+        Ok((
+         (self.dram[addr + 7] as u64) << 56 |
+         (self.dram[addr + 6] as u64) << 48 |
+         (self.dram[addr + 5] as u64) << 40 |
+         (self.dram[addr + 4] as u64) << 32 |
+         (self.dram[addr + 3] as u64) << 24 |
+         (self.dram[addr + 2] as u64) << 16 |
+         (self.dram[addr + 1] as u64) <<  8 |
+         (self.dram[addr + 0] as u64)
+        ) as i64)
     }
 
     fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
