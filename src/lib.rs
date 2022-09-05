@@ -10,6 +10,7 @@ use cpu::fetch::fetch;
 pub struct Emulator {
     pub cpu: cpu::CPU,
     tohost_addr: Option<u32>,
+    fromhost_addr: Option<u32>,
     break_point: Option<u32>,
     result_reg: Option<usize>,
 }
@@ -18,15 +19,16 @@ impl Emulator {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
                pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Emulator {
 
-        let tohost_addr = if let Some(ref pk) = pk_load {
-            pk.get_tohost_addr()
+        let (tohost_addr, fromhost_addr) = if let Some(ref pk) = pk_load {
+            pk.get_host_addr()
         } else {
-            loader.get_tohost_addr()
+            loader.get_host_addr()
         };
 
         Emulator {
             cpu: CPU::new(loader, pk_load, pc_from_cli),
             tohost_addr,
+            fromhost_addr,
             break_point,
             result_reg,
         }
@@ -56,9 +58,9 @@ impl Emulator {
             }
 
             let mut return_to_host = false;
-            if let Some(tohost_addr) = self.tohost_addr {
-                if self.check_tohost(tohost_addr) {
-                    return_to_host = true;
+            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() {
+                if self.check_tohost() {
+                    self.handle_syscall();
                 }
             }
 

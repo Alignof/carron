@@ -64,7 +64,7 @@ impl ElfLoader {
         None
     }
 
-    pub fn get_tohost_addr(&self) -> Option<u32> {
+    pub fn get_host_addr(&self) -> (Option<u32>, Option<u32>) {
         let symtab = self.sect_headers.iter()
             .find_map(|s| {
                 if s.sh_name == ".symtab" {
@@ -80,6 +80,8 @@ impl ElfLoader {
                 None
             });
 
+        let mut tohost = None;
+        let mut fromhost = None;
         if let (Some(symtab), Some(strtab)) = (symtab, strtab) {
             const ST_SIZE: usize = 16;
             for symtab_off in (symtab.sh_offset .. symtab.sh_offset + symtab.sh_size).step_by(ST_SIZE) {
@@ -91,11 +93,20 @@ impl ElfLoader {
                     .collect::<String>();
 
                 if st_name == "tohost" {
-                    return Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                    tohost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                }
+
+                if st_name == "fromhost" {
+                    fromhost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                }
+
+                if tohost.is_some() && fromhost.is_some() {
+                    break;
                 }
             }
         }
-        None
+
+        (tohost, fromhost)
     }
 
     pub fn header_show(&self) {
