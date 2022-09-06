@@ -8,10 +8,10 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             let _rl = inst.imm.unwrap() & 0x1;
             let _aq = inst.imm.unwrap() >> 1 & 0x1;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
-            cpu.reservation_set.insert((load_addr as usize, cpu.bus.load32(load_addr)?));
+            cpu.reservation_set.insert((load_addr as usize, cpu.regs.read(inst.rd)));
 		},
         OpecodeKind::OP_SC_W => {
-            let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1) + inst.imm.unwrap())?;
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))?;
             // cache value == rs1 --> store rs2 to rs1 and assign zero to rd
             // cache value != rs1 --> ignore and assign non-zero to rd
             if cpu.reservation_set.contains(&(store_addr as usize, cpu.bus.load32(store_addr)?)) {
