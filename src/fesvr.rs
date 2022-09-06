@@ -1,3 +1,4 @@
+mod syscall;
 use crate::Emulator;
 
 impl Emulator {
@@ -6,14 +7,14 @@ impl Emulator {
         self.cpu.bus.load32(tohost_addr).expect("load from tohost addr failed") != 0
     }
 
-    fn exec_syscall(&self, syscall: [u64; 8]) {
-        match syscall[0] {
-            56 => eprintln!("do sys_openat(56)"),
-            57 => eprintln!("do sys_close(57)"),
-            64 => eprintln!("do sys_write(64)"),
-            67 => eprintln!("do sys_pread(67)"),
-            93 => eprintln!("do sys_exit(93)"),
-            2011 => eprintln!("do sys_getmainvars(2011)"),
+    fn exec_syscall(&mut self, sysargs: [u64; 8]) -> i64{
+        match sysargs[0] {
+            56 => {eprintln!("do sys_openat(56)"); 0},
+            57 => {eprintln!("do sys_close(57)"); 0},
+            64 => syscall::write(&self.cpu, sysargs[1], sysargs[2], sysargs[3]).unwrap_or(-1),
+            67 => {eprintln!("do sys_pread(67)"); 0},
+            93 => {eprintln!("do sys_exit(93)"); 0},
+            2011 => syscall::getmainvars(&mut self.cpu, sysargs[1], sysargs[2]).unwrap_or(-1),
             _ => panic!("illegal syscall number"),
         }
     }
@@ -25,21 +26,21 @@ impl Emulator {
         self.cpu.bus.store64(tohost_addr, 0).unwrap();
 
         let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
-        let syscall: [u64; 8] = [
+        let syscall_args: [u64; 8] = [
             self.cpu.bus.load64(syscall_addr).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 1).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 2).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 3).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 4).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 5).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 6).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 7).unwrap() as u64,
+            self.cpu.bus.load64(syscall_addr +  8).unwrap() as u64,
+            self.cpu.bus.load64(syscall_addr + 16).unwrap() as u64,
+            self.cpu.bus.load64(syscall_addr + 24).unwrap() as u64,
+            self.cpu.bus.load64(syscall_addr + 32).unwrap() as u64,
+            self.cpu.bus.load64(syscall_addr + 40).unwrap() as u64,
+            self.cpu.bus.load64(syscall_addr + 48).unwrap() as u64,
+            self.cpu.bus.load64(syscall_addr + 56).unwrap() as u64,
         ];
 
-        self.exec_syscall(syscall);
+        self.exec_syscall(syscall_args);
 
         // store syscall to tohost
-        for (i, s) in syscall.iter().enumerate() {
+        for (i, s) in syscall_args.iter().enumerate() {
             self.cpu.bus.store64(syscall_addr + i as u32, *s as i64).unwrap();
         } 
 
