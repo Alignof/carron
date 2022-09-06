@@ -6,18 +6,18 @@ mod fesvr;
 
 use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
+use system::Arguments;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,
     tohost_addr: Option<u32>,
     fromhost_addr: Option<u32>,
-    break_point: Option<u32>,
-    result_reg: Option<usize>,
+    args: Arguments,
 }
 
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
-               pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Emulator {
+               args: Arguments) -> Emulator {
 
         let (tohost_addr, fromhost_addr) = if let Some(ref pk) = pk_load {
             pk.get_host_addr()
@@ -26,11 +26,10 @@ impl Emulator {
         };
 
         Emulator {
-            cpu: CPU::new(loader, pk_load, pc_from_cli),
+            cpu: CPU::new(loader, pk_load, args.init_pc),
             tohost_addr,
             fromhost_addr,
-            break_point,
-            result_reg,
+            args,
         }
     }
 
@@ -64,15 +63,15 @@ impl Emulator {
                 }
             }
 
-            if let Some(break_point) = self.break_point {
+            if let Some(break_point) = self.args.break_point {
                 if break_point == self.cpu.pc {
                     return_to_host = true;
                 }
             }
 
             if return_to_host {
-                if self.result_reg.is_some() {
-                    std::process::exit(self.cpu.regs.read(self.result_reg));
+                if self.args.result_reg.is_some() {
+                    std::process::exit(self.cpu.regs.read(self.args.result_reg));
                 } else {
                     std::process::exit(0);
                 }

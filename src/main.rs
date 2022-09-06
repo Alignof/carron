@@ -14,7 +14,7 @@ fn main() {
         Err(error) => panic!("There was a problem opening the file: {:?}", error),
     };
 
-    let pk_load = args.pkpath.map(|path| match elfload::ElfLoader::try_new(&path) {
+    let pk_load = args.pkpath.as_ref().map(|path| match elfload::ElfLoader::try_new(&path) {
         Ok(pk) => pk,
         Err(error) => panic!("There was a problem opening the file: {:?}", error),
     });
@@ -25,7 +25,7 @@ fn main() {
         match args.exe_option {
             ExeOption::OPT_DEFAULT  => {
                 let mut emulator: Emulator = Emulator::new(
-                    loader, pk_load, args.init_pc, args.bpoint, args.rreg,
+                    loader, pk_load, args
                 ); 
                 emulator.emulation();
             },
