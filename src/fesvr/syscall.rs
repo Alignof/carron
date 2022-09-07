@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{Read, Write, Seek, SeekFrom};
 use std::fs::File;
 use std::os::unix::io::{FromRawFd, AsRawFd};
 
@@ -25,12 +25,12 @@ fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
 pub fn openat(cpu: &CPU, _dirfd: u64, name_addr: u64, len: u64, _flags: u64, _mode: u64) -> Result<i64, std::io::Error> {
     eprintln!("do sys_openat(56)");
     let name: Vec<u8> = memread(&cpu, name_addr as u32, len);
-    let name: String = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
+    let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
     let file = File::open(name)?;
     let fd = file.as_raw_fd();
     std::mem::forget(file);
 
-    if dbg!(fd) < 0 {
+    if fd < 0 {
         Err(std::io::Error::from(std::io::ErrorKind::NotFound))
     } else {
         Ok(fd as i64)
@@ -44,6 +44,18 @@ pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> Result<i64, std::io
     file.write_all(&buf)?;
     std::mem::forget(file);
 
+    Ok(len as i64)
+}
+
+pub fn pread(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> Result<i64, std::io::Error> {
+    eprintln!("do sys_pread(67)");
+    let mut file = unsafe { File::from_raw_fd(fd as i32) };
+    let mut buf: Vec<u8> = vec![0; len as usize];
+    file.seek(SeekFrom::Start(off)).unwrap();
+    file.read_exact(&mut buf).unwrap();
+    std::mem::forget(file);
+
+    memwrite(cpu, dst_addr as u32, buf.len(), buf);
     Ok(len as i64)
 }
 
