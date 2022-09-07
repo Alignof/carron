@@ -37,6 +37,12 @@ pub fn openat(cpu: &CPU, _dirfd: u64, name_addr: u64, len: u64, _flags: u64, _mo
     }
 }
 
+pub fn close(fd: u64) -> Result<i64, std::io::Error> {
+    eprintln!("do sys_close(57)");
+    unsafe { libc::close(fd as i32) };
+    Ok(0)
+}
+
 pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> Result<i64, std::io::Error> {
     eprintln!("do sys_write(64)");
     let buf = memread(cpu, dst_addr as u32, len);

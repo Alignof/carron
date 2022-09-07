@@ -10,7 +10,7 @@ impl Emulator {
     fn exec_syscall(&mut self, sysargs: [u64; 8]) -> i64 {
         match sysargs[0] {
             56 => syscall::openat(&self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5]).unwrap_or(-1),
-            57 => {eprintln!("do sys_close(57)"); 0},
+            57 => syscall::close(sysargs[1]).unwrap_or(-1),
             64 => syscall::write(&self.cpu, sysargs[1], sysargs[2], sysargs[3]).unwrap_or(-1),
             67 => syscall::pread(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]).unwrap_or(-1),
             93 => {eprintln!("do sys_exit(93)"); 0},
