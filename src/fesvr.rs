@@ -13,7 +13,7 @@ impl Emulator {
             57 => syscall::close(sysargs[1]).unwrap_or(-1),
             64 => syscall::write(&self.cpu, sysargs[1], sysargs[2], sysargs[3]).unwrap_or(-1),
             67 => syscall::pread(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]).unwrap_or(-1),
-            93 => {eprintln!("do sys_exit(93)"); 0},
+            93 => syscall::exit(&mut self.exit_code, sysargs[1]).unwrap_or(-1),
             2011 => syscall::getmainvars(&mut self.cpu, &self.args, sysargs[1], sysargs[2]).unwrap_or(-12),
             _ => panic!("illegal syscall number"),
         }

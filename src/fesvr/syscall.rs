@@ -2,8 +2,6 @@ use libc::c_void;
 use crate::CPU;
 use crate::Arguments;
 
-const RISCV_AT_FDCWD: i32 = -100;
-
 fn memread(cpu: &CPU, addr: u32, len: u64) -> Vec<u8> {
     let mut buf = Vec::new();
     for off in 0 .. len as u32 {
@@ -55,6 +53,13 @@ pub fn pread(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> Resul
     }
 
     Ok(len as i64)
+}
+
+pub fn exit(exit_code: &mut Option<i32>, code: u64) -> Result<i64, std::io::Error> {
+    eprintln!("do sys_exit(93)");
+    *exit_code = Some(code as i32);
+
+    Ok(0)
 }
 
 pub fn getmainvars(cpu: &mut CPU, args: &Arguments, dst_addr: u64, limit: u64) -> Result<i64, ()> {
