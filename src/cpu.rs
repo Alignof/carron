@@ -236,6 +236,13 @@ impl CPU {
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
             self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
+            self.csrs.write_xstatus( // sstatus.SPIE = sstatus.SIE
+                PrivilegedLevel::Supervisor,
+                Xstatus::SPIE,
+                self.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE)
+            );
+            self.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE, 0b0); // Ssatus.SIE = 0
+            self.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, self.priv_lv as u32); // set prev_priv to SPP
             self.priv_lv = PrivilegedLevel::Supervisor;
 
             let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
