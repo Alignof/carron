@@ -1,6 +1,6 @@
 use std::io::Write;
 use std::fs::File;
-use std::os::unix::io::FromRawFd;
+use std::os::unix::io::{FromRawFd, AsRawFd};
 
 use crate::CPU;
 use crate::Arguments;
@@ -22,12 +22,27 @@ fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
     }
 }
 
+pub fn openat(cpu: &CPU, _dirfd: u64, name_addr: u64, len: u64, _flags: u64, _mode: u64) -> Result<i64, std::io::Error> {
+    eprintln!("do sys_openat(56)");
+    let name: Vec<u8> = memread(&cpu, name_addr as u32, len);
+    let name: String = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
+    let file = File::open(name)?;
+    let fd = file.as_raw_fd();
+    std::mem::forget(file);
+
+    if dbg!(fd) < 0 {
+        Err(std::io::Error::from(std::io::ErrorKind::NotFound))
+    } else {
+        Ok(fd as i64)
+    }
+}
+
 pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> Result<i64, std::io::Error> {
     eprintln!("do sys_write(64)");
     let buf = memread(cpu, dst_addr as u32, len);
-    let mut f = unsafe { File::from_raw_fd(fd as i32) };
-    f.write_all(&buf)?;
-    std::mem::forget(f);
+    let mut file = unsafe { File::from_raw_fd(fd as i32) };
+    file.write_all(&buf)?;
+    std::mem::forget(file);
 
     Ok(len as i64)
 }
@@ -40,7 +55,7 @@ pub fn getmainvars(cpu: &mut CPU, args: &Arguments, dst_addr: u64, limit: u64) -
     let mut words: Vec<u64> = vec![0; 5];
     words[0] = 2; // argc
     words[1] = dst_addr + 8*5;
-    words[2] = dst_addr + 8*5 + pkpath.len() as u64 + 1;
+    words[2] = dst_addr + 8*5 + pkpath.len() as u64;
     words[3] = 0; // argv[argc] = NULL
     words[4] = 0; // envp[0] = NULL
     
