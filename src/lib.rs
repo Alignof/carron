@@ -13,6 +13,7 @@ pub struct Emulator {
     tohost_addr: Option<u32>,
     fromhost_addr: Option<u32>,
     args: Arguments,
+    exit_code: Option<i32>,
 }
 
 impl Emulator {
@@ -30,6 +31,7 @@ impl Emulator {
             tohost_addr,
             fromhost_addr,
             args,
+            exit_code: None,
         }
     }
 
@@ -56,7 +58,6 @@ impl Emulator {
                 },
             }
 
-            let mut return_to_host = false;
             if self.tohost_addr.is_some() && self.fromhost_addr.is_some() {
                 if self.check_tohost() {
                     self.handle_syscall();
@@ -65,16 +66,14 @@ impl Emulator {
 
             if let Some(break_point) = self.args.break_point {
                 if break_point == self.cpu.pc {
-                    return_to_host = true;
+                    self.exit_code = Some(
+                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0)))
+                    );
                 }
             }
 
-            if return_to_host {
-                if self.args.result_reg.is_some() {
-                    std::process::exit(self.cpu.regs.read(self.args.result_reg));
-                } else {
-                    std::process::exit(0);
-                }
+            if let Some(exit_code) = self.exit_code {
+                std::process::exit(exit_code);
             }
         }
     }
