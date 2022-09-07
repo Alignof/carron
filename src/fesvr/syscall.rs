@@ -1,7 +1,4 @@
-use std::io::{Read, Write, Seek, SeekFrom};
-use std::fs::File;
-use std::os::unix::io::{FromRawFd, AsRawFd};
-
+use libc::c_void;
 use crate::CPU;
 use crate::Arguments;
 
@@ -22,13 +19,11 @@ fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
     }
 }
 
-pub fn openat(cpu: &CPU, _dirfd: u64, name_addr: u64, len: u64, _flags: u64, _mode: u64) -> Result<i64, std::io::Error> {
+pub fn openat(cpu: &CPU, dirfd: u64, name_addr: u64, len: u64, flags: u64, mode: u64) -> Result<i64, std::io::Error> {
     eprintln!("do sys_openat(56)");
     let name: Vec<u8> = memread(&cpu, name_addr as u32, len);
     let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
-    let file = File::open(name)?;
-    let fd = file.as_raw_fd();
-    std::mem::forget(file);
+    let fd = unsafe { libc::openat(dirfd as i32, name.as_ptr() as *const i8, flags as i32, mode as i32) };
 
     if fd < 0 {
         Err(std::io::Error::from(std::io::ErrorKind::NotFound))
@@ -46,22 +41,19 @@ pub fn close(fd: u64) -> Result<i64, std::io::Error> {
 pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> Result<i64, std::io::Error> {
     eprintln!("do sys_write(64)");
     let buf = memread(cpu, dst_addr as u32, len);
-    let mut file = unsafe { File::from_raw_fd(fd as i32) };
-    file.write_all(&buf)?;
-    std::mem::forget(file);
+    let len = unsafe { libc::write(fd as i32, buf.as_ptr() as *const c_void, len as usize) };
 
     Ok(len as i64)
 }
 
 pub fn pread(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> Result<i64, std::io::Error> {
     eprintln!("do sys_pread(67)");
-    let mut file = unsafe { File::from_raw_fd(fd as i32) };
-    let mut buf: Vec<u8> = vec![0; len as usize];
-    file.seek(SeekFrom::Start(off)).unwrap();
-    file.read_exact(&mut buf).unwrap();
-    std::mem::forget(file);
+    let buf: Vec<u8> = vec![0; len as usize];
+    let ret = unsafe { libc::pread(fd as i32, buf.as_ptr() as *mut c_void, len as usize, off as i64) };
+    if ret > 0 {
+        memwrite(cpu, dst_addr as u32, buf.len(), buf);
+    }
 
-    memwrite(cpu, dst_addr as u32, buf.len(), buf);
     Ok(len as i64)
 }
 
