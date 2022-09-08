@@ -153,9 +153,9 @@ mod tests {
     fn load_store_u8_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_8 = |data: u32| {
-            Dram::store8(dram, addr, data).unwrap();
-            assert_eq!(data, Dram::load_u8(dram, addr).unwrap());
+        let mut test_8 = |data: i32| {
+            Dram::store8(dram, addr, data as u32).unwrap();
+            assert_eq!(data as u32, Dram::load_u8(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -163,9 +163,10 @@ mod tests {
         test_8(17);
         test_8(0b01111111);
 
-        Dram::store8(dram, addr, -42).unwrap();
-        assert_ne!(-42, Dram::load_u8(dram, addr).unwrap());
-        Dram::store16(dram, addr, -42).unwrap();
+        let minus_num = -42;
+        Dram::store8(dram, addr, minus_num as u32).unwrap();
+        assert_ne!(minus_num, Dram::load_u8(dram, addr).unwrap() as i32);
+        Dram::store16(dram, addr, minus_num as u32).unwrap();
         assert_eq!(214, Dram::load_u8(dram, addr).unwrap());
     }
 
@@ -173,9 +174,9 @@ mod tests {
     fn load_store_8_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_8 = |data: u32| {
-            Dram::store8(dram, addr, data).unwrap();
-            assert_eq!(data, Dram::load8(dram, addr).unwrap());
+        let mut test_8 = |data: i32| {
+            Dram::store8(dram, addr, data as u32).unwrap();
+            assert_eq!(data as u32, Dram::load8(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -192,9 +193,9 @@ mod tests {
     fn load_store_16_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_16 = |data: u32| {
-            Dram::store16(dram, addr, data).unwrap();
-            assert_eq!(data, Dram::load16(dram, addr).unwrap());
+        let mut test_16 = |data: i32| {
+            Dram::store16(dram, addr, data as u32).unwrap();
+            assert_eq!(data as u32, Dram::load16(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -212,9 +213,9 @@ mod tests {
     fn load_store_u16_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_u16 = |data: u32| {
-            Dram::store16(dram, addr, data).unwrap();
-            assert_eq!(data, Dram::load_u16(dram, addr).unwrap());
+        let mut test_u16 = |data: i32| {
+            Dram::store16(dram, addr, data as u32).unwrap();
+            assert_eq!(data as u32, Dram::load_u16(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -223,9 +224,10 @@ mod tests {
         test_u16(255);
         test_u16(0b0111111111111111);
 
-        Dram::store16(dram, addr, -42).unwrap();
-        assert_ne!(-42, Dram::load_u16(dram, addr).unwrap());
-        Dram::store16(dram, addr, -42).unwrap();
+        let minus_num = -42;
+        Dram::store16(dram, addr, minus_num as u32).unwrap();
+        assert_ne!(minus_num, Dram::load_u16(dram, addr).unwrap() as i32);
+        Dram::store16(dram, addr, minus_num as u32).unwrap();
         assert_eq!(65494, Dram::load_u16(dram, addr).unwrap());
     }
 
@@ -234,9 +236,9 @@ mod tests {
     fn load_store_32_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_32 = |data: u32| {
-            Dram::store32(dram, addr, data).unwrap();
-            assert_eq!(data, Dram::load32(dram, addr).unwrap());
+        let mut test_32 = |data: i32| {
+            Dram::store32(dram, addr, data as u32).unwrap();
+            assert_eq!(data as u32, Dram::load32(dram, addr).unwrap());
             addr += 2;
         };
 
