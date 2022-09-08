@@ -72,8 +72,8 @@ impl CPU {
         self.pc += addval as u32;
     }
 
-    pub fn update_pc(&mut self, newpc: i32) {
-        self.pc = newpc as u32;
+    pub fn update_pc(&mut self, newpc: u32) {
+        self.pc = newpc;
     }
 
     pub fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
@@ -200,8 +200,8 @@ impl CPU {
             self.csrs.write(CSRname::stval.wrap(), tval_addr as i32);
             self.priv_lv = PrivilegedLevel::Supervisor;
 
-            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
-            self.update_pc(new_pc as i32);
+            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap();
+            self.update_pc(new_pc);
         } else {
             self.csrs.write(CSRname::mtval.wrap(), tval_addr as i32);
             self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
@@ -213,13 +213,13 @@ impl CPU {
             self.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u32); // set prev_priv to MPP
             self.priv_lv = PrivilegedLevel::Machine;
 
-            let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
+            let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
             let new_pc = if mtvec & 0b1 == 1 {
-                (mtvec - 1) + 4 * cause_of_trap as i32
+                (mtvec - 1) + 4 * cause_of_trap as u32
             } else {
                 mtvec
             };
-            self.update_pc(new_pc as i32);
+            self.update_pc(new_pc);
         }
     }
 
@@ -245,8 +245,8 @@ impl CPU {
             self.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, self.priv_lv as u32); // set prev_priv to SPP
             self.priv_lv = PrivilegedLevel::Supervisor;
 
-            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
-            self.update_pc(new_pc as i32);
+            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap();
+            self.update_pc(new_pc);
         } else {
             self.csrs.write(CSRname::mtval.wrap(), tval_addr as i32);
             self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
@@ -258,8 +258,8 @@ impl CPU {
             self.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u32); // set prev_priv to MPP
             self.priv_lv = PrivilegedLevel::Machine;
 
-            let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap() as i32;
-            self.update_pc(new_pc as i32);
+            let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
+            self.update_pc(new_pc);
         }
     }
 

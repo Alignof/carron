@@ -36,7 +36,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
                 cpu.exception(except_pc, TrapCause::IllegalInst);
             } else {
                 let new_pc = cpu.csrs.read(CSRname::sepc.wrap())?;
-                cpu.update_pc(new_pc as i32);
+                cpu.update_pc(new_pc);
             }
         },
         OpecodeKind::OP_MRET => {
@@ -57,7 +57,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             cpu.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPIE, 0b1); // msatus.MPIE = 1
             cpu.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, 0b00); // msatus.MPP = 0
 
-            let new_pc = cpu.csrs.read(CSRname::mepc.wrap())? as i32;
+            let new_pc = cpu.csrs.read(CSRname::mepc.wrap())?;
             cpu.update_pc(new_pc);
         },
         OpecodeKind::OP_WFI => {

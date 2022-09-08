@@ -85,7 +85,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             let next_pc = cpu.pc + INST_SIZE;
             // setting the least-significant bit of 
             // the result to zero                ->vvvvvv
-            cpu.update_pc(cpu.regs.read(inst.rs1) & !0x1);
+            cpu.update_pc((cpu.regs.read(inst.rs1) & !0x1) as u32);
             cpu.regs.write(Some(REG_LINK), next_pc as i32); 
         },
         OpecodeKind::OP_C_BEQZ => {
@@ -99,7 +99,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             } 
         },
         OpecodeKind::OP_C_JR => {
-            cpu.update_pc(cpu.regs.read(inst.rs1));
+            cpu.update_pc(cpu.regs.read(inst.rs1) as u32);
         },
         OpecodeKind::OP_C_MV => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs2));

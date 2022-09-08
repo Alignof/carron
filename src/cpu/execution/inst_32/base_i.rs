@@ -18,8 +18,8 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
         OpecodeKind::OP_JALR => {
             // calc next_pc before updated
             let next_pc = cpu.pc + INST_SIZE;
-            // setting the least-significant bit of the result to zero->vvvvvv
-            cpu.update_pc((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) & !0x1);
+            // setting the least-significant bit of the result to zero-->vvvvvv
+            cpu.update_pc(((cpu.regs.read(inst.rs1) + inst.imm.unwrap()) & !0x1) as u32);
             cpu.regs.write(inst.rd, next_pc as i32); 
         },
         OpecodeKind::OP_BEQ => {
