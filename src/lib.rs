@@ -40,9 +40,6 @@ impl Emulator {
     }
 
     pub fn emulation(&mut self) {
-        // rv32ui-p: 0x80000044, gp(3)
-        // rv32ui-v: 0xffc02308, a0(10)
-
         loop {
             match self.exec_one_cycle() {
                 Ok(()) => (),

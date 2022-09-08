@@ -69,7 +69,7 @@ impl CPU {
     }
 
     pub fn add2pc(&mut self, addval: u32) {
-        self.pc += addval as u32;
+        self.pc += addval;
     }
 
     pub fn update_pc(&mut self, newpc: u32) {
@@ -286,7 +286,7 @@ impl CPU {
     }
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
-        let addr = self.check_breakpoint(&purpose, addr as u32)?;
+        let addr = self.check_breakpoint(&purpose, addr)?;
         let mut trans_priv = self.priv_lv;
 
         if (purpose == TransFor::Load || purpose == TransFor::StoreAMO) &&
