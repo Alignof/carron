@@ -17,17 +17,11 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
-               args: Arguments) -> Emulator {
-
-        let (tohost_addr, fromhost_addr) = if let Some(ref pk) = pk_load {
-            pk.get_host_addr()
-        } else {
-            loader.get_host_addr()
-        };
+    pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Emulator {
+        let (tohost_addr, fromhost_addr) = loader.get_host_addr();
 
         Emulator {
-            cpu: CPU::new(loader, pk_load, args.init_pc),
+            cpu: CPU::new(loader, args.init_pc),
             tohost_addr,
             fromhost_addr,
             args,

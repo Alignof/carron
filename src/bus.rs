@@ -15,28 +15,19 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>) -> (u32, Bus) {
+    pub fn new(loader: elfload::ElfLoader) -> Bus {
         // load proxy kernel before user program when it's given
-        let dram = if let Some(ref pk_load) = pk_load {
-            Dram::new_with_pk(loader, pk_load)
-        } else {
-            Dram::new(loader)
-        };
+        let dram = Dram::new(loader);
         let mut mrom = Mrom::new(dram.base_addr);
-        let clint = Clint::new();
 
         // create and load DTB
         mrom.load_dtb(dram.base_addr);
 
-        // set initial pc to reset vector if proxy kernel loaded 
-        let init_pc = if pk_load.is_some() {
-            mrom.base_addr
-        } else {
-            dram.base_addr
-        };
-
-        // return initial pc and Bus
-        (init_pc, Bus{mrom, clint, dram})
+        Bus {
+            mrom, 
+            clint: Clint::new(),
+            dram,
+        }
     }
 
     // get 1 byte

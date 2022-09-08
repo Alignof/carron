@@ -53,12 +53,12 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, pc_from_cli: Option<u32>) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>) -> CPU {
         // initialize bus and get the entry point
-        let (init_pc, bus) = bus::Bus::new(loader, pk_load);
+        let bus = bus::Bus::new(loader);
 
         CPU {
-            pc: pc_from_cli.unwrap_or(init_pc),
+            pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
             bus,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new().init(),
