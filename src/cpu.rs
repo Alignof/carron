@@ -187,23 +187,23 @@ impl CPU {
     }
 
     fn interrupt(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
-        self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
-        self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
+        self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as u32);
+        self.csrs.write(CSRname::mepc.wrap(), self.pc);
 
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
         if self.priv_lv != PrivilegedLevel::Machine && (mideleg & 1 << mcause) != 0 {
             dbg!("delegated");
-            self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
-            self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
-            self.csrs.write(CSRname::stval.wrap(), tval_addr as i32);
+            self.csrs.write(CSRname::scause.wrap(), cause_of_trap as u32);
+            self.csrs.write(CSRname::sepc.wrap(), self.pc);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.priv_lv = PrivilegedLevel::Supervisor;
 
             let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap();
             self.update_pc(new_pc);
         } else {
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr as i32);
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
                 PrivilegedLevel::Machine,
                 Xstatus::MPIE,
@@ -224,8 +224,8 @@ impl CPU {
     }
 
     pub fn exception(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
-        self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
-        self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
+        self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as u32);
+        self.csrs.write(CSRname::mepc.wrap(), self.pc);
 
         // check Machine Trap Delegation Registers
         let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
@@ -233,9 +233,9 @@ impl CPU {
         if self.priv_lv != PrivilegedLevel::Machine && (medeleg & 1 << mcause) != 0 {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             dbg!("delegated");
-            self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
-            self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
-            self.csrs.write(CSRname::stval.wrap(), tval_addr as i32);
+            self.csrs.write(CSRname::scause.wrap(), cause_of_trap as u32);
+            self.csrs.write(CSRname::sepc.wrap(), self.pc);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.csrs.write_xstatus( // sstatus.SPIE = sstatus.SIE
                 PrivilegedLevel::Supervisor,
                 Xstatus::SPIE,
@@ -248,7 +248,7 @@ impl CPU {
             let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap();
             self.update_pc(new_pc);
         } else {
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr as i32);
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
                 PrivilegedLevel::Machine,
                 Xstatus::MPIE,

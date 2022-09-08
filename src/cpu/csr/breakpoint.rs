@@ -9,7 +9,7 @@ pub struct Triggers {
 }
 
 impl CSRs {
-    pub fn update_triggers(&mut self, dist: usize, src: i32) {
+    pub fn update_triggers(&mut self, dist: usize, src: u32) {
         match dist {
             0x7a0 => { // tselect
                 let tgr_index = src as usize;
@@ -18,10 +18,10 @@ impl CSRs {
                 self.csrs[CSRname::tdata2 as usize] = self.triggers.tdata2[tgr_index];
             },
             0x7a1 => { // tdata1
-                self.triggers.tdata1[self.triggers.tselect] = src as u32;
+                self.triggers.tdata1[self.triggers.tselect] = src;
             },
             0x7a2 => { // tdata2
-                self.triggers.tdata2[self.triggers.tselect] = src as u32;
+                self.triggers.tdata2[self.triggers.tselect] = src;
             },
             _ => (),
         }
