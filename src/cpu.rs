@@ -186,7 +186,7 @@ impl CPU {
         Ok(())
     }
 
-    fn interrupt(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
+    fn interrupt(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
         self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
 
@@ -197,13 +197,13 @@ impl CPU {
             dbg!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
             self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
-            self.csrs.write(CSRname::stval.wrap(), tval_addr);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr as i32);
             self.priv_lv = PrivilegedLevel::Supervisor;
 
             let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
             self.update_pc(new_pc as i32);
         } else {
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr as i32);
             self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
                 PrivilegedLevel::Machine,
                 Xstatus::MPIE,
@@ -223,7 +223,7 @@ impl CPU {
         }
     }
 
-    pub fn exception(&mut self, tval_addr: i32, cause_of_trap: TrapCause) {
+    pub fn exception(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
         self.csrs.write(CSRname::mcause.wrap(), cause_of_trap as i32);
         self.csrs.write(CSRname::mepc.wrap(), self.pc as i32);
 
@@ -235,7 +235,7 @@ impl CPU {
             dbg!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
             self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
-            self.csrs.write(CSRname::stval.wrap(), tval_addr);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr as i32);
             self.csrs.write_xstatus( // sstatus.SPIE = sstatus.SIE
                 PrivilegedLevel::Supervisor,
                 Xstatus::SPIE,
@@ -248,7 +248,7 @@ impl CPU {
             let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
             self.update_pc(new_pc as i32);
         } else {
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr as i32);
             self.csrs.write_xstatus( // sstatus.MPIE = sstatus.MIE
                 PrivilegedLevel::Machine,
                 Xstatus::MPIE,
@@ -273,12 +273,12 @@ impl CPU {
             TrapCause::InstPageFault |
             TrapCause::LoadPageFault |
             TrapCause::StoreAMOPageFault => {
-                self.exception(tval_addr as i32, cause_of_trap);
+                self.exception(tval_addr, cause_of_trap);
             },
             TrapCause::MachineTimerInterrupt |
             TrapCause::MachineSoftwareInterrupt |
             TrapCause::SupervisorSoftwareInterrupt => {
-                self.interrupt(tval_addr as i32, cause_of_trap);
+                self.interrupt(tval_addr, cause_of_trap);
             },
         }
 

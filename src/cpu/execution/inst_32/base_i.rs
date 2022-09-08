@@ -160,7 +160,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             // nop (pipeline are not yet implemented)
         },
         OpecodeKind::OP_ECALL => {
-            cpu.exception(cpu.pc as i32, 
+            cpu.exception(cpu.pc, 
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
                     PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
@@ -170,7 +170,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             );
         },
         OpecodeKind::OP_EBREAK => {
-            cpu.exception(cpu.pc as i32, TrapCause::Breakpoint);
+            cpu.exception(cpu.pc, TrapCause::Breakpoint);
         },
         _ => panic!("not an Base extension"),
     }

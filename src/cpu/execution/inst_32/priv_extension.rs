@@ -32,7 +32,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, 0b00); // ssatus.SPP = 0
 
             if cpu.csrs.read(CSRname::mstatus.wrap())? >> 22 & 1 == 1 { // mstatus.TSR == 1
-                let except_pc = cpu.pc as i32;
+                let except_pc = cpu.pc;
                 cpu.exception(except_pc, TrapCause::IllegalInst);
             } else {
                 let new_pc = cpu.csrs.read(CSRname::sepc.wrap())?;
@@ -65,7 +65,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
         },
         OpecodeKind::OP_SFENCE_VMA => {
             if cpu.priv_lv == PrivilegedLevel::Supervisor && cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM) == 1 {
-                cpu.exception(cpu.bus.load32(cpu.pc)?, TrapCause::IllegalInst);
+                cpu.exception(cpu.bus.load32(cpu.pc)? as u32, TrapCause::IllegalInst);
             }
         },
         _ => panic!("not an privileged extension"),
