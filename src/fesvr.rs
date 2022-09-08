@@ -25,25 +25,29 @@ impl Emulator {
         let tohost: u64 = self.cpu.bus.load64(tohost_addr).unwrap() as u64;
         self.cpu.bus.store64(tohost_addr, 0).unwrap();
 
-        let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
-        let mut syscall_args: [u64; 8] = [
-            self.cpu.bus.load64(syscall_addr).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr +  8).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 16).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 24).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 32).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 40).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 48).unwrap() as u64,
-            self.cpu.bus.load64(syscall_addr + 56).unwrap() as u64,
-        ];
+        if tohost & 1 == 1 {
+            self.exit_code = Some(tohost as i32);
+        } else {
+            let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
+            let mut syscall_args: [u64; 8] = [
+                self.cpu.bus.load64(syscall_addr).unwrap() as u64,
+                self.cpu.bus.load64(syscall_addr +  8).unwrap() as u64,
+                self.cpu.bus.load64(syscall_addr + 16).unwrap() as u64,
+                self.cpu.bus.load64(syscall_addr + 24).unwrap() as u64,
+                self.cpu.bus.load64(syscall_addr + 32).unwrap() as u64,
+                self.cpu.bus.load64(syscall_addr + 40).unwrap() as u64,
+                self.cpu.bus.load64(syscall_addr + 48).unwrap() as u64,
+                self.cpu.bus.load64(syscall_addr + 56).unwrap() as u64,
+            ];
 
-        syscall_args[0] = self.exec_syscall(syscall_args) as u64;
+            syscall_args[0] = self.exec_syscall(syscall_args) as u64;
 
-        // store syscall to tohost
-        for (i, s) in syscall_args.iter().enumerate() {
-            self.cpu.bus.store64(syscall_addr + (i*8) as u32, *s as i64).unwrap();
-        } 
+            // store syscall to tohost
+            for (i, s) in syscall_args.iter().enumerate() {
+                self.cpu.bus.store64(syscall_addr + (i*8) as u32, *s as i64).unwrap();
+            } 
 
-        self.cpu.bus.store64(fromhost_addr, (tohost << 48 >> 48) as i64 | 1).unwrap();
+            self.cpu.bus.store64(fromhost_addr, (tohost << 48 >> 48) as i64 | 1).unwrap();
+        }
     }
 }
