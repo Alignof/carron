@@ -1,4 +1,4 @@
-pub mod system;
+pub mod cmdline;
 pub mod cpu;
 pub mod bus;
 pub mod elfload;
@@ -6,7 +6,7 @@ mod fesvr;
 
 use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
-use system::Arguments;
+use cmdline::Arguments;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,

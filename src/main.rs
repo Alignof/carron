@@ -1,8 +1,8 @@
 extern crate carron;
 use carron::elfload;
 use carron::Emulator;
-use carron::system::ExeOption;
-use carron::system::Arguments;
+use carron::cmdline::ExeOption;
+use carron::cmdline::Arguments;
 
 fn main() {
     let args = Arguments::new();
