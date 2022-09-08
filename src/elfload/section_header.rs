@@ -2,16 +2,16 @@ use super::ElfHeader;
 use super::{get_u32, get_u16, is_cinst};
 
 pub struct SectionHeader {
-    sh_name: String,
-    sh_type: u32,
-    sh_flags: u32,
-    sh_addr: u32,
-    sh_offset: u32,
-    sh_size: u32,
-    sh_link: u32,
-    sh_info: u32,
-    sh_addralign: u32,
-    sh_entsize: u32,
+    pub sh_name: String,
+        sh_type: u32,
+        sh_flags: u32,
+    pub sh_addr: u32,
+    pub sh_offset: u32,
+    pub sh_size: u32,
+        sh_link: u32,
+        sh_info: u32,
+        sh_addralign: u32,
+        sh_entsize: u32,
 }
     
 

@@ -2,23 +2,30 @@ pub mod system;
 pub mod cpu;
 pub mod bus;
 pub mod elfload;
+mod fesvr;
 
 use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
+use system::Arguments;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,
-    break_point: Option<u32>,
-    result_reg: Option<usize>,
+    tohost_addr: Option<u32>,
+    fromhost_addr: Option<u32>,
+    args: Arguments,
+    exit_code: Option<i32>,
 }
 
 impl Emulator {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
-               pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Emulator {
+    pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Emulator {
+        let (tohost_addr, fromhost_addr) = loader.get_host_addr();
+
         Emulator {
-            cpu: CPU::new(loader, pk_load, pc_from_cli),
-            break_point,
-            result_reg,
+            cpu: CPU::new(loader, args.init_pc),
+            tohost_addr,
+            fromhost_addr,
+            args,
+            exit_code: None,
         }
     }
 
@@ -45,12 +52,22 @@ impl Emulator {
                 },
             }
 
-            if self.break_point.unwrap_or(u32::MAX) == self.cpu.pc {
-                if self.result_reg.is_some() {
-                    std::process::exit(self.cpu.regs.read(self.result_reg));
-                } else {
-                    std::process::exit(0);
+            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() {
+                if self.check_tohost() {
+                    self.handle_syscall();
                 }
+            }
+
+            if let Some(break_point) = self.args.break_point {
+                if break_point == self.cpu.pc {
+                    self.exit_code = Some(
+                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0)))
+                    );
+                }
+            }
+
+            if let Some(exit_code) = self.exit_code {
+                std::process::exit(exit_code);
             }
         }
     }

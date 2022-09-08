@@ -64,6 +64,19 @@ impl Device for Clint {
         Ok(())
     }
 
+    fn store64(&mut self, addr: u32, data: i64) -> Result<(), (Option<u32>, TrapCause, String)> {
+        let addr = self.addr2index(addr);
+        self.clint[addr + 7] = ((data >> 56) & 0xFF) as u8;
+        self.clint[addr + 6] = ((data >> 48) & 0xFF) as u8;
+        self.clint[addr + 5] = ((data >> 40) & 0xFF) as u8;
+        self.clint[addr + 4] = ((data >> 32) & 0xFF) as u8;
+        self.clint[addr + 3] = ((data >> 24) & 0xFF) as u8;
+        self.clint[addr + 2] = ((data >> 16) & 0xFF) as u8;
+        self.clint[addr + 1] = ((data >>  8) & 0xFF) as u8;
+        self.clint[addr + 0] = ((data >>  0) & 0xFF) as u8;
+        Ok(())
+    }
+
 
     // load
     fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
@@ -92,6 +105,19 @@ impl Device for Clint {
         ) as i32)
     }
 
+    fn load64(&self, addr: u32) -> Result<i64, (Option<u32>, TrapCause, String)> {
+        let addr = self.addr2index(addr);
+        Ok((
+         (self.clint[addr + 7] as u64) << 56 |
+         (self.clint[addr + 6] as u64) << 48 |
+         (self.clint[addr + 5] as u64) << 40 |
+         (self.clint[addr + 4] as u64) << 32 |
+         (self.clint[addr + 3] as u64) << 24 |
+         (self.clint[addr + 2] as u64) << 16 |
+         (self.clint[addr + 1] as u64) <<  8 |
+         (self.clint[addr + 0] as u64)
+        ) as i64)
+    }
     fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),

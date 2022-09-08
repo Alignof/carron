@@ -9,24 +9,18 @@ fn main() {
 
     println!("\nIn file {}", args.filename);
 
-    let loader = match elfload::ElfLoader::try_new(&args.filename) {
+    let path = args.pkpath.as_ref().unwrap_or(&args.filename);
+    let loader = match elfload::ElfLoader::try_new(&path) {
         Ok(loader) => loader,
         Err(error) => panic!("There was a problem opening the file: {:?}", error),
     };
-
-    let pk_load = args.pkpath.map(|path| match elfload::ElfLoader::try_new(&path) {
-        Ok(pk) => pk,
-        Err(error) => panic!("There was a problem opening the file: {:?}", error),
-    });
 
     if loader.is_elf() {
         println!("elfcheck: OK\n");
 
         match args.exe_option {
             ExeOption::OPT_DEFAULT  => {
-                let mut emulator: Emulator = Emulator::new(
-                    loader, pk_load, args.init_pc, args.bpoint, args.rreg,
-                ); 
+                let mut emulator: Emulator = Emulator::new(loader, args); 
                 emulator.emulation();
             },
             ExeOption::OPT_ELFHEAD  => loader.header_show(),

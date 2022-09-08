@@ -83,6 +83,14 @@ impl Device for Mrom {
         ))
     }
 
+    fn store64(&mut self, addr: u32, _data: i64) -> Result<(), (Option<u32>, TrapCause, String)> {
+        Err((
+            Some(addr),
+            TrapCause::StoreAMOPageFault,
+            format!("mrom is read only: {:x}", addr)
+        ))
+    }
+
 
     // load
     fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
@@ -108,6 +116,19 @@ impl Device for Mrom {
         ) as i32)
     }
 
+    fn load64(&self, addr: u32) -> Result<i64, (Option<u32>, TrapCause, String)> {
+        let addr = self.addr2index(addr);
+        Ok((
+         (self.mrom[addr + 7] as u64) << 56 |
+         (self.mrom[addr + 6] as u64) << 48 |
+         (self.mrom[addr + 5] as u64) << 40 |
+         (self.mrom[addr + 4] as u64) << 32 |
+         (self.mrom[addr + 3] as u64) << 24 |
+         (self.mrom[addr + 2] as u64) << 16 |
+         (self.mrom[addr + 1] as u64) <<  8 |
+         (self.mrom[addr + 0] as u64)
+        ) as i64)
+    }
     fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok(self.mrom[addr] as i32)

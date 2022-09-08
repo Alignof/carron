@@ -44,7 +44,7 @@ pub enum TransFor {
 
 pub struct CPU {
     pub pc: u32,
-        bus: bus::Bus,
+    pub bus: bus::Bus,
     pub regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
@@ -53,12 +53,12 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>, pc_from_cli: Option<u32>) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>) -> CPU {
         // initialize bus and get the entry point
-        let (init_pc, bus) = bus::Bus::new(loader, pk_load);
+        let bus = bus::Bus::new(loader);
 
         CPU {
-            pc: pc_from_cli.unwrap_or(init_pc),
+            pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
             bus,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new().init(),
@@ -98,18 +98,13 @@ impl CPU {
             (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
         };
 
-        dbg_hex::dbg_hex!(mtime);
-        dbg_hex::dbg_hex!(mtimecmp);
-        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mie.wrap()).unwrap());
-        dbg_hex::dbg_hex!(self.csrs.read(CSRname::mip.wrap()).unwrap());
-
         // mtime += 1
         self.bus.store32(MTIME, (mtime+1 & 0xFFFF_FFFF) as i32).unwrap();
         self.bus.store32(MTIME+4, (mtime+1 >> 32 & 0xFFFF_FFFF) as i32).unwrap();
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {
-                if dbg!(self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)) == 1 {
+                if self.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE) == 1 {
                     if is_interrupt_enabled(MTIP) {
                         // TODO: bit clear when mtimecmp written
                         self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
@@ -161,7 +156,7 @@ impl CPU {
                 }
             },
             PrivilegedLevel::User => {
-                if dbg!(is_interrupt_enabled(MTIP)) {
+                if is_interrupt_enabled(MTIP) {
                     // TODO: bit clear when mtimecmp written
                     self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                     return Err((
@@ -241,6 +236,13 @@ impl CPU {
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as i32);
             self.csrs.write(CSRname::sepc.wrap(), self.pc as i32);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
+            self.csrs.write_xstatus( // sstatus.SPIE = sstatus.SIE
+                PrivilegedLevel::Supervisor,
+                Xstatus::SPIE,
+                self.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE)
+            );
+            self.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE, 0b0); // Ssatus.SIE = 0
+            self.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, self.priv_lv as u32); // set prev_priv to SPP
             self.priv_lv = PrivilegedLevel::Supervisor;
 
             let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap() as i32;
