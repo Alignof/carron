@@ -61,7 +61,7 @@ impl Emulator {
             if let Some(break_point) = self.args.break_point {
                 if break_point == self.cpu.pc {
                     self.exit_code = Some(
-                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0)))
+                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0))) as i32
                     );
                 }
             }

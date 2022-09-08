@@ -60,20 +60,20 @@ impl Device for Dram {
     }
 
     // store
-    fn store8(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store8(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.dram[addr] = (data & 0xFF) as u8;
         Ok(())
     }
 
-    fn store16(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store16(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.dram[addr + 1] = ((data >> 8) & 0xFF) as u8;
         self.dram[addr + 0] = ((data >> 0) & 0xFF) as u8;
         Ok(())
     }
 
-    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store32(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.dram[addr + 3] = ((data >> 24) & 0xFF) as u8;
         self.dram[addr + 2] = ((data >> 16) & 0xFF) as u8;
@@ -96,30 +96,30 @@ impl Device for Dram {
     }
 
     // load
-    fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok(self.dram[addr] as i8 as i32)
+        Ok(self.dram[addr] as i8 as i32 as u32)
     }
 
-    fn load16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
-         (self.dram[addr + 1] as u16) << 8 |
-         (self.dram[addr + 0] as u16)
-        ) as i16 as i32)
+         (self.dram[addr + 1] as i16) << 8 |
+         (self.dram[addr + 0] as i16)
+        ) as i32 as u32)
     }
 
-    fn load32(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load32(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
          (self.dram[addr + 3] as u32) << 24 |
          (self.dram[addr + 2] as u32) << 16 |
          (self.dram[addr + 1] as u32) <<  8 |
          (self.dram[addr + 0] as u32)
-        ) as i32)
+        ))
     }
 
-    fn load64(&self, addr: u32) -> Result<i64, (Option<u32>, TrapCause, String)> {
+    fn load64(&self, addr: u32) -> Result<u64, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
          (self.dram[addr + 7] as u64) << 56 |
@@ -130,20 +130,20 @@ impl Device for Dram {
          (self.dram[addr + 2] as u64) << 16 |
          (self.dram[addr + 1] as u64) <<  8 |
          (self.dram[addr + 0] as u64)
-        ) as i64)
+        ))
     }
 
-    fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load_u8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok(self.dram[addr] as i32)
+        Ok(self.dram[addr] as u32)
     }
 
-    fn load_u16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load_u16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((
-         (self.dram[addr + 1] as u32) << 8 |
-         (self.dram[addr + 0] as u32)
-        ) as i32)
+         (self.dram[addr + 1] as u16) << 8 |
+         (self.dram[addr + 0] as u16)
+        ) as u32)
     }
 }
 
@@ -157,7 +157,7 @@ mod tests {
     fn load_store_u8_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_8 = |data: i32| {
+        let mut test_8 = |data: u32| {
             Dram::store8(dram, addr, data).unwrap();
             assert_eq!(data, Dram::load_u8(dram, addr).unwrap());
             addr += 2;
@@ -177,7 +177,7 @@ mod tests {
     fn load_store_8_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_8 = |data: i32| {
+        let mut test_8 = |data: u32| {
             Dram::store8(dram, addr, data).unwrap();
             assert_eq!(data, Dram::load8(dram, addr).unwrap());
             addr += 2;
@@ -196,7 +196,7 @@ mod tests {
     fn load_store_16_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_16 = |data: i32| {
+        let mut test_16 = |data: u32| {
             Dram::store16(dram, addr, data).unwrap();
             assert_eq!(data, Dram::load16(dram, addr).unwrap());
             addr += 2;
@@ -216,7 +216,7 @@ mod tests {
     fn load_store_u16_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_u16 = |data: i32| {
+        let mut test_u16 = |data: u32| {
             Dram::store16(dram, addr, data).unwrap();
             assert_eq!(data, Dram::load_u16(dram, addr).unwrap());
             addr += 2;
@@ -238,7 +238,7 @@ mod tests {
     fn load_store_32_test() {
         let dram = &mut Dram{ dram: vec![0; DRAM_SIZE], base_addr: 0, size: DRAM_SIZE };
         let mut addr = 0;
-        let mut test_32 = |data: i32| {
+        let mut test_32 = |data: u32| {
             Dram::store32(dram, addr, data).unwrap();
             assert_eq!(data, Dram::load32(dram, addr).unwrap());
             addr += 2;

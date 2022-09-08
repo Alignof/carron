@@ -13,7 +13,7 @@ fn memread(cpu: &CPU, addr: u32, len: u64) -> Vec<u8> {
 
 fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
     for off in 0 .. len as u32 {
-        cpu.bus.store8(addr + off, data[off as usize] as i32).unwrap();
+        cpu.bus.store8(addr + off, data[off as usize] as u32).unwrap();
     }
 }
 

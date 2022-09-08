@@ -48,7 +48,7 @@ pub struct CPU {
     pub regs: reg::Register,
         csrs: csr::CSRs,
         mmu: mmu::MMU,
-    pub reservation_set: HashSet<(usize, i32)>,
+    pub reservation_set: HashSet<(usize, u32)>,
     pub priv_lv: PrivilegedLevel,
 }
 
@@ -68,7 +68,7 @@ impl CPU {
         }
     }
 
-    pub fn add2pc(&mut self, addval: i32) {
+    pub fn add2pc(&mut self, addval: u32) {
         self.pc += addval as u32;
     }
 
@@ -99,8 +99,8 @@ impl CPU {
         };
 
         // mtime += 1
-        self.bus.store32(MTIME, (mtime+1 & 0xFFFF_FFFF) as i32).unwrap();
-        self.bus.store32(MTIME+4, (mtime+1 >> 32 & 0xFFFF_FFFF) as i32).unwrap();
+        self.bus.store32(MTIME, (mtime+1 & 0xFFFF_FFFF) as u32).unwrap();
+        self.bus.store32(MTIME+4, (mtime+1 >> 32 & 0xFFFF_FFFF) as u32).unwrap();
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {
@@ -285,7 +285,7 @@ impl CPU {
         eprintln!("new pc:0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, purpose: TransFor, addr: i32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    pub fn trans_addr(&mut self, purpose: TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.check_breakpoint(&purpose, addr as u32)?;
         let mut trans_priv = self.priv_lv;
 
