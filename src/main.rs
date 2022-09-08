@@ -1,8 +1,8 @@
 extern crate carron;
 use carron::elfload;
 use carron::Emulator;
-use carron::system::ExeOption;
-use carron::system::Arguments;
+use carron::cmdline::ExeOption;
+use carron::cmdline::Arguments;
 
 fn main() {
     let args = Arguments::new();
@@ -10,7 +10,7 @@ fn main() {
     println!("\nIn file {}", args.filename);
 
     let path = args.pkpath.as_ref().unwrap_or(&args.filename);
-    let loader = match elfload::ElfLoader::try_new(&path) {
+    let loader = match elfload::ElfLoader::try_new(path) {
         Ok(loader) => loader,
         Err(error) => panic!("There was a problem opening the file: {:?}", error),
     };

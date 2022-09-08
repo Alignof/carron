@@ -13,13 +13,13 @@ fn memread(cpu: &CPU, addr: u32, len: u64) -> Vec<u8> {
 
 fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
     for off in 0 .. len as u32 {
-        cpu.bus.store8(addr + off, data[off as usize] as i32).unwrap();
+        cpu.bus.store8(addr + off, data[off as usize] as u32).unwrap();
     }
 }
 
 pub fn openat(cpu: &CPU, dirfd: u64, name_addr: u64, len: u64, flags: u64, mode: u64) -> Result<i64, std::io::Error> {
     eprintln!("do sys_openat(56)");
-    let name: Vec<u8> = memread(&cpu, name_addr as u32, len);
+    let name: Vec<u8> = memread(cpu, name_addr as u32, len);
     let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
     let fd = unsafe { libc::openat(dirfd as i32, name.as_ptr() as *const i8, flags as i32, mode as i32) };
 

@@ -37,7 +37,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))
                 .expect("transition address failed in AMO");
-            cpu.bus.store32(store_addr, cpu.regs.read(inst.rd) + cpu.regs.read(inst.rs2))?;
+            cpu.bus.store32(store_addr, (cpu.regs.read(inst.rd) as i32 + cpu.regs.read(inst.rs2) as i32) as u32)?;
 		},
         OpecodeKind::OP_AMOXOR_W => {
             let load_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))?;
@@ -65,28 +65,28 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))
                 .expect("transition address failed in AMO");
-            cpu.bus.store32(store_addr, std::cmp::min(cpu.regs.read(inst.rd), cpu.regs.read(inst.rs2)))?;
+            cpu.bus.store32(store_addr, std::cmp::min(cpu.regs.read(inst.rd) as i32, cpu.regs.read(inst.rs2) as i32) as u32)?;
 		},
         OpecodeKind::OP_AMOMAX_W => {
             let load_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))
                 .expect("transition address failed in AMO");
-            cpu.bus.store32(store_addr, std::cmp::max(cpu.regs.read(inst.rd), cpu.regs.read(inst.rs2)))?;
+            cpu.bus.store32(store_addr, std::cmp::max(cpu.regs.read(inst.rd) as i32, cpu.regs.read(inst.rs2) as i32) as u32)?;
 		},
         OpecodeKind::OP_AMOMINU_W => {
             let load_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))
                 .expect("transition address failed in AMO");
-            cpu.bus.store32(store_addr, std::cmp::min(cpu.regs.read(inst.rd) as u32, cpu.regs.read(inst.rs2) as u32) as i32)?;
+            cpu.bus.store32(store_addr, std::cmp::min(cpu.regs.read(inst.rd) as u32, cpu.regs.read(inst.rs2) as u32))?;
 		},
         OpecodeKind::OP_AMOMAXU_W => {
             let load_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu.trans_addr(TransFor::StoreAMO, cpu.regs.read(inst.rs1))
                 .expect("transition address failed in AMO");
-            cpu.bus.store32(store_addr, std::cmp::max(cpu.regs.read(inst.rd) as u32, cpu.regs.read(inst.rs2) as u32) as i32)?;
+            cpu.bus.store32(store_addr, std::cmp::max(cpu.regs.read(inst.rd) as u32, cpu.regs.read(inst.rs2) as u32))?;
 		},
         _ => panic!("not an A extension"),
     }

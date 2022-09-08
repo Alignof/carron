@@ -39,23 +39,23 @@ impl Device for Clint {
     }
 
     // store
-    fn store8(&mut self, addr: u32, _data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store8(&mut self, addr: u32, _data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            format!("clint is allow load/store32 but try store8")
+            "clint is allow load/store32 but try store8".to_string()
         ))
     }
 
-    fn store16(&mut self, addr: u32, _data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store16(&mut self, addr: u32, _data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            format!("clint is allow load/store32 but try store16")
+            "clint is allow load/store32 but try store16".to_string()
         ))
     }
 
-    fn store32(&mut self, addr: u32, data: i32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store32(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.clint[addr + 3] = ((data >> 24) & 0xFF) as u8;
         self.clint[addr + 2] = ((data >> 16) & 0xFF) as u8;
@@ -79,58 +79,54 @@ impl Device for Clint {
 
 
     // load
-    fn load8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            format!("clint is allow load/store32 but try load8")
+            "clint is allow load/store32 but try load8".to_string()
         ))
     }
 
-    fn load16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            format!("clint is allow load/store32 but try load16")
+            "clint is allow load/store32 but try load16".to_string()
         ))
     }
 
-    fn load32(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load32(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((
-         (self.clint[addr + 3] as u32) << 24 |
+        Ok((self.clint[addr + 3] as u32) << 24 |
          (self.clint[addr + 2] as u32) << 16 |
          (self.clint[addr + 1] as u32) <<  8 |
-         (self.clint[addr + 0] as u32)
-        ) as i32)
+         (self.clint[addr + 0] as u32))
     }
 
-    fn load64(&self, addr: u32) -> Result<i64, (Option<u32>, TrapCause, String)> {
+    fn load64(&self, addr: u32) -> Result<u64, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((
-         (self.clint[addr + 7] as u64) << 56 |
+        Ok((self.clint[addr + 7] as u64) << 56 |
          (self.clint[addr + 6] as u64) << 48 |
          (self.clint[addr + 5] as u64) << 40 |
          (self.clint[addr + 4] as u64) << 32 |
          (self.clint[addr + 3] as u64) << 24 |
          (self.clint[addr + 2] as u64) << 16 |
          (self.clint[addr + 1] as u64) <<  8 |
-         (self.clint[addr + 0] as u64)
-        ) as i64)
+         (self.clint[addr + 0] as u64))
     }
-    fn load_u8(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load_u8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            format!("clint is allow load/store32 but try load_u8")
+            "clint is allow load/store32 but try load_u8".to_string()
         ))
     }
 
-    fn load_u16(&self, addr: u32) -> Result<i32, (Option<u32>, TrapCause, String)> {
+    fn load_u16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            format!("clint is allow load/store32 but try load_u16")
+            "clint is allow load/store32 but try load_u16".to_string()
         ))
     }
 }

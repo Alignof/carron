@@ -3,7 +3,7 @@ use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<u32>, TrapCause, String)> {
-    let inst_addr = cpu.trans_addr(TransFor::Fetch, cpu.pc as i32)?;
+    let inst_addr = cpu.trans_addr(TransFor::Fetch, cpu.pc)?;
     let invalid_instruction = Some(cpu.bus.load32(inst_addr)? as u32);
 
     if dist >= 4096 {
@@ -63,31 +63,31 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
 
     match inst.opc {
         OpecodeKind::OP_CSRRW => {
-            let rs1 = cpu.regs.read(inst.rs1) as i32;
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)? as i32);
+            let rs1 = cpu.regs.read(inst.rs1) as u32;
+            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
             cpu.csrs.write(inst.rs2, rs1);
         },
         OpecodeKind::OP_CSRRS => {
-            let rs1 = cpu.regs.read(inst.rs1) as i32;
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)? as i32);
+            let rs1 = cpu.regs.read(inst.rs1) as u32;
+            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
             cpu.csrs.bitset(inst.rs2, rs1);
         },
         OpecodeKind::OP_CSRRC => {
-            let rs1 = cpu.regs.read(inst.rs1) as i32;
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)? as i32);
+            let rs1 = cpu.regs.read(inst.rs1) as u32;
+            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
             cpu.csrs.bitclr(inst.rs2, rs1);
         },
         OpecodeKind::OP_CSRRWI => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)? as i32);
-            cpu.csrs.write(inst.rs2, inst.rs1.unwrap() as i32);
+            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
+            cpu.csrs.write(inst.rs2, inst.rs1.unwrap() as u32);
         },
         OpecodeKind::OP_CSRRSI => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)? as i32);
-            cpu.csrs.bitset(inst.rs2, inst.rs1.unwrap() as i32);
+            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
+            cpu.csrs.bitset(inst.rs2, inst.rs1.unwrap() as u32);
         },
         OpecodeKind::OP_CSRRCI => {
-            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)? as i32);
-            cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as i32);
+            cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
+            cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as u32);
         },
         _ => panic!("not an Zicsr extension"),
     }

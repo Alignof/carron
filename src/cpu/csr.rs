@@ -30,8 +30,8 @@ impl CSRs {
         self
     }
 
-    pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
-        let mask = src as u32;
+    pub fn bitset(&mut self, dist: Option<usize>, src: u32) {
+        let mask = src;
         if mask != 0 {
             match dist.unwrap() {
                 0x000 => self.csrs[0x300] |= mask & UMASK,
@@ -41,8 +41,8 @@ impl CSRs {
         }
     }
 
-    pub fn bitclr(&mut self, dist: Option<usize>, src: i32) {
-        let mask = src as u32;
+    pub fn bitclr(&mut self, dist: Option<usize>, src: u32) {
+        let mask = src;
         if mask != 0 {
             match dist.unwrap() {
                 0x000 => self.csrs[0x300] &= !(mask & UMASK),
@@ -52,11 +52,11 @@ impl CSRs {
         }
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: i32) {
+    pub fn write(&mut self, dist: Option<usize>, src: u32) {
         match dist.unwrap() {
-            0x000 => self.csrs[0x300] = src as u32 & UMASK,
-            0x100 => self.csrs[0x300] = src as u32 & SMASK,
-            _ => self.csrs[dist.unwrap()] = src as u32,
+            0x000 => self.csrs[0x300] = src & UMASK,
+            0x100 => self.csrs[0x300] = src & SMASK,
+            _ => self.csrs[dist.unwrap()] = src,
         }
         self.update_triggers(dist.unwrap(), src);
     }

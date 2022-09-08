@@ -1,4 +1,4 @@
-pub mod system;
+pub mod cmdline;
 pub mod cpu;
 pub mod bus;
 pub mod elfload;
@@ -6,7 +6,7 @@ mod fesvr;
 
 use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
-use system::Arguments;
+use cmdline::Arguments;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,
@@ -40,9 +40,6 @@ impl Emulator {
     }
 
     pub fn emulation(&mut self) {
-        // rv32ui-p: 0x80000044, gp(3)
-        // rv32ui-v: 0xffc02308, a0(10)
-
         loop {
             match self.exec_one_cycle() {
                 Ok(()) => (),
@@ -52,16 +49,14 @@ impl Emulator {
                 },
             }
 
-            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() {
-                if self.check_tohost() {
-                    self.handle_syscall();
-                }
+            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost() {
+                self.handle_syscall();
             }
 
             if let Some(break_point) = self.args.break_point {
                 if break_point == self.cpu.pc {
                     self.exit_code = Some(
-                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0)))
+                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0))) as i32
                     );
                 }
             }
