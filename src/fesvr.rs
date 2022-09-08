@@ -9,11 +9,27 @@ impl Emulator {
 
     fn exec_syscall(&mut self, sysargs: [u64; 8]) -> i64 {
         match sysargs[0] {
+            17 => panic!("sys_getcwd is not implemented"),
+            25 => panic!("sys_fcntl is not implemented"),
+            34 => panic!("sys_mkdirat is not implemented"),
+            35 => panic!("sys_unlinkat is not implemented"),
+            37 => panic!("sys_linkat is not implemented"),
+            38 => panic!("sys_renameat is not implemented"),
+            46 => panic!("sys_ftruncate is not implemented"),
+            48 => panic!("sys_faccessat is not implemented"),
+            49 => panic!("sys_chdir is not implemented"),
             56 => syscall::openat(&self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5]).unwrap_or(-1),
             57 => syscall::close(sysargs[1]).unwrap_or(-1),
+            62 => panic!("sys_lseek is not implemented"),
+            63 => panic!("sys_read is not implemented"),
             64 => syscall::write(&self.cpu, sysargs[1], sysargs[2], sysargs[3]).unwrap_or(-1),
             67 => syscall::pread(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]).unwrap_or(-1),
+            68 => panic!("sys_pwrite is not implemented"),
+            79 => panic!("sys_fstatat is not implemented"),
+            80 => panic!("sys_fstat is not implemented"),
             93 => syscall::exit(&mut self.exit_code, sysargs[1]).unwrap_or(-1),
+            291 => panic!("sys_statx is not implemented"),
+            1039 => panic!("sys_lstat is not implemented"),
             2011 => syscall::getmainvars(&mut self.cpu, &self.args, sysargs[1], sysargs[2]).unwrap_or(-12),
             _ => panic!("illegal syscall number"),
         }
