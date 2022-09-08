@@ -108,26 +108,22 @@ impl Device for Mrom {
 
     fn load32(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((
-         (self.mrom[addr + 3] as u32) << 24 |
+        Ok((self.mrom[addr + 3] as u32) << 24 |
          (self.mrom[addr + 2] as u32) << 16 |
          (self.mrom[addr + 1] as u32) <<  8 |
-         (self.mrom[addr + 0] as u32)
-        ))
+         (self.mrom[addr + 0] as u32))
     }
 
     fn load64(&self, addr: u32) -> Result<u64, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((
-         (self.mrom[addr + 7] as u64) << 56 |
+        Ok((self.mrom[addr + 7] as u64) << 56 |
          (self.mrom[addr + 6] as u64) << 48 |
          (self.mrom[addr + 5] as u64) << 40 |
          (self.mrom[addr + 4] as u64) << 32 |
          (self.mrom[addr + 3] as u64) << 24 |
          (self.mrom[addr + 2] as u64) << 16 |
          (self.mrom[addr + 1] as u64) <<  8 |
-         (self.mrom[addr + 0] as u64)
-        ))
+         (self.mrom[addr + 0] as u64))
     }
     fn load_u8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
@@ -136,9 +132,7 @@ impl Device for Mrom {
 
     fn load_u16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((
-         (self.mrom[addr + 1] as u32) << 8 |
-         (self.mrom[addr + 0] as u32)
-        ))
+        Ok((self.mrom[addr + 1] as u32) << 8 |
+         (self.mrom[addr + 0] as u32))
     }
 }

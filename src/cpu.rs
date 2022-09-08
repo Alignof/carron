@@ -99,8 +99,8 @@ impl CPU {
         };
 
         // mtime += 1
-        self.bus.store32(MTIME, (mtime+1 & 0xFFFF_FFFF) as u32).unwrap();
-        self.bus.store32(MTIME+4, (mtime+1 >> 32 & 0xFFFF_FFFF) as u32).unwrap();
+        self.bus.store32(MTIME, ((mtime+1) & 0xFFFF_FFFF) as u32).unwrap();
+        self.bus.store32(MTIME+4, ((mtime+1) >> 32 & 0xFFFF_FFFF) as u32).unwrap();
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {

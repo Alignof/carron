@@ -106,11 +106,11 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
         },
         OpecodeKind::OP_SLLI => {
             cpu.regs.write(inst.rd,
-                (cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u32));
+                cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u32);
         },                                        
         OpecodeKind::OP_SRLI => {
             cpu.regs.write(inst.rd,
-                (cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as u32));
+                cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as u32);
         },
         OpecodeKind::OP_SRAI => {
             cpu.regs.write(inst.rd,
@@ -126,7 +126,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
         },
         OpecodeKind::OP_SLL => {
             cpu.regs.write(inst.rd,
-                (cpu.regs.read(inst.rs1) << cpu.regs.read(inst.rs2)));
+                cpu.regs.read(inst.rs1) << cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_SLT => {
             cpu.regs.write(inst.rd,
@@ -142,7 +142,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
         },
         OpecodeKind::OP_SRL => {
             cpu.regs.write(inst.rd,
-                (cpu.regs.read(inst.rs1) >> cpu.regs.read(inst.rs2)));
+                cpu.regs.read(inst.rs1) >> cpu.regs.read(inst.rs2));
         },
         OpecodeKind::OP_SRA => {
             cpu.regs.write(inst.rd,

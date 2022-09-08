@@ -31,11 +31,11 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
         },
         OpecodeKind::OP_C_SLLI => {
             cpu.regs.write(inst.rd,
-                (cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u32));
+                cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u32);
         },
         OpecodeKind::OP_C_SRLI => {
             cpu.regs.write(inst.rd,
-                (cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as u32));
+                cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as u32);
         },
         OpecodeKind::OP_C_SRAI => {
             cpu.regs.write(inst.rd,

@@ -52,10 +52,8 @@ impl Emulator {
                 },
             }
 
-            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() {
-                if self.check_tohost() {
-                    self.handle_syscall();
-                }
+            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost() {
+                self.handle_syscall();
             }
 
             if let Some(break_point) = self.args.break_point {
