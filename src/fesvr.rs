@@ -24,7 +24,7 @@ impl Emulator {
             63 => syscall::read(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3]),
             64 => syscall::write(&self.cpu, sysargs[1], sysargs[2], sysargs[3]),
             67 => syscall::pread(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
-            68 => panic!("sys_pwrite is not implemented"),
+            68 => syscall::pwrite(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
             79 => syscall::fstatat(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5]),
             80 => syscall::fstat(&mut self.cpu, sysargs[1], sysargs[2]),
             93 => syscall::exit(&mut self.exit_code, sysargs[1]),

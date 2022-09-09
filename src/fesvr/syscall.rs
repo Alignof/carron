@@ -66,6 +66,14 @@ pub fn pread(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
     len as i64
 }
 
+pub fn pwrite(cpu: &CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
+    eprintln!("sys_pwrite(68)");
+    let buf = memread(cpu, dst_addr as u32, len);
+    let len = unsafe { libc::pwrite(fd as i32, buf.as_ptr() as *const c_void, len as usize, off as i64) };
+
+    len as i64
+}
+
 pub fn fstatat(cpu: &mut CPU, dirfd: u64, name_addr: u64, len: u64, dst_addr: u64, flags: u64) -> i64 {
     eprintln!("sys_fstatat(79)");
     let name: Vec<u8> = memread(cpu, name_addr as u32, len);
