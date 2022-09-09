@@ -1,6 +1,6 @@
 [package]
 name = "carron"
-version = "0.9.4"
+version = "0.9.5"
 authors = ["n.takana <Alignof@outlook.com>"]
 edition = "2021"
 description = "RV32IMAC emulator"
