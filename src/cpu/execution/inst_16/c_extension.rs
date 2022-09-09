@@ -124,7 +124,7 @@ mod exe_16 {
 
     #[test]
     fn c_extension_test() {
-        let dummy_elf = elfload::ElfLoader::try_new("./return_42")
+        let dummy_elf = elfload::ElfLoader::try_new("./HelloWorld")
             .expect("creating dummy_elf failed");
         let mut cpu = CPU::new(dummy_elf, None);
 

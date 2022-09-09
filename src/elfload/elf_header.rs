@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn elf_header_test() {
-        let loader = match ElfLoader::try_new("./return_42") {
+        let loader = match ElfLoader::try_new("./HelloWorld") {
             Ok(loader) => loader,
             Err(error) => {
                 panic!("There was a problem opening the file: {:?}", error);
