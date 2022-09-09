@@ -30,7 +30,7 @@ pub fn is_cinst(mmap: &[u8], index: usize) -> bool {
 pub struct ElfLoader {
     pub elf_header: ElfHeader,
     pub prog_headers: Vec<ProgramHeader>,
-        sect_headers: Vec<SectionHeader>,
+    pub sect_headers: Vec<SectionHeader>,
     pub mem_data: Mmap,
 }
 
@@ -62,6 +62,51 @@ impl ElfLoader {
         }
 
         None
+    }
+
+    pub fn get_host_addr(&self) -> (Option<u32>, Option<u32>) {
+        let symtab = self.sect_headers.iter()
+            .find_map(|s| {
+                if s.sh_name == ".symtab" {
+                    return Some(s);
+                }
+                None
+            });
+        let strtab = self.sect_headers.iter()
+            .find_map(|s| {
+                if s.sh_name == ".strtab" {
+                    return Some(s);
+                }
+                None
+            });
+
+        let mut tohost = None;
+        let mut fromhost = None;
+        if let (Some(symtab), Some(strtab)) = (symtab, strtab) {
+            const ST_SIZE: usize = 16;
+            for symtab_off in (symtab.sh_offset .. symtab.sh_offset + symtab.sh_size).step_by(ST_SIZE) {
+                let st_name_off = get_u32(&self.mem_data, symtab_off as usize);
+                let st_name = &self.mem_data[(strtab.sh_offset + st_name_off) as usize ..]
+                    .iter()
+                    .take_while(|c| **c as char != '\0')
+                    .map(|c| *c as char)
+                    .collect::<String>();
+
+                if st_name == "tohost" {
+                    tohost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                }
+
+                if st_name == "fromhost" {
+                    fromhost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                }
+
+                if tohost.is_some() && fromhost.is_some() {
+                    break;
+                }
+            }
+        }
+
+        (tohost, fromhost)
     }
 
     pub fn header_show(&self) {

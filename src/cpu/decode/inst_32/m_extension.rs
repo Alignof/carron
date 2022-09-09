@@ -22,7 +22,7 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
     }
 }
 
-pub fn parse_rd(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+pub fn parse_rd(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
     let rd: usize = inst.slice(11, 7) as usize;
 
     match opkind {
@@ -38,7 +38,7 @@ pub fn parse_rd(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Optio
     }
 }
 
-pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
     let rs1: usize = inst.slice(19, 15) as usize;
 
     match opkind {
@@ -54,7 +54,7 @@ pub fn parse_rs1(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Opti
     }
 }
 
-pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
     let rs2: usize = inst.slice(24, 20) as usize;
 
     match opkind {
@@ -71,7 +71,7 @@ pub fn parse_rs2(inst: u32, opkind: &OpecodeKind) -> Result<Option<usize>, (Opti
 }
 
 #[allow(non_snake_case)]
-pub fn parse_imm(_inst: u32, _opkind: &OpecodeKind) -> Result<Option<i32>, (Option<i32>, TrapCause, String)> {
+pub fn parse_imm(_inst: u32, _opkind: &OpecodeKind) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
     Ok(None)
 }
 

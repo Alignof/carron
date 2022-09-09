@@ -2,12 +2,12 @@ use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::csr::{CSRname, Xstatus};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
             if cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TSR) == 1 {
                 return Err((
-                    Some(cpu.bus.load32(cpu.pc)?),
+                    Some(cpu.bus.load32(cpu.pc)? as u32),
                     TrapCause::IllegalInst,
                     "exec sret but mstatus.TSR == 1".to_string()
                 ));
@@ -32,11 +32,11 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
             cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, 0b00); // ssatus.SPP = 0
 
             if cpu.csrs.read(CSRname::mstatus.wrap())? >> 22 & 1 == 1 { // mstatus.TSR == 1
-                let except_pc = cpu.pc as i32;
+                let except_pc = cpu.pc;
                 cpu.exception(except_pc, TrapCause::IllegalInst);
             } else {
                 let new_pc = cpu.csrs.read(CSRname::sepc.wrap())?;
-                cpu.update_pc(new_pc as i32);
+                cpu.update_pc(new_pc);
             }
         },
         OpecodeKind::OP_MRET => {
@@ -57,7 +57,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
             cpu.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPIE, 0b1); // msatus.MPIE = 1
             cpu.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, 0b00); // msatus.MPP = 0
 
-            let new_pc = cpu.csrs.read(CSRname::mepc.wrap())? as i32;
+            let new_pc = cpu.csrs.read(CSRname::mepc.wrap())?;
             cpu.update_pc(new_pc);
         },
         OpecodeKind::OP_WFI => {
@@ -65,7 +65,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapC
         },
         OpecodeKind::OP_SFENCE_VMA => {
             if cpu.priv_lv == PrivilegedLevel::Supervisor && cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM) == 1 {
-                cpu.exception(cpu.bus.load32(cpu.pc)?, TrapCause::IllegalInst);
+                cpu.exception(cpu.bus.load32(cpu.pc)? as u32, TrapCause::IllegalInst);
             }
         },
         _ => panic!("not an privileged extension"),

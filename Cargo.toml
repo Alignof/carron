@@ -1,6 +1,6 @@
 [package]
 name = "carron"
-version = "0.9.4"
+version = "0.9.5"
 authors = ["n.takana <Alignof@outlook.com>"]
 edition = "2021"
 description = "RV32IMAC emulator"
@@ -11,6 +11,7 @@ description = "RV32IMAC emulator"
 overflow-checks = false
 
 [dependencies]
+libc = "0.2.132"
 memmap = "0.7.0"
 dbg_hex = "0.1.1"
 clap = {version = "3.0.5", features=["cargo"]}

@@ -1,28 +1,35 @@
-pub mod system;
+pub mod cmdline;
 pub mod cpu;
 pub mod bus;
 pub mod elfload;
+mod fesvr;
 
 use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
+use cmdline::Arguments;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,
-    break_point: Option<u32>,
-    result_reg: Option<usize>,
+    tohost_addr: Option<u32>,
+    fromhost_addr: Option<u32>,
+    args: Arguments,
+    exit_code: Option<i32>,
 }
 
 impl Emulator {
-    pub fn new(loader: elfload::ElfLoader, pk_load: Option<elfload::ElfLoader>,
-               pc_from_cli: Option<u32>, break_point: Option<u32> , result_reg: Option<usize>) -> Emulator {
+    pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Emulator {
+        let (tohost_addr, fromhost_addr) = loader.get_host_addr();
+
         Emulator {
-            cpu: CPU::new(loader, pk_load, pc_from_cli),
-            break_point,
-            result_reg,
+            cpu: CPU::new(loader, args.init_pc),
+            tohost_addr,
+            fromhost_addr,
+            args,
+            exit_code: None,
         }
     }
 
-    fn exec_one_cycle(&mut self) -> Result<(), (Option<i32>, TrapCause, String)> {
+    fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
         use crate::cpu::execution::Execution;
     
         self.cpu.check_interrupt()?;
@@ -33,24 +40,29 @@ impl Emulator {
     }
 
     pub fn emulation(&mut self) {
-        // rv32ui-p: 0x80000044, gp(3)
-        // rv32ui-v: 0xffc02308, a0(10)
-
         loop {
             match self.exec_one_cycle() {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
-                    self.cpu.trap(addr.unwrap_or(self.cpu.pc as i32), cause);
+                    self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
                     eprintln!("{}", msg);
                 },
             }
 
-            if self.break_point.unwrap_or(u32::MAX) == self.cpu.pc {
-                if self.result_reg.is_some() {
-                    std::process::exit(self.cpu.regs.read(self.result_reg));
-                } else {
-                    std::process::exit(0);
+            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost() {
+                self.handle_syscall();
+            }
+
+            if let Some(break_point) = self.args.break_point {
+                if break_point == self.cpu.pc {
+                    self.exit_code = Some(
+                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0))) as i32
+                    );
                 }
+            }
+
+            if let Some(exit_code) = self.exit_code {
+                std::process::exit(exit_code);
             }
         }
     }

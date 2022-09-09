@@ -1,6 +1,6 @@
 use super::instruction::reg2str;
 pub struct Register {
-    regs: [i32; 32],
+    regs: [u32; 32],
 }
 
 impl Register {
@@ -11,16 +11,15 @@ impl Register {
     }
 
     pub fn show(&self) {
-        println!("=========================================== dump ============================================");
-        //println!("pc: 0x{:x}", self.pc);
+        eprintln!("=========================================== dump ============================================");
         for (num, reg) in self.regs.iter().enumerate() {
-            print!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
-            if (num + 1) % 4 == 0 { println!() }
+            eprint!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
+            if (num + 1) % 4 == 0 { eprintln!() }
         }
-        println!("=============================================================================================");
+        eprintln!("=============================================================================================");
     }
     
-    pub fn read(&self, src: Option<usize>) -> i32 {
+    pub fn read(&self, src: Option<usize>) -> u32 {
         let src = src.unwrap();
         if src == 0 {
             0
@@ -29,7 +28,7 @@ impl Register {
         }
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: i32) {
+    pub fn write(&mut self, dist: Option<usize>, src: u32) {
         let dist = dist.unwrap();
         if dist != 0 {
             self.regs[dist] = src;

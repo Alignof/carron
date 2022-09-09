@@ -6,11 +6,11 @@ use crate::cpu::TrapCause;
 use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
 
 impl Decode for u16 {
-    fn decode(&self) -> Result<Instruction, (Option<i32>, TrapCause, String)> {
+    fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)> {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc)  => opc,
             Err(msg) => return Err((
-                Some(*self as i32),
+                Some(*self as u32),
                 TrapCause::IllegalInst,
                 format!("{}, {:b}", msg, self)
             )),
@@ -36,28 +36,28 @@ impl Decode for u16 {
         }
     }
 
-    fn parse_rd(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+    fn parse_rd(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rd(self, opkind),
             _ => panic!("It isn't compressed instruction"),
         }
     }
 
-    fn parse_rs1(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+    fn parse_rs1(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rs1(self, opkind),
             _ => panic!("It isn't compressed instruction"),
         }
     }
 
-    fn parse_rs2(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<i32>, TrapCause, String)> {
+    fn parse_rs2(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rs2(self, opkind),
             _ => panic!("It isn't compressed instruction"),
         }
     }
 
-    fn parse_imm(self, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<i32>, TrapCause, String)> {
+    fn parse_imm(self, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_imm(self, opkind),
             _ => panic!("It isn't compressed instruction"),

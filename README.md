@@ -28,7 +28,7 @@ cargo build --release
 ## Usage
 ```zsh
 $ ./carron --help
-carron 0.9.4
+carron 0.9.5
 n.takana <Alignof@outlook.com>
 RV32IMAC emulator
 
@@ -50,4 +50,12 @@ OPTIONS:
         --result_reg <register_number>    Set result register
     -h, --help                            Print help information
     -V, --version                         Print version information
+
+$ ./carron --pk $RISCV/riscv32-unknown-elf/bin/pk ./HelloWorld 2>/dev/null
+
+In file HelloWorld
+elfcheck: OK
+
+bbl loader
+hello world!
 ```

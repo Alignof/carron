@@ -7,7 +7,7 @@ mod zicsr_extension;
 use crate::cpu::{CPU, TrapCause};
 use crate::cpu::instruction::{Instruction, Extensions};
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, TrapCause, String)> {
+pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
     const INST_SIZE: u32 = 4;
 
     // store previous program counter for excluding branch case
@@ -24,7 +24,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<i32>, T
 
     // add the program counter when it isn't a branch instruction
     if cpu.pc == prev_pc {
-        cpu.add2pc(INST_SIZE as i32);
+        cpu.add2pc(INST_SIZE);
     }
 
     Ok(())

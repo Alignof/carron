@@ -30,8 +30,8 @@ impl CSRs {
         self
     }
 
-    pub fn bitset(&mut self, dist: Option<usize>, src: i32) {
-        let mask = src as u32;
+    pub fn bitset(&mut self, dist: Option<usize>, src: u32) {
+        let mask = src;
         if mask != 0 {
             match dist.unwrap() {
                 0x000 => self.csrs[0x300] |= mask & UMASK,
@@ -41,8 +41,8 @@ impl CSRs {
         }
     }
 
-    pub fn bitclr(&mut self, dist: Option<usize>, src: i32) {
-        let mask = src as u32;
+    pub fn bitclr(&mut self, dist: Option<usize>, src: u32) {
+        let mask = src;
         if mask != 0 {
             match dist.unwrap() {
                 0x000 => self.csrs[0x300] &= !(mask & UMASK),
@@ -52,16 +52,16 @@ impl CSRs {
         }
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: i32) {
+    pub fn write(&mut self, dist: Option<usize>, src: u32) {
         match dist.unwrap() {
-            0x000 => self.csrs[0x300] = src as u32 & UMASK,
-            0x100 => self.csrs[0x300] = src as u32 & SMASK,
-            _ => self.csrs[dist.unwrap()] = src as u32,
+            0x000 => self.csrs[0x300] = src & UMASK,
+            0x100 => self.csrs[0x300] = src & SMASK,
+            _ => self.csrs[dist.unwrap()] = src,
         }
         self.update_triggers(dist.unwrap(), src);
     }
 
-    fn read_xepc(&self, dist: usize) -> Result<u32, (Option<i32>, TrapCause, String)> {
+    fn read_xepc(&self, dist: usize) -> Result<u32, (Option<u32>, TrapCause, String)> {
         if self.csrs[CSRname::misa as usize] >> 2 & 0x1 == 1 {
             // C extension enabled (IALIGN = 16)
             Ok(self.csrs[dist] & !0b01)
@@ -71,7 +71,7 @@ impl CSRs {
         }
     }
 
-    pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<i32>, TrapCause, String)> {
+    pub fn read(&self, src: Option<usize>) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let dist = src.unwrap();
         match dist {
             0x000  => Ok(self.csrs[0x300] & UMASK),
