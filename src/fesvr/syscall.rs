@@ -36,6 +36,17 @@ pub fn close(fd: u64) -> i64 {
     0
 }
 
+pub fn read(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
+    eprintln!("sys_read(63)");
+    let buf: Vec<u8> = vec![0; len as usize];
+    let ret = unsafe { libc::read(fd as i32, buf.as_ptr() as *mut c_void, len as usize) };
+    if ret > 0 {
+        memwrite(cpu, dst_addr as u32, buf.len(), buf);
+    }
+
+    len as i64
+}
+
 pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
     eprintln!("sys_write(64)");
     let buf = memread(cpu, dst_addr as u32, len);
