@@ -26,7 +26,7 @@ impl Emulator {
             67 => syscall::pread(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]).unwrap_or(-1),
             68 => panic!("sys_pwrite is not implemented"),
             79 => panic!("sys_fstatat is not implemented"),
-            80 => panic!("sys_fstat is not implemented"),
+            80 => syscall::fstat(&mut self.cpu, sysargs[1], sysargs[2]).unwrap_or(-1),
             93 => syscall::exit(&mut self.exit_code, sysargs[1]).unwrap_or(-1),
             291 => panic!("sys_statx is not implemented"),
             1039 => panic!("sys_lstat is not implemented"),

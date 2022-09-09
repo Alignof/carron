@@ -18,7 +18,7 @@ fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
 }
 
 pub fn openat(cpu: &CPU, dirfd: u64, name_addr: u64, len: u64, flags: u64, mode: u64) -> Result<i64, std::io::Error> {
-    eprintln!("do sys_openat(56)");
+    eprintln!("sys_openat(56)");
     let name: Vec<u8> = memread(cpu, name_addr as u32, len);
     let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
     let fd = unsafe { libc::openat(dirfd as i32, name.as_ptr() as *const i8, flags as i32, mode as i32) };
@@ -31,13 +31,13 @@ pub fn openat(cpu: &CPU, dirfd: u64, name_addr: u64, len: u64, flags: u64, mode:
 }
 
 pub fn close(fd: u64) -> Result<i64, std::io::Error> {
-    eprintln!("do sys_close(57)");
+    eprintln!("sys_close(57)");
     unsafe { libc::close(fd as i32) };
     Ok(0)
 }
 
 pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> Result<i64, std::io::Error> {
-    eprintln!("do sys_write(64)");
+    eprintln!("sys_write(64)");
     let buf = memread(cpu, dst_addr as u32, len);
     let len = unsafe { libc::write(fd as i32, buf.as_ptr() as *const c_void, len as usize) };
 
@@ -45,7 +45,7 @@ pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> Result<i64, std::io
 }
 
 pub fn pread(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> Result<i64, std::io::Error> {
-    eprintln!("do sys_pread(67)");
+    eprintln!("sys_pread(67)");
     let buf: Vec<u8> = vec![0; len as usize];
     let ret = unsafe { libc::pread(fd as i32, buf.as_ptr() as *mut c_void, len as usize, off as i64) };
     if ret > 0 {
@@ -55,15 +55,58 @@ pub fn pread(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> Resul
     Ok(len as i64)
 }
 
+pub fn fstat(cpu: &mut CPU, fd: u64, dst_addr: u64) -> Result<i64, ()> {
+    eprintln!("sys_fstat(80)");
+    let (ret, rbuf) = unsafe {
+        let mut buf: libc::stat = std::mem::zeroed();
+        let ret = libc::fstat(fd as i32, &mut buf as *mut libc::stat);
+        const PADDING: u64 = 0;
+        (
+            ret,
+            vec![
+                buf.st_dev,
+                buf.st_ino,
+                (buf.st_mode as u64) << 32 | buf.st_nlink as u64,
+                (buf.st_uid as u64) << 32 | buf.st_gid as u64,
+                buf.st_rdev,
+                PADDING,
+                buf.st_size as u64,
+                (buf.st_blksize as u64) << 32 | PADDING,
+                buf.st_blocks as u64,
+                buf.st_atime as u64,
+                PADDING,
+                buf.st_mtime as u64,
+                PADDING,
+                buf.st_ctime as u64,
+                PADDING,
+                PADDING,
+                PADDING,
+            ]
+        )
+    };
+
+    if ret == -1 {
+        Err(())
+    } else {
+        let rbuf = rbuf
+        .iter()
+        .flat_map(|w| w.to_le_bytes().to_vec())
+        .collect::<Vec<u8>>();
+
+        memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
+        Ok(ret as i64)
+    }
+}
+
 pub fn exit(exit_code: &mut Option<i32>, code: u64) -> Result<i64, std::io::Error> {
-    eprintln!("do sys_exit(93)");
+    eprintln!("sys_exit(93)");
     *exit_code = Some(code as i32);
 
     Ok(0)
 }
 
 pub fn getmainvars(cpu: &mut CPU, args: &Arguments, dst_addr: u64, limit: u64) -> Result<i64, ()> {
-    eprintln!("do sys_getmainvars(2011)");
+    eprintln!("sys_getmainvars(2011)");
 
     let elfpath = args.filename.clone();
     let pkpath = args.pkpath.as_ref().unwrap().clone();
