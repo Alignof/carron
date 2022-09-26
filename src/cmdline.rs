@@ -1,4 +1,4 @@
-use clap::{AppSettings, ArgGroup, arg};
+use clap::{AppSettings, ArgGroup, Arg, arg};
 
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
@@ -17,6 +17,7 @@ pub struct Arguments {
     pub init_pc: Option<u32>,
     pub break_point: Option<u32>,
     pub result_reg: Option<usize>,
+    pub main_args: Option<Vec<String>>,
 }
 
 impl Arguments {
@@ -37,6 +38,7 @@ impl Arguments {
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
             .arg(arg!(--break_point <address> ... "Set break point as hex").required(false))
             .arg(arg!(--result_reg <register_number> ... "Set result register").required(false))
+            .arg(Arg::new("main_args").multiple_values(true))
             .setting(AppSettings::DeriveDisplayOrder)
             .get_matches();
 
@@ -82,6 +84,11 @@ impl Arguments {
                 x.parse().unwrap()
             });
 
+        let main_args = app.values_of("main_args")
+            .map(|args| {
+                args.map(|s| s.to_string()).collect::<Vec<String>>()
+            });
+
         Arguments {
             filename,
             exe_option,
@@ -89,6 +96,7 @@ impl Arguments {
             init_pc,
             break_point,
             result_reg,
+            main_args,
         }
     }
 }
