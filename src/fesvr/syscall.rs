@@ -170,21 +170,40 @@ pub fn exit(exit_code: &mut Option<i32>, code: u64) -> i64 {
 pub fn getmainvars(cpu: &mut CPU, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {
     eprintln!("sys_getmainvars(2011)");
 
-    let elfpath = args.filename.clone();
-    let pkpath = args.pkpath.as_ref().unwrap().clone();
+    let elfpath = format!("{}\0", args.filename);
+    let pkpath = format!("{}\0", args.pkpath.as_ref().unwrap());
     let mut words: Vec<u64> = vec![0; 5];
-    words[0] = 2; // argc
-    words[1] = dst_addr + 8*5;
-    words[2] = dst_addr + 8*5 + pkpath.len() as u64;
-    words[3] = 0; // argv[argc] = NULL
+    words[0] = 2 + args.main_args.as_ref().unwrap_or(&Vec::new()).len() as u64; // argc
+    words[1] = dst_addr + 8*5; // pkpath addr
+    words[2] = words[1] + pkpath.len() as u64; // elfpath addr
+    words[3] = if args.main_args.is_some() { // arguments addr of main func
+        words[2] + elfpath.len() as u64
+    } else {
+        0 // argv[argc] = NULL
+    };
     words[4] = 0; // envp[0] = NULL
     
+    dbg!(&args.filename);
+    dbg!(&args.pkpath);
+    dbg!(&args.main_args);
+
     let mut buf: Vec<u8> = words
         .iter()
         .flat_map(|w| w.to_le_bytes().to_vec())
         .collect::<Vec<u8>>();
     buf.append(&mut pkpath.into_bytes());
     buf.append(&mut elfpath.into_bytes());
+    if let Some(argv) = &args.main_args {
+        buf.append(
+            &mut argv
+                .iter()
+                .cloned()
+                .flat_map(|x| {
+                    format!("{}\0", x).into_bytes()
+                })
+                .collect()
+        );
+    }
 
     if buf.len() > limit as usize {
         return -12;
