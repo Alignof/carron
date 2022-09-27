@@ -36,6 +36,12 @@ pub fn close(fd: u64) -> i64 {
     0
 }
 
+pub fn lseek(fd: u64, ptr: u64, dir: u64) -> i64 {
+    eprintln!("sys_lseek(62)");
+    let ret = unsafe { libc::lseek(fd as i32, ptr as i64, dir as i32) };
+    ret as i64
+}
+
 pub fn read(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
     eprintln!("sys_read(63)");
     let buf: Vec<u8> = vec![0; len as usize];

@@ -20,7 +20,7 @@ impl Emulator {
             49 => panic!("sys_chdir is not implemented"),
             56 => syscall::openat(&self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5]),
             57 => syscall::close(sysargs[1]),
-            62 => panic!("sys_lseek is not implemented"),
+            62 => syscall::lseek(sysargs[1], sysargs[2], sysargs[3]),
             63 => syscall::read(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3]),
             64 => syscall::write(&self.cpu, sysargs[1], sysargs[2], sysargs[3]),
             67 => syscall::pread(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
