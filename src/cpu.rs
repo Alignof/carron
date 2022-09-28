@@ -7,6 +7,7 @@ mod mmu;
 mod instruction;
 
 use std::collections::HashSet;
+use crate::log;
 use crate::bus;
 use crate::elfload;
 use csr::{CSRname, Xstatus};
@@ -194,7 +195,7 @@ impl CPU {
         let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
         if self.priv_lv != PrivilegedLevel::Machine && (mideleg & 1 << mcause) != 0 {
-            dbg!("delegated");
+            log::infoln!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as u32);
             self.csrs.write(CSRname::sepc.wrap(), self.pc);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
@@ -232,7 +233,7 @@ impl CPU {
         let medeleg = self.csrs.read(CSRname::medeleg.wrap()).unwrap();
         if self.priv_lv != PrivilegedLevel::Machine && (medeleg & 1 << mcause) != 0 {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
-            dbg!("delegated");
+            log::infoln!("delegated");
             self.csrs.write(CSRname::scause.wrap(), cause_of_trap as u32);
             self.csrs.write(CSRname::sepc.wrap(), self.pc);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
@@ -282,7 +283,7 @@ impl CPU {
             },
         }
 
-        eprintln!("new pc:0x{:x}", self.pc);
+        log::infoln!("new pc: 0x{:x}", self.pc);
     }
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
@@ -305,7 +306,7 @@ impl CPU {
 
             Ok(addr) => Ok(addr),
             Err(cause) => {
-                dbg!(cause);
+                log::debugln!("{:?}", cause);
                 Err((Some(addr), cause, format!("address transration failed: {:?}", cause)))
             },
         }

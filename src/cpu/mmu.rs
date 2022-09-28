@@ -1,3 +1,4 @@
+use crate::log;
 use crate::bus::Device;
 use crate::bus::dram::Dram;
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
@@ -33,19 +34,19 @@ impl MMU {
         match purpose {
             TransFor::Fetch | TransFor::Deleg => {
                 if pmp_x != 1 {
-                    eprintln!("invalid pmp_x: {:x}", pmpcfg);
+                    log::debugln!("invalid pmp_x: {:x}", pmpcfg);
                     return Err(TrapCause::InstPageFault);
                 }
             },
             TransFor::Load => {
                 if pmp_r != 1 {
-                    eprintln!("invalid pmp_r: {:x}", pmpcfg);
+                    log::debugln!("invalid pmp_r: {:x}", pmpcfg);
                     return Err(TrapCause::LoadPageFault);
                 }
             },
             TransFor::StoreAMO => {
                 if pmp_w != 1 {
-                    eprintln!("invalid pmp_w: {:x}", pmpcfg);
+                    log::debugln!("invalid pmp_w: {:x}", pmpcfg);
                     return Err(TrapCause::StoreAMOPageFault);
                 }
             },
@@ -141,7 +142,7 @@ impl MMU {
 
         // check the PTE validity
         if pte_v == 0 || (pte_r == 0 && pte_w == 1) {
-            eprintln!("invalid pte: {:x}", pte);
+            log::debugln!("invalid pte: {:x}", pte);
             return Err(trap_cause(purpose));
         }
 
@@ -170,14 +171,14 @@ impl MMU {
 
         // check the U bit
         if pte_u == 0 && priv_lv == PrivilegedLevel::User {
-            eprintln!("invalid pte_u: {:x}", pte);
+            log::debugln!("invalid pte_u: {:x}", pte);
             return Err(trap_cause(purpose));
         }
         match purpose {
             TransFor::Load | TransFor::StoreAMO => {
                 let sum = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SUM);
                 if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
-                    eprintln!("invalid pte_u: {:x}", pte);
+                    log::debugln!("invalid pte_u: {:x}", pte);
                     return Err(trap_cause(purpose));
                 }
             },
@@ -187,12 +188,12 @@ impl MMU {
         // check the X and R bit
         let mxr = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MXR);
         if (mxr == 0 && pte_r == 0) || (mxr == 1 && pte_r == 1 && pte_x == 1) {
-            eprintln!("invalid pte_r or pte_x: {:x}", pte);
+            log::debugln!("invalid pte_r or pte_x: {:x}", pte);
             return Err(trap_cause(purpose));
         }
         
         if pte_a == 0 {
-            eprintln!("invalid pte_a: {:x}", pte);
+            log::debugln!("invalid pte_a: {:x}", pte);
             return Err(trap_cause(purpose));
         }
 
@@ -200,25 +201,25 @@ impl MMU {
         match purpose {
             TransFor::Fetch | TransFor::Deleg => {
                 if pte_x != 1 {
-                    eprintln!("invalid pte_x: {:x}", pte);
+                    log::debugln!("invalid pte_x: {:x}", pte);
                     return Err(TrapCause::InstPageFault);
                 }
             },
             TransFor::Load => {
                 if pte_r != 1 {
-                    eprintln!("invalid pte_r: {:x}", pte);
+                    log::debugln!("invalid pte_r: {:x}", pte);
                     return Err(TrapCause::LoadPageFault);
                 }
             },
             TransFor::StoreAMO => {
                 if pte_w != 1 || pte_d == 0 {
-                    eprintln!("invalid pte_w: {:x}", pte);
+                    log::debugln!("invalid pte_w: {:x}", pte);
                     return Err(TrapCause::StoreAMOPageFault);
                 }
             },
         }
 
-        eprintln!("PPN0: 0x{:x}", pte >> 10 & 0x3FF);
+        log::debugln!("PPN0: 0x{:x}", pte >> 10 & 0x3FF);
         Ok(pte)
     }
 
@@ -252,16 +253,16 @@ impl MMU {
 
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
-                        eprintln!("PTE_addr(1): 0x{:x}", PTE_addr);
+                        log::debugln!("PTE_addr(1): 0x{:x}", PTE_addr);
                         let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr).unwrap() as u32) {
                             Ok(pte) => pte,
                             Err(cause) => {
                                 return Err(cause) // exception
                             },
                         };
-                        eprintln!("PTE(1): 0x{:x}", PTE);
+                        log::debugln!("PTE(1): 0x{:x}", PTE);
                         let PPN1 = PTE >> 20 & 0xFFF;
-                        eprintln!("PPN1: 0x{:x}", PPN1);
+                        log::debugln!("PPN1: 0x{:x}", PPN1);
 
                         // complete the trans addr if PTE is the leaf
                         let PPN0 = if self.is_leaf_pte(PTE) {
@@ -278,8 +279,8 @@ impl MMU {
                             } else {
                                 // second table walk
                                 let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
-                                eprintln!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
-                                eprintln!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
+                                log::debugln!("PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE");
+                                log::debugln!("0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                          PTE_addr, (PTE >> 10 & 0x3FFFFF), PAGESIZE, VPN0, PTESIZE);
                                 let PTE = match self.check_pte_validity(&purpose, dram.load32(PTE_addr).unwrap() as u32) {
                                     Ok(pte) => pte,
@@ -288,7 +289,7 @@ impl MMU {
                                     },
                                 };
 
-                                eprintln!("PTE(2): 0x{:x}", PTE);
+                                log::debugln!("PTE(2): 0x{:x}", PTE);
 
                                 // check PTE to be leaf
                                 if !self.is_leaf_pte(PTE) {
@@ -302,7 +303,7 @@ impl MMU {
                                 }
                             };
 
-                        eprintln!("raw address:{:x}\n\t=> transrated address:{:x}",
+                        log::debugln!("raw address:{:x}\n\t=> transrated address:{:x}",
                                  addr, PPN1 << 22 | PPN0 << 12 | page_off);
 
                         // check pmp and return transrated address

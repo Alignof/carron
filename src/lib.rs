@@ -1,4 +1,5 @@
 pub mod cmdline;
+pub mod log;
 pub mod cpu;
 pub mod bus;
 pub mod elfload;
@@ -45,7 +46,7 @@ impl Emulator {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
                     self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
-                    eprintln!("{}", msg);
+                    log::debugln!("{}", msg);
                 },
             }
 

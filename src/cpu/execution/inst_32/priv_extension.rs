@@ -1,3 +1,4 @@
+use crate::log;
 use crate::cpu::{CPU, PrivilegedLevel, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::csr::{CSRname, Xstatus};
@@ -20,8 +21,8 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
                 0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
                 _ => panic!("invalid PrivilegedLevel"),
             };
-            dbg!(cpu.priv_lv);
-            dbg_hex::dbg_hex!(cpu.csrs.read(CSRname::sepc.wrap())?);
+            log::debugln!("priv: {:?}", cpu.priv_lv);
+            log::debugln!("csrs.sepc: {:x}", cpu.csrs.read(CSRname::sepc.wrap())?);
 
             cpu.csrs.write_xstatus( // sstatus.SIE = sstatus.SPIE
                 PrivilegedLevel::Supervisor,
@@ -47,7 +48,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
                 0b11 => PrivilegedLevel::Machine,
                 _ => panic!("invalid PrivilegedLevel"),
             };
-            dbg!(cpu.priv_lv);
+            log::debugln!("priv: {:?}", cpu.priv_lv);
 
             cpu.csrs.write_xstatus( // sstatus.MIE = sstatus.MPIE
                 PrivilegedLevel::Machine,

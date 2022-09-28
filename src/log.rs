@@ -1,10 +1,10 @@
-pub static LOG_LEVEL: LogLv = LogLv::Info;
+pub static LOG_LEVEL: LogLv = LogLv::NoLog;
 
 #[derive(PartialEq, PartialOrd)]
 pub enum LogLv {
     NoLog,
-    Debug,
     Info,
+    Debug,
     All
 } 
 
@@ -32,6 +32,7 @@ macro_rules! infoln {
     }
 }
 
+#[allow(unused_macros)]
 macro_rules! info {
     ($($rest:tt)*) => {
         if crate::log::LogLv::Info <= crate::log::LOG_LEVEL {
@@ -40,6 +41,7 @@ macro_rules! info {
     }
 }
 
+#[allow(unused_imports)]
 pub(crate) use {
     debug, 
     debugln,

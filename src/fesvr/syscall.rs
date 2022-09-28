@@ -1,4 +1,5 @@
 use libc::c_void;
+use crate::log;
 use crate::CPU;
 use crate::Arguments;
 
@@ -18,7 +19,7 @@ fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
 }
 
 pub fn openat(cpu: &CPU, dirfd: u64, name_addr: u64, len: u64, flags: u64, mode: u64) -> i64 {
-    eprintln!("sys_openat(56)");
+    log::infoln!("sys_openat(56)");
     let name: Vec<u8> = memread(cpu, name_addr as u32, len);
     let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
     let fd = unsafe { libc::openat(dirfd as i32, name.as_ptr() as *const i8, flags as i32, mode as i32) };
@@ -31,57 +32,57 @@ pub fn openat(cpu: &CPU, dirfd: u64, name_addr: u64, len: u64, flags: u64, mode:
 }
 
 pub fn close(fd: u64) -> i64 {
-    eprintln!("sys_close(57)");
+    log::infoln!("sys_close(57)");
     unsafe { libc::close(fd as i32) };
     0
 }
 
 pub fn lseek(fd: u64, ptr: u64, dir: u64) -> i64 {
-    eprintln!("sys_lseek(62)");
+    log::infoln!("sys_lseek(62)");
     let ret = unsafe { libc::lseek(fd as i32, ptr as i64, dir as i32) };
     ret as i64
 }
 
 pub fn read(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
-    eprintln!("sys_read(63)");
+    log::infoln!("sys_read(63)");
     let buf: Vec<u8> = vec![0; len as usize];
-    let ret = unsafe { libc::read(fd as i32, buf.as_ptr() as *mut c_void, len as usize) };
-    if ret > 0 {
+    let read_len = unsafe { libc::read(fd as i32, buf.as_ptr() as *mut c_void, len as usize) };
+    if read_len > 0 {
         memwrite(cpu, dst_addr as u32, buf.len(), buf);
     }
 
-    len as i64
+    read_len as i64
 }
 
 pub fn write(cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
-    eprintln!("sys_write(64)");
+    log::infoln!("sys_write(64)");
     let buf = memread(cpu, dst_addr as u32, len);
-    let len = unsafe { libc::write(fd as i32, buf.as_ptr() as *const c_void, len as usize) };
+    let wrote_len = unsafe { libc::write(fd as i32, buf.as_ptr() as *const c_void, len as usize) };
 
-    len as i64
+    wrote_len as i64
 }
 
 pub fn pread(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
-    eprintln!("sys_pread(67)");
+    log::infoln!("sys_pread(67)");
     let buf: Vec<u8> = vec![0; len as usize];
-    let ret = unsafe { libc::pread(fd as i32, buf.as_ptr() as *mut c_void, len as usize, off as i64) };
-    if ret > 0 {
+    let read_len = unsafe { libc::pread(fd as i32, buf.as_ptr() as *mut c_void, len as usize, off as i64) };
+    if read_len > 0 {
         memwrite(cpu, dst_addr as u32, buf.len(), buf);
     }
 
-    len as i64
+    read_len as i64
 }
 
 pub fn pwrite(cpu: &CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
-    eprintln!("sys_pwrite(68)");
+    log::infoln!("sys_pwrite(68)");
     let buf = memread(cpu, dst_addr as u32, len);
-    let len = unsafe { libc::pwrite(fd as i32, buf.as_ptr() as *const c_void, len as usize, off as i64) };
+    let wrote_len = unsafe { libc::pwrite(fd as i32, buf.as_ptr() as *const c_void, len as usize, off as i64) };
 
-    len as i64
+    wrote_len as i64
 }
 
 pub fn fstatat(cpu: &mut CPU, dirfd: u64, name_addr: u64, len: u64, dst_addr: u64, flags: u64) -> i64 {
-    eprintln!("sys_fstatat(79)");
+    log::infoln!("sys_fstatat(79)");
     let name: Vec<u8> = memread(cpu, name_addr as u32, len);
     let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
     let (ret, rbuf) = unsafe {
@@ -125,7 +126,7 @@ pub fn fstatat(cpu: &mut CPU, dirfd: u64, name_addr: u64, len: u64, dst_addr: u6
 }
 
 pub fn fstat(cpu: &mut CPU, fd: u64, dst_addr: u64) -> i64 {
-    eprintln!("sys_fstat(80)");
+    log::infoln!("sys_fstat(80)");
     let (ret, rbuf) = unsafe {
         let mut buf: libc::stat = std::mem::zeroed();
         let ret = libc::fstat(fd as i32, &mut buf as *mut libc::stat);
@@ -167,14 +168,14 @@ pub fn fstat(cpu: &mut CPU, fd: u64, dst_addr: u64) -> i64 {
 }
 
 pub fn exit(exit_code: &mut Option<i32>, code: u64) -> i64 {
-    eprintln!("sys_exit(93)");
+    log::infoln!("sys_exit(93)");
     *exit_code = Some(code as i32);
 
     0
 }
 
 pub fn getmainvars(cpu: &mut CPU, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {
-    eprintln!("sys_getmainvars(2011)");
+    log::infoln!("sys_getmainvars(2011)");
 
     let elfpath = format!("{}\0", args.filename);
     let pkpath = format!("{}\0", args.pkpath.as_ref().unwrap());
@@ -189,10 +190,6 @@ pub fn getmainvars(cpu: &mut CPU, args: &Arguments, dst_addr: u64, limit: u64) -
     };
     words[4] = 0; // envp[0] = NULL
     
-    dbg!(&args.filename);
-    dbg!(&args.pkpath);
-    dbg!(&args.main_args);
-
     let mut buf: Vec<u8> = words
         .iter()
         .flat_map(|w| w.to_le_bytes().to_vec())

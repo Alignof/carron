@@ -1,9 +1,9 @@
-use dbg_hex::dbg_hex;
+use crate::log;
 use super::{TransFor, TrapCause};
 use super::decode::Decode;
 
 pub fn fetch(cpu: &mut super::CPU) -> Result<Box<dyn Decode>, (Option<u32>, TrapCause, String)> {
-    dbg_hex!(cpu.pc);
+    log::infoln!("pc: 0x{:x}", cpu.pc);
     let index_pc: u32 = cpu.trans_addr(TransFor::Fetch, cpu.pc)?;
     let is_cinst: bool = cpu.bus.raw_byte(index_pc) & 0x3 != 0x3;
 
