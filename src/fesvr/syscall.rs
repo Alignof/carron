@@ -48,7 +48,7 @@ pub fn read(cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
     let buf: Vec<u8> = vec![0; len as usize];
     let read_len = unsafe { libc::read(fd as i32, buf.as_ptr() as *mut c_void, len as usize) };
     if read_len > 0 {
-        memwrite(cpu, dst_addr as u32, read_len, buf);
+        memwrite(cpu, dst_addr as u32, read_len as usize, buf);
     }
 
     read_len as i64
