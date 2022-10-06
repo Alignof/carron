@@ -16,6 +16,8 @@ use csr::{CSRname, Xstatus};
 pub enum TrapCause {
     IllegalInst = 2,
     Breakpoint = 3,
+    LoadAddrMisaligned = 4,
+    StoreAMOAddrMisaligned = 6,
     UmodeEcall = 8,
     SmodeEcall = 9,
     MmodeEcall = 11,
