@@ -29,7 +29,7 @@ impl CSRs {
 }
 
 impl CPU {
-    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    pub fn check_breakpoint(&mut self, purpose: TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         for trigger_num in 0 .. self.csrs.triggers.tselect + 1 { 
             let tdata1 = self.csrs.triggers.tdata1[trigger_num];
             let trigger_type = tdata1 >> 28 & 0xF;

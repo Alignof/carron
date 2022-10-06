@@ -1,7 +1,7 @@
 mod breakpoint;
 
 use crate::cpu::{PrivilegedLevel, TrapCause};
-use crate::cpu::csr::breakpoint::{Triggers};
+use crate::cpu::csr::breakpoint::Triggers;
 
 const UMASK: u32 = 0b10000000000011010111100100110011;
 const SMASK: u32 = 0b10000000000011010111100100110011;
