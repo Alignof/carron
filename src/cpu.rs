@@ -14,6 +14,7 @@ use csr::{CSRname, Xstatus};
 
 #[derive(Copy, Clone, Debug)]
 pub enum TrapCause {
+    InstAddrMisaligned = 0,
     IllegalInst = 2,
     Breakpoint = 3,
     LoadAddrMisaligned = 4,
@@ -37,7 +38,7 @@ pub enum PrivilegedLevel {
     Machine = 0b11,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TransFor {
     Fetch,
     Load,
@@ -268,11 +269,14 @@ impl CPU {
 
     pub fn trap(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
         match cause_of_trap {
+            TrapCause::InstAddrMisaligned |
             TrapCause::IllegalInst |
             TrapCause::Breakpoint |
             TrapCause::UmodeEcall |
             TrapCause::SmodeEcall |
             TrapCause::MmodeEcall |
+            TrapCause::LoadAddrMisaligned |
+            TrapCause::StoreAMOAddrMisaligned |
             TrapCause::InstPageFault |
             TrapCause::LoadPageFault |
             TrapCause::StoreAMOPageFault => {
@@ -289,7 +293,7 @@ impl CPU {
     }
 
     pub fn trans_addr(&mut self, purpose: TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
-        let addr = self.check_breakpoint(&purpose, addr)?;
+        let addr = self.check_breakpoint(purpose, addr)?;
         let mut trans_priv = self.priv_lv;
 
         if (purpose == TransFor::Load || purpose == TransFor::StoreAMO) &&
@@ -303,10 +307,25 @@ impl CPU {
                }
         }
 
-        match self.mmu.trans_addr(
-            purpose, addr, &self.csrs, &self.bus.dram, trans_priv) {
+        match self.mmu.trans_addr(purpose, addr, &self.csrs, &self.bus.dram, trans_priv) {
 
-            Ok(addr) => Ok(addr),
+            Ok(addr) => { 
+                if addr % 4 == 0 {
+                    Ok(addr)
+                } else {
+                    let cause = match purpose {
+                        TransFor::Fetch => TrapCause::InstAddrMisaligned,
+                        TransFor::Load => TrapCause::LoadAddrMisaligned,
+                        TransFor::StoreAMO => TrapCause::StoreAMOAddrMisaligned,
+                        TransFor::Deleg => TrapCause::InstAddrMisaligned,
+                    };
+                    Err((
+                        Some(addr),
+                        cause,
+                        format!("address misaligned: {:?}", cause)
+                    ))
+                }
+            },
             Err(cause) => {
                 log::debugln!("{:?}", cause);
                 Err((Some(addr), cause, format!("address transration failed: {:?}", cause)))
