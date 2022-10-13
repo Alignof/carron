@@ -303,8 +303,11 @@ impl MMU {
                                 }
                             };
 
-                        log::debugln!("raw address:{:x}\n\t=> transrated address:{:x}",
-                                 addr, PPN1 << 22 | PPN0 << 12 | page_off);
+                        log::debugln!(
+                            "raw address:{:x}\n\t=> transrated address:{:x}",
+                            addr,
+                            PPN1 << 22 | PPN0 << 12 | page_off
+                        );
 
                         // check pmp and return transrated address
                         self.pmp(purpose, PPN1 << 22 | PPN0 << 12 | page_off, priv_lv, csrs)
