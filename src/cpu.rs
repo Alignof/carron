@@ -308,24 +308,7 @@ impl CPU {
         }
 
         match self.mmu.trans_addr(purpose, addr, &self.csrs, &self.bus.dram, trans_priv) {
-
-            Ok(addr) => { 
-                if addr % 4 == 0 {
-                    Ok(addr)
-                } else {
-                    let cause = match purpose {
-                        TransFor::Fetch => TrapCause::InstAddrMisaligned,
-                        TransFor::Load => TrapCause::LoadAddrMisaligned,
-                        TransFor::StoreAMO => TrapCause::StoreAMOAddrMisaligned,
-                        TransFor::Deleg => TrapCause::InstAddrMisaligned,
-                    };
-                    Err((
-                        Some(addr),
-                        cause,
-                        format!("address misaligned: {:?}", cause)
-                    ))
-                }
-            },
+            Ok(addr) => Ok(addr),
             Err(cause) => {
                 log::debugln!("{:?}", cause);
                 Err((Some(addr), cause, format!("address transration failed: {:?}", cause)))

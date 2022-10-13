@@ -1,4 +1,4 @@
-pub static LOG_LEVEL: LogLv = LogLv::NoLog;
+pub static LOG_LEVEL: LogLv = LogLv::Debug;
 
 #[derive(PartialEq, PartialOrd)]
 pub enum LogLv {
