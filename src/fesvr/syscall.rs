@@ -86,9 +86,9 @@ pub fn fstatat(cpu: &mut CPU, dirfd: u64, name_addr: u64, len: u64, dst_addr: u6
     let name: Vec<u8> = memread(cpu, name_addr as u32, len);
     let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
     let (ret, rbuf) = unsafe {
+        const PADDING: u64 = 0;
         let mut buf: libc::stat = std::mem::zeroed();
         let ret = libc::fstatat(dirfd as i32, name.as_ptr() as *const i8, &mut buf as *mut libc::stat, flags as i32);
-        const PADDING: u64 = 0;
         (
             ret,
             vec![
@@ -99,7 +99,7 @@ pub fn fstatat(cpu: &mut CPU, dirfd: u64, name_addr: u64, len: u64, dst_addr: u6
                 buf.st_rdev,
                 PADDING,
                 buf.st_size as u64,
-                (buf.st_blksize as u64) << 32 | PADDING,
+                (buf.st_blksize as u32 as u64) << 32 | PADDING,
                 buf.st_blocks as u64,
                 buf.st_atime as u64,
                 PADDING,
@@ -107,8 +107,7 @@ pub fn fstatat(cpu: &mut CPU, dirfd: u64, name_addr: u64, len: u64, dst_addr: u6
                 PADDING,
                 buf.st_ctime as u64,
                 PADDING,
-                PADDING,
-                PADDING,
+                (PADDING as u32 as u64) << 32 | PADDING as u32 as u64,
             ]
         )
     };
@@ -130,38 +129,16 @@ pub fn fstat(cpu: &mut CPU, fd: u64, dst_addr: u64) -> i64 {
     let (ret, rbuf) = unsafe {
         let mut buf: libc::stat = std::mem::zeroed();
         let ret = libc::fstat(fd as i32, &mut buf as *mut libc::stat);
-        const PADDING: u64 = 0;
-        (
-            ret,
-            vec![
-                buf.st_dev,
-                buf.st_ino,
-                (buf.st_mode as u64) << 32 | buf.st_nlink as u64,
-                (buf.st_uid as u64) << 32 | buf.st_gid as u64,
-                buf.st_rdev,
-                PADDING,
-                buf.st_size as u64,
-                (buf.st_blksize as u64) << 32 | PADDING,
-                buf.st_blocks as u64,
-                buf.st_atime as u64,
-                PADDING,
-                buf.st_mtime as u64,
-                PADDING,
-                buf.st_ctime as u64,
-                PADDING,
-                PADDING,
-                PADDING,
-            ]
-        )
+
+        let ptr = &mut buf as *mut libc::stat as *mut u8;
+        let len = std::mem::size_of::<libc::stat>();
+        let rbuf: Vec<u8> = dbg!(std::slice::from_raw_parts(ptr, len).to_vec());
+
+        (ret, rbuf)
     };
 
     if ret != -1 {
-        let rbuf = rbuf
-        .iter()
-        .flat_map(|w| w.to_le_bytes().to_vec())
-        .collect::<Vec<u8>>();
-
-        memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
+        memwrite(cpu, dbg!(dst_addr as u32), rbuf.len(), rbuf);
     }
 
     ret as i64
