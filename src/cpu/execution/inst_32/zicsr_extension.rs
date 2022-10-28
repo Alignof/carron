@@ -4,7 +4,12 @@ use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<u32>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, cpu.pc)?;
-    let invalid_instruction = Some(cpu.bus.load32(inst_addr)? as u32);
+    let invalid_instruction = Some(
+            (cpu.bus.raw_byte(inst_addr + 3) as u32) << 24 |
+            (cpu.bus.raw_byte(inst_addr + 2) as u32) << 16 |
+            (cpu.bus.raw_byte(inst_addr + 1) as u32) <<  8 |
+            (cpu.bus.raw_byte(inst_addr) as u32)
+        );
 
     if dist >= 4096 {
         return Err((
@@ -17,12 +22,12 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<u32>, Trap
     match cpu.priv_lv {
         PrivilegedLevel::User => {
             if (0x100..=0x180).contains(&dist) || (0x300..=0x344).contains(&dist) {
-                    return Err((
-                        invalid_instruction,
-                        TrapCause::IllegalInst,
-                        format!("You are in User mode but accessed {}", dist)
-                    ));
-                }
+                return Err((
+                    invalid_instruction,
+                    TrapCause::IllegalInst,
+                    format!("You are in User mode but accessed {}", dist)
+                ));
+            }
         },
         PrivilegedLevel::Supervisor => {
             if (0x300..=0x344).contains(&dist) {
