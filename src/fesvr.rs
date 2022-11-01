@@ -1,6 +1,41 @@
 mod syscall;
 use crate::Emulator;
 
+struct FrontendServer {
+    fd_table: Vec<Option<u64>>,
+}
+
+impl FrontendServer {
+    pub fn new() -> Self {
+        FrontendServer {
+            fd_table: vec![Some(0), Some(1), Some(2)],
+        }
+    }
+
+    pub fn alloc(&self, fd: u64) -> u64 {
+        if self.fd_table.iter().all(|x| x.is_some()) {
+            self.fd_table.push(Some(fd));
+            self.fd_table.len() as u64
+        } else {
+            let index = self.fd_table.iter().position(|x| x.is_none()).unwrap();
+            self.fd_table[index] = Some(fd);
+            index as u64
+        }
+    }
+
+    pub fn dealloc(&self, fd: u64) {
+        self.fd_table[fd as usize] = None;
+    }
+
+    pub fn lookup(&self, fd: u64) -> u64 {
+        if fd >= self.fd_table.len() as u64 {
+            u64::MAX // -1
+        } else {
+            self.fd_table[fd as usize].unwrap_or(u64::MAX)
+        }
+    }
+}
+
 impl Emulator {
     pub fn check_tohost(&self) -> bool {
         let tohost_addr = self.tohost_addr.unwrap();
@@ -46,7 +81,7 @@ impl Emulator {
         } else {
             let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
             let mut syscall_args: [u64; 8] = [
-                self.cpu.bus.load64(syscall_addr).unwrap() as u64,
+                self.cpu.bus.load64(dbg!(syscall_addr)).unwrap() as u64,
                 self.cpu.bus.load64(syscall_addr +  8).unwrap() as u64,
                 self.cpu.bus.load64(syscall_addr + 16).unwrap() as u64,
                 self.cpu.bus.load64(syscall_addr + 24).unwrap() as u64,
