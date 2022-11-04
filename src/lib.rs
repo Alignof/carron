@@ -7,10 +7,12 @@ mod fesvr;
 
 use cpu::{CPU, TrapCause};
 use cpu::fetch::fetch;
+use fesvr::FrontendServer;
 use cmdline::Arguments;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,
+    frontend_server: FrontendServer,
     tohost_addr: Option<u32>,
     fromhost_addr: Option<u32>,
     args: Arguments,
@@ -23,6 +25,7 @@ impl Emulator {
 
         Emulator {
             cpu: CPU::new(loader, args.init_pc),
+            frontend_server: FrontendServer::new(),
             tohost_addr,
             fromhost_addr,
             args,
