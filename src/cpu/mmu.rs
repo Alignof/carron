@@ -174,22 +174,16 @@ impl MMU {
             log::debugln!("invalid pte_u: {:x}", pte);
             return Err(trap_cause(purpose));
         }
+
         match purpose {
             TransFor::Load | TransFor::StoreAMO => {
                 let sum = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SUM);
                 if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
-                    log::debugln!("invalid pte_u: {:x}", pte);
+                    log::debugln!("[SUM] invalid pte_u: {:x}", pte);
                     return Err(trap_cause(purpose));
                 }
             },
             _ => (),
-        }
-        
-        // check the X and R bit
-        let mxr = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MXR);
-        if (mxr == 0 && pte_r == 0) || (mxr == 1 && pte_r == 1 && pte_x == 1) {
-            log::debugln!("invalid pte_r or pte_x: {:x}", pte);
-            return Err(trap_cause(purpose));
         }
         
         if pte_a == 0 {
@@ -200,19 +194,21 @@ impl MMU {
         // check the PTE field according to translate purpose 
         match purpose {
             TransFor::Fetch | TransFor::Deleg => {
-                if pte_x != 1 {
+                if pte_x == 0 {
                     log::debugln!("invalid pte_x: {:x}", pte);
                     return Err(TrapCause::InstPageFault);
                 }
             },
             TransFor::Load => {
-                if pte_r != 1 {
-                    log::debugln!("invalid pte_r: {:x}", pte);
+                // check the X and R bit
+                let mxr = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MXR);
+                if pte_r == 0 && (mxr == 0 || pte_x == 0) {
+                    log::debugln!("[MXR == {}] invalid pte_r or pte_x: {:x}", mxr, pte);
                     return Err(TrapCause::LoadPageFault);
                 }
             },
             TransFor::StoreAMO => {
-                if pte_w != 1 || pte_d == 0 {
+                if pte_w == 0 || pte_d == 0 {
                     log::debugln!("invalid pte_w: {:x}", pte);
                     return Err(TrapCause::StoreAMOPageFault);
                 }
