@@ -68,43 +68,31 @@ impl Device for Dram {
 
     fn store16(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        if index % 2 == 0 {
-            self.dram[index + 1] = ((data >> 8) & 0xFF) as u8;
-            self.dram[index + 0] = ((data >> 0) & 0xFF) as u8;
-            Ok(())
-        } else {
-            Err((Some(addr as u32), TrapCause::StoreAMOAddrMisaligned, format!("store address misaligned: 0x{:x}", addr)))
-        }
+        self.dram[index + 1] = ((data >> 8) & 0xFF) as u8;
+        self.dram[index + 0] = ((data >> 0) & 0xFF) as u8;
+        Ok(())
     }
 
     fn store32(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        if index % 4 == 0 {
-            self.dram[index + 3] = ((data >> 24) & 0xFF) as u8;
-            self.dram[index + 2] = ((data >> 16) & 0xFF) as u8;
-            self.dram[index + 1] = ((data >>  8) & 0xFF) as u8;
-            self.dram[index + 0] = ((data >>  0) & 0xFF) as u8;
-            Ok(())
-        } else {
-            Err((Some(addr as u32), TrapCause::StoreAMOAddrMisaligned, format!("store address misaligned: 0x{:x}", addr)))
-        }
+        self.dram[index + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[index + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[index + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[index + 0] = ((data >>  0) & 0xFF) as u8;
+        Ok(())
     }
 
     fn store64(&mut self, addr: u32, data: i64) -> Result<(), (Option<u32>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        if index % 8 == 0 {
-            self.dram[index + 7] = ((data >> 56) & 0xFF) as u8;
-            self.dram[index + 6] = ((data >> 48) & 0xFF) as u8;
-            self.dram[index + 5] = ((data >> 40) & 0xFF) as u8;
-            self.dram[index + 4] = ((data >> 32) & 0xFF) as u8;
-            self.dram[index + 3] = ((data >> 24) & 0xFF) as u8;
-            self.dram[index + 2] = ((data >> 16) & 0xFF) as u8;
-            self.dram[index + 1] = ((data >>  8) & 0xFF) as u8;
-            self.dram[index + 0] = ((data >>  0) & 0xFF) as u8;
-            Ok(())
-        } else {
-            Err((Some(addr as u32), TrapCause::StoreAMOAddrMisaligned, format!("store address misaligned: 0x{:x}", addr)))
-        }
+        self.dram[index + 7] = ((data >> 56) & 0xFF) as u8;
+        self.dram[index + 6] = ((data >> 48) & 0xFF) as u8;
+        self.dram[index + 5] = ((data >> 40) & 0xFF) as u8;
+        self.dram[index + 4] = ((data >> 32) & 0xFF) as u8;
+        self.dram[index + 3] = ((data >> 24) & 0xFF) as u8;
+        self.dram[index + 2] = ((data >> 16) & 0xFF) as u8;
+        self.dram[index + 1] = ((data >>  8) & 0xFF) as u8;
+        self.dram[index + 0] = ((data >>  0) & 0xFF) as u8;
+        Ok(())
     }
 
     // load
@@ -115,41 +103,29 @@ impl Device for Dram {
 
     fn load16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        if index % 2 == 0 {
-            Ok((
-             (self.dram[index + 1] as i16) << 8 |
-             (self.dram[index + 0] as i16)) as i32 as u32)
-        } else {
-            Err((Some(addr as u32), TrapCause::LoadAddrMisaligned, format!("load address misaligned: 0x{:x}", addr)))
-        }
+        Ok((
+         (self.dram[index + 1] as i16) << 8 |
+         (self.dram[index + 0] as i16)) as i32 as u32)
     }
 
     fn load32(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        if index % 4 == 0 {
-            Ok((self.dram[index + 3] as u32) << 24 |
-             (self.dram[index + 2] as u32) << 16 |
-             (self.dram[index + 1] as u32) <<  8 |
-             (self.dram[index + 0] as u32))
-        } else {
-            Err((Some(addr as u32), TrapCause::LoadAddrMisaligned, format!("load address misaligned: 0x{:x}", addr)))
-        }
+        Ok((self.dram[index + 3] as u32) << 24 |
+         (self.dram[index + 2] as u32) << 16 |
+         (self.dram[index + 1] as u32) <<  8 |
+         (self.dram[index + 0] as u32))
     }
 
     fn load64(&self, addr: u32) -> Result<u64, (Option<u32>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        if index % 8 == 0 {
-            Ok((self.dram[index + 7] as u64) << 56 |
-             (self.dram[index + 6] as u64) << 48 |
-             (self.dram[index + 5] as u64) << 40 |
-             (self.dram[index + 4] as u64) << 32 |
-             (self.dram[index + 3] as u64) << 24 |
-             (self.dram[index + 2] as u64) << 16 |
-             (self.dram[index + 1] as u64) <<  8 |
-             (self.dram[index + 0] as u64))
-        } else {
-            Err((Some(index as u32), TrapCause::LoadAddrMisaligned, format!("load address misaligned: 0x{:x}", addr)))
-        }
+        Ok((self.dram[index + 7] as u64) << 56 |
+         (self.dram[index + 6] as u64) << 48 |
+         (self.dram[index + 5] as u64) << 40 |
+         (self.dram[index + 4] as u64) << 32 |
+         (self.dram[index + 3] as u64) << 24 |
+         (self.dram[index + 2] as u64) << 16 |
+         (self.dram[index + 1] as u64) <<  8 |
+         (self.dram[index + 0] as u64))
     }
 
     fn load_u8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
@@ -159,14 +135,10 @@ impl Device for Dram {
 
     fn load_u16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        if index % 2 == 0 {
-            Ok((
-                 (self.dram[index + 1] as u16) << 8 |
-                 (self.dram[index + 0] as u16)
-            ) as u32)
-        } else {
-            Err((Some(addr as u32), TrapCause::LoadAddrMisaligned, format!("load address misaligned: 0x{:x}", index)))
-        }
+        Ok((
+             (self.dram[index + 1] as u16) << 8 |
+             (self.dram[index + 0] as u16)
+        ) as u32)
     }
 }
 
