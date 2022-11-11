@@ -1,9 +1,9 @@
-use crate::cpu::{CPU, PrivilegedLevel, TrapCause, TransFor};
+use crate::cpu::{CPU, PrivilegedLevel, TrapCause, TransFor, TransAlign};
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<u32>, TrapCause, String)> {
-    let inst_addr = cpu.trans_addr(TransFor::Fetch, cpu.pc)?;
+    let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc)?;
     let invalid_instruction = Some(
             (cpu.bus.raw_byte(inst_addr + 3) as u32) << 24 |
             (cpu.bus.raw_byte(inst_addr + 2) as u32) << 16 |

@@ -1,4 +1,4 @@
-use crate::cpu::{CPU, TransFor, TrapCause};
+use crate::cpu::{CPU, TransFor, TransAlign, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
@@ -11,22 +11,22 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             cpu.regs.write(inst.rd, inst.imm.unwrap() as u32);
         },
         OpecodeKind::OP_C_LW => {
-            let load_addr = cpu.trans_addr(TransFor::Load, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let load_addr = cpu.trans_addr(TransFor::Load, TransAlign::Size32,  (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         },
         OpecodeKind::OP_C_LWSP => {
-            let load_addr = cpu.trans_addr(TransFor::Load, (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u32)?;
+            let load_addr = cpu.trans_addr(TransFor::Load, TransAlign::Size32,  (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         },
         OpecodeKind::OP_C_LUI => {
             cpu.regs.write(inst.rd, inst.imm.unwrap() as u32);
         },
         OpecodeKind::OP_C_SW => {
-            let store_addr = cpu.trans_addr(TransFor::StoreAMO, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, TransAlign::Size32,  (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         },
         OpecodeKind::OP_C_SWSP => {
-            let store_addr = cpu.trans_addr(TransFor::StoreAMO, (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u32)?;
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, TransAlign::Size32,  (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         },
         OpecodeKind::OP_C_SLLI => {

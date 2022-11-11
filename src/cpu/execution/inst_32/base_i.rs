@@ -1,4 +1,4 @@
-use crate::cpu::{CPU, PrivilegedLevel, TransFor, TrapCause};
+use crate::cpu::{CPU, PrivilegedLevel, TransFor, TransAlign, TrapCause};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 
 pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
@@ -53,35 +53,35 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
             } 
         },
         OpecodeKind::OP_LB => {
-            let load_addr = cpu.trans_addr(TransFor::Load, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let load_addr = cpu.trans_addr(TransFor::Load, TransAlign::Size8, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.regs.write(inst.rd, cpu.bus.load8(load_addr)?);
         },
         OpecodeKind::OP_LH => {
-            let load_addr = cpu.trans_addr(TransFor::Load, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let load_addr = cpu.trans_addr(TransFor::Load, TransAlign::Size16, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.regs.write(inst.rd, cpu.bus.load16(load_addr)?);
         },
         OpecodeKind::OP_LW => {
-            let load_addr = cpu.trans_addr(TransFor::Load, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let load_addr = cpu.trans_addr(TransFor::Load, TransAlign::Size32, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         },
         OpecodeKind::OP_LBU => {
-            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u32)?;
+            let load_addr = cpu.trans_addr(TransFor::Load, TransAlign::Size8, cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u32)?;
             cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr)?);
         },
         OpecodeKind::OP_LHU => {
-            let load_addr = cpu.trans_addr(TransFor::Load, cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u32)?;
+            let load_addr = cpu.trans_addr(TransFor::Load, TransAlign::Size16, cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u32)?;
             cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr)?);
         },
         OpecodeKind::OP_SB => {
-            let store_addr = cpu.trans_addr(TransFor::StoreAMO, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, TransAlign::Size8, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2))?;
         },
         OpecodeKind::OP_SH => {
-            let store_addr = cpu.trans_addr(TransFor::StoreAMO, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, TransAlign::Size16, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2))?;
         },
         OpecodeKind::OP_SW => {
-            let store_addr = cpu.trans_addr(TransFor::StoreAMO, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
+            let store_addr = cpu.trans_addr(TransFor::StoreAMO, TransAlign::Size32, (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32)?;
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         },
         OpecodeKind::OP_ADDI => {
