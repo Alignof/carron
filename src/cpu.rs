@@ -38,6 +38,13 @@ pub enum PrivilegedLevel {
     Machine = 0b11,
 }
 
+pub enum TransAlign {
+    Size8 = 1,
+    Size16 = 2,
+    Size32 = 4,
+    Size64 = 8,
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TransFor {
     Fetch,
@@ -292,7 +299,7 @@ impl CPU {
         log::infoln!("new pc: 0x{:x}", self.pc);
     }
 
-    pub fn trans_addr(&mut self, purpose: TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    pub fn trans_addr(&mut self, purpose: TransFor, align: TransAlign, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.check_breakpoint(purpose, addr)?;
         let mut trans_priv = self.priv_lv;
 
@@ -308,7 +315,18 @@ impl CPU {
         }
 
         match self.mmu.trans_addr(purpose, addr, &self.csrs, &self.bus.dram, trans_priv) {
-            Ok(addr) => Ok(addr),
+            Ok(vaddr) => {
+                if addr % align as u32 == 0 {
+                    Ok(vaddr)
+                } else {
+                    let cause = match purpose {
+                        TransFor::Fetch | TransFor::Deleg => TrapCause::InstAddrMisaligned,
+                        TransFor::Load => TrapCause::LoadAddrMisaligned,
+                        TransFor::StoreAMO => TrapCause::StoreAMOAddrMisaligned,
+                    };
+                    Err((Some(addr), cause, format!("address transration failed: {:?}", cause)))
+                }
+            },
             Err(cause) => {
                 log::debugln!("{:?}", cause);
                 Err((Some(addr), cause, format!("address transration failed: {:?}", cause)))
