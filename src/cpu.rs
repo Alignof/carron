@@ -30,7 +30,7 @@ pub enum TrapCause {
     SupervisorSoftwareInterrupt = (1 << 31) + 1,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
@@ -45,7 +45,7 @@ pub enum TransAlign {
     Size64 = 8,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TransFor {
     Fetch,
     Load,

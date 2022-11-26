@@ -77,13 +77,9 @@ impl Emulator {
                 sysargs[3],
                 sysargs[4],
             ),
-            68 => self.frontend_server.pwrite(
-                &mut self.cpu,
-                sysargs[1],
-                sysargs[2],
-                sysargs[3],
-                sysargs[4],
-            ),
+            68 => self
+                .frontend_server
+                .pwrite(&self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
             79 => self.frontend_server.fstatat(
                 &mut self.cpu,
                 sysargs[1],

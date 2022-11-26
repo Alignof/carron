@@ -111,7 +111,7 @@ pub fn parse_node(lines: &mut Peekable<std::str::Lines>, mmap: &mut dtb_mmap) {
 
         if util::consume(lines, "};") {
             if mmap.strings.phandle_needed {
-                mmap.write_property("phandle", &mut vec![mmap.strings.phandle_value], 4);
+                mmap.write_property("phandle", &mut [mmap.strings.phandle_value], 4);
                 mmap.strings.phandle_needed = false;
                 mmap.strings.phandle_value += 1;
             }

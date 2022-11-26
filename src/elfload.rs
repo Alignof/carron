@@ -63,18 +63,8 @@ impl ElfLoader {
     }
 
     pub fn get_host_addr(&self) -> (Option<u32>, Option<u32>) {
-        let symtab = self.sect_headers.iter().find_map(|s| {
-            if s.sh_name == ".symtab" {
-                return Some(s);
-            }
-            None
-        });
-        let strtab = self.sect_headers.iter().find_map(|s| {
-            if s.sh_name == ".strtab" {
-                return Some(s);
-            }
-            None
-        });
+        let symtab = self.sect_headers.iter().find(|&s| s.sh_name == ".symtab");
+        let strtab = self.sect_headers.iter().find(|&s| s.sh_name == ".strtab");
 
         let mut tohost = None;
         let mut fromhost = None;

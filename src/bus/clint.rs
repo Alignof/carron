@@ -7,6 +7,12 @@ pub struct Clint {
     size: usize,
 }
 
+impl Default for Clint {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Clint {
     #[allow(arithmetic_overflow)]
     pub fn new() -> Clint {

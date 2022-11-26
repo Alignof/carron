@@ -62,7 +62,7 @@ impl dtb_mmap {
         self.structure.push(kind as u32);
     }
 
-    pub fn write_property(&mut self, name: &str, data: &mut Vec<u32>, size: u32) {
+    pub fn write_property(&mut self, name: &str, data: &mut [u32], size: u32) {
         self.write_nodekind(FdtNodeKind::Prop);
         let offset = self.regist_string(name);
         self.structure.push(size); // data len

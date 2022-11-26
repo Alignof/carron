@@ -1,6 +1,6 @@
 pub static LOG_LEVEL: LogLv = LogLv::NoLog;
 
-#[derive(PartialEq, PartialOrd)]
+#[derive(PartialEq, Eq, PartialOrd)]
 pub enum LogLv {
     NoLog,
     Info,
