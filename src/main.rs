@@ -1,8 +1,8 @@
 extern crate carron;
+use carron::cmdline::Arguments;
+use carron::cmdline::ExeOption;
 use carron::elfload;
 use carron::Emulator;
-use carron::cmdline::ExeOption;
-use carron::cmdline::Arguments;
 
 fn main() {
     let args = Arguments::new();
@@ -19,15 +19,15 @@ fn main() {
         println!("elfcheck: OK\n");
 
         match args.exe_option {
-            ExeOption::OPT_DEFAULT  => {
-                let mut emulator: Emulator = Emulator::new(loader, args); 
+            ExeOption::OPT_DEFAULT => {
+                let mut emulator: Emulator = Emulator::new(loader, args);
                 emulator.emulation();
-            },
-            ExeOption::OPT_ELFHEAD  => loader.header_show(),
-            ExeOption::OPT_DISASEM  => loader.dump_section(),
-            ExeOption::OPT_SECT     => loader.dump_section(),
-            ExeOption::OPT_PROG     => loader.dump_segment(),
-            ExeOption::OPT_SHOWALL  => loader.show_all_header(),
+            }
+            ExeOption::OPT_ELFHEAD => loader.header_show(),
+            ExeOption::OPT_DISASEM => loader.dump_section(),
+            ExeOption::OPT_SECT => loader.dump_section(),
+            ExeOption::OPT_PROG => loader.dump_segment(),
+            ExeOption::OPT_SHOWALL => loader.show_all_header(),
         };
     } else {
         panic!("This file is not an ELF.");

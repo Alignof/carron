@@ -1,4 +1,4 @@
-use clap::{AppSettings, ArgGroup, Arg, arg};
+use clap::{arg, AppSettings, Arg, ArgGroup};
 
 #[allow(non_camel_case_types)]
 pub enum ExeOption {
@@ -32,7 +32,7 @@ impl Arguments {
             .group(
                 ArgGroup::new("run option")
                     .args(&["elfhead", "disasem", "program", "section", "all"])
-                    .required(false)
+                    .required(false),
             )
             .arg(arg!(--pk <proxy_kernel> "Run with proxy kernel").required(false))
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
@@ -49,13 +49,13 @@ impl Arguments {
 
         let pkpath = app.value_of("pk").map(|s| s.to_string());
 
-        let flag_map = | | {
+        let flag_map = || {
             (
                 app.is_present("elfhead"),
                 app.is_present("program"),
                 app.is_present("section"),
                 app.is_present("disasem"),
-                app.is_present("all")
+                app.is_present("all"),
             )
         };
         let exe_option = match flag_map() {
@@ -67,27 +67,21 @@ impl Arguments {
             _ => ExeOption::OPT_DEFAULT,
         };
 
-        let init_pc = app.value_of("pc")
-            .map(|x| {
-                u32::from_str_radix(x.trim_start_matches("0x"), 16)
-                    .expect("invalid pc\nplease set value as hex (e.g. --pc=0x80000000)")
-            });
+        let init_pc = app.value_of("pc").map(|x| {
+            u32::from_str_radix(x.trim_start_matches("0x"), 16)
+                .expect("invalid pc\nplease set value as hex (e.g. --pc=0x80000000)")
+        });
 
-        let break_point = app.value_of("break_point")
-            .map(|x| {
-                u32::from_str_radix(x.trim_start_matches("0x"), 16)
-                    .expect("invalid break point\nplease set value as hex (e.g. --pc=0x80000000)")
-            });
+        let break_point = app.value_of("break_point").map(|x| {
+            u32::from_str_radix(x.trim_start_matches("0x"), 16)
+                .expect("invalid break point\nplease set value as hex (e.g. --pc=0x80000000)")
+        });
 
-        let result_reg = app.value_of("result_reg")
-            .map(|x| {
-                x.parse().unwrap()
-            });
+        let result_reg = app.value_of("result_reg").map(|x| x.parse().unwrap());
 
-        let main_args = app.values_of("main_args")
-            .map(|args| {
-                args.map(|s| s.to_string()).collect::<Vec<String>>()
-            });
+        let main_args = app
+            .values_of("main_args")
+            .map(|args| args.map(|s| s.to_string()).collect::<Vec<String>>());
 
         Arguments {
             filename,

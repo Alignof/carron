@@ -1,12 +1,12 @@
-pub static LOG_LEVEL: LogLv = LogLv::Debug;
+pub static LOG_LEVEL: LogLv = LogLv::NoLog;
 
 #[derive(PartialEq, PartialOrd)]
 pub enum LogLv {
     NoLog,
     Info,
     Debug,
-    All
-} 
+    All,
+}
 
 macro_rules! debugln {
     ($($rest:tt)*) => {
@@ -42,9 +42,4 @@ macro_rules! info {
 }
 
 #[allow(unused_imports)]
-pub(crate) use {
-    debug, 
-    debugln,
-    info,
-    infoln,
-};
+pub(crate) use {debug, debugln, info, infoln};

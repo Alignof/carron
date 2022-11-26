@@ -1,12 +1,12 @@
-use libc::c_void;
-use crate::log;
-use crate::CPU;
-use crate::Arguments;
 use crate::fesvr::FrontendServer;
+use crate::log;
+use crate::Arguments;
+use crate::CPU;
+use libc::c_void;
 
 fn memread(cpu: &CPU, addr: u32, len: u64) -> Vec<u8> {
     let mut buf = Vec::new();
-    for off in 0 .. len as u32 {
+    for off in 0..len as u32 {
         buf.push(cpu.bus.load8(addr + off).unwrap() as u8);
     }
 
@@ -14,17 +14,34 @@ fn memread(cpu: &CPU, addr: u32, len: u64) -> Vec<u8> {
 }
 
 fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
-    for off in 0 .. len as u32 {
-        cpu.bus.store8(addr + off, data[off as usize] as u32).unwrap();
+    for off in 0..len as u32 {
+        cpu.bus
+            .store8(addr + off, data[off as usize] as u32)
+            .unwrap();
     }
 }
 
 impl FrontendServer {
-    pub fn openat(&mut self, cpu: &CPU, dirfd: u64, name_addr: u64, len: u64, flags: u64, mode: u64) -> i64 {
+    pub fn openat(
+        &mut self,
+        cpu: &CPU,
+        dirfd: u64,
+        name_addr: u64,
+        len: u64,
+        flags: u64,
+        mode: u64,
+    ) -> i64 {
         log::infoln!("sys_openat(56)");
         let name: Vec<u8> = memread(cpu, name_addr as u32, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
-        let fd = unsafe { libc::openat(dirfd as i32, name.as_ptr() as *const i8, flags as i32, mode as i32) };
+        let fd = unsafe {
+            libc::openat(
+                dirfd as i32,
+                name.as_ptr() as *const i8,
+                flags as i32,
+                mode as i32,
+            )
+        };
 
         if fd < 0 {
             -1
@@ -49,7 +66,13 @@ impl FrontendServer {
     pub fn read(&self, cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
         log::infoln!("sys_read(63)");
         let buf: Vec<u8> = vec![0; len as usize];
-        let read_len = unsafe { libc::read(self.fd_lookup(fd) as i32, buf.as_ptr() as *mut c_void, len as usize) };
+        let read_len = unsafe {
+            libc::read(
+                self.fd_lookup(fd) as i32,
+                buf.as_ptr() as *mut c_void,
+                len as usize,
+            )
+        };
         if read_len > 0 {
             memwrite(cpu, dst_addr as u32, read_len as usize, buf);
         }
@@ -60,7 +83,13 @@ impl FrontendServer {
     pub fn write(&self, cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
         log::infoln!("sys_write(64)");
         let buf = memread(cpu, dst_addr as u32, len);
-        let wrote_len = unsafe { libc::write(self.fd_lookup(fd) as i32, buf.as_ptr() as *const c_void, len as usize) };
+        let wrote_len = unsafe {
+            libc::write(
+                self.fd_lookup(fd) as i32,
+                buf.as_ptr() as *const c_void,
+                len as usize,
+            )
+        };
 
         wrote_len as i64
     }
@@ -68,7 +97,14 @@ impl FrontendServer {
     pub fn pread(&self, cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
         log::infoln!("sys_pread(67)");
         let buf: Vec<u8> = vec![0; len as usize];
-        let read_len = unsafe { libc::pread(self.fd_lookup(fd) as i32, buf.as_ptr() as *mut c_void, len as usize, off as i64) };
+        let read_len = unsafe {
+            libc::pread(
+                self.fd_lookup(fd) as i32,
+                buf.as_ptr() as *mut c_void,
+                len as usize,
+                off as i64,
+            )
+        };
         if read_len > 0 {
             memwrite(cpu, dst_addr as u32, read_len as usize, buf);
         }
@@ -79,19 +115,39 @@ impl FrontendServer {
     pub fn pwrite(&self, cpu: &CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
         log::infoln!("sys_pwrite(68)");
         let buf = memread(cpu, dst_addr as u32, len);
-        let wrote_len = unsafe { libc::pwrite(self.fd_lookup(fd) as i32, buf.as_ptr() as *const c_void, len as usize, off as i64) };
+        let wrote_len = unsafe {
+            libc::pwrite(
+                self.fd_lookup(fd) as i32,
+                buf.as_ptr() as *const c_void,
+                len as usize,
+                off as i64,
+            )
+        };
 
         wrote_len as i64
     }
 
-    pub fn fstatat(&self, cpu: &mut CPU, dirfd: u64, name_addr: u64, len: u64, dst_addr: u64, flags: u64) -> i64 {
+    pub fn fstatat(
+        &self,
+        cpu: &mut CPU,
+        dirfd: u64,
+        name_addr: u64,
+        len: u64,
+        dst_addr: u64,
+        flags: u64,
+    ) -> i64 {
         log::infoln!("sys_fstatat(79)");
         let name: Vec<u8> = memread(cpu, name_addr as u32, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
         let (ret, rbuf) = unsafe {
             const PADDING: u64 = 0;
             let mut buf: libc::stat = std::mem::zeroed();
-            let ret = libc::fstatat(dirfd as i32, name.as_ptr() as *const i8, &mut buf as *mut libc::stat, flags as i32);
+            let ret = libc::fstatat(
+                dirfd as i32,
+                name.as_ptr() as *const i8,
+                &mut buf as *mut libc::stat,
+                flags as i32,
+            );
             (
                 ret,
                 vec![
@@ -111,15 +167,15 @@ impl FrontendServer {
                     buf.st_ctime as u64,
                     PADDING,
                     (PADDING as u32 as u64) << 32 | PADDING as u32 as u64,
-                ]
+                ],
             )
         };
 
         if ret != -1 {
             let rbuf = rbuf
-            .iter()
-            .flat_map(|w| w.to_le_bytes().to_vec())
-            .collect::<Vec<u8>>();
+                .iter()
+                .flat_map(|w| w.to_le_bytes().to_vec())
+                .collect::<Vec<u8>>();
 
             memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
         }
@@ -152,15 +208,15 @@ impl FrontendServer {
                     buf.st_ctime as u64,
                     PADDING,
                     (PADDING as u32 as u64) << 32 | PADDING as u32 as u64,
-                ]
+                ],
             )
         };
 
         if ret != -1 {
             let rbuf = rbuf
-            .iter()
-            .flat_map(|w| w.to_le_bytes().to_vec())
-            .collect::<Vec<u8>>();
+                .iter()
+                .flat_map(|w| w.to_le_bytes().to_vec())
+                .collect::<Vec<u8>>();
 
             memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
         }
@@ -182,15 +238,16 @@ impl FrontendServer {
         let pkpath = format!("{}\0", args.pkpath.as_ref().unwrap());
         let mut words: Vec<u64> = vec![0; 5];
         words[0] = 2 + args.main_args.as_ref().unwrap_or(&Vec::new()).len() as u64; // argc
-        words[1] = dst_addr + 8*5; // pkpath addr
+        words[1] = dst_addr + 8 * 5; // pkpath addr
         words[2] = words[1] + pkpath.len() as u64; // elfpath addr
-        words[3] = if args.main_args.is_some() { // arguments addr of main func
+        words[3] = if args.main_args.is_some() {
+            // arguments addr of main func
             words[2] + elfpath.len() as u64
         } else {
             0 // argv[argc] = NULL
         };
         words[4] = 0; // envp[0] = NULL
-        
+
         let mut buf: Vec<u8> = words
             .iter()
             .flat_map(|w| w.to_le_bytes().to_vec())
@@ -202,10 +259,8 @@ impl FrontendServer {
                 &mut argv
                     .iter()
                     .cloned()
-                    .flat_map(|x| {
-                        format!("{}\0", x).into_bytes()
-                    })
-                    .collect()
+                    .flat_map(|x| format!("{}\0", x).into_bytes())
+                    .collect(),
             );
         }
 

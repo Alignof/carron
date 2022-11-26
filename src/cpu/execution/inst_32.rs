@@ -1,11 +1,11 @@
-mod base_i;
 mod a_extension;
+mod base_i;
 mod m_extension;
 mod priv_extension;
 mod zicsr_extension;
 
-use crate::cpu::{CPU, TrapCause};
-use crate::cpu::instruction::{Instruction, Extensions};
+use crate::cpu::instruction::{Extensions, Instruction};
+use crate::cpu::{TrapCause, CPU};
 
 pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
     const INST_SIZE: u32 = 4;
