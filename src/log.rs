@@ -1,4 +1,5 @@
-pub static LOG_LEVEL: LogLv = LogLv::NoLog;
+use once_cell::sync::OnceCell;
+pub static LOG_LEVEL: OnceCell<LogLv> = OnceCell::new();
 
 #[derive(PartialEq, Eq, PartialOrd)]
 pub enum LogLv {
@@ -10,7 +11,7 @@ pub enum LogLv {
 
 macro_rules! debugln {
     ($($rest:tt)*) => {
-        if crate::log::LogLv::Debug <= crate::log::LOG_LEVEL {
+        if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
             std::println!($($rest)*);
         }
     }
@@ -18,7 +19,7 @@ macro_rules! debugln {
 
 macro_rules! debug {
     ($($rest:tt)*) => {
-        if crate::log::LogLv::Debug <= crate::log::LOG_LEVEL {
+        if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
             std::print!($($rest)*);
         }
     }
@@ -26,7 +27,7 @@ macro_rules! debug {
 
 macro_rules! infoln {
     ($($rest:tt)*) => {
-        if crate::log::LogLv::Info <= crate::log::LOG_LEVEL {
+        if &crate::log::LogLv::Info <= crate::log::LOG_LEVEL.get().unwrap() {
             std::println!($($rest)*);
         }
     }
@@ -35,7 +36,7 @@ macro_rules! infoln {
 #[allow(unused_macros)]
 macro_rules! info {
     ($($rest:tt)*) => {
-        if crate::log::LogLv::Info <= crate::log::LOG_LEVEL {
+        if &crate::log::LogLv::Info <= crate::log::LOG_LEVEL.get().unwrap() {
             std::print!($($rest)*);
         }
     }

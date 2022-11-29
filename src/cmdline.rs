@@ -1,3 +1,4 @@
+use crate::log::{LogLv, LOG_LEVEL};
 use clap::{arg, AppSettings, Arg, ArgGroup};
 
 #[allow(non_camel_case_types)]
@@ -38,6 +39,7 @@ impl Arguments {
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
             .arg(arg!(--break_point <address> ... "Set break point as hex").required(false))
             .arg(arg!(--result_reg <register_number> ... "Set result register").required(false))
+            .arg(arg!(--loglv <log_level> ... "Set log level").required(false))
             .arg(Arg::new("main_args").multiple_values(true))
             .setting(AppSettings::DeriveDisplayOrder)
             .get_matches();
@@ -75,6 +77,13 @@ impl Arguments {
         let break_point = app.value_of("break_point").map(|x| {
             u32::from_str_radix(x.trim_start_matches("0x"), 16)
                 .expect("invalid break point\nplease set value as hex (e.g. --pc=0x80000000)")
+        });
+
+        LOG_LEVEL.get_or_init(|| match app.value_of("loglv") {
+            Some("info") => LogLv::Info,
+            Some("debug") => LogLv::Debug,
+            Some("all") => LogLv::All,
+            _ => LogLv::NoLog,
         });
 
         let result_reg = app.value_of("result_reg").map(|x| x.parse().unwrap());
