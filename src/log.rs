@@ -6,7 +6,7 @@ pub enum LogLv {
     NoLog,
     Info,
     Debug,
-    All,
+    Trace,
 }
 
 macro_rules! debugln {

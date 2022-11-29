@@ -80,9 +80,10 @@ impl Arguments {
         });
 
         LOG_LEVEL.get_or_init(|| match app.value_of("loglv") {
+            Some("nolog") => LogLv::NoLog,
             Some("info") => LogLv::Info,
             Some("debug") => LogLv::Debug,
-            Some("all") => LogLv::All,
+            Some("trace") => LogLv::Trace,
             _ => LogLv::NoLog,
         });
 
