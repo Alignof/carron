@@ -5,21 +5,38 @@ on:
     branches:
       - master
   pull_request:
-    branches:
-      - master
-      - develop
 
 env:
-  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
 
 jobs:
-  build:
-
+  rust:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+          override: true
+
+      - name: cache dependencies
+        uses: Swatinem/rust-cache@v2.2.0
+
+      - name: reviewdog / clippy
+        uses: sksat/action-clippy@v0.1.0
+        with:
+          reporter: github-pr-review
+
+      - name: format
+        uses: actions-rs/cargo@v1.0.3
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: unit test
+        uses: actions-rs/cargo@v1.0.3
+        with:
+          command: test
