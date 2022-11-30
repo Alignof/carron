@@ -1,32 +1,34 @@
+mod a_extension;
 mod base_i;
 mod m_extension;
-mod a_extension;
-mod zicsr_extension;
 mod priv_extension;
+mod zicsr_extension;
 
 use super::{Decode, DecodeUtil};
+use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
 use crate::cpu::TrapCause;
-use crate::cpu::instruction::{Extensions, OpecodeKind, Instruction};
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
     fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)> {
         let new_opc: OpecodeKind = match self.parse_opecode() {
-            Ok(opc)  => opc,
-            Err(msg) => return Err((
-                Some(*self),
-                TrapCause::IllegalInst,
-                format!("{}, {:b}", msg, self)
-            )),
+            Ok(opc) => opc,
+            Err(msg) => {
+                return Err((
+                    Some(*self),
+                    TrapCause::IllegalInst,
+                    format!("{}, {:b}", msg, self),
+                ))
+            }
         };
-        let new_rd:  Option<usize>  = self.parse_rd(&new_opc)?;
-        let new_rs1: Option<usize>  = self.parse_rs1(&new_opc)?;
-        let new_rs2: Option<usize>  = self.parse_rs2(&new_opc)?;
+        let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
+        let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
+        let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
         let new_imm: Option<i32> = self.parse_imm(&new_opc)?;
 
         Ok(Instruction {
             opc: new_opc,
-            rd:  new_rd,
+            rd: new_rd,
             rs1: new_rs1,
             rs2: new_rs2,
             imm: new_imm,
@@ -44,7 +46,10 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rd(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    fn parse_rd(
+        self,
+        opkind: &OpecodeKind,
+    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rd(self, opkind),
             Extensions::M => m_extension::parse_rd(self, opkind),
@@ -55,7 +60,10 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rs1(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    fn parse_rs1(
+        self,
+        opkind: &OpecodeKind,
+    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs1(self, opkind),
             Extensions::M => m_extension::parse_rs1(self, opkind),
@@ -66,7 +74,10 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_rs2(self, opkind: &OpecodeKind) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    fn parse_rs2(
+        self,
+        opkind: &OpecodeKind,
+    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs2(self, opkind),
             Extensions::M => m_extension::parse_rs2(self, opkind),
@@ -77,7 +88,10 @@ impl Decode for u32 {
         }
     }
 
-    fn parse_imm(self, opkind: &OpecodeKind) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
+    fn parse_imm(
+        self,
+        opkind: &OpecodeKind,
+    ) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_imm(self, opkind),
             Extensions::M => m_extension::parse_imm(self, opkind),
@@ -104,7 +118,7 @@ impl DecodeUtil for u32 {
     }
 
     fn extension(self) -> Extensions {
-        let opmap: u8  = self.slice(6, 0) as u8;
+        let opmap: u8 = self.slice(6, 0) as u8;
         let funct3: u8 = self.slice(14, 12) as u8;
         let funct7: u8 = self.slice(31, 25) as u8;
 
@@ -119,7 +133,7 @@ impl DecodeUtil for u32 {
                     0b0000000 => Extensions::BaseI,
                     _ => Extensions::Priv,
                 },
-                _     => Extensions::Zicsr,
+                _ => Extensions::Zicsr,
             },
             _ => Extensions::BaseI,
         }
@@ -135,8 +149,12 @@ mod decode_32 {
     #[allow(overflowing_literals)]
     fn parsing_opecode_test() {
         use OpecodeKind::*;
-        let test_32 = |inst_32: u32, op: OpecodeKind, rd: Option<usize>,
-                       rs1: Option<usize>, rs2: Option<usize>, imm: Option<i32>| {
+        let test_32 = |inst_32: u32,
+                       op: OpecodeKind,
+                       rd: Option<usize>,
+                       rs1: Option<usize>,
+                       rs2: Option<usize>,
+                       imm: Option<i32>| {
             let op_32 = inst_32.parse_opecode().unwrap();
             assert!(matches!(&op_32, op));
             assert_eq!(inst_32.parse_rd(&op_32).unwrap(), rd);
@@ -145,20 +163,62 @@ mod decode_32 {
             assert_eq!(inst_32.parse_imm(&op_32).unwrap(), imm);
         };
 
-        test_32(0b10000000000000000000000010110111,
-                OP_LUI, Some(1), None, None, Some(0x80000000));
-        test_32(0b00000000000000000000001010010111,
-                OP_AUIPC, Some(5), None, None, Some(0));
-        test_32(0b11111111100111111111000001101111,
-                OP_JAL, Some(0), None, None, Some(-8));
-        test_32(0b11111110001000001000111010100011,
-                OP_SB, None, Some(1), Some(2), Some(-3));
-        test_32(0b11101110110000101000001010010011,
-                OP_ADDI, Some(5), Some(5), None, Some(-276));
-        test_32(0b00000000000000000000000001110011,
-                OP_ECALL, None, None, None, None);
-        test_32(0b00000000000001010100110001100011,
-                OP_BLT, None, Some(10), Some(0), Some(24));
+        test_32(
+            0b10000000000000000000000010110111,
+            OP_LUI,
+            Some(1),
+            None,
+            None,
+            Some(0x80000000),
+        );
+        test_32(
+            0b00000000000000000000001010010111,
+            OP_AUIPC,
+            Some(5),
+            None,
+            None,
+            Some(0),
+        );
+        test_32(
+            0b11111111100111111111000001101111,
+            OP_JAL,
+            Some(0),
+            None,
+            None,
+            Some(-8),
+        );
+        test_32(
+            0b11111110001000001000111010100011,
+            OP_SB,
+            None,
+            Some(1),
+            Some(2),
+            Some(-3),
+        );
+        test_32(
+            0b11101110110000101000001010010011,
+            OP_ADDI,
+            Some(5),
+            Some(5),
+            None,
+            Some(-276),
+        );
+        test_32(
+            0b00000000000000000000000001110011,
+            OP_ECALL,
+            None,
+            None,
+            None,
+            None,
+        );
+        test_32(
+            0b00000000000001010100110001100011,
+            OP_BLT,
+            None,
+            Some(10),
+            Some(0),
+            Some(24),
+        );
         test_32(0x00100513, OP_ADDI, Some(10), Some(0), None, Some(1))
     }
 }

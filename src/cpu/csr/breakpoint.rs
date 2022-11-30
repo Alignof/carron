@@ -1,6 +1,6 @@
+use crate::cpu::csr::{CSRname, CSRs};
+use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
 use crate::CPU;
-use crate::cpu::{TransFor, TrapCause, PrivilegedLevel};
-use crate::cpu::csr::{CSRs, CSRname};
 
 pub struct Triggers {
     pub tselect: usize,
@@ -11,26 +11,33 @@ pub struct Triggers {
 impl CSRs {
     pub fn update_triggers(&mut self, dist: usize, src: u32) {
         match dist {
-            0x7a0 => { // tselect
+            0x7a0 => {
+                // tselect
                 let tgr_index = src as usize;
                 self.triggers.tselect = tgr_index;
                 self.csrs[CSRname::tdata1 as usize] = self.triggers.tdata1[tgr_index];
                 self.csrs[CSRname::tdata2 as usize] = self.triggers.tdata2[tgr_index];
-            },
-            0x7a1 => { // tdata1
+            }
+            0x7a1 => {
+                // tdata1
                 self.triggers.tdata1[self.triggers.tselect] = src;
-            },
-            0x7a2 => { // tdata2
+            }
+            0x7a2 => {
+                // tdata2
                 self.triggers.tdata2[self.triggers.tselect] = src;
-            },
+            }
             _ => (),
         }
     }
 }
 
 impl CPU {
-    pub fn check_breakpoint(&mut self, purpose: &TransFor, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
-        for trigger_num in 0 .. self.csrs.triggers.tselect + 1 { 
+    pub fn check_breakpoint(
+        &mut self,
+        purpose: TransFor,
+        addr: u32,
+    ) -> Result<u32, (Option<u32>, TrapCause, String)> {
+        for trigger_num in 0..self.csrs.triggers.tselect + 1 {
             let tdata1 = self.csrs.triggers.tdata1[trigger_num];
             let trigger_type = tdata1 >> 28 & 0xF;
 
@@ -44,12 +51,13 @@ impl CPU {
                     let mode_m = tdata1 >> 6 & 0x1;
                     let mode_s = tdata1 >> 4 & 0x1;
                     let mode_u = tdata1 >> 3 & 0x1;
-                    
-                    if self.priv_lv == PrivilegedLevel::Machine && mode_m == 0x0 ||
-                       self.priv_lv == PrivilegedLevel::Supervisor && mode_s == 0x0 || 
-                       self.priv_lv == PrivilegedLevel::User && mode_u == 0x0 {
-                           return Ok(addr);
-                    } 
+
+                    if self.priv_lv == PrivilegedLevel::Machine && mode_m == 0x0
+                        || self.priv_lv == PrivilegedLevel::Supervisor && mode_s == 0x0
+                        || self.priv_lv == PrivilegedLevel::User && mode_u == 0x0
+                    {
+                        return Ok(addr);
+                    }
 
                     if match_mode != 0x0 {
                         panic!("this match mode is not supported");
@@ -62,32 +70,32 @@ impl CPU {
                                 return Err((
                                     Some(addr),
                                     TrapCause::Breakpoint,
-                                    "Breakpoint exception (fetch)".to_string()
-                                ))
+                                    "Breakpoint exception (fetch)".to_string(),
+                                ));
                             }
-                        },
+                        }
                         TransFor::Load => {
                             let load_bit = tdata1 & 0x1;
                             if addr == tdata2 && load_bit == 1 {
                                 return Err((
                                     Some(addr),
                                     TrapCause::Breakpoint,
-                                    "Breakpoint exception (load)".to_string()
-                                ))
+                                    "Breakpoint exception (load)".to_string(),
+                                ));
                             }
-                        },
+                        }
                         TransFor::StoreAMO => {
                             let store_bit = tdata1 >> 1 & 0x1;
                             if addr == tdata2 && store_bit == 1 {
                                 return Err((
                                     Some(addr),
                                     TrapCause::Breakpoint,
-                                    "Breakpoint exception (store/AMO)".to_string()
-                                ))
+                                    "Breakpoint exception (store/AMO)".to_string(),
+                                ));
                             }
-                        },
+                        }
                     }
-                },
+                }
                 0x3 => panic!("Instruction count trigger is not implemented."),
                 0x4 => panic!("Interrupt trigger is not implemented."),
                 0x5 => panic!("Exception trigger is not implemented."),

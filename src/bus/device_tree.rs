@@ -1,5 +1,5 @@
-mod dts;
 mod dtb;
+mod dts;
 
 use super::mrom::Mrom;
 
@@ -11,4 +11,3 @@ impl Mrom {
         self.set_size();
     }
 }
-

@@ -1,15 +1,18 @@
+pub mod bus;
 pub mod cmdline;
 pub mod cpu;
-pub mod bus;
 pub mod elfload;
 mod fesvr;
+pub mod log;
 
-use cpu::{CPU, TrapCause};
-use cpu::fetch::fetch;
 use cmdline::Arguments;
+use cpu::fetch::fetch;
+use cpu::{TrapCause, CPU};
+use fesvr::FrontendServer;
 
 pub struct Emulator {
     pub cpu: cpu::CPU,
+    frontend_server: FrontendServer,
     tohost_addr: Option<u32>,
     fromhost_addr: Option<u32>,
     args: Arguments,
@@ -22,6 +25,7 @@ impl Emulator {
 
         Emulator {
             cpu: CPU::new(loader, args.init_pc),
+            frontend_server: FrontendServer::new(),
             tohost_addr,
             fromhost_addr,
             args,
@@ -31,12 +35,10 @@ impl Emulator {
 
     fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
         use crate::cpu::execution::Execution;
-    
+
         self.cpu.check_interrupt()?;
 
-        fetch(&mut self.cpu)?
-            .decode()?
-            .execution(&mut self.cpu)
+        fetch(&mut self.cpu)?.decode()?.execution(&mut self.cpu)
     }
 
     pub fn emulation(&mut self) {
@@ -44,9 +46,9 @@ impl Emulator {
             match self.exec_one_cycle() {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
+                    log::infoln!("[exception] {}", msg);
                     self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
-                    eprintln!("{}", msg);
-                },
+                }
             }
 
             if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost() {
@@ -55,9 +57,8 @@ impl Emulator {
 
             if let Some(break_point) = self.args.break_point {
                 if break_point == self.cpu.pc {
-                    self.exit_code = Some(
-                        self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0))) as i32
-                    );
+                    self.exit_code =
+                        Some(self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0))) as i32);
                 }
             }
 
@@ -66,5 +67,4 @@ impl Emulator {
             }
         }
     }
-} 
-
+}

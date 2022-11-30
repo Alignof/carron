@@ -53,4 +53,3 @@ pub fn make_dts(dram_addr: u32) -> String {
         }};"
     )
 }
-

@@ -1,26 +1,24 @@
 mod elf_header;
-mod section_header;
 mod program_header;
+mod section_header;
 
-use std::fs::File;
-use memmap::Mmap;
 use elf_header::ElfHeader;
-use section_header::SectionHeader;
+use memmap::Mmap;
 use program_header::ProgramHeader;
-
+use section_header::SectionHeader;
+use std::fs::File;
 
 #[allow(clippy::identity_op)]
 pub fn get_u16(mmap: &[u8], index: usize) -> u16 {
-    (mmap[index + 1] as u16) << 8 |
-    (mmap[index + 0] as u16)
+    (mmap[index + 1] as u16) << 8 | (mmap[index + 0] as u16)
 }
 
 #[allow(clippy::identity_op)]
 pub fn get_u32(mmap: &[u8], index: usize) -> u32 {
-    (mmap[index + 3] as u32) << 24 |
-    (mmap[index + 2] as u32) << 16 |
-    (mmap[index + 1] as u32) <<  8 |
-    (mmap[index + 0] as u32)
+    (mmap[index + 3] as u32) << 24
+        | (mmap[index + 2] as u32) << 16
+        | (mmap[index + 1] as u32) << 8
+        | (mmap[index + 0] as u32)
 }
 
 pub fn is_cinst(mmap: &[u8], index: usize) -> bool {
@@ -37,8 +35,8 @@ pub struct ElfLoader {
 impl ElfLoader {
     pub fn try_new(filename: &str) -> std::io::Result<ElfLoader> {
         let file = File::open(filename)?;
-        let mapped_data = unsafe{ Mmap::map(&file)? };
-        let new_elf  = ElfHeader::new(&mapped_data);
+        let mapped_data = unsafe { Mmap::map(&file)? };
+        let new_elf = ElfHeader::new(&mapped_data);
         let new_prog = ProgramHeader::new(&mapped_data, &new_elf);
         let new_sect = SectionHeader::new(&mapped_data, &new_elf);
 
@@ -65,28 +63,17 @@ impl ElfLoader {
     }
 
     pub fn get_host_addr(&self) -> (Option<u32>, Option<u32>) {
-        let symtab = self.sect_headers.iter()
-            .find_map(|s| {
-                if s.sh_name == ".symtab" {
-                    return Some(s);
-                }
-                None
-            });
-        let strtab = self.sect_headers.iter()
-            .find_map(|s| {
-                if s.sh_name == ".strtab" {
-                    return Some(s);
-                }
-                None
-            });
+        let symtab = self.sect_headers.iter().find(|&s| s.sh_name == ".symtab");
+        let strtab = self.sect_headers.iter().find(|&s| s.sh_name == ".strtab");
 
         let mut tohost = None;
         let mut fromhost = None;
         if let (Some(symtab), Some(strtab)) = (symtab, strtab) {
             const ST_SIZE: usize = 16;
-            for symtab_off in (symtab.sh_offset .. symtab.sh_offset + symtab.sh_size).step_by(ST_SIZE) {
+            for symtab_off in (symtab.sh_offset..symtab.sh_offset + symtab.sh_size).step_by(ST_SIZE)
+            {
                 let st_name_off = get_u32(&self.mem_data, symtab_off as usize);
-                let st_name = &self.mem_data[(strtab.sh_offset + st_name_off) as usize ..]
+                let st_name = &self.mem_data[(strtab.sh_offset + st_name_off) as usize..]
                     .iter()
                     .take_while(|c| **c as char != '\0')
                     .map(|c| *c as char)
@@ -127,7 +114,6 @@ impl ElfLoader {
         for (id, sect) in self.sect_headers.iter().enumerate() {
             sect.show(id);
         }
-
     }
 
     pub fn dump_segment(&self) {
@@ -148,4 +134,3 @@ impl ElfLoader {
         }
     }
 }
-

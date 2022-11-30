@@ -4,25 +4,25 @@ use crate::TrapCause;
 pub struct Mrom {
     pub mrom: Vec<u8>,
     pub base_addr: u32,
-        size: usize,
+    size: usize,
 }
 
 impl Mrom {
     #[allow(arithmetic_overflow)]
     pub fn new(entry_point: u32) -> Mrom {
         let reset_vector: Vec<u32> = vec![
-            0x00000297, // auipc   t0, 0x0
-            0x02028593, // addi    a1, t0, 32
-            0xf1402573, // csrr    a0, mhartid
-            0x0182a283, // lw      t0, 24(t0)
-            0x00028067, // jr      t0    |
-            0x0,        //               |
-            entry_point,// <-------------+
+            0x00000297,  // auipc   t0, 0x0
+            0x02028593,  // addi    a1, t0, 32
+            0xf1402573,  // csrr    a0, mhartid
+            0x0182a283,  // lw      t0, 24(t0)
+            0x00028067,  // jr      t0    |
+            0x0,         //               |
+            entry_point, // <-------------+
             entry_point >> 32,
         ];
 
         // Vec<u32> -> Vec<u8>
-        let mrom: Vec<u8> = reset_vector 
+        let mrom: Vec<u8> = reset_vector
             .iter()
             .flat_map(|val| val.to_le_bytes().to_vec())
             .collect();
@@ -31,7 +31,7 @@ impl Mrom {
         Mrom {
             mrom,
             base_addr: 0x1000,
-            size: mrom_size
+            size: mrom_size,
         }
     }
 
@@ -44,7 +44,7 @@ impl Mrom {
 impl Device for Mrom {
     // is addr in device address space
     fn in_range(&self, addr: u32) -> bool {
-        (self.base_addr ..= self.base_addr + self.size as u32).contains(&addr)
+        (self.base_addr..=self.base_addr + self.size as u32).contains(&addr)
     }
 
     // address to raw index
@@ -63,7 +63,7 @@ impl Device for Mrom {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            format!("mrom is read only: {:x}", addr)
+            format!("mrom is read only: {:x}", addr),
         ))
     }
 
@@ -71,7 +71,7 @@ impl Device for Mrom {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            format!("mrom is read only: {:x}", addr)
+            format!("mrom is read only: {:x}", addr),
         ))
     }
 
@@ -79,7 +79,7 @@ impl Device for Mrom {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            format!("mrom is read only: {:x}", addr)
+            format!("mrom is read only: {:x}", addr),
         ))
     }
 
@@ -87,10 +87,9 @@ impl Device for Mrom {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            format!("mrom is read only: {:x}", addr)
+            format!("mrom is read only: {:x}", addr),
         ))
     }
-
 
     // load
     fn load8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
@@ -100,30 +99,27 @@ impl Device for Mrom {
 
     fn load16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((
-         (self.mrom[addr + 1] as i16) << 8 |
-         (self.mrom[addr + 0] as i16)
-        ) as i32 as u32)
+        Ok(((self.mrom[addr + 1] as i16) << 8 | (self.mrom[addr + 0] as i16)) as i32 as u32)
     }
 
     fn load32(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((self.mrom[addr + 3] as u32) << 24 |
-         (self.mrom[addr + 2] as u32) << 16 |
-         (self.mrom[addr + 1] as u32) <<  8 |
-         (self.mrom[addr + 0] as u32))
+        Ok((self.mrom[addr + 3] as u32) << 24
+            | (self.mrom[addr + 2] as u32) << 16
+            | (self.mrom[addr + 1] as u32) << 8
+            | (self.mrom[addr + 0] as u32))
     }
 
     fn load64(&self, addr: u32) -> Result<u64, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((self.mrom[addr + 7] as u64) << 56 |
-         (self.mrom[addr + 6] as u64) << 48 |
-         (self.mrom[addr + 5] as u64) << 40 |
-         (self.mrom[addr + 4] as u64) << 32 |
-         (self.mrom[addr + 3] as u64) << 24 |
-         (self.mrom[addr + 2] as u64) << 16 |
-         (self.mrom[addr + 1] as u64) <<  8 |
-         (self.mrom[addr + 0] as u64))
+        Ok((self.mrom[addr + 7] as u64) << 56
+            | (self.mrom[addr + 6] as u64) << 48
+            | (self.mrom[addr + 5] as u64) << 40
+            | (self.mrom[addr + 4] as u64) << 32
+            | (self.mrom[addr + 3] as u64) << 24
+            | (self.mrom[addr + 2] as u64) << 16
+            | (self.mrom[addr + 1] as u64) << 8
+            | (self.mrom[addr + 0] as u64))
     }
     fn load_u8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
@@ -132,7 +128,6 @@ impl Device for Mrom {
 
     fn load_u16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((self.mrom[addr + 1] as u32) << 8 |
-         (self.mrom[addr + 0] as u32))
+        Ok((self.mrom[addr + 1] as u32) << 8 | (self.mrom[addr + 0] as u32))
     }
 }
