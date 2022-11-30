@@ -28,15 +28,16 @@ cargo build --release
 ## Usage
 ```zsh
 $ ./carron --help
-carron 0.9.5
+carron 0.9.6
 n.takana <Alignof@outlook.com>
 RV32IMAC emulator
 
 USAGE:
-    carron [OPTIONS] <filename>
+    carron [OPTIONS] <filename> [main_args]...
 
 ARGS:
-    <filename>    ELF file path
+    <filename>        ELF file path
+    <main_args>...
 
 OPTIONS:
     -e, --elfhead                         Show ELF header
@@ -48,10 +49,11 @@ OPTIONS:
         --pc <init_pc>                    Set entry address as hex
         --break_point <address>           Set break point as hex
         --result_reg <register_number>    Set result register
+        --loglv <log_level>               Set log level
     -h, --help                            Print help information
     -V, --version                         Print version information
 
-$ ./carron --pk $RISCV/riscv32-unknown-elf/bin/pk ./HelloWorld 2>/dev/null
+$ ./carron --pk $RISCV/riscv32-unknown-elf/bin/pk ./HelloWorld
 
 In file HelloWorld
 elfcheck: OK
