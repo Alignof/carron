@@ -18,10 +18,11 @@ impl Dram {
         // load elf memory mapping
         for segment in loader.prog_headers.iter() {
             if segment.is_loadable() {
-                let dram_start = (segment.p_paddr - virt_entry) as usize;
-                let mmap_start = (segment.p_offset) as usize;
-                let dram_end = dram_start + segment.p_filesz as usize;
-                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+                let (offset, paddr) = segment.offset_and_addr();
+                let dram_start = (paddr - virt_entry) as usize;
+                let mmap_start = (offset) as usize;
+                let dram_end = dram_start + segment.p_filesz() as usize;
+                let mmap_end = (offset + segment.p_filesz()) as usize;
 
                 new_dram.splice(
                     dram_start..dram_end,
@@ -33,7 +34,7 @@ impl Dram {
         let dram_size = new_dram.len();
         Dram {
             dram: new_dram,
-            base_addr: virt_entry,
+            base_addr: virt_entry as u32,
             size: dram_size,
         }
     }
