@@ -24,7 +24,7 @@ diff_output() {
         filter=$v_filter;
     fi;
 
-    cargo r -- $test_dir$test_name 2> /dev/null |
+    cargo r -- --loglv=info $test_dir$test_name 2> /dev/null |
         perl -ne 'print if /^pc: /' |
         perl -pe 's/pc: //' |
         perl -ne "print unless /${filter}/" > ./target/output;
