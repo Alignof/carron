@@ -10,6 +10,11 @@ use cpu::fetch::fetch;
 use cpu::{TrapCause, CPU};
 use fesvr::FrontendServer;
 
+pub enum Isa {
+    Rv32,
+    Rv64,
+}
+
 pub struct Emulator {
     pub cpu: cpu::CPU,
     frontend_server: FrontendServer,
