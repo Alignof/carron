@@ -1,12 +1,12 @@
 use super::instruction::reg2str;
 use crate::log;
 pub struct Register {
-    regs: [u32; 32],
+    regs: [u64; 32],
 }
 
 impl Register {
     pub fn new() -> Register {
-        Register { regs: [0; 32] }
+        Register { regs: [0; 64] }
     }
 
     pub fn show(&self) {
