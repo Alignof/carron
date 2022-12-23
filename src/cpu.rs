@@ -6,9 +6,8 @@ mod instruction;
 mod mmu;
 mod reg;
 
-use crate::bus;
-use crate::elfload;
-use crate::log;
+use crate::Isa;
+use crate::{bus, elfload, log};
 use csr::{CSRname, Xstatus};
 use std::collections::HashSet;
 
@@ -64,14 +63,14 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>, isa: Isa) -> CPU {
         // initialize bus and get the entry point
         let bus = bus::Bus::new(loader);
 
         CPU {
             pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
             bus,
-            regs: reg::Register::new(),
+            regs: reg::Register::new(isa),
             csrs: csr::CSRs::new().init(),
             mmu: mmu::MMU::new(),
             reservation_set: HashSet::new(),
