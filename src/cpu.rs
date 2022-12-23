@@ -53,7 +53,7 @@ pub enum TransFor {
 }
 
 pub struct CPU {
-    pub pc: u32,
+    pub pc: u64,
     pub bus: bus::Bus,
     pub regs: reg::Register,
     csrs: csr::CSRs,
