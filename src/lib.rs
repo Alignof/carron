@@ -29,7 +29,7 @@ impl Emulator {
         let (tohost_addr, fromhost_addr) = loader.get_host_addr();
 
         Emulator {
-            cpu: CPU::new(loader, args.init_pc),
+            cpu: CPU::new(loader, args.init_pc, args.isa.unwrap_or(Isa::Rv64)),
             frontend_server: FrontendServer::new(),
             tohost_addr,
             fromhost_addr,
