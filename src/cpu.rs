@@ -63,12 +63,12 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>, isa: Isa) -> CPU {
+    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u64>, isa: Isa) -> CPU {
         // initialize bus and get the entry point
         let bus = bus::Bus::new(loader);
 
         CPU {
-            pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
+            pc: pc_from_cl.unwrap_or(bus.mrom.base_addr as u64),
             bus,
             regs: reg::Register::new(isa),
             csrs: csr::CSRs::new().init(),
@@ -78,11 +78,11 @@ impl CPU {
         }
     }
 
-    pub fn add2pc(&mut self, addval: u32) {
+    pub fn add2pc(&mut self, addval: u64) {
         self.pc += addval;
     }
 
-    pub fn update_pc(&mut self, newpc: u32) {
+    pub fn update_pc(&mut self, newpc: u64) {
         self.pc = newpc;
     }
 
@@ -244,7 +244,7 @@ impl CPU {
 
             let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
             let new_pc = if mtvec & 0b1 == 1 {
-                (mtvec - 1) + 4 * cause_of_trap as u32
+                (mtvec - 1) + 4 * cause_of_trap as u64
             } else {
                 mtvec
             };
@@ -252,9 +252,9 @@ impl CPU {
         }
     }
 
-    pub fn exception(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
+    pub fn exception(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
         self.csrs
-            .write(CSRname::mcause.wrap(), cause_of_trap as u32);
+            .write(CSRname::mcause.wrap(), cause_of_trap as u64);
         self.csrs.write(CSRname::mepc.wrap(), self.pc);
 
         // check Machine Trap Delegation Registers
@@ -264,7 +264,7 @@ impl CPU {
             // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
             log::infoln!("delegated");
             self.csrs
-                .write(CSRname::scause.wrap(), cause_of_trap as u32);
+                .write(CSRname::scause.wrap(), cause_of_trap as u64);
             self.csrs.write(CSRname::sepc.wrap(), self.pc);
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.csrs.write_xstatus(
@@ -279,7 +279,7 @@ impl CPU {
             self.csrs.write_xstatus(
                 PrivilegedLevel::Supervisor,
                 Xstatus::SPP,
-                self.priv_lv as u32,
+                self.priv_lv as u64,
             ); // set prev_priv to SPP
             self.priv_lv = PrivilegedLevel::Supervisor;
 
@@ -305,7 +305,7 @@ impl CPU {
         }
     }
 
-    pub fn trap(&mut self, tval_addr: u32, cause_of_trap: TrapCause) {
+    pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
         match cause_of_trap {
             TrapCause::InstAddrMisaligned
             | TrapCause::IllegalInst
@@ -334,8 +334,8 @@ impl CPU {
         &mut self,
         purpose: TransFor,
         align: TransAlign,
-        addr: u32,
-    ) -> Result<u32, (Option<u32>, TrapCause, String)> {
+        addr: u64,
+    ) -> Result<u64, (Option<u32>, TrapCause, String)> {
         let addr = self.check_breakpoint(purpose, addr)?;
         let mut trans_priv = self.priv_lv;
 
