@@ -55,11 +55,10 @@ exit_code() {
     fi;
 }
 
-flag=$1
 exit_status=0
 for test_kind in ${test_kinds[@]}; do
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
-        if [ $(which spike 2> /dev/null) ] && [ $flag != "--simple" ]; then
+        if [ $(which spike 2> /dev/null) ]; then
             diff_output;
         else
             exit_code;
