@@ -18,8 +18,8 @@ pub enum Isa {
 pub struct Emulator {
     pub cpu: cpu::CPU,
     frontend_server: FrontendServer,
-    tohost_addr: Option<u32>,
-    fromhost_addr: Option<u32>,
+    tohost_addr: Option<u64>,
+    fromhost_addr: Option<u64>,
     args: Arguments,
     exit_code: Option<i32>,
 }
@@ -31,8 +31,8 @@ impl Emulator {
         Emulator {
             cpu: CPU::new(loader, args.init_pc, args.isa.unwrap_or(Isa::Rv64)),
             frontend_server: FrontendServer::new(),
-            tohost_addr,
-            fromhost_addr,
+            tohost_addr: tohost_addr.map(|x| x as u64),
+            fromhost_addr: fromhost_addr.map(|x| x as u64),
             args,
             exit_code: None,
         }
