@@ -24,11 +24,11 @@ pub struct CPU32 {
 }
 
 impl CPU32 {
-    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>) -> Self {
+    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>) -> Box<dyn CPU> {
         // initialize bus and get the entry point
         let bus = bus::Bus::new(loader);
 
-        CPU32 {
+        Box::new(CPU32 {
             pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
             bus,
             regs: reg::Register::new(),
@@ -36,7 +36,7 @@ impl CPU32 {
             mmu: mmu::MMU::new(),
             reservation_set: HashSet::new(),
             priv_lv: PrivilegedLevel::Machine,
-        }
+        })
     }
 }
 

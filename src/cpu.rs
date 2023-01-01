@@ -1,4 +1,4 @@
-mod rv32;
+pub mod rv32;
 
 use crate::elfload;
 
@@ -43,7 +43,7 @@ pub enum TransFor {
     Deleg,
 }
 
-trait CPU {
+pub trait CPU {
     fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>) -> Self;
     fn add2pc(&mut self, addval: u32);
     fn update_pc(&mut self, newpc: u32);

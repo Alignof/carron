@@ -6,7 +6,6 @@ mod fesvr;
 pub mod log;
 
 use cmdline::Arguments;
-use cpu::fetch::fetch;
 use cpu::{TrapCause, CPU};
 use fesvr::FrontendServer;
 
@@ -16,7 +15,7 @@ pub enum Isa {
 }
 
 pub struct Emulator {
-    pub cpu: cpu::CPU,
+    pub cpu: Box<dyn cpu::CPU>,
     frontend_server: FrontendServer,
     tohost_addr: Option<u32>,
     fromhost_addr: Option<u32>,
@@ -39,7 +38,8 @@ impl Emulator {
     }
 
     fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
-        use crate::cpu::execution::Execution;
+        use cpu::rv32::execution::Execution;
+        use cpu::rv32::fetch::fetch;
 
         self.cpu.check_interrupt()?;
 
