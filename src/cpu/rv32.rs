@@ -2,7 +2,6 @@ pub mod csr;
 pub mod decode;
 pub mod execution;
 pub mod fetch;
-mod instruction;
 mod mmu;
 mod reg;
 

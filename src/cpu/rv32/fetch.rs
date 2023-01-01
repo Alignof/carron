@@ -1,5 +1,6 @@
 use super::decode::Decode;
 use super::{TransAlign, TransFor, TrapCause};
+use crate::cpu::CPU;
 use crate::log;
 
 pub fn fetch(cpu: &mut super::Cpu32) -> Result<Box<dyn Decode>, (Option<u32>, TrapCause, String)> {

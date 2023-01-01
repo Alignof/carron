@@ -1,3 +1,4 @@
+pub mod instruction;
 pub mod rv32;
 
 use crate::bus;
