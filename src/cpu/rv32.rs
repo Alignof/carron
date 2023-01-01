@@ -44,8 +44,8 @@ impl CPU for Cpu32 {
         self.pc
     }
 
-    fn bus(&mut self) -> bus::Bus {
-        self.bus
+    fn bus(&mut self) -> &mut bus::Bus {
+        &mut self.bus
     }
 
     fn add2pc(&mut self, addval: u32) {
@@ -62,7 +62,7 @@ impl CPU for Cpu32 {
 
         self.check_interrupt()?;
 
-        fetch(&mut self)?.decode()?.execution(&mut self)
+        fetch(self)?.decode()?.execution(self)
     }
 
     fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {

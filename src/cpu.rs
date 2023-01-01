@@ -48,7 +48,7 @@ pub trait CPU {
     fn pc(&mut self) -> u32;
     fn add2pc(&mut self, addval: u32);
     fn update_pc(&mut self, newpc: u32);
-    fn bus(&mut self) -> bus::Bus;
+    fn bus(&mut self) -> &mut bus::Bus;
     fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)>;
     fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)>;
     fn interrupt(&mut self, tval_addr: u32, cause_of_trap: TrapCause);
