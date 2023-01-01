@@ -6,6 +6,7 @@ mod fesvr;
 pub mod log;
 
 use cmdline::Arguments;
+use cpu::rv32::Cpu32;
 use cpu::{TrapCause, CPU};
 use fesvr::FrontendServer;
 
@@ -26,9 +27,14 @@ pub struct Emulator {
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Emulator {
         let (tohost_addr, fromhost_addr) = loader.get_host_addr();
+        let cpu = match args.isa {
+            Some(Isa::Rv32) => Cpu32::new(loader, args.init_pc),
+            Some(Isa::Rv64) => panic!("Rv64 has not implmented yet"),
+            None => panic!("Rv64 has not implmented yet"),
+        };
 
         Emulator {
-            cpu: CPU::new(loader, args.init_pc),
+            cpu,
             frontend_server: FrontendServer::new(),
             tohost_addr,
             fromhost_addr,
