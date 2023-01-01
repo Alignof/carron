@@ -40,7 +40,7 @@ impl Cpu32 {
 }
 
 impl CPU for Cpu32 {
-    fn pc(&mut self) -> u32 {
+    fn pc(&self) -> u32 {
         self.pc
     }
 
