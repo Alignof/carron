@@ -4,8 +4,9 @@ mod m_extension;
 mod priv_extension;
 mod zicsr_extension;
 
+use super::Cpu32;
 use crate::cpu::instruction::{Extensions, Instruction};
-use crate::cpu::{Cpu32, TrapCause};
+use crate::cpu::TrapCause;
 
 pub fn exe_inst(
     inst: &Instruction,

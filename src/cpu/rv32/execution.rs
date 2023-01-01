@@ -1,8 +1,8 @@
 mod inst_16;
 mod inst_32;
 
-use super::instruction::{Extensions, Instruction};
 use super::{Cpu32, TrapCause};
+use crate::cpu::instruction::{Extensions, Instruction};
 use crate::log;
 
 pub trait Execution {
