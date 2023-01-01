@@ -40,7 +40,7 @@ impl Emulator {
     pub fn check_tohost(&self) -> bool {
         let tohost_addr = self.tohost_addr.unwrap();
         self.cpu
-            .bus
+            .bus()
             .load32(tohost_addr)
             .expect("load from tohost addr failed")
             != 0
@@ -58,7 +58,7 @@ impl Emulator {
             48 => panic!("sys_faccessat is not implemented"),
             49 => panic!("sys_chdir is not implemented"),
             56 => self.frontend_server.openat(
-                &self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5],
+                self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5],
             ),
             57 => self.frontend_server.close(sysargs[1]),
             62 => self
@@ -66,38 +66,26 @@ impl Emulator {
                 .lseek(sysargs[1], sysargs[2], sysargs[3]),
             63 => self
                 .frontend_server
-                .read(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3]),
+                .read(self.cpu, sysargs[1], sysargs[2], sysargs[3]),
             64 => self
                 .frontend_server
-                .write(&self.cpu, sysargs[1], sysargs[2], sysargs[3]),
-            67 => self.frontend_server.pread(
-                &mut self.cpu,
-                sysargs[1],
-                sysargs[2],
-                sysargs[3],
-                sysargs[4],
-            ),
+                .write(self.cpu, sysargs[1], sysargs[2], sysargs[3]),
+            67 => self
+                .frontend_server
+                .pread(self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
             68 => self
                 .frontend_server
-                .pwrite(&self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
+                .pwrite(self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
             79 => self.frontend_server.fstatat(
-                &mut self.cpu,
-                sysargs[1],
-                sysargs[2],
-                sysargs[3],
-                sysargs[4],
-                sysargs[5],
+                self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5],
             ),
-            80 => self
-                .frontend_server
-                .fstat(&mut self.cpu, sysargs[1], sysargs[2]),
+            80 => self.frontend_server.fstat(self.cpu, sysargs[1], sysargs[2]),
             93 => self.frontend_server.exit(&mut self.exit_code, sysargs[1]),
             291 => panic!("sys_statx is not implemented"),
             1039 => panic!("sys_lstat is not implemented"),
-            2011 => {
-                self.frontend_server
-                    .getmainvars(&mut self.cpu, &self.args, sysargs[1], sysargs[2])
-            }
+            2011 => self
+                .frontend_server
+                .getmainvars(self.cpu, &self.args, sysargs[1], sysargs[2]),
             _ => panic!("illegal syscall number"),
         }
     }
@@ -105,22 +93,22 @@ impl Emulator {
     pub fn handle_syscall(&mut self) {
         let tohost_addr = self.tohost_addr.unwrap();
         let fromhost_addr = self.fromhost_addr.unwrap();
-        let tohost: u64 = self.cpu.bus.load64(tohost_addr).unwrap() as u64;
-        self.cpu.bus.store64(tohost_addr, 0).unwrap();
+        let tohost: u64 = self.cpu.bus().load64(tohost_addr).unwrap() as u64;
+        self.cpu.bus().store64(tohost_addr, 0).unwrap();
 
         if tohost & 1 == 1 {
             self.exit_code = Some(tohost as i32);
         } else {
             let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
             let mut syscall_args: [u64; 8] = [
-                self.cpu.bus.load64(syscall_addr).unwrap() as u64,
-                self.cpu.bus.load64(syscall_addr + 8).unwrap() as u64,
-                self.cpu.bus.load64(syscall_addr + 16).unwrap() as u64,
-                self.cpu.bus.load64(syscall_addr + 24).unwrap() as u64,
-                self.cpu.bus.load64(syscall_addr + 32).unwrap() as u64,
-                self.cpu.bus.load64(syscall_addr + 40).unwrap() as u64,
-                self.cpu.bus.load64(syscall_addr + 48).unwrap() as u64,
-                self.cpu.bus.load64(syscall_addr + 56).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr + 8).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr + 16).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr + 24).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr + 32).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr + 40).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr + 48).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr + 56).unwrap() as u64,
             ];
 
             syscall_args[0] = self.exec_syscall(syscall_args) as u64;
@@ -128,13 +116,13 @@ impl Emulator {
             // store syscall to tohost
             for (i, s) in syscall_args.iter().enumerate() {
                 self.cpu
-                    .bus
+                    .bus()
                     .store64(syscall_addr + (i * 8) as u32, *s as i64)
                     .unwrap();
             }
 
             self.cpu
-                .bus
+                .bus()
                 .store64(fromhost_addr, (tohost << 48 >> 48) as i64 | 1)
                 .unwrap();
         }
