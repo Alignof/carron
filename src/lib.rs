@@ -43,7 +43,7 @@ impl Emulator {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
                     log::infoln!("[exception] {}", msg);
-                    self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
+                    self.cpu.trap(addr.unwrap_or(self.cpu.pc()), cause);
                 }
             }
 
@@ -52,9 +52,8 @@ impl Emulator {
             }
 
             if let Some(break_point) = self.args.break_point {
-                if break_point == self.cpu.pc {
-                    self.exit_code =
-                        Some(self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0))) as i32);
+                if break_point == self.cpu.pc() {
+                    self.exit_code = Some(0);
                 }
             }
 
