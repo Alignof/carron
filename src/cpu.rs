@@ -45,7 +45,7 @@ pub enum TransFor {
 }
 
 pub trait CPU {
-    fn pc(&mut self) -> u32;
+    fn pc(&self) -> u32;
     fn add2pc(&mut self, addval: u32);
     fn update_pc(&mut self, newpc: u32);
     fn bus(&mut self) -> &mut bus::Bus;
