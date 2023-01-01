@@ -13,7 +13,7 @@ use crate::log;
 use csr::{CSRname, Xstatus};
 use std::collections::HashSet;
 
-pub struct CPU32 {
+pub struct Cpu32 {
     pub pc: u32,
     pub bus: bus::Bus,
     pub regs: reg::Register,
@@ -23,12 +23,12 @@ pub struct CPU32 {
     pub priv_lv: PrivilegedLevel,
 }
 
-impl CPU32 {
+impl Cpu32 {
     pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u32>) -> Box<dyn CPU> {
         // initialize bus and get the entry point
         let bus = bus::Bus::new(loader);
 
-        Box::new(CPU32 {
+        Box::new(Cpu32 {
             pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
             bus,
             regs: reg::Register::new(),
@@ -40,7 +40,7 @@ impl CPU32 {
     }
 }
 
-impl CPU for CPU32 {
+impl CPU for Cpu32 {
     fn add2pc(&mut self, addval: u32) {
         self.pc += addval;
     }
