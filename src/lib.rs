@@ -49,7 +49,7 @@ impl Emulator {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
                     log::infoln!("[exception] {}", msg);
-                    self.cpu.trap(addr.unwrap_or(self.cpu.pc()), cause);
+                    self.cpu.trap(addr.unwrap_or_else(|| self.cpu.pc()), cause);
                 }
             }
 

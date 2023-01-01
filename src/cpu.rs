@@ -4,6 +4,7 @@ pub mod rv32;
 use crate::bus;
 
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::enum_clike_unportable_variant)]
 pub enum TrapCause {
     InstAddrMisaligned = 0,
     IllegalInst = 2,
