@@ -37,7 +37,7 @@ impl FrontendServer {
 }
 
 impl Emulator {
-    pub fn check_tohost(&self) -> bool {
+    pub fn check_tohost(&mut self) -> bool {
         let tohost_addr = self.tohost_addr.unwrap();
         self.cpu
             .bus()
@@ -58,7 +58,12 @@ impl Emulator {
             48 => panic!("sys_faccessat is not implemented"),
             49 => panic!("sys_chdir is not implemented"),
             56 => self.frontend_server.openat(
-                self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5],
+                &mut self.cpu,
+                sysargs[1],
+                sysargs[2],
+                sysargs[3],
+                sysargs[4],
+                sysargs[5],
             ),
             57 => self.frontend_server.close(sysargs[1]),
             62 => self
@@ -66,26 +71,42 @@ impl Emulator {
                 .lseek(sysargs[1], sysargs[2], sysargs[3]),
             63 => self
                 .frontend_server
-                .read(self.cpu, sysargs[1], sysargs[2], sysargs[3]),
+                .read(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3]),
             64 => self
                 .frontend_server
-                .write(self.cpu, sysargs[1], sysargs[2], sysargs[3]),
-            67 => self
-                .frontend_server
-                .pread(self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
-            68 => self
-                .frontend_server
-                .pwrite(self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4]),
-            79 => self.frontend_server.fstatat(
-                self.cpu, sysargs[1], sysargs[2], sysargs[3], sysargs[4], sysargs[5],
+                .write(&mut self.cpu, sysargs[1], sysargs[2], sysargs[3]),
+            67 => self.frontend_server.pread(
+                &mut self.cpu,
+                sysargs[1],
+                sysargs[2],
+                sysargs[3],
+                sysargs[4],
             ),
-            80 => self.frontend_server.fstat(self.cpu, sysargs[1], sysargs[2]),
+            68 => self.frontend_server.pwrite(
+                &mut self.cpu,
+                sysargs[1],
+                sysargs[2],
+                sysargs[3],
+                sysargs[4],
+            ),
+            79 => self.frontend_server.fstatat(
+                &mut self.cpu,
+                sysargs[1],
+                sysargs[2],
+                sysargs[3],
+                sysargs[4],
+                sysargs[5],
+            ),
+            80 => self
+                .frontend_server
+                .fstat(&mut self.cpu, sysargs[1], sysargs[2]),
             93 => self.frontend_server.exit(&mut self.exit_code, sysargs[1]),
             291 => panic!("sys_statx is not implemented"),
             1039 => panic!("sys_lstat is not implemented"),
-            2011 => self
-                .frontend_server
-                .getmainvars(self.cpu, &self.args, sysargs[1], sysargs[2]),
+            2011 => {
+                self.frontend_server
+                    .getmainvars(&mut self.cpu, &self.args, sysargs[1], sysargs[2])
+            }
             _ => panic!("illegal syscall number"),
         }
     }
