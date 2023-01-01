@@ -41,6 +41,10 @@ impl Cpu32 {
 }
 
 impl CPU for Cpu32 {
+    fn bus(&mut self) -> bus::Bus {
+        self.bus
+    }
+
     fn add2pc(&mut self, addval: u32) {
         self.pc += addval;
     }

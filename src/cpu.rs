@@ -1,5 +1,7 @@
 pub mod rv32;
 
+use crate::bus;
+
 #[derive(Copy, Clone, Debug)]
 pub enum TrapCause {
     InstAddrMisaligned = 0,
@@ -42,6 +44,7 @@ pub enum TransFor {
 }
 
 pub trait CPU {
+    fn bus(&mut self) -> bus::Bus;
     fn add2pc(&mut self, addval: u32);
     fn update_pc(&mut self, newpc: u32);
     fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)>;
