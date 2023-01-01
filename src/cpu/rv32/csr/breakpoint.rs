@@ -1,6 +1,6 @@
 use crate::cpu::csr::{CSRname, CSRs};
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
-use crate::CPU;
+use crate::Cpu32;
 
 pub struct Triggers {
     pub tselect: usize,
@@ -31,7 +31,7 @@ impl CSRs {
     }
 }
 
-impl CPU {
+impl Cpu32 {
     pub fn check_breakpoint(
         &mut self,
         purpose: TransFor,

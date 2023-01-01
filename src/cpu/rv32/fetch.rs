@@ -2,7 +2,7 @@ use super::decode::Decode;
 use super::{TransAlign, TransFor, TrapCause};
 use crate::log;
 
-pub fn fetch(cpu: &mut super::CPU) -> Result<Box<dyn Decode>, (Option<u32>, TrapCause, String)> {
+pub fn fetch(cpu: &mut super::Cpu32) -> Result<Box<dyn Decode>, (Option<u32>, TrapCause, String)> {
     let index_pc: u32 = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc)?;
     let is_cinst: bool = cpu.bus.raw_byte(index_pc) & 0x3 != 0x3;
 

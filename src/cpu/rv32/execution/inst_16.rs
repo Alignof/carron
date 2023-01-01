@@ -1,10 +1,10 @@
 mod c_extension;
 use crate::cpu::instruction::Instruction;
-use crate::cpu::{TrapCause, CPU};
+use crate::cpu::{TrapCause, Cpu32};
 
 pub fn exe_cinst(
     inst: &Instruction,
-    cpu: &mut CPU,
+    cpu: &mut Cpu32,
 ) -> Result<(), (Option<u32>, TrapCause, String)> {
     const INST_SIZE: u32 = 2;
 

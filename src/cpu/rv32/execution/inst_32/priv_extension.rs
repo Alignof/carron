@@ -1,9 +1,9 @@
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{PrivilegedLevel, TrapCause, CPU};
+use crate::cpu::{PrivilegedLevel, TrapCause, Cpu32};
 use crate::log;
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
             if cpu

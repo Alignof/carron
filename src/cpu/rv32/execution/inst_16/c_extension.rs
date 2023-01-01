@@ -1,7 +1,7 @@
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{TransAlign, TransFor, TrapCause, CPU};
+use crate::cpu::{TransAlign, TransFor, TrapCause, Cpu32};
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {
     const INST_SIZE: u32 = 2;
     const REG_SP: usize = 2;
     const REG_LINK: usize = 1;
@@ -146,13 +146,13 @@ mod exe_16 {
     use crate::cpu::instruction::Instruction;
     use crate::cpu::instruction::OpecodeKind::*;
     use crate::elfload;
-    use crate::CPU;
+    use crate::Cpu32;
 
     #[test]
     fn c_extension_test() {
         let dummy_elf =
             elfload::ElfLoader::try_new("./HelloWorld").expect("creating dummy_elf failed");
-        let mut cpu = CPU::new(dummy_elf, None);
+        let mut cpu = Cpu32::new(dummy_elf, None);
 
         exec(
             &Instruction {
