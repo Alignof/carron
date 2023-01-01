@@ -111,7 +111,8 @@ impl SectionHeader for SectionHeader64 {
     }
 
     fn dump(&self, mmap: &[u8]) {
-        use crate::cpu::decode::Decode;
+        //use crate::cpu::rv64::decode::Decode;
+        use crate::cpu::rv32::decode::Decode;
 
         println!("--------------------------------");
         let mut dump_head = self.sh_offset;

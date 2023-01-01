@@ -1,20 +1,12 @@
-use super::instruction::reg2str;
-use crate::{log, Isa};
-
+use crate::cpu::instruction::reg2str;
+use crate::log;
 pub struct Register {
-    regs: [u64; 32],
-    mask: u64,
+    regs: [u32; 32],
 }
 
 impl Register {
-    pub fn new(isa: Isa) -> Register {
-        Register {
-            regs: [0; 32],
-            mask: match isa {
-                Isa::Rv32 => 0xFFFF,
-                Isa::Rv64 => 0xFFFFFFFF,
-            },
-        }
+    pub fn new() -> Register {
+        Register { regs: [0; 32] }
     }
 
     pub fn show(&self) {
@@ -28,25 +20,25 @@ impl Register {
         log::debugln!("=============================================================================================");
     }
 
-    pub fn read(&self, src: Option<usize>) -> u64 {
+    pub fn read(&self, src: Option<usize>) -> u32 {
         let src = src.unwrap();
         if src == 0 {
             0
         } else {
-            self.mask | self.regs[src]
+            self.regs[src]
         }
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: u64) {
+    pub fn write(&mut self, dist: Option<usize>, src: u32) {
         let dist = dist.unwrap();
         if dist != 0 {
-            self.regs[dist] = self.mask | src;
+            self.regs[dist] = src;
         }
     }
 }
 
 impl Default for Register {
     fn default() -> Self {
-        Self::new(Isa::Rv64)
+        Self::new()
     }
 }

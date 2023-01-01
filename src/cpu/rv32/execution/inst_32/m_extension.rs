@@ -1,7 +1,8 @@
+use super::Cpu32;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{TrapCause, CPU};
+use crate::cpu::TrapCause;
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {
     let rs1 = cpu.regs.read(inst.rs1);
     let rs2 = cpu.regs.read(inst.rs2);
 

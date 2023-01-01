@@ -1,8 +1,8 @@
 mod inst_16;
 mod inst_32;
 
-use super::instruction::{Extensions, Instruction, OpecodeKind};
 use super::TrapCause;
+use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
 
 pub trait Decode {
     fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)>;

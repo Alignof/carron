@@ -6,7 +6,7 @@ mod fesvr;
 pub mod log;
 
 use cmdline::Arguments;
-use cpu::fetch::fetch;
+use cpu::rv32::Cpu32;
 use cpu::{TrapCause, CPU};
 use fesvr::FrontendServer;
 
@@ -16,10 +16,10 @@ pub enum Isa {
 }
 
 pub struct Emulator {
-    pub cpu: cpu::CPU,
+    pub cpu: Box<dyn cpu::CPU>,
     frontend_server: FrontendServer,
-    tohost_addr: Option<u64>,
-    fromhost_addr: Option<u64>,
+    tohost_addr: Option<u32>,
+    fromhost_addr: Option<u32>,
     args: Arguments,
     exit_code: Option<i32>,
 }
@@ -27,32 +27,29 @@ pub struct Emulator {
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Emulator {
         let (tohost_addr, fromhost_addr) = loader.get_host_addr();
+        let cpu = match args.isa {
+            Some(Isa::Rv32) => Cpu32::new(loader, args.init_pc),
+            Some(Isa::Rv64) => panic!("Rv64 has not implmented yet"),
+            None => panic!("Rv64 has not implmented yet"),
+        };
 
         Emulator {
-            cpu: CPU::new(loader, args.init_pc, args.isa.unwrap_or(Isa::Rv64)),
+            cpu,
             frontend_server: FrontendServer::new(),
-            tohost_addr: tohost_addr.map(|x| x as u64),
-            fromhost_addr: fromhost_addr.map(|x| x as u64),
+            tohost_addr,
+            fromhost_addr,
             args,
             exit_code: None,
         }
     }
 
-    fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
-        use crate::cpu::execution::Execution;
-
-        self.cpu.check_interrupt()?;
-
-        fetch(&mut self.cpu)?.decode()?.execution(&mut self.cpu)
-    }
-
     pub fn emulation(&mut self) {
         loop {
-            match self.exec_one_cycle() {
+            match self.cpu.exec_one_cycle() {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
                     log::infoln!("[exception] {}", msg);
-                    self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
+                    self.cpu.trap(addr.unwrap_or_else(|| self.cpu.pc()), cause);
                 }
             }
 
@@ -61,9 +58,8 @@ impl Emulator {
             }
 
             if let Some(break_point) = self.args.break_point {
-                if break_point == self.cpu.pc {
-                    self.exit_code =
-                        Some(self.cpu.regs.read(Some(self.args.result_reg.unwrap_or(0))) as i32);
+                if break_point == self.cpu.pc() {
+                    self.exit_code = Some(0);
                 }
             }
 

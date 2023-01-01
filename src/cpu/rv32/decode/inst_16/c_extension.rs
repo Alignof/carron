@@ -1,5 +1,5 @@
-use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
+use crate::cpu::rv32::decode::DecodeUtil;
 use crate::cpu::TrapCause;
 
 fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {

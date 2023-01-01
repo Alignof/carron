@@ -1,5 +1,5 @@
-use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
+use crate::cpu::rv32::decode::DecodeUtil;
 use crate::cpu::TrapCause;
 
 pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
