@@ -1,6 +1,6 @@
 mod c_extension;
 use crate::cpu::instruction::Instruction;
-use crate::cpu::{TrapCause, Cpu32};
+use crate::cpu::{Cpu32, TrapCause};
 
 pub fn exe_cinst(
     inst: &Instruction,

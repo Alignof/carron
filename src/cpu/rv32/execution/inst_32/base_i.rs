@@ -1,5 +1,5 @@
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{PrivilegedLevel, TransAlign, TransFor, TrapCause, Cpu32};
+use crate::cpu::{Cpu32, PrivilegedLevel, TransAlign, TransFor, TrapCause};
 
 pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {
     const INST_SIZE: u32 = 4;
