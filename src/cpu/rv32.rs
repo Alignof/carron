@@ -52,6 +52,15 @@ impl CPU for Cpu32 {
         self.pc = newpc;
     }
 
+    fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
+        use crate::cpu::rv32::execution::Execution;
+        use crate::cpu::rv32::fetch::fetch;
+
+        self.check_interrupt()?;
+
+        fetch(&mut self)?.decode()?.execution(&mut self)
+    }
+
     fn check_interrupt(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
         const MSIP: u32 = 3;
         const SSIP: u32 = 1;

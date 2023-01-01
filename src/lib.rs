@@ -37,18 +37,9 @@ impl Emulator {
         }
     }
 
-    fn exec_one_cycle(&mut self) -> Result<(), (Option<u32>, TrapCause, String)> {
-        use cpu::rv32::execution::Execution;
-        use cpu::rv32::fetch::fetch;
-
-        self.cpu.check_interrupt()?;
-
-        fetch(&mut self.cpu)?.decode()?.execution(&mut self.cpu)
-    }
-
     pub fn emulation(&mut self) {
         loop {
-            match self.exec_one_cycle() {
+            match self.cpu.exec_one_cycle() {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
                     log::infoln!("[exception] {}", msg);
