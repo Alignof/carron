@@ -7,6 +7,7 @@ mod zicsr_extension;
 use super::Cpu32;
 use crate::cpu::instruction::{Extensions, Instruction};
 use crate::cpu::TrapCause;
+use crate::cpu::CPU;
 
 pub fn exe_inst(
     inst: &Instruction,

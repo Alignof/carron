@@ -1,6 +1,6 @@
 use crate::bus::dram::Dram;
 use crate::bus::Device;
-use crate::cpu::csr::{CSRname, CSRs, Xstatus};
+use crate::cpu::rv32::csr::{CSRname, CSRs, Xstatus};
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
 use crate::log;
 

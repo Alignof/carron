@@ -1,4 +1,4 @@
-use super::instruction::reg2str;
+use crate::cpu::instruction::reg2str;
 use crate::log;
 pub struct Register {
     regs: [u32; 32],
