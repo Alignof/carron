@@ -144,17 +144,28 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
 
 #[cfg(test)]
 mod exe_16 {
-    use crate::cpu::execution::inst_16::c_extension::exec;
-    use crate::cpu::instruction::Instruction;
-    use crate::cpu::instruction::OpecodeKind::*;
+    use crate::bus;
+    use crate::cpu::instruction::{Instruction, OpecodeKind::*};
+    use crate::cpu::rv32::execution::inst_16::c_extension::exec;
+    use crate::cpu::rv32::{csr, mmu, reg, Cpu32};
+    use crate::cpu::PrivilegedLevel;
     use crate::elfload;
-    use crate::Cpu32;
+    use std::collections::HashSet;
 
     #[test]
     fn c_extension_test() {
         let dummy_elf =
             elfload::ElfLoader::try_new("./HelloWorld").expect("creating dummy_elf failed");
-        let mut cpu = Cpu32::new(dummy_elf, None);
+        let bus = bus::Bus::new(dummy_elf);
+        let mut cpu: Cpu32 = Cpu32 {
+            pc: bus.mrom.base_addr,
+            bus,
+            regs: reg::Register::new(),
+            csrs: csr::CSRs::new().init(),
+            mmu: mmu::MMU::new(),
+            reservation_set: HashSet::new(),
+            priv_lv: PrivilegedLevel::Machine,
+        };
 
         exec(
             &Instruction {
