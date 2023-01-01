@@ -1,6 +1,6 @@
-use crate::cpu::csr::{CSRname, CSRs};
+use crate::cpu::rv32::csr::{CSRname, CSRs};
+use crate::cpu::rv32::Cpu32;
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
-use crate::Cpu32;
 
 pub struct Triggers {
     pub tselect: usize,
