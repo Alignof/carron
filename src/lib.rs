@@ -25,7 +25,7 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Emulator {
+    pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Self {
         let (tohost_addr, fromhost_addr) = loader.get_host_addr();
         let cpu = match args.isa {
             Some(Isa::Rv32) => Cpu32::new(loader, args.init_pc),

@@ -15,7 +15,7 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader) -> Bus {
+    pub fn new(loader: elfload::ElfLoader) -> Self {
         // load proxy kernel before user program when it's given
         let dram = Dram::new(loader);
         let mut mrom = Mrom::new(dram.base_addr);

@@ -15,7 +15,7 @@ impl Default for Clint {
 
 impl Clint {
     #[allow(arithmetic_overflow)]
-    pub fn new() -> Clint {
+    pub fn new() -> Self {
         const CLINT_SIZE: usize = 0xFFFF;
 
         Clint {

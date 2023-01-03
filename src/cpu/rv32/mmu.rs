@@ -16,7 +16,7 @@ pub struct MMU {
 }
 
 impl MMU {
-    pub fn new() -> MMU {
+    pub fn new() -> Self {
         MMU {
             ppn: 0,
             trans_mode: AddrTransMode::Bare,

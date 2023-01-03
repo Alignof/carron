@@ -1,7 +1,6 @@
 mod breakpoint;
 
-use super::{CSRname, Xstatus};
-use crate::cpu::{PrivilegedLevel, TrapCause};
+use super::{CSRname, PrivilegedLevel, TrapCause, Xstatus};
 use breakpoint::Triggers;
 
 const UMASK: u32 = 0b10000000000011010111100100110011;
@@ -15,7 +14,7 @@ pub struct CSRs {
 
 #[allow(clippy::identity_op)]
 impl CSRs {
-    pub fn new() -> CSRs {
+    pub fn new() -> Self {
         CSRs {
             csrs: [0; 4096],
             triggers: Triggers {

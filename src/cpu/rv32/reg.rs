@@ -1,11 +1,12 @@
 use crate::cpu::instruction::reg2str;
 use crate::log;
+
 pub struct Register {
     regs: [u32; 32],
 }
 
 impl Register {
-    pub fn new() -> Register {
+    pub fn new() -> Self {
         Register { regs: [0; 32] }
     }
 
