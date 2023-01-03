@@ -59,7 +59,7 @@ impl FrontendServer {
 
     pub fn lseek(&self, fd: u64, ptr: u64, dir: u64) -> i64 {
         log::infoln!("sys_lseek(62)");
-        
+
         unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) }
     }
 

@@ -23,10 +23,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             );
         }
         OpecodeKind::OP_MULHU => {
-            cpu.regs.write(
-                inst.rd,
-                ((rs1 as u64 * rs2 as u64) >> 32) as u32,
-            );
+            cpu.regs
+                .write(inst.rd, ((rs1 as u64 * rs2 as u64) >> 32) as u32);
         }
         OpecodeKind::OP_DIV => {
             if rs2 == 0 {
@@ -40,8 +38,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             if rs2 == 0 {
                 cpu.regs.write(inst.rd, (2i32.pow(32) - 1) as u32);
             } else {
-                cpu.regs
-                    .write(inst.rd, (rs1 as u64 / rs2 as u64) as u32);
+                cpu.regs.write(inst.rd, (rs1 as u64 / rs2 as u64) as u32);
             }
         }
         OpecodeKind::OP_REM => {

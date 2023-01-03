@@ -11,8 +11,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             cpu.regs.write(inst.rd, inst.imm.unwrap() as u32);
         }
         OpecodeKind::OP_AUIPC => {
-            cpu.regs
-                .write(inst.rd, cpu.pc + inst.imm.unwrap() as u32);
+            cpu.regs.write(inst.rd, cpu.pc + inst.imm.unwrap() as u32);
         }
         OpecodeKind::OP_JAL => {
             cpu.regs.write(inst.rd, cpu.pc + INST_SIZE);

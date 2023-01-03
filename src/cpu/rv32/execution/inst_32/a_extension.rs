@@ -182,10 +182,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
                 .expect("transition address failed in AMO");
             cpu.bus.store32(
                 store_addr,
-                std::cmp::min(
-                    cpu.regs.read(inst.rd),
-                    cpu.regs.read(inst.rs2),
-                ),
+                std::cmp::min(cpu.regs.read(inst.rd), cpu.regs.read(inst.rs2)),
             )?;
         }
         OpecodeKind::OP_AMOMAXU_W => {
@@ -204,10 +201,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
                 .expect("transition address failed in AMO");
             cpu.bus.store32(
                 store_addr,
-                std::cmp::max(
-                    cpu.regs.read(inst.rd),
-                    cpu.regs.read(inst.rs2),
-                ),
+                std::cmp::max(cpu.regs.read(inst.rd), cpu.regs.read(inst.rs2)),
             )?;
         }
         _ => panic!("not an A extension"),
