@@ -10,14 +10,14 @@ pub enum AddrTransMode {
     Sv32,
 }
 
-pub struct MMU {
+pub struct Mmu {
     ppn: u32,
     trans_mode: AddrTransMode,
 }
 
-impl MMU {
+impl Mmu {
     pub fn new() -> Self {
-        MMU {
+        Mmu {
             ppn: 0,
             trans_mode: AddrTransMode::Bare,
         }

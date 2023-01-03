@@ -17,7 +17,7 @@ pub struct Cpu32 {
     pub bus: bus::Bus,
     pub regs: reg::Register,
     csrs: csr::CSRs,
-    mmu: mmu::MMU,
+    mmu: mmu::Mmu,
     pub reservation_set: HashSet<usize>,
     pub priv_lv: PrivilegedLevel,
 }
@@ -32,7 +32,7 @@ impl Cpu32 {
             bus,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new().init(),
-            mmu: mmu::MMU::new(),
+            mmu: mmu::Mmu::new(),
             reservation_set: HashSet::new(),
             priv_lv: PrivilegedLevel::Machine,
         })
