@@ -1,8 +1,7 @@
 use super::Cpu32;
+use crate::cpu::csr_name::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::rv32::csr::{CSRname, Xstatus};
-use crate::cpu::CPU;
-use crate::cpu::{PrivilegedLevel, TrapCause};
+use crate::cpu::{PrivilegedLevel, TrapCause, CPU};
 use crate::log;
 
 pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {

@@ -5,11 +5,10 @@ pub mod fetch;
 mod mmu;
 mod reg;
 
+use super::csr_name::{CSRname, Xstatus};
 use super::{PrivilegedLevel, TransAlign, TransFor, TrapCause, CPU};
 use crate::bus;
-use crate::elfload;
-use crate::log;
-use csr::{CSRname, Xstatus};
+use crate::{elfload, log};
 use std::collections::HashSet;
 
 pub struct Cpu32 {

@@ -1,8 +1,7 @@
 use super::Cpu32;
+use crate::cpu::csr_name::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::rv32::csr::{CSRname, Xstatus};
-use crate::cpu::CPU;
-use crate::cpu::{PrivilegedLevel, TransAlign, TransFor, TrapCause};
+use crate::cpu::{PrivilegedLevel, TransAlign, TransFor, TrapCause, CPU};
 
 fn check_accessible(cpu: &mut Cpu32, dist: usize) -> Result<(), (Option<u32>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc)?;
