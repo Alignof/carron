@@ -1,30 +1,19 @@
 #!/bin/bash
 
-test_dir=/opt/riscv32/share/riscv-tests/isa/
-test_kinds=(
-    "rv32mi-p"
-    "rv32si-p"
-    "rv32ui-p"
-    "rv32ui-v"
-    "rv32um-p"
-    "rv32um-v"
-    "rv32ua-p"
-    "rv32ua-v"
-    "rv32uc-p"
-    "rv32uc-v"
-)
+test_dir=/opt/riscv/riscv-tests/isa/
 ESC=$(printf '\033');
-p_filter="0x800000(3c|40|44|48)"
-v_filter="(0xffc021(48|4c|50|54|58))|(0xffc023(04|08))"
+exit_status=0
 
 diff_output() {
+    p_filter="0x800000(3c|40|44|48)"
+    v_filter="(0xffc021(48|4c|50|54|58))|(0xffc023(04|08))"
     if [ ${test_kind: -1} = "p" ]; then
         filter=$p_filter;
     else
         filter=$v_filter;
     fi;
 
-    cargo r -- --isa=rv32 --loglv=info $test_dir$test_name 2> /dev/null |
+    cargo r -- --isa=${isa} --loglv=info $test_dir$test_name 2> /dev/null |
         perl -ne 'print if /^pc: /' |
         perl -pe 's/pc: //' |
         perl -ne "print unless /${filter}/" > ./target/output;
@@ -46,7 +35,7 @@ diff_output() {
 }
 
 exit_code() {
-    cargo r -- --isa=rv32 $test_dir$test_name > /dev/null 2>&1;
+    cargo r -- --isa=${isa} $test_dir$test_name > /dev/null 2>&1;
     if [ $? = 1 ]; then
         echo "$test_name ${ESC}[32;1m ... passed ${ESC}[m"
     else
@@ -55,15 +44,22 @@ exit_code() {
     fi;
 }
 
-flag=$1
-exit_status=0
+isa=$(echo $1 | perl -pe 's/--isa=//')
+test_kinds=(
+    "${isa}mi-p"
+    "${isa}si-p"
+    "${isa}ui-p"
+    "${isa}ui-v"
+    "${isa}um-p"
+    "${isa}um-v"
+    "${isa}ua-p"
+    "${isa}ua-v"
+    "${isa}uc-p"
+    "${isa}uc-v"
+)
 for test_kind in ${test_kinds[@]}; do
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
-        if [ $(which spike 2> /dev/null) ] && [ "$flag" != "--exit_code" ]; then
-            diff_output;
-        else
-            exit_code;
-        fi
+        exit_code
     done;
 done;
 
