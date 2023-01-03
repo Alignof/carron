@@ -5,11 +5,12 @@ pub mod fetch;
 mod mmu;
 mod reg;
 
+use std::collections::HashSet;
+
 use super::csr_name::{CSRname, Xstatus};
 use super::{PrivilegedLevel, TransAlign, TransFor, TrapCause, CPU};
 use crate::bus;
 use crate::{elfload, log};
-use std::collections::HashSet;
 
 pub struct Cpu32 {
     pub pc: u32,
@@ -71,10 +72,8 @@ impl CPU for Cpu32 {
         const MTIME: u32 = 0x0200_BFF8;
         const MTIMECMP: u32 = 0x0200_4000;
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
-        let mtime: u64 = (self.bus.load32(MTIME + 4).unwrap() as u64) << 32
-            | self.bus.load32(MTIME).unwrap() as u64;
-        let mtimecmp: u64 = (self.bus.load32(MTIMECMP + 4).unwrap() as u64) << 32
-            | self.bus.load32(MTIMECMP).unwrap() as u64;
+        let mtime: u64 = self.bus.load64(MTIME).unwrap();
+        let mtimecmp: u64 = self.bus.load64(MTIMECMP).unwrap();
 
         if (mie >> MTIP) & 0b1 == 1 && mtime >= mtimecmp {
             self.csrs.write(CSRname::mip.wrap(), 1 << MTIP)
