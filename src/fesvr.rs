@@ -114,7 +114,7 @@ impl Emulator {
     pub fn handle_syscall(&mut self) {
         let tohost_addr = self.tohost_addr.unwrap();
         let fromhost_addr = self.fromhost_addr.unwrap();
-        let tohost: u64 = self.cpu.bus().load64(tohost_addr).unwrap() as u64;
+        let tohost: u64 = self.cpu.bus().load64(tohost_addr).unwrap();
         self.cpu.bus().store64(tohost_addr, 0).unwrap();
 
         if tohost & 1 == 1 {
@@ -122,14 +122,14 @@ impl Emulator {
         } else {
             let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
             let mut syscall_args: [u64; 8] = [
-                self.cpu.bus().load64(syscall_addr).unwrap() as u64,
-                self.cpu.bus().load64(syscall_addr + 8).unwrap() as u64,
-                self.cpu.bus().load64(syscall_addr + 16).unwrap() as u64,
-                self.cpu.bus().load64(syscall_addr + 24).unwrap() as u64,
-                self.cpu.bus().load64(syscall_addr + 32).unwrap() as u64,
-                self.cpu.bus().load64(syscall_addr + 40).unwrap() as u64,
-                self.cpu.bus().load64(syscall_addr + 48).unwrap() as u64,
-                self.cpu.bus().load64(syscall_addr + 56).unwrap() as u64,
+                self.cpu.bus().load64(syscall_addr).unwrap(),
+                self.cpu.bus().load64(syscall_addr + 8).unwrap(),
+                self.cpu.bus().load64(syscall_addr + 16).unwrap(),
+                self.cpu.bus().load64(syscall_addr + 24).unwrap(),
+                self.cpu.bus().load64(syscall_addr + 32).unwrap(),
+                self.cpu.bus().load64(syscall_addr + 40).unwrap(),
+                self.cpu.bus().load64(syscall_addr + 48).unwrap(),
+                self.cpu.bus().load64(syscall_addr + 56).unwrap(),
             ];
 
             syscall_args[0] = self.exec_syscall(syscall_args) as u64;

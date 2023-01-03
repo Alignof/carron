@@ -97,7 +97,7 @@ impl ElfLoader {
         }
 
         addr_table.sort_by(|x, y| (x.1).cmp(&y.1));
-        for w in (&addr_table).windows(2) {
+        for w in addr_table.windows(2) {
             let (a, z) = (w[0], w[1]);
             if a.1 <= addr && addr < z.1 {
                 return Some(a.0 + (addr - a.1));

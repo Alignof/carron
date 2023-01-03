@@ -12,7 +12,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
         }
         OpecodeKind::OP_AUIPC => {
             cpu.regs
-                .write(inst.rd, (cpu.pc + inst.imm.unwrap() as u32) as u32);
+                .write(inst.rd, cpu.pc + inst.imm.unwrap() as u32);
         }
         OpecodeKind::OP_JAL => {
             cpu.regs.write(inst.rd, cpu.pc + INST_SIZE);
@@ -22,7 +22,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             // calc next_pc before updated
             let next_pc = cpu.pc + INST_SIZE;
             // setting the least-significant bit of the result to zero-->vvvvvv
-            cpu.update_pc(((cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u32) & !0x1) as u32);
+            cpu.update_pc((cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u32) & !0x1);
             cpu.regs.write(inst.rd, next_pc);
         }
         OpecodeKind::OP_BEQ => {
@@ -128,7 +128,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
         OpecodeKind::OP_SLTI => {
             cpu.regs.write(
                 inst.rd,
-                ((cpu.regs.read(inst.rs1) as i32) < (inst.imm.unwrap() as i32)) as u32,
+                ((cpu.regs.read(inst.rs1) as i32) < inst.imm.unwrap()) as u32,
             );
         }
         OpecodeKind::OP_SLTIU => {

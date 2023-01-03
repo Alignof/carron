@@ -24,7 +24,7 @@ impl MMU {
     }
 
     fn update_ppn_and_mode(&mut self, csrs: &CSRs) {
-        self.ppn = (csrs.read(CSRname::satp.wrap()).unwrap() & 0x3FFFFF) as u32;
+        self.ppn = csrs.read(CSRname::satp.wrap()).unwrap() & 0x3FFFFF;
         self.trans_mode = match csrs.read(CSRname::satp.wrap()).unwrap() >> 31 & 0x1 {
             1 => AddrTransMode::Sv32,
             _ => AddrTransMode::Bare,
@@ -182,9 +182,7 @@ impl MMU {
             TransFor::Deleg => TrapCause::InstPageFault,
         };
 
-        if let Err(e) = self.check_pte_validity(purpose, pte) {
-            return Err(e);
-        }
+        self.check_pte_validity(purpose, pte)?;
 
         // check the U bit
         if pte_u == 0 && priv_lv == PrivilegedLevel::User {
@@ -270,7 +268,7 @@ impl MMU {
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         log::debugln!("PTE_addr(1): 0x{:x}", PTE_addr);
                         let PTE = match self
-                            .check_pte_validity(purpose, dram.load32(PTE_addr).unwrap() as u32)
+                            .check_pte_validity(purpose, dram.load32(PTE_addr).unwrap())
                         {
                             Ok(pte) => pte,
                             Err(cause) => {
@@ -308,7 +306,7 @@ impl MMU {
                                 PTESIZE
                             );
                             let PTE = match self
-                                .check_pte_validity(purpose, dram.load32(PTE_addr).unwrap() as u32)
+                                .check_pte_validity(purpose, dram.load32(PTE_addr).unwrap())
                             {
                                 Ok(pte) => pte,
                                 Err(cause) => {

@@ -183,8 +183,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             cpu.bus.store32(
                 store_addr,
                 std::cmp::min(
-                    cpu.regs.read(inst.rd) as u32,
-                    cpu.regs.read(inst.rs2) as u32,
+                    cpu.regs.read(inst.rd),
+                    cpu.regs.read(inst.rs2),
                 ),
             )?;
         }
@@ -205,8 +205,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             cpu.bus.store32(
                 store_addr,
                 std::cmp::max(
-                    cpu.regs.read(inst.rd) as u32,
-                    cpu.regs.read(inst.rs2) as u32,
+                    cpu.regs.read(inst.rd),
+                    cpu.regs.read(inst.rs2),
                 ),
             )?;
         }

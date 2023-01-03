@@ -59,8 +59,8 @@ impl FrontendServer {
 
     pub fn lseek(&self, fd: u64, ptr: u64, dir: u64) -> i64 {
         log::infoln!("sys_lseek(62)");
-        let ret = unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) };
-        ret as i64
+        
+        unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) }
     }
 
     pub fn read(&self, cpu: &mut Box<dyn CPU>, fd: u64, dst_addr: u64, len: u64) -> i64 {
@@ -160,7 +160,7 @@ impl FrontendServer {
                 vec![
                     buf.st_dev,
                     buf.st_ino,
-                    (buf.st_nlink as u64) << 32 | buf.st_mode as u64,
+                    buf.st_nlink << 32 | buf.st_mode as u64,
                     (buf.st_uid as u64) << 32 | buf.st_gid as u64,
                     buf.st_rdev,
                     PADDING,
@@ -201,7 +201,7 @@ impl FrontendServer {
                 vec![
                     buf.st_dev,
                     buf.st_ino,
-                    (buf.st_nlink as u64) << 32 | buf.st_mode as u64,
+                    buf.st_nlink << 32 | buf.st_mode as u64,
                     (buf.st_uid as u64) << 32 | buf.st_gid as u64,
                     buf.st_rdev,
                     PADDING,

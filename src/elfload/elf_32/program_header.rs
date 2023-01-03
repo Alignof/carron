@@ -65,7 +65,7 @@ impl ProgramHeader for ProgramHeader32 {
     }
 
     fn dump(&self, mmap: &[u8]) {
-        for (block, dump_part) in (self.p_offset..self.p_offset + self.p_memsz as u32)
+        for (block, dump_part) in (self.p_offset..self.p_offset + self.p_memsz)
             .step_by(4)
             .enumerate()
         {
