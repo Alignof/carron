@@ -9,8 +9,7 @@ use std::collections::HashSet;
 
 use super::csr_name::{CSRname, Xstatus};
 use super::{PrivilegedLevel, TransAlign, TransFor, TrapCause, CPU};
-use crate::bus;
-use crate::{elfload, log};
+use crate::{bus, elfload, log};
 
 pub struct Cpu32 {
     pub pc: u32,
@@ -86,12 +85,7 @@ impl CPU for Cpu32 {
         };
 
         // mtime += 1
-        self.bus
-            .store32(MTIME, ((mtime + 1) & 0xFFFF_FFFF) as u32)
-            .unwrap();
-        self.bus
-            .store32(MTIME + 4, ((mtime + 1) >> 32 & 0xFFFF_FFFF) as u32)
-            .unwrap();
+        self.bus.store64(MTIME, mtime as i64 + 1).unwrap();
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {

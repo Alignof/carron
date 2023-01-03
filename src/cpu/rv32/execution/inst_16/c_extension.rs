@@ -162,7 +162,7 @@ mod exe_16 {
             bus,
             regs: reg::Register::new(),
             csrs: csr::CSRs::new().init(),
-            mmu: mmu::MMU::new(),
+            mmu: mmu::Mmu::new(),
             reservation_set: HashSet::new(),
             priv_lv: PrivilegedLevel::Machine,
         };
