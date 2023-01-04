@@ -94,7 +94,7 @@ impl Cpu {
         self.pc = newpc;
     }
 
-    fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
+    pub fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
         use execution::Execution;
         use fetch::fetch;
 
@@ -315,7 +315,7 @@ impl Cpu {
         }
     }
 
-    fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
+    pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
         match cause_of_trap {
             TrapCause::InstAddrMisaligned
             | TrapCause::IllegalInst
