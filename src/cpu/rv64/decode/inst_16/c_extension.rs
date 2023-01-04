@@ -1,5 +1,5 @@
 use crate::cpu::instruction::OpecodeKind;
-use crate::cpu::rv32::decode::DecodeUtil;
+use crate::cpu::rv64::decode::DecodeUtil;
 use crate::cpu::TrapCause;
 
 fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
@@ -93,7 +93,7 @@ pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, &'static str> {
 pub fn parse_rd(
     inst: u16,
     opkind: &OpecodeKind,
-) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rd: usize = (inst.slice(4, 2) + 8) as usize;
     let q1_rd: usize = (inst.slice(9, 7) + 8) as usize;
@@ -130,7 +130,7 @@ pub fn parse_rd(
 pub fn parse_rs1(
     inst: u16,
     opkind: &OpecodeKind,
-) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rs1: usize = (inst.slice(9, 7) + 8) as usize;
     let q1_rs1: usize = (inst.slice(9, 7) + 8) as usize;
@@ -165,7 +165,7 @@ pub fn parse_rs1(
 pub fn parse_rs2(
     inst: u16,
     opkind: &OpecodeKind,
-) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
     // see riscv-spec-20191213.pdf, page 100, Table 16.2
     let q0_rs2: usize = (inst.slice(4, 2) + 8) as usize;
     let q1_rs2: usize = (inst.slice(4, 2) + 8) as usize;
@@ -190,7 +190,7 @@ pub fn parse_rs2(
 pub fn parse_imm(
     inst: u16,
     opkind: &OpecodeKind,
-) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
+) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
     let q0_uimm = || (inst.slice(12, 10).set(&[5, 4, 3]) | inst.slice(6, 5).set(&[2, 6])) as i32;
     let q0_nzuimm = || inst.slice(12, 5).set(&[5, 4, 9, 8, 7, 6, 2, 3]) as i32;
     let q1_nzuimm =

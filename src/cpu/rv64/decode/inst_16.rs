@@ -6,12 +6,12 @@ use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
 use crate::cpu::TrapCause;
 
 impl Decode for u16 {
-    fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)> {
+    fn decode(&self) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc) => opc,
             Err(msg) => {
                 return Err((
-                    Some(*self as u32),
+                    Some(*self as u64),
                     TrapCause::IllegalInst,
                     format!("{}, {:b}", msg, self),
                 ))
@@ -41,7 +41,7 @@ impl Decode for u16 {
     fn parse_rd(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rd(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -51,7 +51,7 @@ impl Decode for u16 {
     fn parse_rs1(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rs1(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -61,7 +61,7 @@ impl Decode for u16 {
     fn parse_rs2(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rs2(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -71,7 +71,7 @@ impl Decode for u16 {
     fn parse_imm(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_imm(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -80,14 +80,14 @@ impl Decode for u16 {
 }
 
 impl DecodeUtil for u16 {
-    fn slice(self, end: u32, start: u32) -> u16 {
+    fn slice(self, end: u64, start: u64) -> u16 {
         (self >> start) & (2_u16.pow(end - start + 1) - 1)
     }
 
-    fn set(self, mask: &[u32]) -> u32 {
-        let mut inst: u32 = 0;
+    fn set(self, mask: &[u64]) -> u64 {
+        let mut inst: u64 = 0;
         for (i, m) in mask.iter().rev().enumerate() {
-            inst |= ((self as u32 >> i) & 0x1) << m;
+            inst |= ((self as u64 >> i) & 0x1) << m;
         }
 
         inst

@@ -10,7 +10,7 @@ use crate::cpu::TrapCause;
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
-    fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)> {
+    fn decode(&self) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
         let new_opc: OpecodeKind = match self.parse_opecode() {
             Ok(opc) => opc,
             Err(msg) => {
@@ -49,7 +49,7 @@ impl Decode for u32 {
     fn parse_rd(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rd(self, opkind),
             Extensions::M => m_extension::parse_rd(self, opkind),
@@ -63,7 +63,7 @@ impl Decode for u32 {
     fn parse_rs1(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs1(self, opkind),
             Extensions::M => m_extension::parse_rs1(self, opkind),
@@ -77,7 +77,7 @@ impl Decode for u32 {
     fn parse_rs2(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs2(self, opkind),
             Extensions::M => m_extension::parse_rs2(self, opkind),
@@ -91,7 +91,7 @@ impl Decode for u32 {
     fn parse_imm(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_imm(self, opkind),
             Extensions::M => m_extension::parse_imm(self, opkind),
@@ -103,13 +103,13 @@ impl Decode for u32 {
     }
 }
 
-impl DecodeUtil for u32 {
-    fn slice(self, end: u32, start: u32) -> u32 {
-        (self >> start) & (2_u32.pow(end - start + 1) - 1)
+impl DecodeUtil for u64 {
+    fn slice(self, end: u64, start: u64) -> u64 {
+        (self >> start) & (2_u64.pow(end - start + 1) - 1)
     }
 
-    fn set(self, mask: &[u32]) -> u32 {
-        let mut inst: u32 = 0;
+    fn set(self, mask: &[u64]) -> u64 {
+        let mut inst: u64 = 0;
         for (i, m) in mask.iter().rev().enumerate() {
             inst |= ((self >> i) & 0x1) << m;
         }
@@ -149,7 +149,7 @@ mod decode_32 {
     #[allow(overflowing_literals)]
     fn parsing_opecode_test() {
         use OpecodeKind::*;
-        let test_32 = |inst_32: u32,
+        let test_32 = |inst_32: u64,
                        op: OpecodeKind,
                        rd: Option<usize>,
                        rs1: Option<usize>,

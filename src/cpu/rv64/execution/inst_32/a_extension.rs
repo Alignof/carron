@@ -1,9 +1,9 @@
-use super::Cpu32;
+use super::Cpu64;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::CPU;
 use crate::cpu::{TransAlign, TransFor, TrapCause};
 
-pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut Cpu64) -> Result<(), (Option<u64>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_LR_W => {
             let load_addr = cpu.trans_addr(
@@ -68,7 +68,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
                 .expect("transition address failed in AMO");
             cpu.bus.store32(
                 store_addr,
-                (cpu.regs.read(inst.rd) as i32 + cpu.regs.read(inst.rs2) as i32) as u32,
+                (cpu.regs.read(inst.rd) as i32 + cpu.regs.read(inst.rs2) as i32) as u64,
             )?;
         }
         OpecodeKind::OP_AMOXOR_W => {
@@ -141,7 +141,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
                 std::cmp::min(
                     cpu.regs.read(inst.rd) as i32,
                     cpu.regs.read(inst.rs2) as i32,
-                ) as u32,
+                ) as u64,
             )?;
         }
         OpecodeKind::OP_AMOMAX_W => {
@@ -163,7 +163,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
                 std::cmp::max(
                     cpu.regs.read(inst.rd) as i32,
                     cpu.regs.read(inst.rs2) as i32,
-                ) as u32,
+                ) as u64,
             )?;
         }
         OpecodeKind::OP_AMOMINU_W => {

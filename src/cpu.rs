@@ -1,6 +1,7 @@
 pub mod csr_name;
 pub mod instruction;
 pub mod rv32;
+pub mod rv64;
 
 use crate::bus;
 

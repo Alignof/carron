@@ -1,7 +1,7 @@
 use crate::bus::dram::Dram;
 use crate::bus::Device;
 use crate::cpu::csr_name::{CSRname, Xstatus};
-use crate::cpu::rv32::csr::CSRs;
+use crate::cpu::rv64::csr::CSRs;
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
 use crate::log;
 
@@ -11,7 +11,7 @@ pub enum AddrTransMode {
 }
 
 pub struct Mmu {
-    ppn: u32,
+    ppn: u64,
     trans_mode: AddrTransMode,
 }
 
@@ -34,12 +34,12 @@ impl Mmu {
     fn check_pmp(
         &self,
         purpose: TransFor,
-        addr: u32,
-        pmpcfg: u32,
-        pmp_r: u32,
-        pmp_w: u32,
-        pmp_x: u32,
-    ) -> Result<u32, TrapCause> {
+        addr: u64,
+        pmpcfg: u64,
+        pmp_r: u64,
+        pmp_w: u64,
+        pmp_x: u64,
+    ) -> Result<u64, TrapCause> {
         match purpose {
             TransFor::Fetch | TransFor::Deleg => {
                 if pmp_x != 1 {
@@ -67,10 +67,10 @@ impl Mmu {
     fn pmp(
         &self,
         purpose: TransFor,
-        addr: u32,
+        addr: u64,
         priv_lv: PrivilegedLevel,
         csrs: &CSRs,
-    ) -> Result<u32, TrapCause> {
+    ) -> Result<u64, TrapCause> {
         let pmpaddrs: Vec<usize> = (0x3B0..0x3BF).collect();
         let get_pmpcfg = |pmpnum| {
             let cfgnum = pmpnum / 4;
@@ -135,14 +135,14 @@ impl Mmu {
         }
     }
 
-    fn is_leaf_pte(&self, pte: u32) -> bool {
+    fn is_leaf_pte(&self, pte: u64) -> bool {
         let pte_r = pte >> 1 & 0x1;
         let pte_x = pte >> 3 & 0x1;
 
         pte_r == 1 || pte_x == 1
     }
 
-    fn check_pte_validity(&self, purpose: TransFor, pte: u32) -> Result<u32, TrapCause> {
+    fn check_pte_validity(&self, purpose: TransFor, pte: u64) -> Result<u64, TrapCause> {
         let pte_v = pte & 0x1;
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
@@ -167,8 +167,8 @@ impl Mmu {
         purpose: TransFor,
         priv_lv: PrivilegedLevel,
         csrs: &CSRs,
-        pte: u32,
-    ) -> Result<u32, TrapCause> {
+        pte: u64,
+    ) -> Result<u64, TrapCause> {
         let pte_r = pte >> 1 & 0x1;
         let pte_w = pte >> 2 & 0x1;
         let pte_x = pte >> 3 & 0x1;
@@ -238,11 +238,11 @@ impl Mmu {
     pub fn trans_addr(
         &mut self,
         purpose: TransFor,
-        addr: u32,
+        addr: u64,
         csrs: &CSRs,
         dram: &Dram,
         priv_lv: PrivilegedLevel,
-    ) -> Result<u32, TrapCause> {
+    ) -> Result<u64, TrapCause> {
         let trap_cause = |purpose: TransFor| match purpose {
             TransFor::Fetch => TrapCause::InstPageFault,
             TransFor::Load => TrapCause::LoadPageFault,
@@ -257,8 +257,8 @@ impl Mmu {
                 match self.trans_mode {
                     AddrTransMode::Bare => Ok(addr),
                     AddrTransMode::Sv32 => {
-                        const PTESIZE: u32 = 4;
-                        const PAGESIZE: u32 = 4096; // 2^12
+                        const PTESIZE: u64 = 4;
+                        const PAGESIZE: u64 = 4096; // 2^12
 
                         let VPN1 = addr >> 22 & 0x3FF;
                         let VPN0 = addr >> 12 & 0x3FF;

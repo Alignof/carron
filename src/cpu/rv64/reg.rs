@@ -2,7 +2,7 @@ use crate::cpu::instruction::reg2str;
 use crate::log;
 
 pub struct Register {
-    regs: [u32; 32],
+    regs: [u64; 32],
 }
 
 impl Register {
@@ -21,7 +21,7 @@ impl Register {
         log::debugln!("=============================================================================================");
     }
 
-    pub fn read(&self, src: Option<usize>) -> u32 {
+    pub fn read(&self, src: Option<usize>) -> u64 {
         let src = src.unwrap();
         if src == 0 {
             0
@@ -30,7 +30,7 @@ impl Register {
         }
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: u32) {
+    pub fn write(&mut self, dist: Option<usize>, src: u64) {
         let dist = dist.unwrap();
         if dist != 0 {
             self.regs[dist] = src;

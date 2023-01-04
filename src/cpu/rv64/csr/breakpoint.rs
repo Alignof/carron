@@ -1,15 +1,15 @@
-use crate::cpu::rv32::csr::{CSRname, CSRs};
-use crate::cpu::rv32::Cpu32;
+use crate::cpu::rv64::csr::{CSRname, CSRs};
+use crate::cpu::rv64::Cpu64;
 use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
 
 pub struct Triggers {
     pub tselect: usize,
-    pub tdata1: [u32; 8],
-    pub tdata2: [u32; 8],
+    pub tdata1: [u64; 8],
+    pub tdata2: [u64; 8],
 }
 
 impl CSRs {
-    pub fn update_triggers(&mut self, dist: usize, src: u32) {
+    pub fn update_triggers(&mut self, dist: usize, src: u64) {
         match dist {
             0x7a0 => {
                 // tselect
@@ -31,12 +31,12 @@ impl CSRs {
     }
 }
 
-impl Cpu32 {
+impl Cpu64 {
     pub fn check_breakpoint(
         &mut self,
         purpose: TransFor,
-        addr: u32,
-    ) -> Result<u32, (Option<u32>, TrapCause, String)> {
+        addr: u64,
+    ) -> Result<u64, (Option<u64>, TrapCause, String)> {
         for trigger_num in 0..self.csrs.triggers.tselect + 1 {
             let tdata1 = self.csrs.triggers.tdata1[trigger_num];
             let trigger_type = tdata1 >> 28 & 0xF;

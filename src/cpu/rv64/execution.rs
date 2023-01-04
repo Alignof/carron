@@ -1,16 +1,16 @@
 mod inst_16;
 mod inst_32;
 
-use super::{Cpu32, TrapCause};
+use super::{Cpu64, TrapCause};
 use crate::cpu::instruction::{Extensions, Instruction};
 use crate::log;
 
 pub trait Execution {
-    fn execution(&self, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)>;
+    fn execution(&self, cpu: &mut Cpu64) -> Result<(), (Option<u64>, TrapCause, String)>;
 }
 
 impl Execution for Instruction {
-    fn execution(&self, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn execution(&self, cpu: &mut Cpu64) -> Result<(), (Option<u64>, TrapCause, String)> {
         log::debugln!("{:#?}", self);
 
         match self.opc_to_extension() {

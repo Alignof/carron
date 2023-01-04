@@ -1,22 +1,22 @@
-use super::super::Cpu32;
+use super::super::Cpu64;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::CPU;
 use crate::cpu::{TransAlign, TransFor, TrapCause};
 
-pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, TrapCause, String)> {
-    const INST_SIZE: u32 = 2;
+pub fn exec(inst: &Instruction, cpu: &mut Cpu64) -> Result<(), (Option<u64>, TrapCause, String)> {
+    const INST_SIZE: u64 = 2;
     const REG_SP: usize = 2;
     const REG_LINK: usize = 1;
 
     match inst.opc {
         OpecodeKind::OP_C_LI => {
-            cpu.regs.write(inst.rd, inst.imm.unwrap() as u32);
+            cpu.regs.write(inst.rd, inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_C_LW => {
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size32,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32,
+                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         }
@@ -24,18 +24,18 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size32,
-                (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u32,
+                (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u64,
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         }
         OpecodeKind::OP_C_LUI => {
-            cpu.regs.write(inst.rd, inst.imm.unwrap() as u32);
+            cpu.regs.write(inst.rd, inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_C_SW => {
             let store_addr = cpu.trans_addr(
                 TransFor::StoreAMO,
                 TransAlign::Size32,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32,
+                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
             )?;
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         }
@@ -43,22 +43,22 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
             let store_addr = cpu.trans_addr(
                 TransFor::StoreAMO,
                 TransAlign::Size32,
-                (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u32,
+                (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u64,
             )?;
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_C_SLLI => {
             cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u32);
+                .write(inst.rd, cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_C_SRLI => {
             cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as u32);
+                .write(inst.rd, cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_C_SRAI => {
             cpu.regs.write(
                 inst.rd,
-                ((cpu.regs.read(inst.rs1) as i32) >> inst.imm.unwrap()) as u32,
+                ((cpu.regs.read(inst.rs1) as i32) >> inst.imm.unwrap()) as u64,
             );
         }
         OpecodeKind::OP_C_ADD => {
@@ -68,22 +68,22 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
         OpecodeKind::OP_C_ADDI4SPN => {
             cpu.regs.write(
                 inst.rd,
-                cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap() as u32,
+                cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap() as u64,
             );
         }
         OpecodeKind::OP_C_ADDI => {
             cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap() as u32);
+                .write(inst.rd, cpu.regs.read(inst.rd) + inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_C_ADDI16SP => {
             cpu.regs.write(
                 Some(REG_SP),
-                cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap() as u32,
+                cpu.regs.read(Some(REG_SP)) + inst.imm.unwrap() as u64,
             );
         }
         OpecodeKind::OP_C_ANDI => {
             cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rd) & inst.imm.unwrap() as u32);
+                .write(inst.rd, cpu.regs.read(inst.rd) & inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_C_SUB => {
             cpu.regs
@@ -102,11 +102,11 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
                 .write(inst.rd, cpu.regs.read(inst.rs1) & cpu.regs.read(inst.rs2));
         }
         OpecodeKind::OP_C_J => {
-            cpu.pc += inst.imm.unwrap() as u32;
+            cpu.pc += inst.imm.unwrap() as u64;
         }
         OpecodeKind::OP_C_JAL => {
             cpu.regs.write(Some(1), cpu.pc + INST_SIZE);
-            cpu.add2pc(inst.imm.unwrap() as u32);
+            cpu.add2pc(inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_C_JALR => {
             // calc next_pc before updated
@@ -118,12 +118,12 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
         }
         OpecodeKind::OP_C_BEQZ => {
             if cpu.regs.read(inst.rs1) == 0 {
-                cpu.add2pc(inst.imm.unwrap() as u32);
+                cpu.add2pc(inst.imm.unwrap() as u64);
             }
         }
         OpecodeKind::OP_C_BNEZ => {
             if cpu.regs.read(inst.rs1) != 0 {
-                cpu.add2pc(inst.imm.unwrap() as u32);
+                cpu.add2pc(inst.imm.unwrap() as u64);
             }
         }
         OpecodeKind::OP_C_JR => {
@@ -146,8 +146,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu32) -> Result<(), (Option<u32>, Tra
 mod exe_16 {
     use crate::bus;
     use crate::cpu::instruction::{Instruction, OpecodeKind::*};
-    use crate::cpu::rv32::execution::inst_16::c_extension::exec;
-    use crate::cpu::rv32::{csr, mmu, reg, Cpu32};
+    use crate::cpu::rv64::execution::inst_16::c_extension::exec;
+    use crate::cpu::rv64::{csr, mmu, reg, Cpu64};
     use crate::cpu::PrivilegedLevel;
     use crate::elfload;
     use std::collections::HashSet;
@@ -157,7 +157,7 @@ mod exe_16 {
         let dummy_elf =
             elfload::ElfLoader::try_new("./HelloWorld").expect("creating dummy_elf failed");
         let bus = bus::Bus::new(dummy_elf);
-        let mut cpu: Cpu32 = Cpu32 {
+        let mut cpu: Cpu64 = Cpu64 {
             pc: bus.mrom.base_addr,
             bus,
             regs: reg::Register::new(),
