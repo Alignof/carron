@@ -13,7 +13,7 @@ diff_output() {
         filter=$v_filter;
     fi;
 
-    cargo r -- --isa=${isa} --loglv=info $test_dir$test_name 2> /dev/null |
+    cargo r --release -- --isa=${isa} --loglv=info $test_dir$test_name 2> /dev/null |
         perl -ne 'print if /^pc: /' |
         perl -pe 's/pc: //' |
         perl -ne "print unless /${filter}/" > ./target/output;
@@ -35,7 +35,7 @@ diff_output() {
 }
 
 exit_code() {
-    cargo r -- --isa=${isa} $test_dir$test_name > /dev/null 2>&1;
+    cargo r --release -- --isa=${isa} $test_dir$test_name > /dev/null 2>&1;
     if [ $? = 1 ]; then
         echo "$test_name ${ESC}[32;1m ... passed ${ESC}[m"
     else
