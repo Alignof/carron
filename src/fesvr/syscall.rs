@@ -4,17 +4,17 @@ use crate::log;
 use crate::Arguments;
 use libc::c_void;
 
-fn memread(cpu: &mut Cpu, addr: u32, len: u64) -> Vec<u8> {
+fn memread(cpu: &mut Cpu, addr: u64, len: u64) -> Vec<u8> {
     let mut buf = Vec::new();
-    for off in 0..len as u32 {
+    for off in 0..len {
         buf.push(cpu.bus.load8(addr + off).unwrap() as u8);
     }
 
     buf
 }
 
-fn memwrite(cpu: &mut Cpu, addr: u32, len: usize, data: Vec<u8>) {
-    for off in 0..len as u32 {
+fn memwrite(cpu: &mut Cpu, addr: u64, len: usize, data: Vec<u8>) {
+    for off in 0..len as u64 {
         cpu.bus
             .store8(addr + off, data[off as usize] as u32)
             .unwrap();
@@ -32,7 +32,7 @@ impl FrontendServer {
         mode: u64,
     ) -> i64 {
         log::infoln!("sys_openat(56)");
-        let name: Vec<u8> = memread(cpu, name_addr as u32, len);
+        let name: Vec<u8> = memread(cpu, name_addr, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
         let fd = unsafe {
             libc::openat(
@@ -74,7 +74,7 @@ impl FrontendServer {
             )
         };
         if read_len > 0 {
-            memwrite(cpu, dst_addr as u32, read_len as usize, buf);
+            memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
         read_len as i64
@@ -82,7 +82,7 @@ impl FrontendServer {
 
     pub fn write(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
         log::infoln!("sys_write(64)");
-        let buf = memread(cpu, dst_addr as u32, len);
+        let buf = memread(cpu, dst_addr, len);
         let wrote_len = unsafe {
             libc::write(
                 self.fd_lookup(fd) as i32,
@@ -106,7 +106,7 @@ impl FrontendServer {
             )
         };
         if read_len > 0 {
-            memwrite(cpu, dst_addr as u32, read_len as usize, buf);
+            memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
         read_len as i64
@@ -114,7 +114,7 @@ impl FrontendServer {
 
     pub fn pwrite(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
         log::infoln!("sys_pwrite(68)");
-        let buf = memread(cpu, dst_addr as u32, len);
+        let buf = memread(cpu, dst_addr, len);
         let wrote_len = unsafe {
             libc::pwrite(
                 self.fd_lookup(fd) as i32,
@@ -137,7 +137,7 @@ impl FrontendServer {
         flags: u64,
     ) -> i64 {
         log::infoln!("sys_fstatat(79)");
-        let name: Vec<u8> = memread(cpu, name_addr as u32, len);
+        let name: Vec<u8> = memread(cpu, name_addr, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
         let (ret, rbuf) = unsafe {
             const PADDING: u64 = 0;
@@ -177,7 +177,7 @@ impl FrontendServer {
                 .flat_map(|w| w.to_le_bytes().to_vec())
                 .collect::<Vec<u8>>();
 
-            memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
+            memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
         ret as i64
@@ -218,7 +218,7 @@ impl FrontendServer {
                 .flat_map(|w| w.to_le_bytes().to_vec())
                 .collect::<Vec<u8>>();
 
-            memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
+            memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
         ret as i64
@@ -268,7 +268,7 @@ impl FrontendServer {
             return -12;
         }
 
-        memwrite(cpu, dst_addr as u32, buf.len(), buf);
+        memwrite(cpu, dst_addr, buf.len(), buf);
         0
     }
 }

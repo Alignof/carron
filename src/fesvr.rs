@@ -120,7 +120,7 @@ impl Emulator {
         if tohost & 1 == 1 {
             self.exit_code = Some(tohost as i32);
         } else {
-            let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
+            let syscall_addr: u64 = tohost << 16 >> 16;
             let mut syscall_args: [u64; 8] = [
                 self.cpu.bus.load64(syscall_addr).unwrap(),
                 self.cpu.bus.load64(syscall_addr + 8).unwrap(),
@@ -138,7 +138,7 @@ impl Emulator {
             for (i, s) in syscall_args.iter().enumerate() {
                 self.cpu
                     .bus
-                    .store64(syscall_addr + (i * 8) as u32, *s as i64)
+                    .store64(syscall_addr + (i * 8) as u64, *s as i64)
                     .unwrap();
             }
 

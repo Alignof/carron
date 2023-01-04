@@ -267,7 +267,7 @@ impl Mmu {
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         log::debugln!("PTE_addr(1): 0x{:x}", PTE_addr);
                         let PTE = match self
-                            .check_pte_validity(purpose, dram.load32(PTE_addr).unwrap())
+                            .check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())
                         {
                             Ok(pte) => pte,
                             Err(cause) => {
@@ -305,7 +305,7 @@ impl Mmu {
                                 PTESIZE
                             );
                             let PTE = match self
-                                .check_pte_validity(purpose, dram.load32(PTE_addr).unwrap())
+                                .check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())
                             {
                                 Ok(pte) => pte,
                                 Err(cause) => {

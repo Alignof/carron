@@ -1,4 +1,4 @@
-pub fn make_dts(dram_addr: u32) -> String {
+pub fn make_dts(dram_addr: u64) -> String {
     format!(
         "/dts-v1/;
 
