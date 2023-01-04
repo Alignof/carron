@@ -1,14 +1,16 @@
 mod elf_32;
 mod elf_64;
 
+use memmap::Mmap;
+use std::fs::File;
+
+use crate::Isa;
 use elf_32::elf_header::ElfHeader32;
 use elf_32::program_header::ProgramHeader32;
 use elf_32::section_header::SectionHeader32;
 use elf_64::elf_header::ElfHeader64;
 use elf_64::program_header::ProgramHeader64;
 use elf_64::section_header::SectionHeader64;
-use memmap::Mmap;
-use std::fs::File;
 
 pub fn get_u16(mmap: &[u8], index: usize) -> u16 {
     (mmap[index + 1] as u16) << 8 | (mmap[index] as u16)
@@ -151,7 +153,7 @@ impl ElfLoader {
         None
     }
 
-    pub fn get_host_addr(&self) -> (Option<u32>, Option<u32>) {
+    pub fn get_host_addr(&self, isa: Option<Isa>) -> (Option<u64>, Option<u64>) {
         let symtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".symtab");
         let strtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".strtab");
 
@@ -168,11 +170,27 @@ impl ElfLoader {
                     .collect::<String>();
 
                 if st_name == "tohost" {
-                    tohost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                    tohost = match isa {
+                        Some(Isa::Rv32) => Some(u64::from(get_u32(
+                            &self.mem_data,
+                            (symtab_off + 4) as usize,
+                        ))),
+                        Some(Isa::Rv64) | None => {
+                            Some(get_u64(&self.mem_data, (symtab_off + 4) as usize))
+                        }
+                    }
                 }
 
                 if st_name == "fromhost" {
-                    fromhost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                    fromhost = match isa {
+                        Some(Isa::Rv32) => Some(u64::from(get_u32(
+                            &self.mem_data,
+                            (symtab_off + 4) as usize,
+                        ))),
+                        Some(Isa::Rv64) | None => {
+                            Some(get_u64(&self.mem_data, (symtab_off + 4) as usize))
+                        }
+                    }
                 }
 
                 if tohost.is_some() && fromhost.is_some() {

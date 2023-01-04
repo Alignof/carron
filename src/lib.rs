@@ -17,15 +17,15 @@ pub enum Isa {
 pub struct Emulator {
     pub cpu: Cpu,
     frontend_server: FrontendServer,
-    tohost_addr: Option<u32>,
-    fromhost_addr: Option<u32>,
+    tohost_addr: Option<u64>,
+    fromhost_addr: Option<u64>,
     args: Arguments,
     exit_code: Option<i32>,
 }
 
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Self {
-        let (tohost_addr, fromhost_addr) = loader.get_host_addr();
+        let (tohost_addr, fromhost_addr) = loader.get_host_addr(args.isa);
 
         Emulator {
             cpu: Cpu::new(loader, args.init_pc),
@@ -43,7 +43,7 @@ impl Emulator {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
                     log::infoln!("[exception] {}", msg);
-                    self.cpu.trap(addr.unwrap_or_else(|| self.cpu.pc()), cause);
+                    self.cpu.trap(addr.unwrap_or_else(|| self.cpu.pc), cause);
                 }
             }
 
@@ -52,7 +52,7 @@ impl Emulator {
             }
 
             if let Some(break_point) = self.args.break_point {
-                if break_point == self.cpu.pc() {
+                if break_point == self.cpu.pc {
                     self.exit_code = Some(0);
                 }
             }
