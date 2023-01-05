@@ -46,8 +46,6 @@ exit_code() {
 
 isa=$(echo $1 | perl -pe 's/--isa=//')
 test_kinds=(
-    "${isa}mi-p"
-    "${isa}si-p"
     "${isa}ui-p"
     "${isa}ui-v"
     "${isa}um-p"
@@ -56,6 +54,8 @@ test_kinds=(
     "${isa}ua-v"
     "${isa}uc-p"
     "${isa}uc-v"
+    "${isa}mi-p"
+    "${isa}si-p"
 )
 for test_kind in ${test_kinds[@]}; do
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
