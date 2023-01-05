@@ -80,14 +80,14 @@ impl Decode for u16 {
 }
 
 impl DecodeUtil for u16 {
-    fn slice(self, end: u64, start: u64) -> u16 {
+    fn slice(self, end: u32, start: u32) -> Self {
         (self >> start) & (2_u16.pow(end - start + 1) - 1)
     }
 
-    fn set(self, mask: &[u64]) -> u64 {
-        let mut inst: u64 = 0;
+    fn set(self, mask: &[u32]) -> Self {
+        let mut inst: u16 = 0;
         for (i, m) in mask.iter().rev().enumerate() {
-            inst |= ((self as u64 >> i) & 0x1) << m;
+            inst |= ((self >> i) & 0x1) << m;
         }
 
         inst

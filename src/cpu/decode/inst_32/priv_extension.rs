@@ -2,7 +2,7 @@ use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
 use crate::cpu::TrapCause;
 
-pub fn parse_opecode(inst: u64) -> Result<OpecodeKind, &'static str> {
+pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
     let _opmap: u8 = inst.slice(6, 0) as u8;
     let _funct3: u8 = inst.slice(14, 12) as u8;
     let funct7: u8 = inst.slice(31, 25) as u8;
@@ -19,14 +19,14 @@ pub fn parse_opecode(inst: u64) -> Result<OpecodeKind, &'static str> {
 }
 
 pub fn parse_rd(
-    _inst: u64,
+    _inst: u32,
     _opkind: &OpecodeKind,
 ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
     Ok(None)
 }
 
 pub fn parse_rs1(
-    inst: u64,
+    inst: u32,
     opkind: &OpecodeKind,
 ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
     let rs1: usize = inst.slice(19, 15) as usize;
@@ -38,7 +38,7 @@ pub fn parse_rs1(
 }
 
 pub fn parse_rs2(
-    inst: u64,
+    inst: u32,
     opkind: &OpecodeKind,
 ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
     let rs2: usize = inst.slice(24, 20) as usize;
@@ -50,7 +50,7 @@ pub fn parse_rs2(
 }
 
 pub fn parse_imm(
-    _inst: u64,
+    _inst: u32,
     _opkind: &OpecodeKind,
 ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
     Ok(None)

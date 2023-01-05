@@ -15,7 +15,7 @@ impl Decode for u32 {
             Ok(opc) => opc,
             Err(msg) => {
                 return Err((
-                    Some(*self),
+                    Some(u64::from(*self)),
                     TrapCause::IllegalInst,
                     format!("{}, {:b}", msg, self),
                 ))
@@ -103,13 +103,13 @@ impl Decode for u32 {
     }
 }
 
-impl DecodeUtil for u64 {
-    fn slice(self, end: u64, start: u64) -> u64 {
-        (self >> start) & (2_u64.pow(end - start + 1) - 1)
+impl DecodeUtil for u32 {
+    fn slice(self, end: u32, start: u32) -> Self {
+        (self >> start) & (2_u32.pow(end - start + 1) - 1)
     }
 
-    fn set(self, mask: &[u64]) -> u64 {
-        let mut inst: u64 = 0;
+    fn set(self, mask: &[u32]) -> Self {
+        let mut inst: u32 = 0;
         for (i, m) in mask.iter().rev().enumerate() {
             inst |= ((self >> i) & 0x1) << m;
         }
@@ -149,7 +149,7 @@ mod decode_32 {
     #[allow(overflowing_literals)]
     fn parsing_opecode_test() {
         use OpecodeKind::*;
-        let test_32 = |inst_32: u64,
+        let test_32 = |inst_32: u32,
                        op: OpecodeKind,
                        rd: Option<usize>,
                        rs1: Option<usize>,
