@@ -145,16 +145,15 @@ mod exe_16 {
     use crate::bus;
     use crate::cpu::execution::inst_16::c_extension::exec;
     use crate::cpu::instruction::{Instruction, OpecodeKind::*};
-    use crate::cpu::PrivilegedLevel;
-    use crate::cpu::{csr, mmu, reg, Cpu};
-    use crate::elfload;
+    use crate::cpu::{csr, mmu, reg, Cpu, PrivilegedLevel};
+    use crate::{elfload, Isa};
     use std::collections::HashSet;
 
     #[test]
     fn c_extension_test() {
         let dummy_elf =
             elfload::ElfLoader::try_new("./HelloWorld").expect("creating dummy_elf failed");
-        let bus = bus::Bus::new(dummy_elf);
+        let bus = bus::Bus::new(dummy_elf, Isa::Rv32);
         let mut cpu: Cpu = Cpu {
             pc: bus.mrom.base_addr,
             bus,

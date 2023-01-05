@@ -9,6 +9,7 @@ use cmdline::Arguments;
 use cpu::{Cpu, TrapCause};
 use fesvr::FrontendServer;
 
+#[derive(Copy, Clone)]
 pub enum Isa {
     Rv32,
     Rv64,
@@ -25,10 +26,11 @@ pub struct Emulator {
 
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Self {
-        let (tohost_addr, fromhost_addr) = loader.get_host_addr(args.isa);
+        let isa = args.isa.unwrap_or(Isa::Rv64);
+        let (tohost_addr, fromhost_addr) = loader.get_host_addr(isa);
 
         Emulator {
-            cpu: Cpu::new(loader, args.init_pc),
+            cpu: Cpu::new(loader, args.init_pc, isa),
             frontend_server: FrontendServer::new(),
             tohost_addr,
             fromhost_addr,

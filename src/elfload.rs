@@ -153,7 +153,7 @@ impl ElfLoader {
         None
     }
 
-    pub fn get_host_addr(&self, isa: Option<Isa>) -> (Option<u64>, Option<u64>) {
+    pub fn get_host_addr(&self, isa: Isa) -> (Option<u64>, Option<u64>) {
         let symtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".symtab");
         let strtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".strtab");
 
@@ -171,25 +171,21 @@ impl ElfLoader {
 
                 if st_name == "tohost" {
                     tohost = match isa {
-                        Some(Isa::Rv32) => Some(u64::from(get_u32(
+                        Isa::Rv32 => Some(u64::from(get_u32(
                             &self.mem_data,
                             (symtab_off + 4) as usize,
                         ))),
-                        Some(Isa::Rv64) | None => {
-                            Some(get_u64(&self.mem_data, (symtab_off + 4) as usize))
-                        }
+                        Isa::Rv64 => Some(get_u64(&self.mem_data, (symtab_off + 4) as usize)),
                     }
                 }
 
                 if st_name == "fromhost" {
                     fromhost = match isa {
-                        Some(Isa::Rv32) => Some(u64::from(get_u32(
+                        Isa::Rv32 => Some(u64::from(get_u32(
                             &self.mem_data,
                             (symtab_off + 4) as usize,
                         ))),
-                        Some(Isa::Rv64) | None => {
-                            Some(get_u64(&self.mem_data, (symtab_off + 4) as usize))
-                        }
+                        Isa::Rv64 => Some(get_u64(&self.mem_data, (symtab_off + 4) as usize)),
                     }
                 }
 
