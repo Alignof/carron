@@ -64,9 +64,13 @@ impl ElfIdentification {
         }
     }
 
-    fn is_elf32(&self) -> bool {
+    fn target_arch(&self) -> Isa {
         const EI_CLASS: usize = 4;
-        self.magic[EI_CLASS] == 1
+        if self.magic[EI_CLASS] == 1 {
+            Isa::Rv32
+        } else {
+            Isa::Rv64
+        }
     }
 
     fn show(&self) {
@@ -113,29 +117,36 @@ impl ElfLoader {
         let file = File::open(filename)?;
         let mapped_data = unsafe { Mmap::map(&file)? };
         let elf_ident = ElfIdentification::new(&mapped_data);
-        if elf_ident.is_elf32() {
-            let new_elf = ElfHeader32::new(&mapped_data, elf_ident);
-            let new_prog = ProgramHeader32::new(&mapped_data, &new_elf);
-            let new_sect = SectionHeader32::new(&mapped_data, &new_elf);
+        match elf_ident.target_arch() {
+            Isa::Rv32 => {
+                let new_elf = ElfHeader32::new(&mapped_data, elf_ident);
+                let new_prog = ProgramHeader32::new(&mapped_data, &new_elf);
+                let new_sect = SectionHeader32::new(&mapped_data, &new_elf);
 
-            Ok(ElfLoader {
-                elf_header: new_elf,
-                prog_headers: new_prog,
-                sect_headers: new_sect,
-                mem_data: mapped_data,
-            })
-        } else {
-            let new_elf = ElfHeader64::new(&mapped_data, elf_ident);
-            let new_prog = ProgramHeader64::new(&mapped_data, &new_elf);
-            let new_sect = SectionHeader64::new(&mapped_data, &new_elf);
+                Ok(ElfLoader {
+                    elf_header: new_elf,
+                    prog_headers: new_prog,
+                    sect_headers: new_sect,
+                    mem_data: mapped_data,
+                })
+            }
+            Isa::Rv64 => {
+                let new_elf = ElfHeader64::new(&mapped_data, elf_ident);
+                let new_prog = ProgramHeader64::new(&mapped_data, &new_elf);
+                let new_sect = SectionHeader64::new(&mapped_data, &new_elf);
 
-            Ok(ElfLoader {
-                elf_header: new_elf,
-                prog_headers: new_prog,
-                sect_headers: new_sect,
-                mem_data: mapped_data,
-            })
+                Ok(ElfLoader {
+                    elf_header: new_elf,
+                    prog_headers: new_prog,
+                    sect_headers: new_sect,
+                    mem_data: mapped_data,
+                })
+            }
         }
+    }
+
+    pub fn target_arch(&self) -> Isa {
+        self.elf_header.target_arch()
     }
 
     pub fn is_elf(&self) -> bool {
@@ -239,6 +250,7 @@ impl ElfLoader {
 
 pub trait ElfHeader {
     fn show(&self);
+    fn target_arch(&self) -> Isa;
     fn is_elf(&self) -> bool;
 }
 

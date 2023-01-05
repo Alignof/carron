@@ -1,5 +1,4 @@
 use crate::log::{LogLv, LOG_LEVEL};
-use crate::Isa;
 use clap::{arg, AppSettings, Arg, ArgGroup};
 
 #[allow(non_camel_case_types)]
@@ -99,7 +98,6 @@ impl Arguments {
             exe_option,
             pkpath,
             init_pc,
-            isa,
             break_point,
             result_reg,
             main_args,

@@ -26,7 +26,7 @@ pub struct Emulator {
 
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Self {
-        let isa = args.isa.unwrap_or(Isa::Rv64);
+        let isa = loader.target_arch();
         let (tohost_addr, fromhost_addr) = loader.get_host_addr(isa);
 
         Emulator {
