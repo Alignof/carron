@@ -30,7 +30,7 @@ impl Clint {
 impl Device for Clint {
     // is addr in device address space
     fn in_range(&self, addr: u64) -> bool {
-        (self.base_addr..=self.base_addr + self.size as u32).contains(&addr)
+        (self.base_addr..=self.base_addr + self.size as u64).contains(&addr)
     }
 
     // address to raw index
@@ -45,7 +45,7 @@ impl Device for Clint {
     }
 
     // store
-    fn store8(&mut self, addr: u64, _data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store8(&mut self, addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
@@ -53,7 +53,7 @@ impl Device for Clint {
         ))
     }
 
-    fn store16(&mut self, addr: u64, _data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store16(&mut self, addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
@@ -61,7 +61,7 @@ impl Device for Clint {
         ))
     }
 
-    fn store32(&mut self, addr: u64, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store32(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.clint[addr + 3] = ((data >> 24) & 0xFF) as u8;
         self.clint[addr + 2] = ((data >> 16) & 0xFF) as u8;
@@ -70,7 +70,7 @@ impl Device for Clint {
         Ok(())
     }
 
-    fn store64(&mut self, addr: u64, data: i64) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store64(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         self.clint[addr + 7] = ((data >> 56) & 0xFF) as u8;
         self.clint[addr + 6] = ((data >> 48) & 0xFF) as u8;
@@ -84,7 +84,7 @@ impl Device for Clint {
     }
 
     // load
-    fn load8(&self, addr: u64) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
@@ -92,7 +92,7 @@ impl Device for Clint {
         ))
     }
 
-    fn load16(&self, addr: u64) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
@@ -100,15 +100,15 @@ impl Device for Clint {
         ))
     }
 
-    fn load32(&self, addr: u64) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
-        Ok((self.clint[addr + 3] as u32) << 24
-            | (self.clint[addr + 2] as u32) << 16
-            | (self.clint[addr + 1] as u32) << 8
-            | (self.clint[addr + 0] as u32))
+        Ok((self.clint[addr + 3] as u64) << 24
+            | (self.clint[addr + 2] as u64) << 16
+            | (self.clint[addr + 1] as u64) << 8
+            | (self.clint[addr + 0] as u64))
     }
 
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u32>, TrapCause, String)> {
+    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((self.clint[addr + 7] as u64) << 56
             | (self.clint[addr + 6] as u64) << 48
@@ -119,7 +119,7 @@ impl Device for Clint {
             | (self.clint[addr + 1] as u64) << 8
             | (self.clint[addr + 0] as u64))
     }
-    fn load_u8(&self, addr: u64) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load_u8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
@@ -127,7 +127,7 @@ impl Device for Clint {
         ))
     }
 
-    fn load_u16(&self, addr: u64) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load_u16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
