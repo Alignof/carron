@@ -59,6 +59,7 @@ pub struct Cpu {
     csrs: csr::CSRs,
     mmu: mmu::Mmu,
     pub reservation_set: HashSet<usize>,
+    isa: Isa,
     pub priv_lv: PrivilegedLevel,
 }
 
@@ -70,10 +71,11 @@ impl Cpu {
         Cpu {
             pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
             bus,
-            regs: reg::Register::new(),
+            regs: reg::Register::new(isa),
             csrs: csr::CSRs::new().init(),
             mmu: mmu::Mmu::new(),
             reservation_set: HashSet::new(),
+            isa,
             priv_lv: PrivilegedLevel::Machine,
         }
     }
@@ -365,7 +367,10 @@ impl Cpu {
         {
             Ok(vaddr) => {
                 if addr % align as u64 == 0 {
-                    Ok(vaddr)
+                    match self.isa {
+                        Isa::Rv32 => Ok(vaddr & 0xffffffff),
+                        Isa::Rv64 => Ok(vaddr),
+                    }
                 } else {
                     let cause = match purpose {
                         TransFor::Fetch | TransFor::Deleg => TrapCause::InstAddrMisaligned,
