@@ -131,10 +131,7 @@ impl Cpu {
         {
             Ok(vaddr) => {
                 if addr % align as u64 == 0 {
-                    match self.isa {
-                        Isa::Rv32 => Ok(vaddr & 0xffffffff),
-                        Isa::Rv64 => Ok(vaddr),
-                    }
+                    Ok(vaddr.fix2regsz(self.isa))
                 } else {
                     let cause = match purpose {
                         TransFor::Fetch | TransFor::Deleg => TrapCause::InstAddrMisaligned,
@@ -156,6 +153,19 @@ impl Cpu {
                     format!("address transration failed: {:?}", cause),
                 ))
             }
+        }
+    }
+}
+
+trait CrossIsaUtil {
+    fn fix2regsz(self, isa: Isa) -> Self;
+}
+
+impl CrossIsaUtil for u64 {
+    fn fix2regsz(self, isa: Isa) -> Self {
+        match isa {
+            Isa::Rv32 => self & 0xffffffff,
+            Isa::Rv64 => self,
         }
     }
 }

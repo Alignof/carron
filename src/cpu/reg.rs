@@ -1,4 +1,5 @@
 use crate::cpu::instruction::reg2str;
+use crate::cpu::CrossIsaUtil;
 use crate::{log, Isa};
 
 pub struct Register {
@@ -37,22 +38,14 @@ impl Register {
         if src == 0 {
             0
         } else {
-            self.fix_to_reg_size(self.regs[src])
+            self.regs[src].fix2regsz(self.isa)
         }
     }
 
     pub fn write(&mut self, dist: Option<usize>, src: u64) {
-        let src = self.fix_to_reg_size(src);
         let dist = dist.unwrap();
         if dist != 0 {
-            self.regs[dist] = src;
-        }
-    }
-
-    fn fix_to_reg_size(&self, x: u64) -> u64 {
-        match self.isa {
-            Isa::Rv32 => x & 0xffffffff,
-            Isa::Rv64 => x,
+            self.regs[dist] = src.fix2regsz(self.isa);
         }
     }
 }
