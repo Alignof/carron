@@ -27,7 +27,7 @@ pub trait Decode {
 
 pub trait DecodeUtil {
     fn slice(self, end: u32, start: u32) -> Self;
-    fn set(self, mask: &[u32]) -> Self;
+    fn set(self, mask: &[u32]) -> u32;
     fn extension(self) -> Extensions;
     fn to_signed_nbit(&self, imm32: i32, bit_size: u32) -> i32 {
         let imm32 = imm32 & (2_i32.pow(bit_size) - 1);

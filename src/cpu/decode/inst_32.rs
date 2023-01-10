@@ -108,7 +108,7 @@ impl DecodeUtil for u32 {
         (self >> start) & (2_u32.pow(end - start + 1) - 1)
     }
 
-    fn set(self, mask: &[u32]) -> Self {
+    fn set(self, mask: &[u32]) -> u32 {
         let mut inst: u32 = 0;
         for (i, m) in mask.iter().rev().enumerate() {
             inst |= ((self >> i) & 0x1) << m;
