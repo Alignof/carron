@@ -1,5 +1,5 @@
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause};
+use crate::cpu::{Cpu, CrossIsaUtil, PrivilegedLevel, TransAlign, TransFor, TrapCause};
 
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     const INST_SIZE: u64 = 4;
@@ -131,7 +131,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_SLTIU => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rs1) < (inst.imm.unwrap() as u64)) as u64,
+                (cpu.regs.read(inst.rs1) < (inst.imm.unwrap() as u64).fix2regsz(cpu.isa)) as u64,
             );
         }
         OpecodeKind::OP_XORI => {
