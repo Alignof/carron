@@ -106,6 +106,7 @@ impl Cpu {
         align: TransAlign,
         addr: u64,
     ) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        let addr = addr.fix2regsz(&self.isa);
         let addr = self.check_breakpoint(purpose, addr)?;
         let mut trans_priv = self.priv_lv;
 

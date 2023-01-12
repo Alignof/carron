@@ -61,7 +61,7 @@ impl CSRs {
         match dist.unwrap() {
             0x000 => self.csrs[0x300] = src & UMASK,
             0x100 => self.csrs[0x300] = src & SMASK,
-            _ => self.csrs[dist.unwrap()] = src,
+            other => self.csrs[other] = src,
         }
         self.update_triggers(dist.unwrap(), src);
     }
