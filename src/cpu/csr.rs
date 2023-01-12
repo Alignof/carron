@@ -1,7 +1,9 @@
 mod breakpoint;
 
-use super::{PrivilegedLevel, TrapCause};
+use super::{CrossIsaUtil, PrivilegedLevel, TrapCause};
+use crate::Isa;
 use breakpoint::Triggers;
+use std::rc::Rc;
 
 const UMASK: u64 = 0b10000000000011010111100100110011;
 const SMASK: u64 = 0b10000000000011010111100100110011;
@@ -10,11 +12,12 @@ const MMASK: u64 = 0b10000000011111111111100110111011;
 pub struct CSRs {
     csrs: [u64; 4096],
     triggers: Triggers,
+    isa: Rc<Isa>,
 }
 
 #[allow(clippy::identity_op)]
 impl CSRs {
-    pub fn new() -> Self {
+    pub fn new(isa: Rc<Isa>) -> Self {
         CSRs {
             csrs: [0; 4096],
             triggers: Triggers {
@@ -22,6 +25,7 @@ impl CSRs {
                 tdata1: [0; 8],
                 tdata2: [0; 8],
             },
+            isa,
         }
     }
 
@@ -31,7 +35,7 @@ impl CSRs {
     }
 
     pub fn bitset(&mut self, dist: Option<usize>, src: u64) {
-        let mask = src;
+        let mask = src.fix2regsz(&self.isa);
         if mask != 0 {
             match dist.unwrap() {
                 0x000 => self.csrs[0x300] |= mask & UMASK,
@@ -42,7 +46,7 @@ impl CSRs {
     }
 
     pub fn bitclr(&mut self, dist: Option<usize>, src: u64) {
-        let mask = src;
+        let mask = src.fix2regsz(&self.isa);
         if mask != 0 {
             match dist.unwrap() {
                 0x000 => self.csrs[0x300] &= !(mask & UMASK),
@@ -53,6 +57,7 @@ impl CSRs {
     }
 
     pub fn write(&mut self, dist: Option<usize>, src: u64) {
+        let src = src.fix2regsz(&self.isa);
         match dist.unwrap() {
             0x000 => self.csrs[0x300] = src & UMASK,
             0x100 => self.csrs[0x300] = src & SMASK,
@@ -195,7 +200,7 @@ impl CSRs {
 
 impl Default for CSRs {
     fn default() -> Self {
-        Self::new()
+        Self::new(Isa::Rv64.into())
     }
 }
 
