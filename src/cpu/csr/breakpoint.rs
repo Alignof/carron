@@ -35,7 +35,7 @@ impl Cpu {
         &mut self,
         purpose: TransFor,
         addr: u64,
-    ) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    ) -> Result<(), (Option<u64>, TrapCause, String)> {
         for trigger_num in 0..self.csrs.triggers.tselect + 1 {
             let tdata1 = self.csrs.triggers.tdata1[trigger_num];
             let trigger_type = tdata1 >> 28 & 0xF;
@@ -55,7 +55,7 @@ impl Cpu {
                         || self.priv_lv == PrivilegedLevel::Supervisor && mode_s == 0x0
                         || self.priv_lv == PrivilegedLevel::User && mode_u == 0x0
                     {
-                        return Ok(addr);
+                        return Ok(());
                     }
 
                     if match_mode != 0x0 {
@@ -102,6 +102,6 @@ impl Cpu {
             }
         }
 
-        Ok(addr)
+        Ok(())
     }
 }

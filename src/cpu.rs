@@ -107,9 +107,9 @@ impl Cpu {
         addr: u64,
     ) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let addr = addr.fix2regsz(&self.isa);
-        let addr = self.check_breakpoint(purpose, addr)?;
-        let mut trans_priv = self.priv_lv;
+        self.check_breakpoint(purpose, addr)?;
 
+        let mut trans_priv = self.priv_lv;
         if (purpose == TransFor::Load || purpose == TransFor::StoreAMO)
             && self
                 .csrs
