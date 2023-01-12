@@ -131,7 +131,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_SLTIU => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rs1) < (inst.imm.unwrap() as u64).fix2regsz(cpu.isa)) as u64,
+                (cpu.regs.read(inst.rs1) < (inst.imm.unwrap() as u64).fix2regsz(&cpu.isa)) as u64,
             );
         }
         OpecodeKind::OP_XORI => {

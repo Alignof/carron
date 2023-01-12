@@ -10,6 +10,7 @@ mod trap;
 use crate::{bus, elfload, log, Isa};
 use csr::{CSRname, Xstatus};
 use std::collections::HashSet;
+use std::rc::Rc;
 
 #[derive(Copy, Clone, Debug)]
 #[allow(clippy::enum_clike_unportable_variant)]
@@ -60,7 +61,7 @@ pub struct Cpu {
     csrs: csr::CSRs,
     mmu: mmu::Mmu,
     pub reservation_set: HashSet<usize>,
-    isa: Isa,
+    isa: Rc<Isa>,
     pub priv_lv: PrivilegedLevel,
 }
 
@@ -68,15 +69,16 @@ impl Cpu {
     pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u64>, isa: Isa) -> Self {
         // initialize bus and get the entry point
         let bus = bus::Bus::new(loader, isa);
+        let isa = Rc::new(isa);
 
         Cpu {
             pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
             bus,
-            regs: reg::Register::new(isa),
-            csrs: csr::CSRs::new().init(),
+            regs: reg::Register::new(isa.clone()),
+            csrs: csr::CSRs::new(isa.clone()).init(),
             mmu: mmu::Mmu::new(),
             reservation_set: HashSet::new(),
-            isa,
+            isa: isa.clone(),
             priv_lv: PrivilegedLevel::Machine,
         }
     }
@@ -131,7 +133,7 @@ impl Cpu {
         {
             Ok(vaddr) => {
                 if addr % align as u64 == 0 {
-                    Ok(vaddr.fix2regsz(self.isa))
+                    Ok(vaddr.fix2regsz(&self.isa))
                 } else {
                     let cause = match purpose {
                         TransFor::Fetch | TransFor::Deleg => TrapCause::InstAddrMisaligned,
@@ -158,12 +160,12 @@ impl Cpu {
 }
 
 trait CrossIsaUtil {
-    fn fix2regsz(self, isa: Isa) -> Self;
+    fn fix2regsz(self, isa: &Rc<Isa>) -> Self;
 }
 
 impl CrossIsaUtil for u64 {
-    fn fix2regsz(self, isa: Isa) -> Self {
-        match isa {
+    fn fix2regsz(self, isa: &Rc<Isa>) -> Self {
+        match **isa {
             Isa::Rv32 => self & 0xffffffff,
             Isa::Rv64 => self,
         }
