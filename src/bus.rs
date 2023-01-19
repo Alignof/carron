@@ -55,7 +55,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOPageFault,
-                "addr out of range at store8".to_string(),
+                format!("addr out of range at store8: {addr:#x}"),
             ))
         }
     }
@@ -75,7 +75,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOPageFault,
-                "addr out of range at store16".to_string(),
+                format!("addr out of range at store16: {addr:#x}"),
             ))
         }
     }
@@ -95,7 +95,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOPageFault,
-                "addr out of range at store32".to_string(),
+                format!("addr out of range at store32: {addr:#x}"),
             ))
         }
     }
@@ -115,7 +115,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOPageFault,
-                "addr out of range at store64".to_string(),
+                format!("addr out of range at store64: {addr:#x}"),
             ))
         }
     }
@@ -132,7 +132,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                "addr out of range at load8".to_string(),
+                format!("addr out of range at loat8: {addr:#x}"),
             ))
         }
     }
@@ -148,7 +148,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                "addr out of range at load16".to_string(),
+                format!("addr out of range at loat16: {addr:#x}"),
             ))
         }
     }
@@ -164,7 +164,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                "addr out of range at load32".to_string(),
+                format!("addr out of range at loat32: {addr:#x}"),
             ))
         }
     }
@@ -180,7 +180,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                "addr out of range at load64".to_string(),
+                format!("addr out of range at loat64: {addr:#x}"),
             ))
         }
     }
@@ -196,7 +196,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                "addr out of range at load_u8".to_string(),
+                format!("addr out of range at loat_u8: {addr:#x}"),
             ))
         }
     }
@@ -212,7 +212,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                "addr out of range at load_u16".to_string(),
+                format!("addr out of range at loat_u16: {addr:#x}"),
             ))
         }
     }

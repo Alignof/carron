@@ -1,5 +1,5 @@
 pub fn make_dts(dram_addr: u64) -> String {
-    dbg!(format!(
+    format!(
         "/dts-v1/;
             / {{
               #address-cells = <2>;
@@ -70,5 +70,5 @@ pub fn make_dts(dram_addr: u64) -> String {
                 compatible = \"ucb,htif0\";
               }};
         }};"
-    ))
+    )
 }
