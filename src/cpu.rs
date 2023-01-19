@@ -78,7 +78,7 @@ impl Cpu {
             csrs: csr::CSRs::new(isa.clone()).init(),
             mmu: mmu::Mmu::new(),
             reservation_set: HashSet::new(),
-            isa: isa.clone(),
+            isa,
             priv_lv: PrivilegedLevel::Machine,
         }
     }

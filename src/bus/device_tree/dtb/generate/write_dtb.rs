@@ -41,16 +41,16 @@ pub fn write_dtb(mmap: DtbMmap) -> Vec<u8> {
     };
 
     let mut mmap: Vec<u8> = Vec::new();
-    mmap.extend(&header.magic.to_be_bytes());
-    mmap.extend(&header.totalsize.to_be_bytes());
-    mmap.extend(&header.off_dt_struct.to_be_bytes());
-    mmap.extend(&header.off_dt_strings.to_be_bytes());
-    mmap.extend(&header.off_mem_rsvmap.to_be_bytes());
-    mmap.extend(&header.version.to_be_bytes());
-    mmap.extend(&header.last_comp_version.to_be_bytes());
-    mmap.extend(&header.boot_cpuid_phys.to_be_bytes());
-    mmap.extend(&header.size_dt_strings.to_be_bytes());
-    mmap.extend(&header.size_dt_struct.to_be_bytes());
+    mmap.extend(header.magic.to_be_bytes());
+    mmap.extend(header.totalsize.to_be_bytes());
+    mmap.extend(header.off_dt_struct.to_be_bytes());
+    mmap.extend(header.off_dt_strings.to_be_bytes());
+    mmap.extend(header.off_mem_rsvmap.to_be_bytes());
+    mmap.extend(header.version.to_be_bytes());
+    mmap.extend(header.last_comp_version.to_be_bytes());
+    mmap.extend(header.boot_cpuid_phys.to_be_bytes());
+    mmap.extend(header.size_dt_strings.to_be_bytes());
+    mmap.extend(header.size_dt_struct.to_be_bytes());
     mmap.extend(&reserve);
     mmap.extend(&structure);
     mmap.extend(&strings);
