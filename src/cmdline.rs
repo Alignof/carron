@@ -1,5 +1,4 @@
 use crate::log::{LogLv, LOG_LEVEL};
-use crate::Isa;
 use clap::{arg, AppSettings, Arg, ArgGroup};
 
 #[allow(non_camel_case_types)]
@@ -16,9 +15,8 @@ pub struct Arguments {
     pub filename: String,
     pub exe_option: ExeOption,
     pub pkpath: Option<String>,
-    pub init_pc: Option<u32>,
-    pub isa: Option<Isa>,
-    pub break_point: Option<u32>,
+    pub init_pc: Option<u64>,
+    pub break_point: Option<u64>,
     pub result_reg: Option<usize>,
     pub main_args: Option<Vec<String>>,
 }
@@ -39,7 +37,6 @@ impl Arguments {
             )
             .arg(arg!(--pk <proxy_kernel> "Run with proxy kernel").required(false))
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
-            .arg(arg!(--isa <isa> ... "Specify ISA").required(false))
             .arg(arg!(--break_point <address> ... "Set break point as hex").required(false))
             .arg(arg!(--result_reg <register_number> ... "Set result register").required(false))
             .arg(arg!(--loglv <log_level> ... "Set log level").required(false))
@@ -73,18 +70,12 @@ impl Arguments {
         };
 
         let init_pc = app.value_of("pc").map(|x| {
-            u32::from_str_radix(x.trim_start_matches("0x"), 16)
+            u64::from_str_radix(x.trim_start_matches("0x"), 16)
                 .expect("invalid pc\nplease set value as hex (e.g. --pc=0x80000000)")
         });
 
-        let isa = app.value_of("isa").map(|x| match x {
-            "rv32" => Isa::Rv32,
-            "rv64" => Isa::Rv64,
-            _ => Isa::Rv32,
-        });
-
         let break_point = app.value_of("break_point").map(|x| {
-            u32::from_str_radix(x.trim_start_matches("0x"), 16)
+            u64::from_str_radix(x.trim_start_matches("0x"), 16)
                 .expect("invalid break point\nplease set value as hex (e.g. --pc=0x80000000)")
         });
 
@@ -107,7 +98,6 @@ impl Arguments {
             exe_option,
             pkpath,
             init_pc,
-            isa,
             break_point,
             result_reg,
             main_args,

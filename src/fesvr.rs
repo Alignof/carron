@@ -40,7 +40,7 @@ impl Emulator {
     pub fn check_tohost(&mut self) -> bool {
         let tohost_addr = self.tohost_addr.unwrap();
         self.cpu
-            .bus()
+            .bus
             .load32(tohost_addr)
             .expect("load from tohost addr failed")
             != 0
@@ -114,22 +114,22 @@ impl Emulator {
     pub fn handle_syscall(&mut self) {
         let tohost_addr = self.tohost_addr.unwrap();
         let fromhost_addr = self.fromhost_addr.unwrap();
-        let tohost: u64 = self.cpu.bus().load64(tohost_addr).unwrap();
-        self.cpu.bus().store64(tohost_addr, 0).unwrap();
+        let tohost: u64 = self.cpu.bus.load64(tohost_addr).unwrap();
+        self.cpu.bus.store64(tohost_addr, 0).unwrap();
 
         if tohost & 1 == 1 {
             self.exit_code = Some(tohost as i32);
         } else {
-            let syscall_addr: u32 = (tohost << 16 >> 16) as u32;
+            let syscall_addr: u64 = tohost << 16 >> 16;
             let mut syscall_args: [u64; 8] = [
-                self.cpu.bus().load64(syscall_addr).unwrap(),
-                self.cpu.bus().load64(syscall_addr + 8).unwrap(),
-                self.cpu.bus().load64(syscall_addr + 16).unwrap(),
-                self.cpu.bus().load64(syscall_addr + 24).unwrap(),
-                self.cpu.bus().load64(syscall_addr + 32).unwrap(),
-                self.cpu.bus().load64(syscall_addr + 40).unwrap(),
-                self.cpu.bus().load64(syscall_addr + 48).unwrap(),
-                self.cpu.bus().load64(syscall_addr + 56).unwrap(),
+                self.cpu.bus.load64(syscall_addr).unwrap(),
+                self.cpu.bus.load64(syscall_addr + 8).unwrap(),
+                self.cpu.bus.load64(syscall_addr + 16).unwrap(),
+                self.cpu.bus.load64(syscall_addr + 24).unwrap(),
+                self.cpu.bus.load64(syscall_addr + 32).unwrap(),
+                self.cpu.bus.load64(syscall_addr + 40).unwrap(),
+                self.cpu.bus.load64(syscall_addr + 48).unwrap(),
+                self.cpu.bus.load64(syscall_addr + 56).unwrap(),
             ];
 
             syscall_args[0] = self.exec_syscall(syscall_args) as u64;
@@ -137,13 +137,13 @@ impl Emulator {
             // store syscall to tohost
             for (i, s) in syscall_args.iter().enumerate() {
                 self.cpu
-                    .bus()
-                    .store64(syscall_addr + (i * 8) as u32, *s as i64)
+                    .bus
+                    .store64(syscall_addr + (i * 8) as u64, *s as i64)
                     .unwrap();
             }
 
             self.cpu
-                .bus()
+                .bus
                 .store64(fromhost_addr, (tohost << 48 >> 48) as i64 | 1)
                 .unwrap();
         }

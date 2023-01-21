@@ -1,14 +1,16 @@
 mod elf_32;
 mod elf_64;
 
+use memmap::Mmap;
+use std::fs::File;
+
+use crate::Isa;
 use elf_32::elf_header::ElfHeader32;
 use elf_32::program_header::ProgramHeader32;
 use elf_32::section_header::SectionHeader32;
 use elf_64::elf_header::ElfHeader64;
 use elf_64::program_header::ProgramHeader64;
 use elf_64::section_header::SectionHeader64;
-use memmap::Mmap;
-use std::fs::File;
 
 pub fn get_u16(mmap: &[u8], index: usize) -> u16 {
     (mmap[index + 1] as u16) << 8 | (mmap[index] as u16)
@@ -62,9 +64,13 @@ impl ElfIdentification {
         }
     }
 
-    fn is_elf32(&self) -> bool {
+    fn target_arch(&self) -> Isa {
         const EI_CLASS: usize = 4;
-        self.magic[EI_CLASS] == 1
+        if self.magic[EI_CLASS] == 1 {
+            Isa::Rv32
+        } else {
+            Isa::Rv64
+        }
     }
 
     fn show(&self) {
@@ -111,29 +117,36 @@ impl ElfLoader {
         let file = File::open(filename)?;
         let mapped_data = unsafe { Mmap::map(&file)? };
         let elf_ident = ElfIdentification::new(&mapped_data);
-        if elf_ident.is_elf32() {
-            let new_elf = ElfHeader32::new(&mapped_data, elf_ident);
-            let new_prog = ProgramHeader32::new(&mapped_data, &new_elf);
-            let new_sect = SectionHeader32::new(&mapped_data, &new_elf);
+        match elf_ident.target_arch() {
+            Isa::Rv32 => {
+                let new_elf = ElfHeader32::new(&mapped_data, elf_ident);
+                let new_prog = ProgramHeader32::new(&mapped_data, &new_elf);
+                let new_sect = SectionHeader32::new(&mapped_data, &new_elf);
 
-            Ok(ElfLoader {
-                elf_header: new_elf,
-                prog_headers: new_prog,
-                sect_headers: new_sect,
-                mem_data: mapped_data,
-            })
-        } else {
-            let new_elf = ElfHeader64::new(&mapped_data, elf_ident);
-            let new_prog = ProgramHeader64::new(&mapped_data, &new_elf);
-            let new_sect = SectionHeader64::new(&mapped_data, &new_elf);
+                Ok(ElfLoader {
+                    elf_header: new_elf,
+                    prog_headers: new_prog,
+                    sect_headers: new_sect,
+                    mem_data: mapped_data,
+                })
+            }
+            Isa::Rv64 => {
+                let new_elf = ElfHeader64::new(&mapped_data, elf_ident);
+                let new_prog = ProgramHeader64::new(&mapped_data, &new_elf);
+                let new_sect = SectionHeader64::new(&mapped_data, &new_elf);
 
-            Ok(ElfLoader {
-                elf_header: new_elf,
-                prog_headers: new_prog,
-                sect_headers: new_sect,
-                mem_data: mapped_data,
-            })
+                Ok(ElfLoader {
+                    elf_header: new_elf,
+                    prog_headers: new_prog,
+                    sect_headers: new_sect,
+                    mem_data: mapped_data,
+                })
+            }
         }
+    }
+
+    pub fn target_arch(&self) -> Isa {
+        self.elf_header.target_arch()
     }
 
     pub fn is_elf(&self) -> bool {
@@ -151,7 +164,7 @@ impl ElfLoader {
         None
     }
 
-    pub fn get_host_addr(&self) -> (Option<u32>, Option<u32>) {
+    pub fn get_host_addr(&self, isa: Isa) -> (Option<u64>, Option<u64>) {
         let symtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".symtab");
         let strtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".strtab");
 
@@ -168,11 +181,23 @@ impl ElfLoader {
                     .collect::<String>();
 
                 if st_name == "tohost" {
-                    tohost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                    tohost = match isa {
+                        Isa::Rv32 => Some(u64::from(get_u32(
+                            &self.mem_data,
+                            (symtab_off + 4) as usize,
+                        ))),
+                        Isa::Rv64 => Some(get_u64(&self.mem_data, (symtab_off + 4) as usize)),
+                    }
                 }
 
                 if st_name == "fromhost" {
-                    fromhost = Some(get_u32(&self.mem_data, (symtab_off + 4) as usize));
+                    fromhost = match isa {
+                        Isa::Rv32 => Some(u64::from(get_u32(
+                            &self.mem_data,
+                            (symtab_off + 4) as usize,
+                        ))),
+                        Isa::Rv64 => Some(get_u64(&self.mem_data, (symtab_off + 4) as usize)),
+                    }
                 }
 
                 if tohost.is_some() && fromhost.is_some() {
@@ -225,6 +250,7 @@ impl ElfLoader {
 
 pub trait ElfHeader {
     fn show(&self);
+    fn target_arch(&self) -> Isa;
     fn is_elf(&self) -> bool;
 }
 

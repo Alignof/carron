@@ -1,4 +1,5 @@
 use crate::elfload::{get_u16, get_u32, get_u64, ElfHeader, ElfIdentification};
+use crate::Isa;
 
 fn get_elf_type_name(elf_type: u16) -> &'static str {
     match elf_type {
@@ -67,6 +68,10 @@ impl ElfHeader for ElfHeader64 {
         println!("e_shentsize:\t{} (bytes)", self.e_shentsize);
         println!("e_shnum:\t{}", self.e_shnum);
         println!("e_shstrndx:\t{}", self.e_shstrndx);
+    }
+
+    fn target_arch(&self) -> Isa {
+        self.e_ident.target_arch()
     }
 
     fn is_elf(&self) -> bool {

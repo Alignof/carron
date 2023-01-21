@@ -6,35 +6,31 @@ mod fesvr;
 pub mod log;
 
 use cmdline::Arguments;
-use cpu::rv32::Cpu32;
-use cpu::{TrapCause, CPU};
+use cpu::{Cpu, TrapCause};
 use fesvr::FrontendServer;
 
+#[derive(Copy, Clone)]
 pub enum Isa {
     Rv32,
     Rv64,
 }
 
 pub struct Emulator {
-    pub cpu: Box<dyn cpu::CPU>,
+    pub cpu: Cpu,
     frontend_server: FrontendServer,
-    tohost_addr: Option<u32>,
-    fromhost_addr: Option<u32>,
+    tohost_addr: Option<u64>,
+    fromhost_addr: Option<u64>,
     args: Arguments,
     exit_code: Option<i32>,
 }
 
 impl Emulator {
     pub fn new(loader: elfload::ElfLoader, args: Arguments) -> Self {
-        let (tohost_addr, fromhost_addr) = loader.get_host_addr();
-        let cpu = match args.isa {
-            Some(Isa::Rv32) => Cpu32::new(loader, args.init_pc),
-            Some(Isa::Rv64) => panic!("Rv64 has not implmented yet"),
-            None => panic!("Rv64 has not implmented yet"),
-        };
+        let isa = loader.target_arch();
+        let (tohost_addr, fromhost_addr) = loader.get_host_addr(isa);
 
         Emulator {
-            cpu,
+            cpu: Cpu::new(loader, args.init_pc, isa),
             frontend_server: FrontendServer::new(),
             tohost_addr,
             fromhost_addr,
@@ -49,7 +45,7 @@ impl Emulator {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
                     log::infoln!("[exception] {}", msg);
-                    self.cpu.trap(addr.unwrap_or_else(|| self.cpu.pc()), cause);
+                    self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
                 }
             }
 
@@ -58,7 +54,7 @@ impl Emulator {
             }
 
             if let Some(break_point) = self.args.break_point {
-                if break_point == self.cpu.pc() {
+                if break_point == self.cpu.pc {
                     self.exit_code = Some(0);
                 }
             }
