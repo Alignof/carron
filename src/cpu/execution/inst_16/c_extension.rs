@@ -148,19 +148,22 @@ mod exe_16 {
     use crate::cpu::{csr, mmu, reg, Cpu, PrivilegedLevel};
     use crate::{elfload, Isa};
     use std::collections::HashSet;
+    use std::rc::Rc;
 
     #[test]
     fn c_extension_test() {
         let dummy_elf =
             elfload::ElfLoader::try_new("./HelloWorld").expect("creating dummy_elf failed");
-        let bus = bus::Bus::new(dummy_elf, Isa::Rv32);
+        let isa = Isa::Rv32;
+        let bus = bus::Bus::new(dummy_elf, isa);
         let mut cpu: Cpu = Cpu {
             pc: bus.mrom.base_addr,
             bus,
-            regs: reg::Register::new(),
-            csrs: csr::CSRs::new().init(),
+            regs: reg::Register::new(Rc::new(isa)),
+            csrs: csr::CSRs::new(Rc::new(isa)).init(),
             mmu: mmu::Mmu::new(),
             reservation_set: HashSet::new(),
+            isa: Rc::new(isa),
             priv_lv: PrivilegedLevel::Machine,
         };
 
