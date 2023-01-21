@@ -171,10 +171,13 @@ impl ElfLoader {
         let mut tohost = None;
         let mut fromhost = None;
         if let (Some(symtab), Some(strtab)) = (symtab, strtab) {
-            const ST_SIZE: usize = 16;
-            for symtab_off in symtab.section_range().step_by(ST_SIZE) {
+            let st_size: usize = match isa {
+                Isa::Rv32 => 16,
+                Isa::Rv64 => 24,
+            };
+            for symtab_off in symtab.section_range().step_by(st_size) {
                 let st_name_off = get_u32(&self.mem_data, symtab_off as usize);
-                let st_name = &self.mem_data[strtab.sh_offset() as usize + st_name_off as usize..]
+                let st_name = &self.mem_data[(strtab.sh_offset() + st_name_off as u64) as usize..]
                     .iter()
                     .take_while(|c| **c as char != '\0')
                     .map(|c| *c as char)
