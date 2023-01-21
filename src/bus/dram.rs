@@ -97,20 +97,20 @@ impl Device for Dram {
     // load
     fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok(self.dram[index] as i8 as i32 as u64)
+        Ok(self.dram[index] as i8 as i64 as u64)
     }
 
     fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok(((self.dram[index + 1] as i16) << 8 | (self.dram[index + 0] as i16)) as i32 as u64)
+        Ok(((self.dram[index + 1] as i16) << 8 | (self.dram[index + 0] as i16)) as i64 as u64)
     }
 
     fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok((self.dram[index + 3] as u64) << 24
-            | (self.dram[index + 2] as u64) << 16
-            | (self.dram[index + 1] as u64) << 8
-            | (self.dram[index + 0] as u64))
+        Ok(((self.dram[index + 3] as i32) << 24
+            | (self.dram[index + 2] as i32) << 16
+            | (self.dram[index + 1] as i32) << 8
+            | (self.dram[index + 0] as i32)) as i64 as u64)
     }
 
     fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
