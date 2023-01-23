@@ -165,6 +165,8 @@ impl ElfLoader {
     }
 
     pub fn get_host_addr(&self, isa: Isa) -> (Option<u64>, Option<u64>) {
+        const ELF32_VALUE_OFFSET: u64 = 4;
+        const ELF64_VALUE_OFFSET: u64 = 8;
         let symtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".symtab");
         let strtab = self.sect_headers.iter().find(|&s| s.sh_name() == ".strtab");
 
@@ -187,9 +189,12 @@ impl ElfLoader {
                     tohost = match isa {
                         Isa::Rv32 => Some(u64::from(get_u32(
                             &self.mem_data,
-                            (symtab_off + 4) as usize,
+                            (symtab_off + ELF32_VALUE_OFFSET) as usize,
                         ))),
-                        Isa::Rv64 => Some(get_u64(&self.mem_data, (symtab_off + 4) as usize)),
+                        Isa::Rv64 => Some(get_u64(
+                            &self.mem_data,
+                            (symtab_off + ELF64_VALUE_OFFSET) as usize,
+                        )),
                     }
                 }
 
@@ -197,9 +202,12 @@ impl ElfLoader {
                     fromhost = match isa {
                         Isa::Rv32 => Some(u64::from(get_u32(
                             &self.mem_data,
-                            (symtab_off + 4) as usize,
+                            (symtab_off + ELF32_VALUE_OFFSET) as usize,
                         ))),
-                        Isa::Rv64 => Some(get_u64(&self.mem_data, (symtab_off + 4) as usize)),
+                        Isa::Rv64 => Some(get_u64(
+                            &self.mem_data,
+                            (symtab_off + ELF64_VALUE_OFFSET) as usize,
+                        )),
                     }
                 }
 
