@@ -2,16 +2,20 @@ use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
 use crate::cpu::TrapCause;
 
-fn quadrant0(opmap: &u8) -> Result<OpecodeKind, &'static str> {
+fn quadrant0(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     match opmap {
         0b000 => Ok(OpecodeKind::OP_C_ADDI4SPN),
         0b010 => Ok(OpecodeKind::OP_C_LW),
         0b110 => Ok(OpecodeKind::OP_C_SW),
-        _ => Err("opecode decoding failed"),
+        _ => Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        )),
     }
 }
 
-fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
+fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let sr_flag: u8 = inst.slice(11, 10) as u8;
     let lo_flag: u8 = inst.slice(6, 5) as u8;
     let mi_flag: u8 = inst.slice(11, 7) as u8;
@@ -36,18 +40,30 @@ fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
                 0b01 => Ok(OpecodeKind::OP_C_XOR),
                 0b10 => Ok(OpecodeKind::OP_C_OR),
                 0b11 => Ok(OpecodeKind::OP_C_AND),
-                _ => Err("opecode decoding failed"),
+                _ => Err((
+                    Some(u64::from(inst)),
+                    TrapCause::IllegalInst,
+                    format!("opecode decoding failed, {inst:b}"),
+                )),
             },
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
         0b101 => Ok(OpecodeKind::OP_C_J),
         0b110 => Ok(OpecodeKind::OP_C_BEQZ),
         0b111 => Ok(OpecodeKind::OP_C_BNEZ),
-        _ => Err("opecode decoding failed"),
+        _ => Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        )),
     }
 }
 
-fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
+fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let lo_flag: u8 = inst.slice(6, 2) as u8;
     let mi_flag: u8 = inst.slice(11, 7) as u8;
     let hi_flag: u8 = inst.slice(12, 12) as u8;
@@ -67,26 +83,42 @@ fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, &'static str> {
                     _ => Ok(OpecodeKind::OP_C_ADD),
                 },
             },
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
         0b110 => Ok(OpecodeKind::OP_C_SWSP),
-        _ => Err("opecode decoding failed"),
+        _ => Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        )),
     }
 }
 
-pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, &'static str> {
+pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let opmap: u8 = inst.slice(15, 13) as u8;
     let quadrant: u8 = inst.slice(1, 0) as u8;
 
     if inst == 0b0000000000000000 {
-        return Err("invalid instruction");
+        return Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        ));
     }
 
     match quadrant {
-        0b00 => quadrant0(&opmap),
+        0b00 => quadrant0(inst, &opmap),
         0b01 => quadrant1(inst, &opmap),
         0b10 => quadrant2(inst, &opmap),
-        _ => Err("opecode decoding failed"),
+        _ => Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        )),
     }
 }
 

@@ -1,8 +1,8 @@
-use crate::cpu::decode::DecodeUtil;
+use crate::cpu::decode::{only_rv64, DecodeUtil};
 use crate::cpu::instruction::OpecodeKind;
 use crate::cpu::TrapCause;
 
-pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
+pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let opmap: u8 = inst.slice(6, 0) as u8;
     let funct3: u8 = inst.slice(14, 12) as u8;
     let funct5: u8 = inst.slice(24, 20) as u8;
@@ -20,21 +20,37 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
             0b101 => Ok(OpecodeKind::OP_BGE),
             0b110 => Ok(OpecodeKind::OP_BLTU),
             0b111 => Ok(OpecodeKind::OP_BGEU),
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
         0b0000011 => match funct3 {
             0b000 => Ok(OpecodeKind::OP_LB),
             0b001 => Ok(OpecodeKind::OP_LH),
             0b010 => Ok(OpecodeKind::OP_LW),
+            0b011 => {
+                only_rv64(isa)?;
+                Ok(OpecodeKind::OP_LD)
+            }
             0b100 => Ok(OpecodeKind::OP_LBU),
             0b101 => Ok(OpecodeKind::OP_LHU),
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
         0b0100011 => match funct3 {
             0b000 => Ok(OpecodeKind::OP_SB),
             0b001 => Ok(OpecodeKind::OP_SH),
             0b010 => Ok(OpecodeKind::OP_SW),
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
         0b0010011 => match funct3 {
             0b000 => Ok(OpecodeKind::OP_ADDI),
@@ -51,7 +67,11 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
             }
             0b110 => Ok(OpecodeKind::OP_ORI),
             0b111 => Ok(OpecodeKind::OP_ANDI),
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
         0b0110011 => match funct3 {
             0b000 => {
@@ -74,7 +94,11 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
             }
             0b110 => Ok(OpecodeKind::OP_OR),
             0b111 => Ok(OpecodeKind::OP_AND),
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
         0b0001111 => Ok(OpecodeKind::OP_FENCE),
         0b1110011 => match funct3 {
@@ -82,13 +106,29 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
                 0b0000000 => match funct5 {
                     0b00000 => Ok(OpecodeKind::OP_ECALL),
                     0b00001 => Ok(OpecodeKind::OP_EBREAK),
-                    _ => Err("opecode decoding failed"),
+                    _ => Err((
+                        Some(u64::from(inst)),
+                        TrapCause::IllegalInst,
+                        format!("opecode decoding failed, {inst:b}"),
+                    )),
                 },
-                _ => Err("opecode decoding failed"),
+                _ => Err((
+                    Some(u64::from(inst)),
+                    TrapCause::IllegalInst,
+                    format!("opecode decoding failed, {inst:b}"),
+                )),
             },
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
-        _ => Err("opecode decoding failed"),
+        _ => Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        )),
     }
 }
 

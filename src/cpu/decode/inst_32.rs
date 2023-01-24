@@ -11,16 +11,7 @@ use crate::cpu::TrapCause;
 #[allow(non_snake_case)]
 impl Decode for u32 {
     fn decode(&self) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
-        let new_opc: OpecodeKind = match self.parse_opecode() {
-            Ok(opc) => opc,
-            Err(msg) => {
-                return Err((
-                    Some(u64::from(*self)),
-                    TrapCause::IllegalInst,
-                    format!("{}, {:b}", msg, self),
-                ))
-            }
-        };
+        let new_opc: OpecodeKind = self.parse_opecode()?;
         let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
         let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
         let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
@@ -35,7 +26,7 @@ impl Decode for u32 {
         })
     }
 
-    fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
+    fn parse_opecode(self) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_opecode(self),
             Extensions::M => m_extension::parse_opecode(self),

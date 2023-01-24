@@ -7,16 +7,7 @@ use crate::cpu::TrapCause;
 
 impl Decode for u16 {
     fn decode(&self) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
-        let new_opc: OpecodeKind = match self.parse_opecode() {
-            Ok(opc) => opc,
-            Err(msg) => {
-                return Err((
-                    Some(*self as u64),
-                    TrapCause::IllegalInst,
-                    format!("{}, {:b}", msg, self),
-                ))
-            }
-        };
+        let new_opc = self.parse_opecode()?;
         let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
         let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
         let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
@@ -31,7 +22,7 @@ impl Decode for u16 {
         })
     }
 
-    fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
+    fn parse_opecode(self) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_opecode(self),
             _ => panic!("It isn't compressed instruction"),

@@ -2,7 +2,7 @@ use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
 use crate::cpu::TrapCause;
 
-pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
+pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let opmap: u8 = inst.slice(6, 0) as u8;
     let funct3: u8 = inst.slice(14, 12) as u8;
 
@@ -16,9 +16,17 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, &'static str> {
             0b101 => Ok(OpecodeKind::OP_DIVU),
             0b110 => Ok(OpecodeKind::OP_REM),
             0b111 => Ok(OpecodeKind::OP_REMU),
-            _ => Err("opecode decoding failed"),
+            _ => Err((
+                Some(u64::from(inst)),
+                TrapCause::IllegalInst,
+                format!("opecode decoding failed, {inst:b}"),
+            )),
         },
-        _ => Err("opecode decoding failed"),
+        _ => Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        )),
     }
 }
 
