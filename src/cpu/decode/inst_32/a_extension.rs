@@ -1,8 +1,8 @@
 use crate::cpu::decode::DecodeUtil;
 use crate::cpu::instruction::OpecodeKind;
-use crate::cpu::TrapCause;
+use crate::cpu::{Isa, TrapCause};
 
-pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let opmap: u8 = inst.slice(6, 0) as u8;
     let funct7: u8 = inst.slice(31, 27) as u8;
 

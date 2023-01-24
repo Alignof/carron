@@ -1,8 +1,8 @@
 use crate::cpu::decode::{only_rv64, DecodeUtil};
 use crate::cpu::instruction::OpecodeKind;
-use crate::cpu::TrapCause;
+use crate::cpu::{Isa, TrapCause};
 
-pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let opmap: u8 = inst.slice(6, 0) as u8;
     let funct3: u8 = inst.slice(14, 12) as u8;
     let funct5: u8 = inst.slice(24, 20) as u8;
@@ -30,10 +30,7 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, (Option<u64>, TrapCause, 
             0b000 => Ok(OpecodeKind::OP_LB),
             0b001 => Ok(OpecodeKind::OP_LH),
             0b010 => Ok(OpecodeKind::OP_LW),
-            0b011 => {
-                only_rv64(isa)?;
-                Ok(OpecodeKind::OP_LD)
-            }
+            0b011 => only_rv64(OpecodeKind::OP_LD, isa),
             0b100 => Ok(OpecodeKind::OP_LBU),
             0b101 => Ok(OpecodeKind::OP_LHU),
             _ => Err((

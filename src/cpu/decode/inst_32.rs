@@ -6,12 +6,12 @@ mod zicsr_extension;
 
 use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
-use crate::cpu::TrapCause;
+use crate::cpu::{Isa, TrapCause};
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
-    fn decode(&self) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
-        let new_opc: OpecodeKind = self.parse_opecode()?;
+    fn decode(&self, isa: Isa) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
+        let new_opc: OpecodeKind = self.parse_opecode(isa)?;
         let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
         let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
         let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
@@ -26,11 +26,11 @@ impl Decode for u32 {
         })
     }
 
-    fn parse_opecode(self) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+    fn parse_opecode(self, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
         match self.extension() {
-            Extensions::BaseI => base_i::parse_opecode(self),
-            Extensions::M => m_extension::parse_opecode(self),
-            Extensions::A => a_extension::parse_opecode(self),
+            Extensions::BaseI => base_i::parse_opecode(self, isa),
+            Extensions::M => m_extension::parse_opecode(self, isa),
+            Extensions::A => a_extension::parse_opecode(self, isa),
             Extensions::Zicsr => zicsr_extension::parse_opecode(self),
             Extensions::Priv => priv_extension::parse_opecode(self),
             _ => panic!("This instruction does not matched any extensions."),

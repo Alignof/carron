@@ -3,11 +3,11 @@ mod c_extension;
 
 use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
-use crate::cpu::TrapCause;
+use crate::cpu::{Isa, TrapCause};
 
 impl Decode for u16 {
-    fn decode(&self) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
-        let new_opc = self.parse_opecode()?;
+    fn decode(&self, isa: Isa) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
+        let new_opc = self.parse_opecode(isa)?;
         let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
         let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
         let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
@@ -22,7 +22,7 @@ impl Decode for u16 {
         })
     }
 
-    fn parse_opecode(self) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+    fn parse_opecode(self, _isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_opecode(self),
             _ => panic!("It isn't compressed instruction"),

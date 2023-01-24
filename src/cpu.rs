@@ -97,7 +97,7 @@ impl Cpu {
 
         self.check_interrupt()?;
 
-        fetch(self)?.decode()?.execution(self)
+        fetch(self)?.decode(*self.isa)?.execution(self)
     }
 
     fn trans_addr(

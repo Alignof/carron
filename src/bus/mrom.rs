@@ -19,10 +19,10 @@ impl Mrom {
             match isa {
                 Isa::Rv32 => 0x0182a283, // lw      t0, 24(t0)
                 Isa::Rv64 => 0x0182b283, // ld      t0, 24(t0)
-            },
-            0x00028067,  // jr      t0    |
-            0x0,         //               |
-            entry_lower, // <-------------+
+            }, //                            |
+            0x00028067, // jr      t0        |
+            0x0,        //                   |
+            entry_lower, // <----------------+
             entry_upper >> 32,
         ];
 

@@ -1,5 +1,6 @@
 use super::ElfHeader64;
 use crate::elfload::{get_u16, get_u32, get_u64, is_cinst, SectionHeader};
+use crate::Isa;
 
 #[derive(Debug)]
 pub struct SectionHeader64 {
@@ -118,14 +119,14 @@ impl SectionHeader for SectionHeader64 {
         while dump_head != self.sh_offset + self.sh_size {
             if is_cinst(mmap, dump_head as usize) {
                 let mdump = get_u16(mmap, dump_head as usize);
-                let inst = mdump.decode();
+                let inst = mdump.decode(Isa::Rv64);
                 dump_head += 2;
 
                 print!("{:<04x}\t\t", mdump);
                 inst.unwrap().print_myself();
             } else {
                 let mdump = get_u32(mmap, dump_head as usize);
-                let inst = mdump.decode();
+                let inst = mdump.decode(Isa::Rv64);
                 dump_head += 4;
 
                 print!("{:<08x}\t", mdump);

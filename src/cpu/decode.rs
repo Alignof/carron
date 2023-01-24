@@ -3,10 +3,25 @@ mod inst_32;
 
 use super::TrapCause;
 use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
+use crate::cpu::Isa;
+
+pub fn only_rv64(
+    opcode: OpecodeKind,
+    isa: Isa,
+) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+    match isa {
+        Isa::Rv32 => Err((
+            None,
+            TrapCause::IllegalInst,
+            format!("This instruction is only available on rv64"),
+        )),
+        Isa::Rv64 => Ok(opcode),
+    }
+}
 
 pub trait Decode {
-    fn decode(&self) -> Result<Instruction, (Option<u64>, TrapCause, String)>;
-    fn parse_opecode(self) -> Result<OpecodeKind, &'static str>;
+    fn decode(&self, isa: Isa) -> Result<Instruction, (Option<u64>, TrapCause, String)>;
+    fn parse_opecode(self, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)>;
     fn parse_rd(
         self,
         opkind: &OpecodeKind,
