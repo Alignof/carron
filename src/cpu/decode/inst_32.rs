@@ -15,7 +15,7 @@ impl Decode for u32 {
         let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
         let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
         let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
-        let new_imm: Option<i32> = self.parse_imm(&new_opc)?;
+        let new_imm: Option<i32> = self.parse_imm(&new_opc, isa)?;
 
         Ok(Instruction {
             opc: new_opc,
@@ -82,9 +82,10 @@ impl Decode for u32 {
     fn parse_imm(
         self,
         opkind: &OpecodeKind,
+        isa: Isa,
     ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
-            Extensions::BaseI => base_i::parse_imm(self, opkind),
+            Extensions::BaseI => base_i::parse_imm(self, opkind, isa),
             Extensions::M => m_extension::parse_imm(self, opkind),
             Extensions::A => a_extension::parse_imm(self, opkind),
             Extensions::Zicsr => zicsr_extension::parse_imm(self, opkind),

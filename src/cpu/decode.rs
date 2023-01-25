@@ -37,6 +37,7 @@ pub trait Decode {
     fn parse_imm(
         self,
         opkind: &OpecodeKind,
+        isa: Isa,
     ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)>;
 }
 
