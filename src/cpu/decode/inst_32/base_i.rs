@@ -7,6 +7,13 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
     let funct3: u8 = inst.slice(14, 12) as u8;
     let funct5: u8 = inst.slice(24, 20) as u8;
     let funct7: u8 = inst.slice(31, 25) as u8;
+    let illegal_inst_exception = || {
+        Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        ))
+    };
 
     match opmap {
         0b0110111 => Ok(OpecodeKind::OP_LUI),
@@ -20,11 +27,7 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
             0b101 => Ok(OpecodeKind::OP_BGE),
             0b110 => Ok(OpecodeKind::OP_BLTU),
             0b111 => Ok(OpecodeKind::OP_BGEU),
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            _ => illegal_inst_exception(),
         },
         0b0000011 => match funct3 {
             0b000 => Ok(OpecodeKind::OP_LB),
@@ -33,69 +36,52 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
             0b011 => only_rv64(OpecodeKind::OP_LD, isa),
             0b100 => Ok(OpecodeKind::OP_LBU),
             0b101 => Ok(OpecodeKind::OP_LHU),
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            0b110 => only_rv64(OpecodeKind::OP_LWU, isa),
+            _ => illegal_inst_exception(),
         },
         0b0100011 => match funct3 {
             0b000 => Ok(OpecodeKind::OP_SB),
             0b001 => Ok(OpecodeKind::OP_SH),
             0b010 => Ok(OpecodeKind::OP_SW),
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            0b011 => only_rv64(OpecodeKind::OP_SD, isa),
+            _ => illegal_inst_exception(),
         },
         0b0010011 => match funct3 {
             0b000 => Ok(OpecodeKind::OP_ADDI),
-            0b001 => Ok(OpecodeKind::OP_SLLI),
+            0b001 => match funct7 {
+                0b0000000 => Ok(OpecodeKind::OP_SLLI),
+                _ => illegal_inst_exception(),
+            },
             0b010 => Ok(OpecodeKind::OP_SLTI),
             0b011 => Ok(OpecodeKind::OP_SLTIU),
             0b100 => Ok(OpecodeKind::OP_XORI),
-            0b101 => {
-                if (inst >> 30) & 0x1 == 0x0 {
-                    Ok(OpecodeKind::OP_SRLI)
-                } else {
-                    Ok(OpecodeKind::OP_SRAI)
-                }
-            }
+            0b101 => match funct7 {
+                0b0000000 => Ok(OpecodeKind::OP_SRLI),
+                0b0100000 => Ok(OpecodeKind::OP_SRAI),
+                _ => illegal_inst_exception(),
+            },
             0b110 => Ok(OpecodeKind::OP_ORI),
             0b111 => Ok(OpecodeKind::OP_ANDI),
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            _ => illegal_inst_exception(),
         },
         0b0110011 => match funct3 {
-            0b000 => {
-                if (inst >> 30) & 0x1 == 0x0 {
-                    Ok(OpecodeKind::OP_ADD)
-                } else {
-                    Ok(OpecodeKind::OP_SUB)
-                }
-            }
+            0b000 => match funct7 {
+                0b0000000 => Ok(OpecodeKind::OP_ADD),
+                0b0100000 => Ok(OpecodeKind::OP_SUB),
+                _ => illegal_inst_exception(),
+            },
             0b001 => Ok(OpecodeKind::OP_SLL),
             0b010 => Ok(OpecodeKind::OP_SLT),
             0b011 => Ok(OpecodeKind::OP_SLTU),
             0b100 => Ok(OpecodeKind::OP_XOR),
-            0b101 => {
-                if (inst >> 30) & 0x1 == 0x0 {
-                    Ok(OpecodeKind::OP_SRL)
-                } else {
-                    Ok(OpecodeKind::OP_SRA)
-                }
-            }
+            0b101 => match funct7 {
+                0b0000000 => Ok(OpecodeKind::OP_SRL),
+                0b0100000 => Ok(OpecodeKind::OP_SRA),
+                _ => illegal_inst_exception(),
+            },
             0b110 => Ok(OpecodeKind::OP_OR),
             0b111 => Ok(OpecodeKind::OP_AND),
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            _ => illegal_inst_exception(),
         },
         0b0001111 => Ok(OpecodeKind::OP_FENCE),
         0b1110011 => match funct3 {
@@ -103,29 +89,37 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
                 0b0000000 => match funct5 {
                     0b00000 => Ok(OpecodeKind::OP_ECALL),
                     0b00001 => Ok(OpecodeKind::OP_EBREAK),
-                    _ => Err((
-                        Some(u64::from(inst)),
-                        TrapCause::IllegalInst,
-                        format!("opecode decoding failed, {inst:b}"),
-                    )),
+                    _ => illegal_inst_exception(),
                 },
-                _ => Err((
-                    Some(u64::from(inst)),
-                    TrapCause::IllegalInst,
-                    format!("opecode decoding failed, {inst:b}"),
-                )),
+                _ => illegal_inst_exception(),
             },
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            _ => illegal_inst_exception(),
         },
-        _ => Err((
-            Some(u64::from(inst)),
-            TrapCause::IllegalInst,
-            format!("opecode decoding failed, {inst:b}"),
-        )),
+        0b0011011 => match funct3 {
+            0b000 => only_rv64(OpecodeKind::OP_ADDIW, isa),
+            0b001 => only_rv64(OpecodeKind::OP_SLLIW, isa),
+            0b101 => match funct7 {
+                0b0000000 => only_rv64(OpecodeKind::OP_SRLIW, isa),
+                0b0100000 => only_rv64(OpecodeKind::OP_SRAIW, isa),
+                _ => illegal_inst_exception(),
+            },
+            _ => illegal_inst_exception(),
+        },
+        0b0111011 => match funct3 {
+            0b000 => match funct7 {
+                0b0000000 => only_rv64(OpecodeKind::OP_ADDW, isa),
+                0b0100000 => only_rv64(OpecodeKind::OP_SUBW, isa),
+                _ => illegal_inst_exception(),
+            },
+            0b001 => only_rv64(OpecodeKind::OP_SLLW, isa),
+            0b101 => match funct7 {
+                0b0000000 => only_rv64(OpecodeKind::OP_SRLW, isa),
+                0b0100000 => only_rv64(OpecodeKind::OP_SRAW, isa),
+                _ => illegal_inst_exception(),
+            },
+            _ => illegal_inst_exception(),
+        },
+        _ => illegal_inst_exception(),
     }
 }
 
@@ -165,6 +159,17 @@ pub fn parse_rd(
         OpecodeKind::OP_SRA => Ok(Some(rd)),
         OpecodeKind::OP_OR => Ok(Some(rd)),
         OpecodeKind::OP_AND => Ok(Some(rd)),
+        OpecodeKind::OP_LWU => Ok(Some(rd)),
+        OpecodeKind::OP_LD => Ok(Some(rd)),
+        OpecodeKind::OP_ADDIW => Ok(Some(rd)),
+        OpecodeKind::OP_SLLIW => Ok(Some(rd)),
+        OpecodeKind::OP_SRLIW => Ok(Some(rd)),
+        OpecodeKind::OP_SRAIW => Ok(Some(rd)),
+        OpecodeKind::OP_ADDW => Ok(Some(rd)),
+        OpecodeKind::OP_SUBW => Ok(Some(rd)),
+        OpecodeKind::OP_SLLW => Ok(Some(rd)),
+        OpecodeKind::OP_SRLW => Ok(Some(rd)),
+        OpecodeKind::OP_SRAW => Ok(Some(rd)),
         _ => Ok(None),
     }
 }
@@ -211,6 +216,18 @@ pub fn parse_rs1(
         OpecodeKind::OP_SRA => Ok(Some(rs1)),
         OpecodeKind::OP_OR => Ok(Some(rs1)),
         OpecodeKind::OP_AND => Ok(Some(rs1)),
+        OpecodeKind::OP_LWU => Ok(Some(rs1)),
+        OpecodeKind::OP_LD => Ok(Some(rs1)),
+        OpecodeKind::OP_SD => Ok(Some(rs1)),
+        OpecodeKind::OP_ADDIW => Ok(Some(rs1)),
+        OpecodeKind::OP_SLLIW => Ok(Some(rs1)),
+        OpecodeKind::OP_SRLIW => Ok(Some(rs1)),
+        OpecodeKind::OP_SRAIW => Ok(Some(rs1)),
+        OpecodeKind::OP_ADDW => Ok(Some(rs1)),
+        OpecodeKind::OP_SUBW => Ok(Some(rs1)),
+        OpecodeKind::OP_SLLW => Ok(Some(rs1)),
+        OpecodeKind::OP_SRLW => Ok(Some(rs1)),
+        OpecodeKind::OP_SRAW => Ok(Some(rs1)),
         _ => Ok(None),
     }
 }
@@ -244,6 +261,12 @@ pub fn parse_rs2(
         OpecodeKind::OP_SRA => Ok(Some(rs2)),
         OpecodeKind::OP_OR => Ok(Some(rs2)),
         OpecodeKind::OP_AND => Ok(Some(rs2)),
+        OpecodeKind::OP_SD => Ok(Some(rs2)),
+        OpecodeKind::OP_ADDW => Ok(Some(rs2)),
+        OpecodeKind::OP_SUBW => Ok(Some(rs2)),
+        OpecodeKind::OP_SLLW => Ok(Some(rs2)),
+        OpecodeKind::OP_SRLW => Ok(Some(rs2)),
+        OpecodeKind::OP_SRAW => Ok(Some(rs2)),
         _ => Ok(None),
     }
 }
@@ -252,6 +275,7 @@ pub fn parse_rs2(
 pub fn parse_imm(
     inst: u32,
     opkind: &OpecodeKind,
+    isa: Isa,
 ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
     let U_type = || (inst.slice(31, 12) << 12) as i32;
     let I_type = || {
@@ -300,28 +324,18 @@ pub fn parse_imm(
         OpecodeKind::OP_XORI => Ok(Some(I_type())),
         OpecodeKind::OP_ORI => Ok(Some(I_type())),
         OpecodeKind::OP_ANDI => Ok(Some(I_type())),
-        OpecodeKind::OP_SLLI | OpecodeKind::OP_SRLI => {
-            if inst.slice(31, 25) == 0 {
-                Ok(Some(I_type()))
-            } else {
-                Err((
-                    None,
-                    TrapCause::IllegalInst,
-                    "invalid shamt[5] in srli or slli".to_string(),
-                ))
-            }
-        }
-        OpecodeKind::OP_SRAI => {
-            if inst.slice(31, 25) == 0b0100000 {
-                Ok(Some(I_type()))
-            } else {
-                Err((
-                    None,
-                    TrapCause::IllegalInst,
-                    "invalid shamt[5] in srai".to_string(),
-                ))
-            }
-        }
+        OpecodeKind::OP_SLLI | OpecodeKind::OP_SRLI => match isa {
+            Isa::Rv32 => Ok(Some(inst.slice(24, 20) as i32)), // shamt
+            Isa::Rv64 => Ok(Some(inst.slice(25, 20) as i32)),
+        },
+        OpecodeKind::OP_SRAI => match isa {
+            Isa::Rv32 => Ok(Some(inst.slice(24, 20) as i32)),
+            Isa::Rv64 => Ok(Some(inst.slice(25, 20) as i32)),
+        },
+        OpecodeKind::OP_LWU => Ok(Some(I_type())),
+        OpecodeKind::OP_LD => Ok(Some(I_type())),
+        OpecodeKind::OP_SD => Ok(Some(S_type())),
+        OpecodeKind::OP_ADDIW => Ok(Some(I_type())),
         _ => Ok(None),
     }
 }
