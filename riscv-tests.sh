@@ -5,19 +5,19 @@ ESC=$(printf '\033');
 exit_status=0
 
 diff_output() {
-    p_filter="0x800000(3c|40|44|48)"
-    v_filter="(0xffc021(48|4c|50|54|58))|(0xffc023(04|08))"
+    p_filter="0x(00000000)?800000(3c|40|44|48)"
+    v_filter="(0x(00000000)?ffc021(48|4c|50|54|58))|(0xffc023(04|08))"
     if [ ${test_kind: -1} = "p" ]; then
         filter=$p_filter;
     else
         filter=$v_filter;
     fi;
 
-    cargo r --release -- --loglv=info $test_dir$test_name 2> /dev/null |
+    timeout --foreground 3 cargo r --release -- --loglv=info $test_dir$test_name 2> /dev/null |
         perl -ne 'print if /^pc: /' |
         perl -pe 's/pc: //' |
         perl -ne "print unless /${filter}/" > ./target/output;
-    spike -l --isa=RV32IMAC $pk_path $test_dir$test_name 2>&1 |
+    spike -l --isa=${isa}IMAC $pk_path $test_dir$test_name 2>&1 |
         perl -pe 's/core.+: //' |
         perl -pe 's/^: //' |
         perl -pe 's/ \(0x.+$//' |
@@ -35,7 +35,7 @@ diff_output() {
 }
 
 exit_code() {
-    cargo r --release -- $test_dir$test_name > /dev/null 2>&1;
+    timeout --foreground 3 cargo r --release -- $test_dir$test_name > /dev/null 2>&1;
     if [ $? = 1 ]; then
         echo "$test_name ${ESC}[32;1m ... passed ${ESC}[m"
     else
@@ -58,8 +58,10 @@ test_kinds=(
     "${isa}si-p"
 )
 for test_kind in ${test_kinds[@]}; do
+    cargo build --release
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
-        exit_code
+        #exit_code
+        diff_output
     done;
 done;
 
