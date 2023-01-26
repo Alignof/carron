@@ -134,4 +134,12 @@ impl Device for Clint {
             "clint is allow load/store32 but try load_u16".to_string(),
         ))
     }
+
+    fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        Err((
+            Some(addr),
+            TrapCause::LoadPageFault,
+            "clint is allow load/store32 but try load_u32".to_string(),
+        ))
+    }
 }

@@ -134,6 +134,11 @@ impl Device for Dram {
         let index = self.addr2index(addr);
         Ok(((self.dram[index + 1] as u16) << 8 | (self.dram[index + 0] as u16)) as u64)
     }
+
+    fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        let index = self.addr2index(addr);
+        Ok(((self.dram[index + 1] as u32) << 8 | (self.dram[index + 0] as u32)) as u64)
+    }
 }
 
 #[cfg(test)]

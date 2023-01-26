@@ -135,4 +135,9 @@ impl Device for Mrom {
         let addr = self.addr2index(addr);
         Ok((self.mrom[addr + 1] as u64) << 8 | (self.mrom[addr + 0] as u64))
     }
+
+    fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        let addr = self.addr2index(addr);
+        Ok((self.mrom[addr + 1] as u64) << 8 | (self.mrom[addr + 0] as u64))
+    }
 }
