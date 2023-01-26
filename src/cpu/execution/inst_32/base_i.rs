@@ -13,7 +13,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         }
         OpecodeKind::OP_JAL => {
             cpu.regs.write(inst.rd, cpu.pc + INST_SIZE);
-            cpu.add2pc(inst.imm.unwrap() as u64);
+            cpu.add2pc(inst.imm.unwrap());
         }
         OpecodeKind::OP_JALR => {
             // calc next_pc before updated
@@ -24,32 +24,32 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         }
         OpecodeKind::OP_BEQ => {
             if cpu.regs.read(inst.rs1) == cpu.regs.read(inst.rs2) {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_BNE => {
             if cpu.regs.read(inst.rs1) != cpu.regs.read(inst.rs2) {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_BLT => {
             if (cpu.regs.read(inst.rs1) as i32) < (cpu.regs.read(inst.rs2) as i32) {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_BGE => {
             if (cpu.regs.read(inst.rs1) as i32) >= (cpu.regs.read(inst.rs2) as i32) {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_BLTU => {
             if cpu.regs.read(inst.rs1) < cpu.regs.read(inst.rs2) {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_BGEU => {
             if cpu.regs.read(inst.rs1) >= cpu.regs.read(inst.rs2) {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_LB => {

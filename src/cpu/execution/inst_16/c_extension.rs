@@ -104,7 +104,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         }
         OpecodeKind::OP_C_JAL => {
             cpu.regs.write(Some(1), cpu.pc + INST_SIZE);
-            cpu.add2pc(inst.imm.unwrap() as u64);
+            cpu.add2pc(inst.imm.unwrap());
         }
         OpecodeKind::OP_C_JALR => {
             // calc next_pc before updated
@@ -116,12 +116,12 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         }
         OpecodeKind::OP_C_BEQZ => {
             if cpu.regs.read(inst.rs1) == 0 {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_C_BNEZ => {
             if cpu.regs.read(inst.rs1) != 0 {
-                cpu.add2pc(inst.imm.unwrap() as u64);
+                cpu.add2pc(inst.imm.unwrap());
             }
         }
         OpecodeKind::OP_C_JR => {

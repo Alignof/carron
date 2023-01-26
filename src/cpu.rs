@@ -83,8 +83,8 @@ impl Cpu {
         }
     }
 
-    fn add2pc(&mut self, addval: u64) {
-        self.pc += addval;
+    fn add2pc(&mut self, addval: i32) {
+        self.pc = (self.pc as i64 + addval as i64) as u64;
     }
 
     fn update_pc(&mut self, newpc: u64) {
