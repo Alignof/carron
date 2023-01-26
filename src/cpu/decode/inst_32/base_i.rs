@@ -6,6 +6,7 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
     let opmap: u8 = inst.slice(6, 0) as u8;
     let funct3: u8 = inst.slice(14, 12) as u8;
     let funct5: u8 = inst.slice(24, 20) as u8;
+    let funct6: u8 = inst.slice(31, 26) as u8;
     let funct7: u8 = inst.slice(31, 25) as u8;
     let illegal_inst_exception = || {
         Err((
@@ -48,17 +49,30 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
         },
         0b0010011 => match funct3 {
             0b000 => Ok(OpecodeKind::OP_ADDI),
-            0b001 => match funct7 {
-                0b0000000 => Ok(OpecodeKind::OP_SLLI),
-                _ => illegal_inst_exception(),
+            0b001 => match isa {
+                Isa::Rv32 => match funct7 {
+                    0b0000000 => Ok(OpecodeKind::OP_SLLI),
+                    _ => illegal_inst_exception(),
+                },
+                Isa::Rv64 => match funct6 {
+                    0b000000 => Ok(OpecodeKind::OP_SLLI),
+                    _ => illegal_inst_exception(),
+                },
             },
             0b010 => Ok(OpecodeKind::OP_SLTI),
             0b011 => Ok(OpecodeKind::OP_SLTIU),
             0b100 => Ok(OpecodeKind::OP_XORI),
-            0b101 => match funct7 {
-                0b0000000 => Ok(OpecodeKind::OP_SRLI),
-                0b0100000 => Ok(OpecodeKind::OP_SRAI),
-                _ => illegal_inst_exception(),
+            0b101 => match isa {
+                Isa::Rv32 => match funct7 {
+                    0b0000000 => Ok(OpecodeKind::OP_SRLI),
+                    0b0100000 => Ok(OpecodeKind::OP_SRAI),
+                    _ => illegal_inst_exception(),
+                },
+                Isa::Rv64 => match funct6 {
+                    0b000000 => Ok(OpecodeKind::OP_SRLI),
+                    0b010000 => Ok(OpecodeKind::OP_SRAI),
+                    _ => illegal_inst_exception(),
+                },
             },
             0b110 => Ok(OpecodeKind::OP_ORI),
             0b111 => Ok(OpecodeKind::OP_ANDI),
