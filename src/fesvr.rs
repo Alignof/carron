@@ -138,13 +138,13 @@ impl Emulator {
             for (i, s) in syscall_args.iter().enumerate() {
                 self.cpu
                     .bus
-                    .store64(syscall_addr + (i * 8) as u64, *s as i64)
+                    .store64(syscall_addr + (i * 8) as u64, *s)
                     .unwrap();
             }
 
             self.cpu
                 .bus
-                .store64(fromhost_addr, (tohost << 48 >> 48) as i64 | 1)
+                .store64(fromhost_addr, (tohost << 48 >> 48) | 1)
                 .unwrap();
         }
     }

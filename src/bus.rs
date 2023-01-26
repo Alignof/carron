@@ -103,14 +103,14 @@ impl Bus {
     pub fn store64(
         &mut self,
         addr: u64,
-        data: i64,
+        data: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
-            self.mrom.store64(addr, data as u64)
+            self.mrom.store64(addr, data)
         } else if self.clint.in_range(addr) {
-            self.clint.store64(addr, data as u64)
+            self.clint.store64(addr, data)
         } else if self.dram.in_range(addr) {
-            self.dram.store64(addr, data as u64)
+            self.dram.store64(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -216,6 +216,22 @@ impl Bus {
             ))
         }
     }
+
+    pub fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        if self.mrom.in_range(addr) {
+            self.mrom.load_u32(addr)
+        } else if self.clint.in_range(addr) {
+            self.clint.load_u32(addr)
+        } else if self.dram.in_range(addr) {
+            self.dram.load_u32(addr)
+        } else {
+            Err((
+                Some(addr),
+                TrapCause::LoadPageFault,
+                format!("addr out of range at loat_u32: {addr:#x}"),
+            ))
+        }
+    }
 }
 
 pub trait Device {
@@ -232,4 +248,5 @@ pub trait Device {
     fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
+    fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
 }

@@ -24,7 +24,7 @@ impl Cpu {
         };
 
         // mtime += 1
-        self.bus.store64(MTIME, mtime as i64 + 1).unwrap();
+        self.bus.store64(MTIME, mtime + 1).unwrap();
 
         match self.priv_lv {
             PrivilegedLevel::Machine => {
