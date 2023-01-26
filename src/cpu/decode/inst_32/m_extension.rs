@@ -1,10 +1,17 @@
-use crate::cpu::decode::DecodeUtil;
+use crate::cpu::decode::{only_rv64, DecodeUtil};
 use crate::cpu::instruction::OpecodeKind;
 use crate::cpu::{Isa, TrapCause};
 
 pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let opmap: u8 = inst.slice(6, 0) as u8;
     let funct3: u8 = inst.slice(14, 12) as u8;
+    let illegal_inst_exception = || {
+        Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed, {inst:b}"),
+        ))
+    };
 
     match opmap {
         0b0110011 => match funct3 {
@@ -16,17 +23,17 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
             0b101 => Ok(OpecodeKind::OP_DIVU),
             0b110 => Ok(OpecodeKind::OP_REM),
             0b111 => Ok(OpecodeKind::OP_REMU),
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            _ => illegal_inst_exception(),
         },
-        _ => Err((
-            Some(u64::from(inst)),
-            TrapCause::IllegalInst,
-            format!("opecode decoding failed, {inst:b}"),
-        )),
+        0b0111011 => match funct3 {
+            0b000 => only_rv64(OpecodeKind::OP_MULW, isa),
+            0b100 => only_rv64(OpecodeKind::OP_DIVW, isa),
+            0b101 => only_rv64(OpecodeKind::OP_DIVUW, isa),
+            0b110 => only_rv64(OpecodeKind::OP_REMW, isa),
+            0b111 => only_rv64(OpecodeKind::OP_REMUW, isa),
+            _ => illegal_inst_exception(),
+        },
+        _ => illegal_inst_exception(),
     }
 }
 
@@ -45,6 +52,11 @@ pub fn parse_rd(
         OpecodeKind::OP_DIVU => Ok(Some(rd)),
         OpecodeKind::OP_REM => Ok(Some(rd)),
         OpecodeKind::OP_REMU => Ok(Some(rd)),
+        OpecodeKind::OP_MULW => Ok(Some(rd)),
+        OpecodeKind::OP_DIVW => Ok(Some(rd)),
+        OpecodeKind::OP_DIVUW => Ok(Some(rd)),
+        OpecodeKind::OP_REMW => Ok(Some(rd)),
+        OpecodeKind::OP_REMUW => Ok(Some(rd)),
         _ => Ok(None),
     }
 }
@@ -64,6 +76,11 @@ pub fn parse_rs1(
         OpecodeKind::OP_DIVU => Ok(Some(rs1)),
         OpecodeKind::OP_REM => Ok(Some(rs1)),
         OpecodeKind::OP_REMU => Ok(Some(rs1)),
+        OpecodeKind::OP_MULW => Ok(Some(rs1)),
+        OpecodeKind::OP_DIVW => Ok(Some(rs1)),
+        OpecodeKind::OP_DIVUW => Ok(Some(rs1)),
+        OpecodeKind::OP_REMW => Ok(Some(rs1)),
+        OpecodeKind::OP_REMUW => Ok(Some(rs1)),
         _ => Ok(None),
     }
 }
@@ -83,6 +100,11 @@ pub fn parse_rs2(
         OpecodeKind::OP_DIVU => Ok(Some(rs2)),
         OpecodeKind::OP_REM => Ok(Some(rs2)),
         OpecodeKind::OP_REMU => Ok(Some(rs2)),
+        OpecodeKind::OP_MULW => Ok(Some(rs2)),
+        OpecodeKind::OP_DIVW => Ok(Some(rs2)),
+        OpecodeKind::OP_DIVUW => Ok(Some(rs2)),
+        OpecodeKind::OP_REMW => Ok(Some(rs2)),
+        OpecodeKind::OP_REMUW => Ok(Some(rs2)),
         _ => Ok(None),
     }
 }
