@@ -223,6 +223,76 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_EBREAK => {
             cpu.exception(cpu.pc, TrapCause::Breakpoint);
         }
+        OpecodeKind::OP_LWU => {
+            let load_addr = cpu.trans_addr(
+                TransFor::Load,
+                TransAlign::Size32,
+                cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u64,
+            )?;
+            cpu.regs.write(inst.rd, cpu.bus.load_u32(load_addr)?);
+        }
+        OpecodeKind::OP_LD => {
+            let load_addr = cpu.trans_addr(
+                TransFor::Load,
+                TransAlign::Size64,
+                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+            )?;
+            cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
+        }
+        OpecodeKind::OP_SD => {
+            let store_addr = cpu.trans_addr(
+                TransFor::StoreAMO,
+                TransAlign::Size64,
+                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+            )?;
+            cpu.bus.store64(store_addr, cpu.regs.read(inst.rs2))?;
+        }
+        OpecodeKind::OP_ADDIW => {
+            cpu.regs.write(
+                inst.rd,
+                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32 as u64,
+            );
+        }
+        OpecodeKind::OP_SLLIW => {
+            cpu.regs.write(
+                inst.rd,
+                cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u32 as u64,
+            );
+        }
+        OpecodeKind::OP_SRLIW => {
+            cpu.regs.write(
+                inst.rd,
+                cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as u32 as u64,
+            );
+        }
+        OpecodeKind::OP_SRAIW => {
+            cpu.regs.write(
+                inst.rd,
+                ((cpu.regs.read(inst.rs1) as i32) >> inst.imm.unwrap()) as u32 as u64,
+            );
+        }
+        OpecodeKind::OP_ADDW => {
+            cpu.regs
+                .write(inst.rd, cpu.regs.read(inst.rs1) + cpu.regs.read(inst.rs2));
+        }
+        OpecodeKind::OP_SUBW => {
+            cpu.regs
+                .write(inst.rd, cpu.regs.read(inst.rs1) - cpu.regs.read(inst.rs2));
+        }
+        OpecodeKind::OP_SLLW => {
+            cpu.regs
+                .write(inst.rd, cpu.regs.read(inst.rs1) << cpu.regs.read(inst.rs2));
+        }
+        OpecodeKind::OP_SRLW => {
+            cpu.regs
+                .write(inst.rd, cpu.regs.read(inst.rs1) >> cpu.regs.read(inst.rs2));
+        }
+        OpecodeKind::OP_SRAW => {
+            cpu.regs.write(
+                inst.rd,
+                ((cpu.regs.read(inst.rs1) as i32) >> cpu.regs.read(inst.rs2)) as u32 as u64,
+            );
+        }
         _ => panic!("not an Base extension"),
     }
 
