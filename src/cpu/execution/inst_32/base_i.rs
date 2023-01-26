@@ -1,5 +1,6 @@
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::{Cpu, CrossIsaUtil, PrivilegedLevel, TransAlign, TransFor, TrapCause};
+use crate::Isa;
 
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     const INST_SIZE: u64 = 4;
@@ -56,7 +57,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size8,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load8(load_addr)?);
         }
@@ -64,7 +68,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size16,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load16(load_addr)?);
         }
@@ -72,7 +79,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size32,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         }
@@ -80,7 +90,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size8,
-                cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load_u8(load_addr)?);
         }
@@ -88,7 +101,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size16,
-                cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load_u16(load_addr)?);
         }
@@ -96,7 +112,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let store_addr = cpu.trans_addr(
                 TransFor::StoreAMO,
                 TransAlign::Size8,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.bus.store8(store_addr, cpu.regs.read(inst.rs2))?;
         }
@@ -104,7 +123,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let store_addr = cpu.trans_addr(
                 TransFor::StoreAMO,
                 TransAlign::Size16,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.bus.store16(store_addr, cpu.regs.read(inst.rs2))?;
         }
@@ -112,14 +134,20 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let store_addr = cpu.trans_addr(
                 TransFor::StoreAMO,
                 TransAlign::Size32,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             )?;
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_ADDI => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+                },
             );
         }
         OpecodeKind::OP_SLTI => {
@@ -272,12 +300,16 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             );
         }
         OpecodeKind::OP_ADDW => {
-            cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rs1) + cpu.regs.read(inst.rs2));
+            cpu.regs.write(
+                inst.rd,
+                (cpu.regs.read(inst.rs1) as u32 + cpu.regs.read(inst.rs2) as u32) as u64,
+            );
         }
         OpecodeKind::OP_SUBW => {
-            cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rs1) - cpu.regs.read(inst.rs2));
+            cpu.regs.write(
+                inst.rd,
+                (cpu.regs.read(inst.rs1) as u32 - cpu.regs.read(inst.rs2) as u32) as u64,
+            );
         }
         OpecodeKind::OP_SLLW => {
             cpu.regs
