@@ -69,20 +69,20 @@ impl CSRs {
     fn read_xepc(&self, dist: usize) -> Result<u64, (Option<u64>, TrapCause, String)> {
         if self.csrs[CSRname::misa as usize] >> 2 & 0x1 == 1 {
             // C extension enabled (IALIGN = 16)
-            Ok(self.csrs[dist] & !0b01)
+            Ok(self.csrs[dist].fix2regsz(&self.isa) & !0b01)
         } else {
             // C extension disabled (IALIGN = 32)
-            Ok(self.csrs[dist] & !0b11)
+            Ok(self.csrs[dist].fix2regsz(&self.isa) & !0b11)
         }
     }
 
     pub fn read(&self, src: Option<usize>) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let dist = src.unwrap();
         match dist {
-            0x000 => Ok(self.csrs[0x300] & UMASK),
-            0x100 => Ok(self.csrs[0x300] & SMASK),
+            0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & UMASK),
+            0x100 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & SMASK),
             0x341 | 0x141 => self.read_xepc(dist),
-            _ => Ok(self.csrs[dist]),
+            _ => Ok(self.csrs[dist].fix2regsz(&self.isa)),
         }
     }
 
@@ -114,9 +114,11 @@ impl CSRs {
             Xstatus::TSR => (self.csrs[xstatus] & mask) >> 22 & 0x1,
             Xstatus::SD => (self.csrs[xstatus] & mask) >> 31 & 0x1,
         }
+        .fix2regsz(&self.isa)
     }
 
     pub fn write_xstatus(&mut self, priv_lv: PrivilegedLevel, xfield: Xstatus, data: u64) {
+        let data = data.fix2regsz(&self.isa);
         let xstatus = CSRname::mstatus as usize;
         let mask: u64 = match priv_lv {
             PrivilegedLevel::Machine => MMASK,
