@@ -312,6 +312,8 @@ pub fn parse_imm(
         ]) as i32;
         inst.to_signed_nbit(imm32, 20)
     };
+    let shamt5 = || inst.slice(24, 20) as i32;
+    let shamt6 = || inst.slice(25, 20) as i32;
 
     match opkind {
         OpecodeKind::OP_LUI => Ok(Some(U_type())),
@@ -339,13 +341,16 @@ pub fn parse_imm(
         OpecodeKind::OP_ORI => Ok(Some(I_type())),
         OpecodeKind::OP_ANDI => Ok(Some(I_type())),
         OpecodeKind::OP_SLLI | OpecodeKind::OP_SRLI => match isa {
-            Isa::Rv32 => Ok(Some(inst.slice(24, 20) as i32)), // shamt
-            Isa::Rv64 => Ok(Some(inst.slice(25, 20) as i32)),
+            Isa::Rv32 => Ok(Some(shamt5())), // shamt
+            Isa::Rv64 => Ok(Some(shamt6())),
         },
         OpecodeKind::OP_SRAI => match isa {
-            Isa::Rv32 => Ok(Some(inst.slice(24, 20) as i32)),
-            Isa::Rv64 => Ok(Some(inst.slice(25, 20) as i32)),
+            Isa::Rv32 => Ok(Some(shamt5())), // shamt
+            Isa::Rv64 => Ok(Some(shamt6())),
         },
+        OpecodeKind::OP_SLLIW => Ok(Some(shamt5())),
+        OpecodeKind::OP_SRLIW => Ok(Some(shamt5())),
+        OpecodeKind::OP_SRAIW => Ok(Some(shamt5())),
         OpecodeKind::OP_LWU => Ok(Some(I_type())),
         OpecodeKind::OP_LD => Ok(Some(I_type())),
         OpecodeKind::OP_SD => Ok(Some(S_type())),
