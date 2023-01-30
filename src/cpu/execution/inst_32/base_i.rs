@@ -308,13 +308,13 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_SLLIW => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rs1) << inst.imm.unwrap()) as i32 as u64,
+                ((cpu.regs.read(inst.rs1) as u32) << inst.imm.unwrap()) as i32 as u64,
             );
         }
         OpecodeKind::OP_SRLIW => {
             cpu.regs.write(
                 inst.rd,
-                cpu.regs.read(inst.rs1) >> inst.imm.unwrap() as i32 as u64,
+                (cpu.regs.read(inst.rs1) as u32 >> inst.imm.unwrap()) as i32 as u64,
             );
         }
         OpecodeKind::OP_SRAIW => {
