@@ -328,17 +328,23 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             );
         }
         OpecodeKind::OP_SLLW => {
-            cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rs1) << cpu.regs.read(inst.rs2));
+            cpu.regs.write(
+                inst.rd,
+                (cpu.regs.read(inst.rs1) << (cpu.regs.read(inst.rs2) & 0b11111)) as i32 as i64
+                    as u64,
+            );
         }
         OpecodeKind::OP_SRLW => {
-            cpu.regs
-                .write(inst.rd, cpu.regs.read(inst.rs1) >> cpu.regs.read(inst.rs2));
+            cpu.regs.write(
+                inst.rd,
+                cpu.regs.read(inst.rs1) >> (cpu.regs.read(inst.rs2) & 0b11111),
+            );
         }
         OpecodeKind::OP_SRAW => {
             cpu.regs.write(
                 inst.rd,
-                ((cpu.regs.read(inst.rs1) as i32) >> cpu.regs.read(inst.rs2)) as u32 as u64,
+                ((cpu.regs.read(inst.rs1) as i32) >> (cpu.regs.read(inst.rs2) & 0b11111)) as u32
+                    as u64,
             );
         }
         _ => panic!("not an Base extension"),
