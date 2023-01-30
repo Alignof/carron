@@ -8,6 +8,7 @@ use std::rc::Rc;
 pub enum AddrTransMode {
     Bare,
     Sv32,
+    Sv39,
 }
 
 pub struct Mmu {
@@ -346,6 +347,7 @@ impl Mmu {
                         // check pmp and return transrated address
                         self.pmp(purpose, PPN1 << 22 | PPN0 << 12 | page_off, priv_lv, csrs)
                     }
+                    AddrTransMode::Sv39 => unimplemented!(),
                 }
             }
             // return raw address if privileged level is Machine
