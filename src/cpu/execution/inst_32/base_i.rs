@@ -33,16 +33,30 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 cpu.add2pc(inst.imm.unwrap());
             }
         }
-        OpecodeKind::OP_BLT => {
-            if (cpu.regs.read(inst.rs1) as i32) < (cpu.regs.read(inst.rs2) as i32) {
-                cpu.add2pc(inst.imm.unwrap());
+        OpecodeKind::OP_BLT => match *cpu.isa {
+            Isa::Rv32 => {
+                if (cpu.regs.read(inst.rs1) as i32) < (cpu.regs.read(inst.rs2) as i32) {
+                    cpu.add2pc(inst.imm.unwrap());
+                }
             }
-        }
-        OpecodeKind::OP_BGE => {
-            if (cpu.regs.read(inst.rs1) as i32) >= (cpu.regs.read(inst.rs2) as i32) {
-                cpu.add2pc(inst.imm.unwrap());
+            Isa::Rv64 => {
+                if (cpu.regs.read(inst.rs1) as i64) < (cpu.regs.read(inst.rs2) as i64) {
+                    cpu.add2pc(inst.imm.unwrap());
+                }
             }
-        }
+        },
+        OpecodeKind::OP_BGE => match *cpu.isa {
+            Isa::Rv32 => {
+                if (cpu.regs.read(inst.rs1) as i32) >= (cpu.regs.read(inst.rs2) as i32) {
+                    cpu.add2pc(inst.imm.unwrap());
+                }
+            }
+            Isa::Rv64 => {
+                if (cpu.regs.read(inst.rs1) as i64) >= (cpu.regs.read(inst.rs2) as i64) {
+                    cpu.add2pc(inst.imm.unwrap());
+                }
+            }
+        },
         OpecodeKind::OP_BLTU => {
             if cpu.regs.read(inst.rs1) < cpu.regs.read(inst.rs2) {
                 cpu.add2pc(inst.imm.unwrap());
@@ -278,7 +292,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_ADDIW => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u32 as u64,
+                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as i64 as u64,
             );
         }
         OpecodeKind::OP_SLLIW => {
