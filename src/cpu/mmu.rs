@@ -101,17 +101,6 @@ impl Mmu {
             return Err(self.trap_cause(purpose));
         }
 
-        match purpose {
-            TransFor::Load | TransFor::StoreAMO => {
-                let sum = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SUM);
-                if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
-                    log::debugln!("[SUM] invalid pte_u: {:x}", pte);
-                    return Err(self.trap_cause(purpose));
-                }
-            }
-            _ => (),
-        }
-
         // check the PTE field according to translate purpose
         match purpose {
             TransFor::Fetch | TransFor::Deleg => {
@@ -121,6 +110,13 @@ impl Mmu {
                 }
             }
             TransFor::Load => {
+                // check sum bit
+                let sum = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SUM);
+                if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
+                    log::debugln!("[SUM] invalid pte_u: {:x}", pte);
+                    return Err(self.trap_cause(purpose));
+                }
+
                 // check the X and R bit
                 let mxr = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MXR);
                 if pte_r == 0 && (mxr == 0 || pte_x == 0) {
@@ -129,6 +125,13 @@ impl Mmu {
                 }
             }
             TransFor::StoreAMO => {
+                // check sum bit
+                let sum = csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SUM);
+                if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
+                    log::debugln!("[SUM] invalid pte_u: {:x}", pte);
+                    return Err(self.trap_cause(purpose));
+                }
+
                 if pte_w == 0 || pte_d == 0 {
                     log::debugln!("invalid pte_w: {:x}", pte);
                     return Err(TrapCause::StoreAMOPageFault);
@@ -156,7 +159,7 @@ impl Mmu {
             PrivilegedLevel::Supervisor | PrivilegedLevel::User => {
                 match self.trans_mode {
                     AddrTransMode::Bare => Ok(addr),
-                    AddrTransMode::Sv32 => {
+                    AddrTransMode::Sv32 | AddrTransMode::Sv39 => {
                         const PTESIZE: u64 = 4;
                         const PAGESIZE: u64 = 4096; // 2^12
 
@@ -237,7 +240,6 @@ impl Mmu {
                         // check pmp and return transrated address
                         self.pmp(purpose, PPN1 << 22 | PPN0 << 12 | page_off, priv_lv, csrs)
                     }
-                    AddrTransMode::Sv39 => unimplemented!(),
                 }
             }
             // return raw address if privileged level is Machine
