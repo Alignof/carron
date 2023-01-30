@@ -2,7 +2,8 @@ use crate::bus::dram::Dram;
 use crate::bus::Device;
 use crate::cpu::csr::CSRs;
 use crate::cpu::{CSRname, PrivilegedLevel, TransFor, TrapCause, Xstatus};
-use crate::log;
+use crate::{log, Isa};
+use std::rc::Rc;
 
 pub enum AddrTransMode {
     Bare,
@@ -12,21 +13,30 @@ pub enum AddrTransMode {
 pub struct Mmu {
     ppn: u64,
     trans_mode: AddrTransMode,
+    isa: Rc<Isa>,
 }
 
 impl Mmu {
-    pub fn new() -> Self {
+    pub fn new(isa: Rc<Isa>) -> Self {
         Mmu {
             ppn: 0,
             trans_mode: AddrTransMode::Bare,
+            isa,
         }
     }
 
     fn update_ppn_and_mode(&mut self, csrs: &CSRs) {
         self.ppn = csrs.read(CSRname::satp.wrap()).unwrap() & 0x3FFFFF;
-        self.trans_mode = match csrs.read(CSRname::satp.wrap()).unwrap() >> 31 & 0x1 {
-            1 => AddrTransMode::Sv32,
-            _ => AddrTransMode::Bare,
+        let satp = csrs.read(CSRname::satp.wrap()).unwrap();
+        self.trans_mode = match *self.isa {
+            Isa::Rv32 => match satp >> 31 & 0x1 {
+                1 => AddrTransMode::Sv32,
+                _ => AddrTransMode::Bare,
+            },
+            Isa::Rv64 => match satp >> 60 & 0xf {
+                1 => AddrTransMode::Sv39,
+                _ => AddrTransMode::Bare,
+            },
         };
     }
 

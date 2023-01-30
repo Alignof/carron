@@ -76,7 +76,7 @@ impl Cpu {
             bus,
             regs: reg::Register::new(isa.clone()),
             csrs: csr::CSRs::new(isa.clone()).init(),
-            mmu: mmu::Mmu::new(),
+            mmu: mmu::Mmu::new(isa.clone()),
             reservation_set: HashSet::new(),
             isa,
             priv_lv: PrivilegedLevel::Machine,
