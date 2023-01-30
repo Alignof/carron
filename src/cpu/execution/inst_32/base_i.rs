@@ -271,6 +271,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 TransAlign::Size32,
                 (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
             )?;
+            println!("load_addr: {load_addr:x}");
+            println!("load_64: {:x}", cpu.bus.load_u32(load_addr)?);
             cpu.regs.write(inst.rd, cpu.bus.load_u32(load_addr)?);
         }
         OpecodeKind::OP_LD => {
@@ -298,7 +300,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_SLLIW => {
             cpu.regs.write(
                 inst.rd,
-                cpu.regs.read(inst.rs1) << inst.imm.unwrap() as u32 as u64,
+                (cpu.regs.read(inst.rs1) << inst.imm.unwrap()) as i32 as u64,
             );
         }
         OpecodeKind::OP_SRLIW => {
