@@ -60,8 +60,8 @@ test_kinds=(
 for test_kind in ${test_kinds[@]}; do
     cargo build --release
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
-        #exit_code
-        diff_output
+        exit_code
+        #diff_output
     done;
 done;
 
