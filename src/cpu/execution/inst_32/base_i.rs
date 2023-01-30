@@ -269,7 +269,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size32,
-                cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u64,
+                (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load_u32(load_addr)?);
         }
@@ -285,7 +285,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let store_addr = cpu.trans_addr(
                 TransFor::StoreAMO,
                 TransAlign::Size64,
-                (cpu.regs.read(inst.rs1) as i32 + inst.imm.unwrap()) as u64,
+                (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
             )?;
             cpu.bus.store64(store_addr, cpu.regs.read(inst.rs2))?;
         }
