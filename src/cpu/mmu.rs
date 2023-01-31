@@ -170,14 +170,8 @@ impl Mmu {
                         // first table walk
                         let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
                         log::debugln!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE = match self
-                            .check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())
-                        {
-                            Ok(pte) => pte,
-                            Err(cause) => {
-                                return Err(cause); // exception
-                            }
-                        };
+                        let PTE =
+                            self.check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())?;
                         log::debugln!("PTE(1): 0x{:x}", PTE);
                         let PPN1 = PTE >> 20 & 0xFFF;
                         log::debugln!("PPN1: 0x{:x}", PPN1);
@@ -198,25 +192,17 @@ impl Mmu {
                             // second table walk
                             let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
                             log::debugln!(
-                                "PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE"
-                            );
-                            log::debugln!(
-                                "0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
+                                "PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE\n\
+                                0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
                                 PTE_addr,
                                 (PTE >> 10 & 0x3FFFFF),
                                 PAGESIZE,
                                 VPN0,
                                 PTESIZE
                             );
-                            let PTE = match self
-                                .check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())
-                            {
-                                Ok(pte) => pte,
-                                Err(cause) => {
-                                    return Err(cause); // exception
-                                }
-                            };
 
+                            let PTE =
+                                self.check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())?;
                             log::debugln!("PTE(2): 0x{:x}", PTE);
 
                             // check PTE to be leaf
