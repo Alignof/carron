@@ -271,20 +271,19 @@ impl Mmu {
 
                             ppn[levels] = PTE >> pte_offset[levels] & pte_mask[levels];
 
-                            if levels == 0 {
+                            if levels == usize::MAX {
                                 return Err(self.trap_cause(purpose)); // exception
                             }
                         }
 
                         // check misaligned superpage
-                        if (PTE >> 10 & 0x1FF) != 0 {
+                        if levels > 0 && (PTE >> 10 & ((1 << (pte_offset[levels] - 10)) - 1)) != 0 {
                             return Err(self.trap_cause(purpose)); // exception
                         }
 
                         // check leaf pte and return PPN0
-                        const PTELEAF: usize = 0;
-                        ppn[PTELEAF] = match self.check_leaf_pte(purpose, priv_lv, csrs, PTE) {
-                            Ok(PTE) => PTE >> pte_offset[PTELEAF] & pte_mask[PTELEAF],
+                        ppn[levels] = match self.check_leaf_pte(purpose, priv_lv, csrs, PTE) {
+                            Ok(PTE) => PTE >> pte_offset[levels] & pte_mask[levels],
                             Err(cause) => return Err(cause),
                         };
 
