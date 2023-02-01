@@ -159,6 +159,7 @@ pub fn parse_rd(
         // Quadrant 0
         OpecodeKind::OP_C_ADDI4SPN => Ok(Some(q0_rd)),
         OpecodeKind::OP_C_LW => Ok(Some(q0_rd)),
+        OpecodeKind::OP_C_LD => Ok(Some(q0_rd)),
         // Quadrant 1
         OpecodeKind::OP_C_SRLI => Ok(Some(q1_rd)),
         OpecodeKind::OP_C_SRAI => Ok(Some(q1_rd)),
@@ -167,12 +168,16 @@ pub fn parse_rd(
         OpecodeKind::OP_C_XOR => Ok(Some(q1_rd)),
         OpecodeKind::OP_C_OR => Ok(Some(q1_rd)),
         OpecodeKind::OP_C_AND => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_ADDW => Ok(Some(q1_rd)),
+        OpecodeKind::OP_C_SUBW => Ok(Some(q1_rd)),
         OpecodeKind::OP_C_LI => Ok(Some(q1_wide_rd)),
         OpecodeKind::OP_C_LUI => Ok(Some(q1_wide_rd)),
         OpecodeKind::OP_C_ADDI => Ok(Some(q1_wide_rd)),
+        OpecodeKind::OP_C_ADDIW => Ok(Some(q1_wide_rd)),
         // Quadrant 2
         OpecodeKind::OP_C_SLLI => Ok(Some(q2_rd)),
         OpecodeKind::OP_C_LWSP => Ok(Some(q2_rd)),
+        OpecodeKind::OP_C_LDSP => Ok(Some(q2_rd)),
         OpecodeKind::OP_C_JR => Ok(Some(q2_rd)),
         OpecodeKind::OP_C_MV => Ok(Some(q2_rd)),
         OpecodeKind::OP_C_EBREAK => Ok(Some(q2_rd)),
@@ -195,9 +200,12 @@ pub fn parse_rs1(
     match opkind {
         // Quadrant 0
         OpecodeKind::OP_C_LW => Ok(Some(q0_rs1)),
+        OpecodeKind::OP_C_LD => Ok(Some(q0_rs1)),
         OpecodeKind::OP_C_SW => Ok(Some(q0_rs1)),
+        OpecodeKind::OP_C_SD => Ok(Some(q0_rs1)),
         // Quadrant 1
         OpecodeKind::OP_C_ADDI => Ok(Some(q1_addi_rs1)),
+        OpecodeKind::OP_C_ADDIW => Ok(Some(q1_addi_rs1)),
         OpecodeKind::OP_C_ADDI16SP => Ok(Some(q1_addi_rs1)),
         OpecodeKind::OP_C_SRLI => Ok(Some(q1_rs1)),
         OpecodeKind::OP_C_SRAI => Ok(Some(q1_rs1)),
@@ -229,15 +237,19 @@ pub fn parse_rs2(
     match opkind {
         // Quadrant 0
         OpecodeKind::OP_C_SW => Ok(Some(q0_rs2)),
+        OpecodeKind::OP_C_SD => Ok(Some(q0_rs2)),
         // Quadrant 1
         OpecodeKind::OP_C_SUB => Ok(Some(q1_rs2)),
         OpecodeKind::OP_C_XOR => Ok(Some(q1_rs2)),
         OpecodeKind::OP_C_OR => Ok(Some(q1_rs2)),
         OpecodeKind::OP_C_AND => Ok(Some(q1_rs2)),
+        OpecodeKind::OP_C_SUBW => Ok(Some(q1_rs2)),
+        OpecodeKind::OP_C_ADDW => Ok(Some(q1_rs2)),
         // Quadrant 2
         OpecodeKind::OP_C_MV => Ok(Some(q2_rs2)),
         OpecodeKind::OP_C_ADD => Ok(Some(q2_rs2)),
         OpecodeKind::OP_C_SWSP => Ok(Some(q2_rs2)),
+        OpecodeKind::OP_C_SDSP => Ok(Some(q2_rs2)),
         _ => Ok(None),
     }
 }
@@ -247,6 +259,7 @@ pub fn parse_imm(
     opkind: &OpecodeKind,
 ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
     let q0_uimm = || (inst.slice(12, 10).set(&[5, 4, 3]) | inst.slice(6, 5).set(&[2, 6])) as i32;
+    let q0_uimm_64 = || (inst.slice(12, 10).set(&[5, 4, 3]) | inst.slice(6, 5).set(&[7, 6])) as i32;
     let q0_nzuimm = || inst.slice(12, 5).set(&[5, 4, 9, 8, 7, 6, 2, 3]) as i32;
     let q1_nzuimm =
         || (inst.slice(6, 2).set(&[4, 3, 2, 1, 0]) | inst.slice(12, 12).set(&[5])) as i32;
@@ -279,17 +292,23 @@ pub fn parse_imm(
     let q2_imm = || (inst.slice(6, 2).set(&[4, 3, 2, 1, 0]) | inst.slice(12, 12).set(&[5])) as i32;
     let q2_lwsp_imm =
         || (inst.slice(6, 2).set(&[4, 3, 2, 7, 6]) | inst.slice(12, 12).set(&[5])) as i32;
+    let q2_ldsp_imm =
+        || (inst.slice(6, 2).set(&[4, 3, 8, 7, 6]) | inst.slice(12, 12).set(&[5])) as i32;
     let q2_swsp_imm = || inst.slice(12, 7).set(&[5, 4, 3, 2, 7, 6]) as i32;
+    let q2_sdsp_imm = || inst.slice(12, 7).set(&[5, 4, 3, 8, 7, 6]) as i32;
 
     match opkind {
         // Quadrant0
         OpecodeKind::OP_C_ADDI4SPN => Ok(Some(q0_nzuimm())),
         OpecodeKind::OP_C_LW => Ok(Some(q0_uimm())),
+        OpecodeKind::OP_C_LD => Ok(Some(q0_uimm_64())),
         OpecodeKind::OP_C_SW => Ok(Some(q0_uimm())),
+        OpecodeKind::OP_C_SD => Ok(Some(q0_uimm_64())),
         // Quadrant1
         OpecodeKind::OP_C_NOP => Ok(Some(q1_nzimm())),
         OpecodeKind::OP_C_ADDI => Ok(Some(q1_nzimm())),
         OpecodeKind::OP_C_JAL => Ok(Some(q1_j_imm())),
+        OpecodeKind::OP_C_ADDIW => Ok(Some(q1_imm())),
         OpecodeKind::OP_C_LI => Ok(Some(q1_imm())),
         OpecodeKind::OP_C_ADDI16SP => Ok(Some(q1_16sp_nzimm())),
         OpecodeKind::OP_C_LUI => Ok(Some(q1_lui_imm())),
@@ -302,7 +321,9 @@ pub fn parse_imm(
         // Quadrant2
         OpecodeKind::OP_C_SLLI => Ok(Some(q2_imm())),
         OpecodeKind::OP_C_LWSP => Ok(Some(q2_lwsp_imm())),
+        OpecodeKind::OP_C_LDSP => Ok(Some(q2_ldsp_imm())),
         OpecodeKind::OP_C_SWSP => Ok(Some(q2_swsp_imm())),
+        OpecodeKind::OP_C_SDSP => Ok(Some(q2_sdsp_imm())),
         _ => Ok(None),
     }
 }
