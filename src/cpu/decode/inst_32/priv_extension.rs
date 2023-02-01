@@ -16,7 +16,7 @@ pub fn parse_opecode(inst: u32) -> Result<OpecodeKind, (Option<u64>, TrapCause, 
             _ => Err((
                 Some(u64::from(inst)),
                 TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
+                format!("opecode decoding failed in priv extension, {inst:b}"),
             )),
         },
     }

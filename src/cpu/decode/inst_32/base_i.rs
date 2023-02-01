@@ -12,7 +12,7 @@ pub fn parse_opecode(inst: u32, isa: Isa) -> Result<OpecodeKind, (Option<u64>, T
         Err((
             Some(u64::from(inst)),
             TrapCause::IllegalInst,
-            format!("opecode decoding failed, {inst:b}"),
+            format!("opecode decoding failed in base, {inst:b}"),
         ))
     };
 
