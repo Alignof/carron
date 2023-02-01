@@ -121,6 +121,17 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 cpu.regs.write(inst.rd, (rs1 / rs2) as i32 as u64)
             }
         }
+        OpecodeKind::OP_REMW => {
+            let rs1 = rs1 as i32;
+            let rs2 = rs2 as i32;
+            if rs2 == 0 {
+                cpu.regs.write(inst.rd, rs1 as u64);
+            } else if rs1 == i32::MIN && rs2 == -1 {
+                cpu.regs.write(inst.rd, 0);
+            } else {
+                cpu.regs.write(inst.rd, (rs1 % rs2) as i32 as u64);
+            }
+        }
         OpecodeKind::OP_DIVUW => {
             if rs2 == 0 {
                 cpu.regs.write(inst.rd, (2i32.pow(32) - 1) as u64);
