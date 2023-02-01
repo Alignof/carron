@@ -108,6 +108,14 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.regs
                 .write(inst.rd, (rs1 as i32 * rs2 as i32) as i64 as u64);
         }
+        OpecodeKind::OP_DIVUW => {
+            if rs2 == 0 {
+                cpu.regs.write(inst.rd, (2i32.pow(32) - 1) as u64);
+            } else {
+                cpu.regs
+                    .write(inst.rd, (rs1 as u32 / rs2 as u32) as i32 as u64);
+            }
+        }
         _ => panic!("not an M extension"),
     }
 
