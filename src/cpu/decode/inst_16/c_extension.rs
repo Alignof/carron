@@ -12,7 +12,7 @@ fn quadrant0(
         0b010 => Ok(OpecodeKind::OP_C_LW),
         0b011 => only_rv64(OpecodeKind::OP_C_LD, isa),
         0b110 => Ok(OpecodeKind::OP_C_SW),
-        0b111 => only_rv64(OpecodeKind::OP_C_LD, isa),
+        0b111 => only_rv64(OpecodeKind::OP_C_SD, isa),
         _ => Err((
             Some(u64::from(inst)),
             TrapCause::IllegalInst,
@@ -216,6 +216,8 @@ pub fn parse_rs1(
         OpecodeKind::OP_C_AND => Ok(Some(q1_rs1)),
         OpecodeKind::OP_C_BEQZ => Ok(Some(q1_rs1)),
         OpecodeKind::OP_C_BNEZ => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_SUBW => Ok(Some(q1_rs1)),
+        OpecodeKind::OP_C_ADDW => Ok(Some(q1_rs1)),
         // Quadrant 2
         OpecodeKind::OP_C_SLLI => Ok(Some(q2_rs1)),
         OpecodeKind::OP_C_JR => Ok(Some(q2_rs1)),
