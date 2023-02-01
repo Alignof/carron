@@ -70,9 +70,16 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_DIV => {
             if rs2 == 0 {
                 cpu.regs.write(inst.rd, u64::MAX); // -1
+            } else if rs1 as i64 == i64::MIN && rs2 as i64 == -1 {
+                cpu.regs.write(inst.rd, rs1);
             } else {
-                cpu.regs
-                    .write(inst.rd, (rs1 as i32 as i64 / rs2 as i32 as i64) as u64);
+                cpu.regs.write(
+                    inst.rd,
+                    match *cpu.isa {
+                        Isa::Rv32 => (rs1 as i32 as i64 / rs2 as i32 as i64) as u64,
+                        Isa::Rv64 => (rs1 as i64 / rs2 as i64) as u64,
+                    },
+                )
             }
         }
         OpecodeKind::OP_DIVU => {
