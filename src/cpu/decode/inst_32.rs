@@ -120,7 +120,11 @@ impl DecodeUtil for u32 {
                 0b0000001 => Extensions::M,
                 _ => Extensions::BaseI,
             },
-            0b0111011 => Extensions::M,
+            0b0111011 => match funct7 {
+                0b0000000 | 0b0100000 => Extensions::BaseI,
+                0b0000001 => Extensions::M,
+                _ => unreachable!(),
+            },
             0b1110011 => match funct3 {
                 0b000 => match funct7 {
                     0b0000000 => Extensions::BaseI,
