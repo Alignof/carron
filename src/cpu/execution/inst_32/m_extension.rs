@@ -140,6 +140,14 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                     .write(inst.rd, (rs1 as u32 / rs2 as u32) as i32 as u64);
             }
         }
+        OpecodeKind::OP_REMUW => {
+            if rs2 == 0 {
+                cpu.regs.write(inst.rd, rs1 as i32 as u64);
+            } else {
+                cpu.regs
+                    .write(inst.rd, (rs1 as u32 % rs2 as u32) as i32 as u64);
+            }
+        }
         _ => panic!("not an M extension"),
     }
 
