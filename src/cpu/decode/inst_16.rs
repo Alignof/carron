@@ -22,9 +22,9 @@ impl Decode for u16 {
         })
     }
 
-    fn parse_opecode(self, _isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+    fn parse_opecode(self, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
         match self.extension() {
-            Extensions::C => c_extension::parse_opecode(self),
+            Extensions::C => c_extension::parse_opecode(self, isa),
             _ => panic!("It isn't compressed instruction"),
         }
     }

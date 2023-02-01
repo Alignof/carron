@@ -1,12 +1,18 @@
-use crate::cpu::decode::DecodeUtil;
+use crate::cpu::decode::{only_rv64, DecodeUtil};
 use crate::cpu::instruction::OpecodeKind;
-use crate::cpu::TrapCause;
+use crate::cpu::{Isa, TrapCause};
 
-fn quadrant0(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+fn quadrant0(
+    inst: u16,
+    opmap: &u8,
+    isa: Isa,
+) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     match opmap {
         0b000 => Ok(OpecodeKind::OP_C_ADDI4SPN),
         0b010 => Ok(OpecodeKind::OP_C_LW),
+        0b011 => only_rv64(OpecodeKind::OP_C_LD, isa),
         0b110 => Ok(OpecodeKind::OP_C_SW),
+        0b111 => only_rv64(OpecodeKind::OP_C_LD, isa),
         _ => Err((
             Some(u64::from(inst)),
             TrapCause::IllegalInst,
@@ -15,17 +21,32 @@ fn quadrant0(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCau
     }
 }
 
-fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+fn quadrant1(
+    inst: u16,
+    opmap: &u8,
+    isa: Isa,
+) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let sr_flag: u8 = inst.slice(11, 10) as u8;
     let lo_flag: u8 = inst.slice(6, 5) as u8;
     let mi_flag: u8 = inst.slice(11, 7) as u8;
+    let bit_12: u8 = inst.slice(12, 12) as u8;
+    let illegal_inst_exception = || {
+        Err((
+            Some(u64::from(inst)),
+            TrapCause::IllegalInst,
+            format!("opecode decoding failed in c extension, {inst:b}"),
+        ))
+    };
 
     match opmap {
         0b000 => match mi_flag {
             0b00000 => Ok(OpecodeKind::OP_C_NOP),
             _ => Ok(OpecodeKind::OP_C_ADDI),
         },
-        0b001 => Ok(OpecodeKind::OP_C_JAL),
+        0b001 => match isa {
+            Isa::Rv32 => Ok(OpecodeKind::OP_C_JAL),
+            Isa::Rv64 => Ok(OpecodeKind::OP_C_ADDIW),
+        },
         0b010 => Ok(OpecodeKind::OP_C_LI),
         0b011 => match mi_flag {
             0b00010 => Ok(OpecodeKind::OP_C_ADDI16SP),
@@ -35,35 +56,35 @@ fn quadrant1(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCau
             0b00 => Ok(OpecodeKind::OP_C_SRLI),
             0b01 => Ok(OpecodeKind::OP_C_SRAI),
             0b10 => Ok(OpecodeKind::OP_C_ANDI),
-            0b11 => match lo_flag {
-                0b00 => Ok(OpecodeKind::OP_C_SUB),
-                0b01 => Ok(OpecodeKind::OP_C_XOR),
-                0b10 => Ok(OpecodeKind::OP_C_OR),
-                0b11 => Ok(OpecodeKind::OP_C_AND),
-                _ => Err((
-                    Some(u64::from(inst)),
-                    TrapCause::IllegalInst,
-                    format!("opecode decoding failed, {inst:b}"),
-                )),
+            0b11 => match bit_12 {
+                0b0 => match lo_flag {
+                    0b00 => Ok(OpecodeKind::OP_C_SUB),
+                    0b01 => Ok(OpecodeKind::OP_C_XOR),
+                    0b10 => Ok(OpecodeKind::OP_C_OR),
+                    0b11 => Ok(OpecodeKind::OP_C_AND),
+                    _ => illegal_inst_exception(),
+                },
+                0b1 => match lo_flag {
+                    0b00 => only_rv64(OpecodeKind::OP_C_SUBW, isa),
+                    0b01 => only_rv64(OpecodeKind::OP_C_ADDW, isa),
+                    _ => illegal_inst_exception(),
+                },
+                _ => unreachable!(),
             },
-            _ => Err((
-                Some(u64::from(inst)),
-                TrapCause::IllegalInst,
-                format!("opecode decoding failed, {inst:b}"),
-            )),
+            _ => illegal_inst_exception(),
         },
         0b101 => Ok(OpecodeKind::OP_C_J),
         0b110 => Ok(OpecodeKind::OP_C_BEQZ),
         0b111 => Ok(OpecodeKind::OP_C_BNEZ),
-        _ => Err((
-            Some(u64::from(inst)),
-            TrapCause::IllegalInst,
-            format!("opecode decoding failed, {inst:b}"),
-        )),
+        _ => illegal_inst_exception(),
     }
 }
 
-fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+fn quadrant2(
+    inst: u16,
+    opmap: &u8,
+    isa: Isa,
+) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let lo_flag: u8 = inst.slice(6, 2) as u8;
     let mi_flag: u8 = inst.slice(11, 7) as u8;
     let hi_flag: u8 = inst.slice(12, 12) as u8;
@@ -71,6 +92,7 @@ fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCau
     match opmap {
         0b000 => Ok(OpecodeKind::OP_C_SLLI),
         0b010 => Ok(OpecodeKind::OP_C_LWSP),
+        0b011 => only_rv64(OpecodeKind::OP_C_LDSP, isa),
         0b100 => match hi_flag {
             0b0 => match lo_flag {
                 0b0 => Ok(OpecodeKind::OP_C_JR),
@@ -90,6 +112,7 @@ fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCau
             )),
         },
         0b110 => Ok(OpecodeKind::OP_C_SWSP),
+        0b111 => only_rv64(OpecodeKind::OP_C_SDSP, isa),
         _ => Err((
             Some(u64::from(inst)),
             TrapCause::IllegalInst,
@@ -98,7 +121,7 @@ fn quadrant2(inst: u16, opmap: &u8) -> Result<OpecodeKind, (Option<u64>, TrapCau
     }
 }
 
-pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+pub fn parse_opecode(inst: u16, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
     let opmap: u8 = inst.slice(15, 13) as u8;
     let quadrant: u8 = inst.slice(1, 0) as u8;
 
@@ -111,9 +134,9 @@ pub fn parse_opecode(inst: u16) -> Result<OpecodeKind, (Option<u64>, TrapCause, 
     }
 
     match quadrant {
-        0b00 => quadrant0(inst, &opmap),
-        0b01 => quadrant1(inst, &opmap),
-        0b10 => quadrant2(inst, &opmap),
+        0b00 => quadrant0(inst, &opmap, isa),
+        0b01 => quadrant1(inst, &opmap, isa),
+        0b10 => quadrant2(inst, &opmap, isa),
         _ => Err((
             Some(u64::from(inst)),
             TrapCause::IllegalInst,
