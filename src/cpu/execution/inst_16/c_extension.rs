@@ -26,7 +26,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let load_addr = cpu.trans_addr(
                 TransFor::Load,
                 TransAlign::Size32,
-                (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u64,
+                (cpu.regs.read(Some(REG_SP)) as i64 + inst.imm.unwrap() as i64) as u64,
             )?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
         }
@@ -48,7 +48,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let store_addr = cpu.trans_addr(
                 TransFor::StoreAMO,
                 TransAlign::Size32,
-                (cpu.regs.read(Some(REG_SP)) as i32 + inst.imm.unwrap()) as u64,
+                (cpu.regs.read(Some(REG_SP)) as i64 + inst.imm.unwrap() as i64) as u64,
             )?;
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         }
@@ -176,19 +176,19 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_C_SUBW => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rs1) as u32 - cpu.regs.read(inst.rs2) as u32) as u64,
+                (cpu.regs.read(inst.rs1) as i32 - cpu.regs.read(inst.rs2) as i32) as i64 as u64,
             );
         }
         OpecodeKind::OP_C_ADDW => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rs1) as u32 + cpu.regs.read(inst.rs2) as u32) as u64,
+                (cpu.regs.read(inst.rs1) as i32 + cpu.regs.read(inst.rs2) as i32) as i64 as u64,
             );
         }
         OpecodeKind::OP_C_ADDIW => {
             cpu.regs.write(
                 inst.rd,
-                cpu.regs.read(inst.rd) + inst.imm.unwrap() as u32 as u64,
+                (cpu.regs.read(inst.rd) as i32 + inst.imm.unwrap()) as u32 as u64,
             );
         }
         OpecodeKind::OP_C_NOP => { /* NOP */ }
