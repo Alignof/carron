@@ -140,6 +140,57 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_C_EBREAK => {
             panic!("not yet implemented: OP_C_EBREAK");
         }
+        // -- rv64 --
+        OpecodeKind::OP_C_LD => {
+            let load_addr = cpu.trans_addr(
+                TransFor::Load,
+                TransAlign::Size64,
+                (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+            )?;
+            cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
+        }
+        OpecodeKind::OP_C_LDSP => {
+            let load_addr = cpu.trans_addr(
+                TransFor::Load,
+                TransAlign::Size64,
+                (cpu.regs.read(Some(REG_SP)) as i64 + inst.imm.unwrap() as i64) as u64,
+            )?;
+            cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
+        }
+        OpecodeKind::OP_C_SD => {
+            let store_addr = cpu.trans_addr(
+                TransFor::StoreAMO,
+                TransAlign::Size64,
+                (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64,
+            )?;
+            cpu.bus.store64(store_addr, cpu.regs.read(inst.rs2))?;
+        }
+        OpecodeKind::OP_C_SDSP => {
+            let store_addr = cpu.trans_addr(
+                TransFor::StoreAMO,
+                TransAlign::Size32,
+                (cpu.regs.read(Some(REG_SP)) as i64 + inst.imm.unwrap() as i64) as u64,
+            )?;
+            cpu.bus.store64(store_addr, cpu.regs.read(inst.rs2))?;
+        }
+        OpecodeKind::OP_C_SUBW => {
+            cpu.regs.write(
+                inst.rd,
+                (cpu.regs.read(inst.rs1) as u32 - cpu.regs.read(inst.rs2) as u32) as u64,
+            );
+        }
+        OpecodeKind::OP_C_ADDW => {
+            cpu.regs.write(
+                inst.rd,
+                (cpu.regs.read(inst.rs1) as u32 + cpu.regs.read(inst.rs2) as u32) as u64,
+            );
+        }
+        OpecodeKind::OP_C_ADDIW => {
+            cpu.regs.write(
+                inst.rd,
+                cpu.regs.read(inst.rd) + inst.imm.unwrap() as u32 as u64,
+            );
+        }
         OpecodeKind::OP_C_NOP => { /* NOP */ }
         _ => panic!("not a compressed Instruction"),
     }
