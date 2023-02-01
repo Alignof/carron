@@ -159,6 +159,14 @@ pub enum OpecodeKind {
     OP_C_JALR,
     OP_C_ADD,
     OP_C_SWSP,
+    //-- rv64 --
+    OP_C_LD,
+    OP_C_SD,
+    OP_C_ADDIW,
+    OP_C_SUBW,
+    OP_C_ADDW,
+    OP_C_LDSP,
+    OP_C_SDSP,
 }
 
 impl Instruction {
@@ -315,6 +323,13 @@ impl Instruction {
             OpecodeKind::OP_C_JALR => Extensions::C,
             OpecodeKind::OP_C_ADD => Extensions::C,
             OpecodeKind::OP_C_SWSP => Extensions::C,
+            OpecodeKind::OP_C_LD => Extensions::C,
+            OpecodeKind::OP_C_SD => Extensions::C,
+            OpecodeKind::OP_C_ADDIW => Extensions::C,
+            OpecodeKind::OP_C_SUBW => Extensions::C,
+            OpecodeKind::OP_C_ADDW => Extensions::C,
+            OpecodeKind::OP_C_LDSP => Extensions::C,
+            OpecodeKind::OP_C_SDSP => Extensions::C,
         }
     }
 
@@ -444,6 +459,13 @@ impl Instruction {
             OpecodeKind::OP_C_JALR => "C.jalr",
             OpecodeKind::OP_C_ADD => "C.add",
             OpecodeKind::OP_C_SWSP => "C.swsp",
+            OpecodeKind::OP_C_LD => "C.ld",
+            OpecodeKind::OP_C_SD => "C.sd",
+            OpecodeKind::OP_C_ADDIW => "C.addiw",
+            OpecodeKind::OP_C_SUBW => "C.subw",
+            OpecodeKind::OP_C_ADDW => "C.addw",
+            OpecodeKind::OP_C_LDSP => "C.ldsp",
+            OpecodeKind::OP_C_SDSP => "C.sdsp",
         }
     }
 }
