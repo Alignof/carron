@@ -132,7 +132,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                format!("addr out of range at loat8: {addr:#x}"),
+                format!("addr out of range at load8: {addr:#x}"),
             ))
         }
     }
@@ -148,7 +148,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                format!("addr out of range at loat16: {addr:#x}"),
+                format!("addr out of range at load16: {addr:#x}"),
             ))
         }
     }
@@ -164,7 +164,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                format!("addr out of range at loat32: {addr:#x}"),
+                format!("addr out of range at load32: {addr:#x}"),
             ))
         }
     }
@@ -180,7 +180,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                format!("addr out of range at loat64: {addr:#x}"),
+                format!("addr out of range at load64: {addr:#x}"),
             ))
         }
     }
@@ -196,7 +196,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                format!("addr out of range at loat_u8: {addr:#x}"),
+                format!("addr out of range at load_u8: {addr:#x}"),
             ))
         }
     }
@@ -212,7 +212,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                format!("addr out of range at loat_u16: {addr:#x}"),
+                format!("addr out of range at load_u16: {addr:#x}"),
             ))
         }
     }
@@ -228,7 +228,7 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadPageFault,
-                format!("addr out of range at loat_u32: {addr:#x}"),
+                format!("addr out of range at load_u32: {addr:#x}"),
             ))
         }
     }
