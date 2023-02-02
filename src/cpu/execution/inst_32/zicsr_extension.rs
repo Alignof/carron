@@ -68,8 +68,31 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
     Ok(())
 }
 
+fn check_warl(cpu: &mut Cpu, dst: usize, original: u64) {
+    let misa = CSRname::misa as usize;
+    let mstatus = CSRname::mstatus as usize;
+
+    match dst {
+        misa => {
+            if cpu.csrs.read(CSRname::misa.wrap()).unwrap() >> 2 & 0x1 == 0 && cpu.pc % 4 != 0 {
+                cpu.csrs.bitset(Some(dst), 0b100);
+            }
+        }
+        mstatus => {
+            if cpu
+                .csrs
+                .read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL)
+                == 0b00
+            {
+                cpu.csrs.bitset(Some(dst), ((original >> 32) & 0b11) << 32);
+            }
+        }
+    }
+}
+
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     check_accessible(cpu, inst.rs2.unwrap())?;
+    let original = cpu.csrs.read(inst.rs2)?;
 
     match inst.opc {
         OpecodeKind::OP_CSRRW => {
@@ -102,12 +125,6 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         _ => panic!("not an Zicsr extension"),
     }
 
-    if inst.rs2 == CSRname::misa.wrap()
-        && cpu.csrs.read(CSRname::misa.wrap())? >> 2 & 0x1 == 0
-        && cpu.pc % 4 != 0
-    {
-        cpu.csrs.bitset(inst.rs2, 0b100);
-    }
-
+    check_warl(cpu, inst.rs2.unwrap(), original);
     Ok(())
 }
