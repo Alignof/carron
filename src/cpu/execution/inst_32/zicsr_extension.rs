@@ -69,16 +69,16 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
 }
 
 fn check_warl(cpu: &mut Cpu, dst: usize, original: u64) {
-    let misa = CSRname::misa as usize;
-    let mstatus = CSRname::mstatus as usize;
+    const MISA: usize = CSRname::misa as usize;
+    const MSTATUS: usize = CSRname::mstatus as usize;
 
     match dst {
-        misa => {
+        MISA => {
             if cpu.csrs.read(CSRname::misa.wrap()).unwrap() >> 2 & 0x1 == 0 && cpu.pc % 4 != 0 {
                 cpu.csrs.bitset(Some(dst), 0b100);
             }
         }
-        mstatus => {
+        MSTATUS => {
             if cpu
                 .csrs
                 .read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL)
@@ -87,6 +87,7 @@ fn check_warl(cpu: &mut Cpu, dst: usize, original: u64) {
                 cpu.csrs.bitset(Some(dst), ((original >> 32) & 0b11) << 32);
             }
         }
+        _ => (),
     }
 }
 
