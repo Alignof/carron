@@ -26,14 +26,14 @@ impl CSRs {
     }
 
     pub fn init(mut self) -> Self {
-        self.write(CSRname::misa.wrap(), 0x40141105);
         match *self.isa {
-            Isa::Rv32 => self,
+            Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105),
             Isa::Rv64 => {
+                self.write(CSRname::misa.wrap(), 0x8000000000141105);
                 self.write(CSRname::mstatus.wrap(), 0x0000000a00000000);
-                self
             }
         }
+        self
     }
 
     fn umask(&self) -> u64 {
