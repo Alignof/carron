@@ -112,7 +112,10 @@ impl CSRs {
             Xstatus::TVM => (self.csrs[xstatus] & mask) >> 20 & 0x1,
             Xstatus::TW => (self.csrs[xstatus] & mask) >> 21 & 0x1,
             Xstatus::TSR => (self.csrs[xstatus] & mask) >> 22 & 0x1,
-            Xstatus::SD => (self.csrs[xstatus] & mask) >> 31 & 0x1,
+            Xstatus::SD => match *self.isa {
+                Isa::Rv32 => (self.csrs[xstatus] & mask) >> 31 & 0x1,
+                Isa::Rv64 => (self.csrs[xstatus] & mask) >> 63 & 0x1,
+            },
         }
         .fix2regsz(&self.isa)
     }
@@ -193,8 +196,14 @@ impl CSRs {
                     ((self.csrs[xstatus] & !(0x1 << 22)) | ((data & 0x1) << 22)) & mask
             }
             Xstatus::SD => {
-                self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 31)) | ((data & 0x1) << 31)) & mask
+                self.csrs[xstatus] = match *self.isa {
+                    Isa::Rv32 => {
+                        ((self.csrs[xstatus] & !(0x1 << 31)) | ((data & 0x1) << 31)) & mask
+                    }
+                    Isa::Rv64 => {
+                        ((self.csrs[xstatus] & !(0x1 << 63)) | ((data & 0x1) << 63)) & mask
+                    }
+                }
             }
         }
     }
@@ -259,5 +268,5 @@ pub enum Xstatus {
     TVM,  // 20
     TW,   // 21
     TSR,  // 22
-    SD,   // 31
+    SD,   // XLEN - 1
 }
