@@ -5,10 +5,6 @@ use crate::Isa;
 use breakpoint::Triggers;
 use std::rc::Rc;
 
-const UMASK: u64 = 0b10000000000011010111100100110011;
-const SMASK: u64 = 0b10000000000011010111100100110011;
-const MMASK: u64 = 0b10000000011111111111100110111011;
-
 pub struct CSRs {
     csrs: [u64; 4096],
     triggers: Triggers,
@@ -31,15 +27,42 @@ impl CSRs {
 
     pub fn init(mut self) -> Self {
         self.write(CSRname::misa.wrap(), 0x40141105);
-        self
+        match *self.isa {
+            Isa::Rv32 => self,
+            Isa::Rv64 => {
+                self.write(CSRname::mstatus.wrap(), 0x0000000a00000000);
+                self
+            }
+        }
+    }
+
+    fn umask(&self) -> u64 {
+        match *self.isa {
+            Isa::Rv32 => 0b10000000000011010111100100110011,
+            Isa::Rv64 => 0b100000000000000000000000000111100000000000011010111100100110011,
+        }
+    }
+
+    fn smask(&self) -> u64 {
+        match *self.isa {
+            Isa::Rv32 => 0b10000000000011010111100100110011,
+            Isa::Rv64 => 0b100000000000000000000000000111100000000000011010111100100110011,
+        }
+    }
+
+    fn mmask(&self) -> u64 {
+        match *self.isa {
+            Isa::Rv32 => 0b10000000011111111111100110111011,
+            Isa::Rv64 => 0b100000000000000000000000000111100000000011111111111100110111011,
+        }
     }
 
     pub fn bitset(&mut self, dist: Option<usize>, src: u64) {
         let mask = src.fix2regsz(&self.isa);
         if mask != 0 {
             match dist.unwrap() {
-                0x000 => self.csrs[0x300] |= mask & UMASK,
-                0x100 => self.csrs[0x300] |= mask & SMASK,
+                0x000 => self.csrs[0x300] |= mask & self.umask(),
+                0x100 => self.csrs[0x300] |= mask & self.smask(),
                 _ => self.csrs[dist.unwrap()] |= mask,
             }
         }
@@ -49,8 +72,8 @@ impl CSRs {
         let mask = src.fix2regsz(&self.isa);
         if mask != 0 {
             match dist.unwrap() {
-                0x000 => self.csrs[0x300] &= !(mask & UMASK),
-                0x100 => self.csrs[0x300] &= !(mask & SMASK),
+                0x000 => self.csrs[0x300] &= !(mask & self.umask()),
+                0x100 => self.csrs[0x300] &= !(mask & self.smask()),
                 _ => self.csrs[dist.unwrap()] &= !mask,
             }
         }
@@ -59,8 +82,8 @@ impl CSRs {
     pub fn write(&mut self, dist: Option<usize>, src: u64) {
         let src = src.fix2regsz(&self.isa);
         match dist.unwrap() {
-            0x000 => self.csrs[0x300] = src & UMASK,
-            0x100 => self.csrs[0x300] = src & SMASK,
+            0x000 => self.csrs[0x300] = src & self.umask(),
+            0x100 => self.csrs[0x300] = src & self.smask(),
             other => self.csrs[other] = src,
         }
         self.update_triggers(dist.unwrap(), src);
@@ -79,8 +102,8 @@ impl CSRs {
     pub fn read(&self, src: Option<usize>) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let dist = src.unwrap();
         match dist {
-            0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & UMASK),
-            0x100 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & SMASK),
+            0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.umask()),
+            0x100 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.smask()),
             0x341 | 0x141 => self.read_xepc(dist),
             _ => Ok(self.csrs[dist].fix2regsz(&self.isa)),
         }
@@ -89,9 +112,9 @@ impl CSRs {
     pub fn read_xstatus(&self, priv_lv: PrivilegedLevel, xfield: Xstatus) -> u64 {
         let xstatus = CSRname::mstatus as usize;
         let mask: u64 = match priv_lv {
-            PrivilegedLevel::Machine => MMASK,
-            PrivilegedLevel::Supervisor => SMASK,
-            PrivilegedLevel::User => UMASK,
+            PrivilegedLevel::Machine => self.mmask(),
+            PrivilegedLevel::Supervisor => self.smask(),
+            PrivilegedLevel::User => self.umask(),
             _ => panic!("PrivilegedLevel 0x3 is Reserved."),
         };
 
@@ -112,6 +135,14 @@ impl CSRs {
             Xstatus::TVM => (self.csrs[xstatus] & mask) >> 20 & 0x1,
             Xstatus::TW => (self.csrs[xstatus] & mask) >> 21 & 0x1,
             Xstatus::TSR => (self.csrs[xstatus] & mask) >> 22 & 0x1,
+            Xstatus::UXL => match *self.isa {
+                Isa::Rv32 => panic!("attempting write to UXL in rv32"),
+                Isa::Rv64 => (self.csrs[xstatus] & mask) >> 32 & 0x3,
+            },
+            Xstatus::SXL => match *self.isa {
+                Isa::Rv32 => panic!("attempting write to SXL in rv32"),
+                Isa::Rv64 => (self.csrs[xstatus] & mask) >> 34 & 0x3,
+            },
             Xstatus::SD => match *self.isa {
                 Isa::Rv32 => (self.csrs[xstatus] & mask) >> 31 & 0x1,
                 Isa::Rv64 => (self.csrs[xstatus] & mask) >> 63 & 0x1,
@@ -124,9 +155,9 @@ impl CSRs {
         let data = data.fix2regsz(&self.isa);
         let xstatus = CSRname::mstatus as usize;
         let mask: u64 = match priv_lv {
-            PrivilegedLevel::Machine => MMASK,
-            PrivilegedLevel::Supervisor => SMASK,
-            PrivilegedLevel::User => UMASK,
+            PrivilegedLevel::Machine => self.mmask(),
+            PrivilegedLevel::Supervisor => self.smask(),
+            PrivilegedLevel::User => self.umask(),
             _ => panic!("PrivilegedLevel 0x3 is Reserved."),
         };
 
@@ -205,6 +236,22 @@ impl CSRs {
                     }
                 }
             }
+            Xstatus::UXL => {
+                self.csrs[xstatus] = match *self.isa {
+                    Isa::Rv32 => panic!("attempting write to UXL in rv32"),
+                    Isa::Rv64 => {
+                        ((self.csrs[xstatus] & !(0x3 << 32)) | ((data & 0x3) << 32)) & mask
+                    }
+                }
+            }
+            Xstatus::SXL => {
+                self.csrs[xstatus] = match *self.isa {
+                    Isa::Rv32 => panic!("attempting write to SXL in rv32"),
+                    Isa::Rv64 => {
+                        ((self.csrs[xstatus] & !(0x3 << 34)) | ((data & 0x3) << 34)) & mask
+                    }
+                }
+            }
         }
     }
 }
@@ -268,5 +315,7 @@ pub enum Xstatus {
     TVM,  // 20
     TW,   // 21
     TSR,  // 22
+    UXL,  // 32-33 (rv64 only)
+    SXL,  // 33-34 (rv64 only)
     SD,   // XLEN - 1
 }
