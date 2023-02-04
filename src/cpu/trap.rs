@@ -225,7 +225,9 @@ impl Cpu {
             | TrapCause::SmodeEcall
             | TrapCause::MmodeEcall
             | TrapCause::LoadAddrMisaligned
+            | TrapCause::LoadAccessFault
             | TrapCause::StoreAMOAddrMisaligned
+            | TrapCause::StoreAMOAccessFault
             | TrapCause::InstPageFault
             | TrapCause::LoadPageFault
             | TrapCause::StoreAMOPageFault => {
