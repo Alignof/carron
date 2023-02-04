@@ -44,7 +44,7 @@ impl Emulator {
             match self.cpu.exec_one_cycle() {
                 Ok(()) => (),
                 Err((addr, cause, msg)) => {
-                    log::infoln!("[exception] {}", msg);
+                    log::infoln!("[exception: {:?}] {}", cause, msg);
                     self.cpu.trap(addr.unwrap_or(self.cpu.pc), cause);
                 }
             }
