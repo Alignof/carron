@@ -120,6 +120,8 @@ impl Cpu {
     }
 
     fn interrupt(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
+        let mcause_prev = self.csrs.read(CSRname::mcause.wrap()).unwrap();
+
         self.csrs
             .write(CSRname::mcause.wrap(), cause_of_trap as u64);
         self.csrs.write(CSRname::mepc.wrap(), self.pc);
@@ -154,7 +156,7 @@ impl Cpu {
 
             let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
             let new_pc = if mtvec & 0b1 == 1 {
-                (mtvec - 1) + 4 * cause_of_trap as u64
+                (mtvec - 1) + 4 * mcause_prev.trailing_zeros() as u64
             } else {
                 mtvec
             };
