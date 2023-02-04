@@ -1,6 +1,7 @@
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::{Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause};
+use crate::Isa;
 
 fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc)?;
@@ -78,15 +79,18 @@ fn check_warl(cpu: &mut Cpu, dst: usize, original: u64) {
                 cpu.csrs.bitset(Some(dst), 0b100);
             }
         }
-        MSTATUS => {
-            if cpu
-                .csrs
-                .read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL)
-                == 0b00
-            {
-                cpu.csrs.bitset(Some(dst), ((original >> 32) & 0b11) << 32);
+        MSTATUS => match *cpu.isa {
+            Isa::Rv32 => (),
+            Isa::Rv64 => {
+                if cpu
+                    .csrs
+                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL)
+                    == 0b00
+                {
+                    cpu.csrs.bitset(Some(dst), ((original >> 32) & 0b11) << 32);
+                }
             }
-        }
+        },
         _ => (),
     }
 }

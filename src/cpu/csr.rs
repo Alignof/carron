@@ -136,11 +136,11 @@ impl CSRs {
             Xstatus::TW => (self.csrs[xstatus] & mask) >> 21 & 0x1,
             Xstatus::TSR => (self.csrs[xstatus] & mask) >> 22 & 0x1,
             Xstatus::UXL => match *self.isa {
-                Isa::Rv32 => panic!("attempting write to UXL in rv32"),
+                Isa::Rv32 => panic!("attempting read to UXL in rv32"),
                 Isa::Rv64 => (self.csrs[xstatus] & mask) >> 32 & 0x3,
             },
             Xstatus::SXL => match *self.isa {
-                Isa::Rv32 => panic!("attempting write to SXL in rv32"),
+                Isa::Rv32 => panic!("attempting read to SXL in rv32"),
                 Isa::Rv64 => (self.csrs[xstatus] & mask) >> 34 & 0x3,
             },
             Xstatus::SD => match *self.isa {
