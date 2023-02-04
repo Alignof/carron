@@ -218,6 +218,7 @@ impl Cpu {
     pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
         match cause_of_trap {
             TrapCause::InstAddrMisaligned
+            | TrapCause::InstAccessFault
             | TrapCause::IllegalInst
             | TrapCause::Breakpoint
             | TrapCause::UmodeEcall

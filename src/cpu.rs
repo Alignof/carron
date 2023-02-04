@@ -16,6 +16,7 @@ use std::rc::Rc;
 #[allow(clippy::enum_clike_unportable_variant)]
 pub enum TrapCause {
     InstAddrMisaligned = 0,
+    InstAccessFault = 1,
     IllegalInst = 2,
     Breakpoint = 3,
     LoadAddrMisaligned = 4,
