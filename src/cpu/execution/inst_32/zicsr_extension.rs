@@ -5,12 +5,7 @@ use crate::Isa;
 
 fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc)?;
-    let invalid_instruction = Some(
-        (cpu.bus.raw_byte(inst_addr + 3) as u64) << 24
-            | (cpu.bus.raw_byte(inst_addr + 2) as u64) << 16
-            | (cpu.bus.raw_byte(inst_addr + 1) as u64) << 8
-            | (cpu.bus.raw_byte(inst_addr) as u64),
-    );
+    let invalid_instruction = Some(cpu.bus.load_u32(inst_addr).expect("get instruction failed"));
 
     if dist >= 4096 {
         return Err((
