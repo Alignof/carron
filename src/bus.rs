@@ -54,7 +54,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::StoreAMOPageFault,
+                TrapCause::StoreAMOAccessFault,
                 format!("addr out of range at store8: {addr:#x}"),
             ))
         }
@@ -74,7 +74,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::StoreAMOPageFault,
+                TrapCause::StoreAMOAccessFault,
                 format!("addr out of range at store16: {addr:#x}"),
             ))
         }
@@ -94,7 +94,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::StoreAMOPageFault,
+                TrapCause::StoreAMOAccessFault,
                 format!("addr out of range at store32: {addr:#x}"),
             ))
         }
@@ -114,7 +114,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::StoreAMOPageFault,
+                TrapCause::StoreAMOAccessFault,
                 format!("addr out of range at store64: {addr:#x}"),
             ))
         }
@@ -131,7 +131,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::LoadPageFault,
+                TrapCause::LoadAccessFault,
                 format!("addr out of range at load8: {addr:#x}"),
             ))
         }
@@ -147,7 +147,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::LoadPageFault,
+                TrapCause::LoadAccessFault,
                 format!("addr out of range at load16: {addr:#x}"),
             ))
         }
@@ -163,7 +163,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::LoadPageFault,
+                TrapCause::LoadAccessFault,
                 format!("addr out of range at load32: {addr:#x}"),
             ))
         }
@@ -179,7 +179,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::LoadPageFault,
+                TrapCause::LoadAccessFault,
                 format!("addr out of range at load64: {addr:#x}"),
             ))
         }
@@ -195,7 +195,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::LoadPageFault,
+                TrapCause::LoadAccessFault,
                 format!("addr out of range at load_u8: {addr:#x}"),
             ))
         }
@@ -211,7 +211,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::LoadPageFault,
+                TrapCause::LoadAccessFault,
                 format!("addr out of range at load_u16: {addr:#x}"),
             ))
         }
@@ -227,7 +227,7 @@ impl Bus {
         } else {
             Err((
                 Some(addr),
-                TrapCause::LoadPageFault,
+                TrapCause::LoadAccessFault,
                 format!("addr out of range at load_u32: {addr:#x}"),
             ))
         }
