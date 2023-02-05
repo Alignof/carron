@@ -20,10 +20,6 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
             Err((inst, _, msg)) => Err((inst, TrapCause::InstAccessFault, msg)),
         }
     } else {
-        match *cpu.isa {
-            Isa::Rv32 => log::infoln!("pc: 0x{:08x}", cpu.pc),
-            Isa::Rv64 => log::infoln!("pc: 0x{:016x}", cpu.pc),
-        };
         let index_pc2: u64 = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc + 2)?;
         let inst_upper: u32 = match cpu.bus.load_u16(index_pc2) {
             Ok(inst) => inst as u32,
@@ -32,6 +28,10 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
         let inst_lower: u32 = match cpu.bus.load_u16(index_pc) {
             Ok(inst) => inst as u32,
             Err((inst, _, msg)) => return Err((inst, TrapCause::InstAccessFault, msg)),
+        };
+        match *cpu.isa {
+            Isa::Rv32 => log::infoln!("pc: 0x{:08x}", cpu.pc),
+            Isa::Rv64 => log::infoln!("pc: 0x{:016x}", cpu.pc),
         };
         Ok(Box::new(inst_upper << 16 | inst_lower))
     }
