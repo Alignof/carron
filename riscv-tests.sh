@@ -6,7 +6,7 @@ exit_status=0
 
 diff_output() {
     p_filter="0x(00000000)?800000(3c|40|44|48)"
-    v_filter="(0x(00000000)?ffc021(48|4c|50|54|58))|(0xffc023(04|08))"
+    v_filter="(0x(00000000)?ffc021(48|4c|50|54|58))|(0xffc023(04|08))|0xffffffffffe022(b8|bc)"
     if [ ${test_kind: -1} = "p" ]; then
         filter=$p_filter;
     else
@@ -21,7 +21,7 @@ diff_output() {
         perl -pe 's/core.+: //' |
         perl -pe 's/^: //' |
         perl -pe 's/ \(0x.+$//' |
-        perl -ne "print unless /${filter}/ or /^\s/ or /exception/" > ./target/expect;
+        perl -ne "print unless /${filter}/ or /^\s/ or /exception/ or /trigger action 0/" > ./target/expect;
 
     diff ./target/output ./target/expect
     if [ $? = 0 ]; then
