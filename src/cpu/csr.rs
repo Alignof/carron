@@ -20,6 +20,9 @@ impl CSRs {
                 tselect: 0,
                 tdata1: [0; 8],
                 tdata2: [0; 8],
+                tdata3: [0; 8],
+                tdata4: [0; 8],
+                tdata5: [0; 8],
             },
             isa,
         }
@@ -290,6 +293,9 @@ pub enum CSRname {
     tselect = 0x7a0,
     tdata1 = 0x7a1,
     tdata2 = 0x7a2,
+    tdata3 = 0x7a3,
+    tdata4 = 0x7a4,
+    tdata5 = 0x7a5,
 }
 
 impl CSRname {
