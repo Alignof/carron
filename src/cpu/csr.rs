@@ -20,9 +20,6 @@ impl CSRs {
                 tselect: 0,
                 tdata1: [0; 8],
                 tdata2: [0; 8],
-                tdata3: [0; 8],
-                tdata4: [0; 8],
-                tdata5: [0; 8],
             },
             isa,
         }

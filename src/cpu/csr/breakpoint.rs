@@ -6,9 +6,6 @@ pub struct Triggers {
     pub tselect: usize,
     pub tdata1: [u64; 8],
     pub tdata2: [u64; 8],
-    pub tdata3: [u64; 8],
-    pub tdata4: [u64; 8],
-    pub tdata5: [u64; 8],
 }
 
 impl CSRs {
@@ -20,9 +17,6 @@ impl CSRs {
                 self.triggers.tselect = tgr_index;
                 self.csrs[CSRname::tdata1 as usize] = self.triggers.tdata1[tgr_index];
                 self.csrs[CSRname::tdata2 as usize] = self.triggers.tdata2[tgr_index];
-                self.csrs[CSRname::tdata3 as usize] = self.triggers.tdata3[tgr_index];
-                self.csrs[CSRname::tdata4 as usize] = self.triggers.tdata4[tgr_index];
-                self.csrs[CSRname::tdata5 as usize] = self.triggers.tdata5[tgr_index];
             }
             0x7a1 => {
                 // tdata1
@@ -32,19 +26,7 @@ impl CSRs {
                 // tdata2
                 self.triggers.tdata2[self.triggers.tselect] = src;
             }
-            0x7a3 => match *self.isa {
-                Isa::Rv32 => panic!("trigger is out of range: 0x7a3"),
-                Isa::Rv64 => self.triggers.tdata3[self.triggers.tselect] = src,
-            },
-            0x7a4 => match *self.isa {
-                Isa::Rv32 => panic!("trigger is out of range: 0x7a4"),
-                Isa::Rv64 => self.triggers.tdata4[self.triggers.tselect] = src,
-            },
-            0x7a5 => match *self.isa {
-                Isa::Rv32 => panic!("trigger is out of range: 0x7a5"),
-                Isa::Rv64 => self.triggers.tdata5[self.triggers.tselect] = src,
-            },
-            _ => panic!("trigger is out of range"),
+            _ => (),
         }
     }
 }
@@ -57,7 +39,10 @@ impl Cpu {
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         for trigger_num in 0..self.csrs.triggers.tselect + 1 {
             let tdata1 = self.csrs.triggers.tdata1[trigger_num];
-            let trigger_type = tdata1 >> 28 & 0xF;
+            let trigger_type = match *self.isa {
+                Isa::Rv32 => tdata1 >> 28 & 0xF,
+                Isa::Rv64 => tdata1 >> 60 & 0xF,
+            };
 
             match trigger_type {
                 0x0 => (),
