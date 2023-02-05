@@ -188,7 +188,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_C_ADDIW => {
             cpu.regs.write(
                 inst.rd,
-                (cpu.regs.read(inst.rd) as i32 + inst.imm.unwrap()) as u32 as u64,
+                (cpu.regs.read(inst.rd) as i32 + inst.imm.unwrap()) as i64 as u64,
             );
         }
         OpecodeKind::OP_C_NOP => { /* NOP */ }
