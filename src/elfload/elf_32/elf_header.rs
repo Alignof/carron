@@ -1,4 +1,5 @@
-use crate::elfload::{get_u16, get_u32};
+use crate::elfload::{get_u16, get_u32, ElfHeader, ElfIdentification};
+use crate::Isa;
 
 fn get_elf_type_name(elf_type: u16) -> &'static str {
     match elf_type {
@@ -11,47 +12,7 @@ fn get_elf_type_name(elf_type: u16) -> &'static str {
     }
 }
 
-struct ElfIdentification {
-    magic: [u8; 16],
-    class: u8,
-    endian: u8,
-    version: u8,
-    os_abi: u8,
-    os_abi_ver: u8,
-}
-
-impl ElfIdentification {
-    fn new(mmap: &[u8]) -> ElfIdentification {
-        let mut magic: [u8; 16] = [0; 16];
-        for (i, m) in mmap[0..16].iter().enumerate() {
-            magic[i] = *m;
-        }
-
-        ElfIdentification {
-            magic,
-            class: mmap[4],
-            endian: mmap[5],
-            version: mmap[6],
-            os_abi: mmap[7],
-            os_abi_ver: mmap[8],
-        }
-    }
-
-    fn show(&self) {
-        print!("magic:\t");
-        for byte in self.magic.iter() {
-            print!("{:02x} ", byte);
-        }
-        println!();
-        println!("class:\t\t{:?}", self.class);
-        println!("endian:\t\t{:?}", self.endian);
-        println!("version:\t{:?}", self.version);
-        println!("os_abi:\t\t{:?}", self.os_abi);
-        println!("os_abi_ver:\t{:?}", self.os_abi_ver);
-    }
-}
-
-pub struct ElfHeader {
+pub struct ElfHeader32 {
     e_ident: ElfIdentification,
     e_type: u16,
     e_machine: u16,
@@ -68,11 +29,11 @@ pub struct ElfHeader {
     pub e_shstrndx: u16,
 }
 
-impl ElfHeader {
-    pub fn new(mmap: &[u8]) -> ElfHeader {
+impl ElfHeader32 {
+    pub fn new(mmap: &[u8], elf_ident: ElfIdentification) -> Box<Self> {
         const ELF_HEADER_START: usize = 16;
-        ElfHeader {
-            e_ident: ElfIdentification::new(mmap),
+        Box::new(ElfHeader32 {
+            e_ident: elf_ident,
             e_type: get_u16(mmap, ELF_HEADER_START),
             e_machine: get_u16(mmap, ELF_HEADER_START + 2),
             e_version: get_u32(mmap, ELF_HEADER_START + 4),
@@ -86,10 +47,12 @@ impl ElfHeader {
             e_shentsize: get_u16(mmap, ELF_HEADER_START + 30),
             e_shnum: get_u16(mmap, ELF_HEADER_START + 32),
             e_shstrndx: get_u16(mmap, ELF_HEADER_START + 34),
-        }
+        })
     }
+}
 
-    pub fn show(&self) {
+impl ElfHeader for ElfHeader32 {
+    fn show(&self) {
         println!("================ elf header ================");
         self.e_ident.show();
         println!("e_type:\t\t{}", get_elf_type_name(self.e_type));
@@ -107,33 +70,12 @@ impl ElfHeader {
         println!("e_shstrndx:\t{}", self.e_shstrndx);
     }
 
-    pub fn ident_show(&self) {
-        self.e_ident.show();
+    fn target_arch(&self) -> Isa {
+        self.e_ident.target_arch()
     }
 
-    pub fn is_elf(&self) -> bool {
+    fn is_elf(&self) -> bool {
         const HEADER_MAGIC: [u8; 4] = [0x7f, 0x45, 0x4c, 0x46];
         self.e_ident.magic[0..4] == HEADER_MAGIC
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::super::*;
-
-    #[test]
-    fn elf_header_test() {
-        let loader = match ElfLoader::try_new("./HelloWorld") {
-            Ok(loader) => loader,
-            Err(error) => {
-                panic!("There was a problem opening the file: {:?}", error);
-            }
-        };
-
-        assert!(loader.is_elf());
-        assert_eq!(loader.elf_header.e_type, 2);
-        assert_eq!(loader.elf_header.e_flags, 1);
-        assert_eq!(loader.elf_header.e_version, 1);
-        assert_eq!(loader.elf_header.e_machine, 243);
     }
 }

@@ -6,25 +6,16 @@ mod zicsr_extension;
 
 use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
-use crate::cpu::TrapCause;
+use crate::cpu::{Isa, TrapCause};
 
 #[allow(non_snake_case)]
 impl Decode for u32 {
-    fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)> {
-        let new_opc: OpecodeKind = match self.parse_opecode() {
-            Ok(opc) => opc,
-            Err(msg) => {
-                return Err((
-                    Some(*self),
-                    TrapCause::IllegalInst,
-                    format!("{}, {:b}", msg, self),
-                ))
-            }
-        };
+    fn decode(&self, isa: Isa) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
+        let new_opc: OpecodeKind = self.parse_opecode(isa)?;
         let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
         let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
         let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
-        let new_imm: Option<i32> = self.parse_imm(&new_opc)?;
+        let new_imm: Option<i32> = self.parse_imm(&new_opc, isa)?;
 
         Ok(Instruction {
             opc: new_opc,
@@ -35,11 +26,11 @@ impl Decode for u32 {
         })
     }
 
-    fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
+    fn parse_opecode(self, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
         match self.extension() {
-            Extensions::BaseI => base_i::parse_opecode(self),
-            Extensions::M => m_extension::parse_opecode(self),
-            Extensions::A => a_extension::parse_opecode(self),
+            Extensions::BaseI => base_i::parse_opecode(self, isa),
+            Extensions::M => m_extension::parse_opecode(self, isa),
+            Extensions::A => a_extension::parse_opecode(self, isa),
             Extensions::Zicsr => zicsr_extension::parse_opecode(self),
             Extensions::Priv => priv_extension::parse_opecode(self),
             _ => panic!("This instruction does not matched any extensions."),
@@ -49,7 +40,7 @@ impl Decode for u32 {
     fn parse_rd(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rd(self, opkind),
             Extensions::M => m_extension::parse_rd(self, opkind),
@@ -63,7 +54,7 @@ impl Decode for u32 {
     fn parse_rs1(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs1(self, opkind),
             Extensions::M => m_extension::parse_rs1(self, opkind),
@@ -77,7 +68,7 @@ impl Decode for u32 {
     fn parse_rs2(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::BaseI => base_i::parse_rs2(self, opkind),
             Extensions::M => m_extension::parse_rs2(self, opkind),
@@ -91,9 +82,10 @@ impl Decode for u32 {
     fn parse_imm(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
+        isa: Isa,
+    ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
-            Extensions::BaseI => base_i::parse_imm(self, opkind),
+            Extensions::BaseI => base_i::parse_imm(self, opkind, isa),
             Extensions::M => m_extension::parse_imm(self, opkind),
             Extensions::A => a_extension::parse_imm(self, opkind),
             Extensions::Zicsr => zicsr_extension::parse_imm(self, opkind),
@@ -104,7 +96,7 @@ impl Decode for u32 {
 }
 
 impl DecodeUtil for u32 {
-    fn slice(self, end: u32, start: u32) -> u32 {
+    fn slice(self, end: u32, start: u32) -> Self {
         (self >> start) & (2_u32.pow(end - start + 1) - 1)
     }
 
@@ -127,6 +119,11 @@ impl DecodeUtil for u32 {
             0b0110011 => match funct7 {
                 0b0000001 => Extensions::M,
                 _ => Extensions::BaseI,
+            },
+            0b0111011 => match funct7 {
+                0b0000000 | 0b0100000 => Extensions::BaseI,
+                0b0000001 => Extensions::M,
+                _ => unreachable!(),
             },
             0b1110011 => match funct3 {
                 0b000 => match funct7 {

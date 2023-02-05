@@ -1,15 +1,11 @@
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{PrivilegedLevel, TransAlign, TransFor, TrapCause, CPU};
+use crate::cpu::{Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause};
+use crate::Isa;
 
-fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<u32>, TrapCause, String)> {
+fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc)?;
-    let invalid_instruction = Some(
-        (cpu.bus.raw_byte(inst_addr + 3) as u32) << 24
-            | (cpu.bus.raw_byte(inst_addr + 2) as u32) << 16
-            | (cpu.bus.raw_byte(inst_addr + 1) as u32) << 8
-            | (cpu.bus.raw_byte(inst_addr) as u32),
-    );
+    let invalid_instruction = Some(cpu.bus.load_u32(inst_addr).expect("get instruction failed"));
 
     if dist >= 4096 {
         return Err((
@@ -68,46 +64,67 @@ fn check_accessible(cpu: &mut CPU, dist: usize) -> Result<(), (Option<u32>, Trap
     Ok(())
 }
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
+fn check_warl(cpu: &mut Cpu, dst: usize, original: u64) {
+    const MISA: usize = CSRname::misa as usize;
+    const MSTATUS: usize = CSRname::mstatus as usize;
+
+    match dst {
+        MISA => {
+            if cpu.csrs.read(CSRname::misa.wrap()).unwrap() >> 2 & 0x1 == 0 && cpu.pc % 4 != 0 {
+                cpu.csrs.bitset(Some(dst), 0b100);
+            }
+        }
+        MSTATUS => match *cpu.isa {
+            Isa::Rv32 => (),
+            Isa::Rv64 => {
+                if cpu
+                    .csrs
+                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL)
+                    == 0b00
+                {
+                    cpu.csrs.bitset(Some(dst), ((original >> 32) & 0b11) << 32);
+                }
+            }
+        },
+        _ => (),
+    }
+}
+
+pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     check_accessible(cpu, inst.rs2.unwrap())?;
+    let original = cpu.csrs.read(inst.rs2)?;
 
     match inst.opc {
         OpecodeKind::OP_CSRRW => {
-            let rs1 = cpu.regs.read(inst.rs1) as u32;
+            let rs1 = cpu.regs.read(inst.rs1);
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
             cpu.csrs.write(inst.rs2, rs1);
         }
         OpecodeKind::OP_CSRRS => {
-            let rs1 = cpu.regs.read(inst.rs1) as u32;
+            let rs1 = cpu.regs.read(inst.rs1);
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
             cpu.csrs.bitset(inst.rs2, rs1);
         }
         OpecodeKind::OP_CSRRC => {
-            let rs1 = cpu.regs.read(inst.rs1) as u32;
+            let rs1 = cpu.regs.read(inst.rs1);
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
             cpu.csrs.bitclr(inst.rs2, rs1);
         }
         OpecodeKind::OP_CSRRWI => {
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.write(inst.rs2, inst.rs1.unwrap() as u32);
+            cpu.csrs.write(inst.rs2, inst.rs1.unwrap() as u64);
         }
         OpecodeKind::OP_CSRRSI => {
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.bitset(inst.rs2, inst.rs1.unwrap() as u32);
+            cpu.csrs.bitset(inst.rs2, inst.rs1.unwrap() as u64);
         }
         OpecodeKind::OP_CSRRCI => {
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as u32);
+            cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as u64);
         }
         _ => panic!("not an Zicsr extension"),
     }
 
-    if inst.rs2 == CSRname::misa.wrap()
-        && cpu.csrs.read(CSRname::misa.wrap())? >> 2 & 0x1 == 0
-        && cpu.pc % 4 != 0
-    {
-        cpu.csrs.bitset(inst.rs2, 0b100);
-    }
-
+    check_warl(cpu, inst.rs2.unwrap(), original);
     Ok(())
 }

@@ -3,24 +3,15 @@ mod c_extension;
 
 use super::{Decode, DecodeUtil};
 use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
-use crate::cpu::TrapCause;
+use crate::cpu::{Isa, TrapCause};
 
 impl Decode for u16 {
-    fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)> {
-        let new_opc: OpecodeKind = match self.parse_opecode() {
-            Ok(opc) => opc,
-            Err(msg) => {
-                return Err((
-                    Some(*self as u32),
-                    TrapCause::IllegalInst,
-                    format!("{}, {:b}", msg, self),
-                ))
-            }
-        };
+    fn decode(&self, isa: Isa) -> Result<Instruction, (Option<u64>, TrapCause, String)> {
+        let new_opc = self.parse_opecode(isa)?;
         let new_rd: Option<usize> = self.parse_rd(&new_opc)?;
         let new_rs1: Option<usize> = self.parse_rs1(&new_opc)?;
         let new_rs2: Option<usize> = self.parse_rs2(&new_opc)?;
-        let new_imm: Option<i32> = self.parse_imm(&new_opc)?;
+        let new_imm: Option<i32> = self.parse_imm(&new_opc, isa)?;
 
         Ok(Instruction {
             opc: new_opc,
@@ -31,9 +22,9 @@ impl Decode for u16 {
         })
     }
 
-    fn parse_opecode(self) -> Result<OpecodeKind, &'static str> {
+    fn parse_opecode(self, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
         match self.extension() {
-            Extensions::C => c_extension::parse_opecode(self),
+            Extensions::C => c_extension::parse_opecode(self, isa),
             _ => panic!("It isn't compressed instruction"),
         }
     }
@@ -41,7 +32,7 @@ impl Decode for u16 {
     fn parse_rd(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rd(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -51,7 +42,7 @@ impl Decode for u16 {
     fn parse_rs1(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rs1(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -61,7 +52,7 @@ impl Decode for u16 {
     fn parse_rs2(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)> {
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_rs2(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -71,7 +62,8 @@ impl Decode for u16 {
     fn parse_imm(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<i32>, (Option<u32>, TrapCause, String)> {
+        _isa: Isa,
+    ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)> {
         match self.extension() {
             Extensions::C => c_extension::parse_imm(self, opkind),
             _ => panic!("It isn't compressed instruction"),
@@ -80,7 +72,7 @@ impl Decode for u16 {
 }
 
 impl DecodeUtil for u16 {
-    fn slice(self, end: u32, start: u32) -> u16 {
+    fn slice(self, end: u32, start: u32) -> Self {
         (self >> start) & (2_u16.pow(end - start + 1) - 1)
     }
 
