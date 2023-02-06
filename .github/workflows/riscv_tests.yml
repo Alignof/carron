@@ -49,4 +49,4 @@ jobs:
 
       - name: Run test 
         run: |
-          docker run --volume "$(pwd):/data" ${{ github.repository_owner }}/riscv_tests:latest
+          docker run --volume "$(pwd):/data" ghcr.io/alignof/riscv_tests:latest
