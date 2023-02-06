@@ -147,7 +147,7 @@ impl Cpu {
                     Err((
                         Some(addr),
                         cause,
-                        format!("address transration failed: {:?}", cause),
+                        format!("address transration failed: {cause:?}"),
                     ))
                 }
             }
@@ -156,7 +156,7 @@ impl Cpu {
                 Err((
                     Some(addr),
                     cause,
-                    format!("address transration failed: {:?}", cause),
+                    format!("address transration failed: {cause:?}"),
                 ))
             }
         }

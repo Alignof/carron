@@ -13,7 +13,7 @@ pub fn only_rv64(
         Isa::Rv32 => Err((
             None,
             TrapCause::IllegalInst,
-            format!("This instruction is only available on rv64"),
+            "This instruction is only available on rv64".to_string(),
         )),
         Isa::Rv64 => Ok(opcode),
     }

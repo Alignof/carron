@@ -51,7 +51,7 @@ impl DtbMmap {
     }
 
     fn regist_string(&mut self, name: &str) -> u32 {
-        let name = format!("{}\0", name);
+        let name = format!("{name}\0");
         let offset_of_name = self.strings.current_offset;
         *self.strings.table.entry(name.clone()).or_insert_with(|| {
             self.strings.current_offset += name.len() as u32;

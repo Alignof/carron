@@ -11,7 +11,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         return Err((
             invalid_instruction,
             TrapCause::IllegalInst,
-            format!("csr size is 4096, but you accessed {}", dist),
+            format!("csr size is 4096, but you accessed {dist}"),
         ));
     }
 
@@ -21,7 +21,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("You are in User mode but accessed {}", dist),
+                    format!("You are in User mode but accessed {dist}"),
                 ));
             }
         }
@@ -30,7 +30,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("You are in Supervisor mode but accessed {}", dist),
+                    format!("You are in Supervisor mode but accessed {dist}"),
                 ));
             }
 

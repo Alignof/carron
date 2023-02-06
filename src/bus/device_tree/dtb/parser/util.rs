@@ -36,6 +36,6 @@ pub fn expect<
     expected: T,
 ) {
     if token.next() != Some(expected) {
-        panic!("dtb parse error! ('{}' not found)", expected);
+        panic!("dtb parse error! ('{expected}' not found)");
     }
 }

@@ -173,17 +173,17 @@ impl Instruction {
     pub fn print_myself(&self) {
         print!("{:<12}{:>4}", self.opc_to_string(), self.reg_to_string());
         if let Some(v) = self.rs1 {
-            print!("{:>10},", v)
+            print!("{v:>10},")
         } else {
             print!("          ,")
         }
         if let Some(v) = self.rs2 {
-            print!("{:>10},", v)
+            print!("{v:>10},")
         } else {
             print!("          ,")
         }
         if let Some(v) = self.imm {
-            print!("{:>10},", v)
+            print!("{v:>10},")
         } else {
             print!("          ,")
         }

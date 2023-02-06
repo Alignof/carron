@@ -76,7 +76,7 @@ impl ElfIdentification {
     fn show(&self) {
         print!("magic:\t");
         for byte in self.magic.iter() {
-            print!("{:02x} ", byte);
+            print!("{byte:02x} ");
         }
         println!();
         println!("class:\t\t{:?}", self.class);

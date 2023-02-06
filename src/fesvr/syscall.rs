@@ -259,7 +259,7 @@ impl FrontendServer {
                 &mut argv
                     .iter()
                     .cloned()
-                    .flat_map(|x| format!("{}\0", x).into_bytes())
+                    .flat_map(|x| format!("{x}\0").into_bytes())
                     .collect(),
             );
         }

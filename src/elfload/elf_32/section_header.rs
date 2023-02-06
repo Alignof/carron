@@ -118,14 +118,14 @@ impl SectionHeader for SectionHeader32 {
                 let inst = mdump.decode(Isa::Rv32);
                 dump_head += 2;
 
-                print!("{:<04x}\t\t", mdump);
+                print!("{mdump:<04x}\t\t");
                 inst.unwrap().print_myself();
             } else {
                 let mdump = get_u32(mmap, dump_head as usize);
                 let inst = mdump.decode(Isa::Rv32);
                 dump_head += 4;
 
-                print!("{:<08x}\t", mdump);
+                print!("{mdump:<08x}\t");
                 inst.unwrap().print_myself();
             }
             println!();

@@ -102,7 +102,7 @@ impl Cpu {
                 0x3 => panic!("Instruction count trigger is not implemented."),
                 0x4 => panic!("Interrupt trigger is not implemented."),
                 0x5 => panic!("Exception trigger is not implemented."),
-                _ => panic!("this trigger is not supported: {}", trigger_type),
+                _ => panic!("this trigger is not supported: {trigger_type}"),
             }
         }
 

@@ -7,7 +7,7 @@ fn parse_data(
     label_mgr: &mut LabelManager,
 ) -> (Option<Vec<u32>>, Option<String>, usize) {
     if !data.ends_with(';') {
-        panic!("{} <-- ';' expected.", data);
+        panic!("{data} <-- ';' expected.");
     }
 
     let data_ch = &mut data.chars().peekable();

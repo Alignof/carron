@@ -39,7 +39,7 @@ impl Bus {
         } else if self.dram.in_range(addr) {
             self.dram.raw_byte(addr)
         } else {
-            panic!("bus.raw_byte() failed: {}", addr)
+            panic!("bus.raw_byte() failed: {addr}")
         }
     }
 

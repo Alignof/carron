@@ -34,9 +34,9 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                         let rs1 = rs1 as i64;
                         let rs2 = rs2 as i64;
                         if (rs1 < 0) == (rs2 < 0) {
-                            mulhu_64(rs1.abs() as u64, rs2.abs() as u64)
+                            mulhu_64(rs1.unsigned_abs(), rs2.unsigned_abs())
                         } else {
-                            !mulhu_64(rs1.abs() as u64, rs2.abs() as u64) + (rs1 * rs2 == 0) as u64
+                            !mulhu_64(rs1.unsigned_abs(), rs2.unsigned_abs()) + (rs1 * rs2 == 0) as u64
                         }
                     }
                 },
@@ -46,13 +46,13 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.regs.write(
                 inst.rd,
                 match *cpu.isa {
-                    Isa::Rv32 => ((rs1 as i32 as i64 * rs2 as u64 as i64) >> 32) as u64,
+                    Isa::Rv32 => ((rs1 as i32 as i64 * rs2 as i64) >> 32) as u64,
                     Isa::Rv64 => {
                         let rs1 = rs1 as i64;
                         if rs1 < 0 {
-                            !mulhu_64(rs1.abs() as u64, rs2) + (rs1 as u64 * rs2 == 0) as u64
+                            !mulhu_64(rs1.unsigned_abs(), rs2) + (rs1 as u64 * rs2 == 0) as u64
                         } else {
-                            mulhu_64(rs1.abs() as u64, rs2)
+                            mulhu_64(rs1.unsigned_abs(), rs2)
                         }
                     }
                 },
@@ -62,7 +62,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.regs.write(
                 inst.rd,
                 match *cpu.isa {
-                    Isa::Rv32 => ((rs1 as u64 * rs2 as u64) >> 32) as u64,
+                    Isa::Rv32 => (rs1 * rs2) >> 32,
                     Isa::Rv64 => mulhu_64(rs1, rs2),
                 },
             );
@@ -86,7 +86,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             if rs2 == 0 {
                 cpu.regs.write(inst.rd, (2i32.pow(32) - 1) as u64);
             } else {
-                cpu.regs.write(inst.rd, (rs1 as u64 / rs2 as u64) as u64);
+                cpu.regs.write(inst.rd, rs1 / rs2);
             }
         }
         OpecodeKind::OP_REM => {
@@ -103,7 +103,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             if rs2 == 0 {
                 cpu.regs.write(inst.rd, rs1);
             } else {
-                cpu.regs.write(inst.rd, (rs1 as u64 % rs2 as u64) as u64);
+                cpu.regs.write(inst.rd, rs1 % rs2);
             }
         }
         OpecodeKind::OP_MULW => {
@@ -118,7 +118,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             } else if rs1 == i32::MIN && rs2 == -1 {
                 cpu.regs.write(inst.rd, rs1 as u64);
             } else {
-                cpu.regs.write(inst.rd, (rs1 / rs2) as i32 as u64)
+                cpu.regs.write(inst.rd, (rs1 / rs2) as u64)
             }
         }
         OpecodeKind::OP_REMW => {
@@ -129,7 +129,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             } else if rs1 == i32::MIN && rs2 == -1 {
                 cpu.regs.write(inst.rd, 0);
             } else {
-                cpu.regs.write(inst.rd, (rs1 % rs2) as i32 as u64);
+                cpu.regs.write(inst.rd, (rs1 % rs2) as u64);
             }
         }
         OpecodeKind::OP_DIVUW => {
