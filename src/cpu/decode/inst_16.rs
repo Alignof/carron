@@ -99,7 +99,7 @@ mod decode_16 {
     fn parsing_compressed_opecode_test() {
         use OpecodeKind::*;
         let test_16 = |inst_16: u16, _op: OpecodeKind, _rd: Option<u8>| {
-            let op_16 = inst_16.parse_opecode().unwrap();
+            let op_16 = inst_16.parse_opecode(Isa::Rv64).unwrap();
             assert!(matches!(&op_16, _op));
             assert!(matches!(inst_16.parse_rd(&op_16), _rd));
         };

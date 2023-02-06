@@ -219,7 +219,7 @@ mod exe_16 {
             bus,
             regs: reg::Register::new(Rc::new(isa)),
             csrs: csr::CSRs::new(Rc::new(isa)).init(),
-            mmu: mmu::Mmu::new(),
+            mmu: mmu::Mmu::new(Rc::new(isa)),
             reservation_set: HashSet::new(),
             isa: Rc::new(isa),
             priv_lv: PrivilegedLevel::Machine,

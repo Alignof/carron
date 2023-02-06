@@ -152,12 +152,12 @@ mod decode_32 {
                        rs1: Option<usize>,
                        rs2: Option<usize>,
                        imm: Option<i32>| {
-            let op_32 = inst_32.parse_opecode().unwrap();
+            let op_32 = inst_32.parse_opecode(Isa::Rv64).unwrap();
             assert!(matches!(&op_32, op));
             assert_eq!(inst_32.parse_rd(&op_32).unwrap(), rd);
             assert_eq!(inst_32.parse_rs1(&op_32).unwrap(), rs1);
             assert_eq!(inst_32.parse_rs2(&op_32).unwrap(), rs2);
-            assert_eq!(inst_32.parse_imm(&op_32).unwrap(), imm);
+            assert_eq!(inst_32.parse_imm(&op_32, Isa::Rv64).unwrap(), imm);
         };
 
         test_32(
