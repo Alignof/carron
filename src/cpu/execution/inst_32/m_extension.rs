@@ -36,7 +36,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                         if (rs1 < 0) == (rs2 < 0) {
                             mulhu_64(rs1.unsigned_abs(), rs2.unsigned_abs())
                         } else {
-                            !mulhu_64(rs1.unsigned_abs(), rs2.unsigned_abs()) + (rs1 * rs2 == 0) as u64
+                            !mulhu_64(rs1.unsigned_abs(), rs2.unsigned_abs())
+                                + (rs1 * rs2 == 0) as u64
                         }
                     }
                 },
