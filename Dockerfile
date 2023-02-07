@@ -1,5 +1,5 @@
 FROM ghcr.io/alignof/riscv-tests-docker:master
-ENTRYPOINT ["sh", "/data/rv32_tests.sh"]
+ENTRYPOINT ["sh", "/data/riscv_tests.sh"]
 
 ENV HOME /root
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
