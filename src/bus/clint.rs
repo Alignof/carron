@@ -38,12 +38,6 @@ impl Device for Clint {
         (addr - self.base_addr) as usize
     }
 
-    // get 1 byte
-    fn raw_byte(&self, addr: u64) -> u8 {
-        let addr = self.addr2index(addr);
-        self.clint[addr]
-    }
-
     // store
     fn store8(&mut self, addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         Err((

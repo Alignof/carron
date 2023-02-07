@@ -30,19 +30,6 @@ impl Bus {
         }
     }
 
-    // get 1 byte
-    pub fn raw_byte(&self, addr: u64) -> u8 {
-        if self.mrom.in_range(addr) {
-            self.mrom.raw_byte(addr)
-        } else if self.clint.in_range(addr) {
-            self.clint.raw_byte(addr)
-        } else if self.dram.in_range(addr) {
-            self.dram.raw_byte(addr)
-        } else {
-            panic!("bus.raw_byte() failed: {addr}")
-        }
-    }
-
     // store
     pub fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
@@ -237,7 +224,6 @@ impl Bus {
 pub trait Device {
     fn in_range(&self, addr: u64) -> bool;
     fn addr2index(&self, addr: u64) -> usize;
-    fn raw_byte(&self, addr: u64) -> u8;
     fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)>;
     fn store16(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)>;
     fn store32(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)>;
