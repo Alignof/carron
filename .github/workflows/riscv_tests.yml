@@ -3,12 +3,13 @@ name: riscv_tests
 on:
   push:
     branches:
-      - master
-  pull_request:
-    branches:
-      - master
       - develop
-
+    #    branches:
+    #      - master
+    #  pull_request:
+    #    branches:
+    #      - master
+    #      - develop
 
 jobs:
   riscv-tests:
@@ -29,6 +30,7 @@ jobs:
 
       - name: Login to ghcr.io
         uses: docker/login-action@v2
+        if: github.event_name == 'push'
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -37,12 +39,12 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v3
         with:
-          push: true
-          tags: ghcr.io/alignof/carron:latest
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Run test 
         run: |
-          docker run --volume "$(pwd):/data" ghcr.io/alignof/carron:latest
+          docker run --volume "$(pwd):/data" ${{ steps.meta.outputs.tags }}
