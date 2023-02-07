@@ -1,9 +1,9 @@
 use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{PrivilegedLevel, TrapCause, CPU};
+use crate::cpu::{Cpu, PrivilegedLevel, TrapCause};
 use crate::log;
 
-pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
+pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
             if cpu
@@ -12,7 +12,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
                 == 1
             {
                 return Err((
-                    Some(cpu.bus.load32(cpu.pc)? as u32),
+                    Some(cpu.bus.load32(cpu.pc)?),
                     TrapCause::IllegalInst,
                     "exec sret but mstatus.TSR == 1".to_string(),
                 ));
@@ -88,7 +88,7 @@ pub fn exec(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapC
                     .read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM)
                     == 1
             {
-                cpu.exception(cpu.bus.load32(cpu.pc)? as u32, TrapCause::IllegalInst);
+                cpu.exception(cpu.bus.load32(cpu.pc)?, TrapCause::IllegalInst);
             }
         }
         _ => panic!("not an privileged extension"),

@@ -5,10 +5,10 @@ mod priv_extension;
 mod zicsr_extension;
 
 use crate::cpu::instruction::{Extensions, Instruction};
-use crate::cpu::{TrapCause, CPU};
+use crate::cpu::{Cpu, TrapCause};
 
-pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, TrapCause, String)> {
-    const INST_SIZE: u32 = 4;
+pub fn exe_inst(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
+    const INST_SIZE: u64 = 4;
 
     // store previous program counter for excluding branch case
     let prev_pc = cpu.pc;
@@ -24,7 +24,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut CPU) -> Result<(), (Option<u32>, T
 
     // add the program counter when it isn't a branch instruction
     if cpu.pc == prev_pc {
-        cpu.add2pc(INST_SIZE);
+        cpu.add2pc(INST_SIZE as i32);
     }
 
     Ok(())

@@ -1,28 +1,44 @@
 mod inst_16;
 mod inst_32;
 
-use super::instruction::{Extensions, Instruction, OpecodeKind};
 use super::TrapCause;
+use crate::cpu::instruction::{Extensions, Instruction, OpecodeKind};
+use crate::cpu::Isa;
+
+pub fn only_rv64(
+    opcode: OpecodeKind,
+    isa: Isa,
+) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)> {
+    match isa {
+        Isa::Rv32 => Err((
+            None,
+            TrapCause::IllegalInst,
+            "This instruction is only available on rv64".to_string(),
+        )),
+        Isa::Rv64 => Ok(opcode),
+    }
+}
 
 pub trait Decode {
-    fn decode(&self) -> Result<Instruction, (Option<u32>, TrapCause, String)>;
-    fn parse_opecode(self) -> Result<OpecodeKind, &'static str>;
+    fn decode(&self, isa: Isa) -> Result<Instruction, (Option<u64>, TrapCause, String)>;
+    fn parse_opecode(self, isa: Isa) -> Result<OpecodeKind, (Option<u64>, TrapCause, String)>;
     fn parse_rd(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)>;
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)>;
     fn parse_rs1(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)>;
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)>;
     fn parse_rs2(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<usize>, (Option<u32>, TrapCause, String)>;
+    ) -> Result<Option<usize>, (Option<u64>, TrapCause, String)>;
     fn parse_imm(
         self,
         opkind: &OpecodeKind,
-    ) -> Result<Option<i32>, (Option<u32>, TrapCause, String)>;
+        isa: Isa,
+    ) -> Result<Option<i32>, (Option<u64>, TrapCause, String)>;
 }
 
 pub trait DecodeUtil {

@@ -3,12 +3,12 @@ use crate::{elfload, TrapCause};
 
 pub struct Dram {
     dram: Vec<u8>,
-    pub base_addr: u32,
+    pub base_addr: u64,
     size: usize,
 }
 
 impl Dram {
-    pub fn new(loader: elfload::ElfLoader) -> Dram {
+    pub fn new(loader: elfload::ElfLoader) -> Self {
         const DRAM_SIZE: usize = 1024 * 1024 * 128; // 2^27
         let virt_entry = loader.get_entry_point().expect("entry point not found.");
 
@@ -18,10 +18,11 @@ impl Dram {
         // load elf memory mapping
         for segment in loader.prog_headers.iter() {
             if segment.is_loadable() {
-                let dram_start = (segment.p_paddr - virt_entry) as usize;
-                let mmap_start = (segment.p_offset) as usize;
-                let dram_end = dram_start + segment.p_filesz as usize;
-                let mmap_end = (segment.p_offset + segment.p_filesz) as usize;
+                let (offset, paddr) = segment.offset_and_addr();
+                let dram_start = (paddr - virt_entry) as usize;
+                let mmap_start = (offset) as usize;
+                let dram_end = dram_start + segment.p_filesz() as usize;
+                let mmap_end = (offset + segment.p_filesz()) as usize;
 
                 new_dram.splice(
                     dram_start..dram_end,
@@ -42,36 +43,36 @@ impl Dram {
 #[allow(clippy::identity_op)]
 impl Device for Dram {
     // is addr in device address space
-    fn in_range(&self, addr: u32) -> bool {
-        (self.base_addr..=self.base_addr + self.size as u32).contains(&addr)
+    fn in_range(&self, addr: u64) -> bool {
+        (self.base_addr..=self.base_addr + self.size as u64).contains(&addr)
     }
 
     // address to raw index
-    fn addr2index(&self, addr: u32) -> usize {
+    fn addr2index(&self, addr: u64) -> usize {
         (addr - self.base_addr) as usize
     }
 
     // get 1 byte
-    fn raw_byte(&self, addr: u32) -> u8 {
+    fn raw_byte(&self, addr: u64) -> u8 {
         let index = self.addr2index(addr);
         self.dram[index]
     }
 
     // store
-    fn store8(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         self.dram[index] = (data & 0xFF) as u8;
         Ok(())
     }
 
-    fn store16(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store16(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         self.dram[index + 1] = ((data >> 8) & 0xFF) as u8;
         self.dram[index + 0] = ((data >> 0) & 0xFF) as u8;
         Ok(())
     }
 
-    fn store32(&mut self, addr: u32, data: u32) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store32(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         self.dram[index + 3] = ((data >> 24) & 0xFF) as u8;
         self.dram[index + 2] = ((data >> 16) & 0xFF) as u8;
@@ -80,7 +81,7 @@ impl Device for Dram {
         Ok(())
     }
 
-    fn store64(&mut self, addr: u32, data: i64) -> Result<(), (Option<u32>, TrapCause, String)> {
+    fn store64(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         self.dram[index + 7] = ((data >> 56) & 0xFF) as u8;
         self.dram[index + 6] = ((data >> 48) & 0xFF) as u8;
@@ -94,25 +95,25 @@ impl Device for Dram {
     }
 
     // load
-    fn load8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok(self.dram[index] as i8 as i32 as u32)
+        Ok(self.dram[index] as i8 as i64 as u64)
     }
 
-    fn load16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok(((self.dram[index + 1] as i16) << 8 | (self.dram[index + 0] as i16)) as i32 as u32)
+        Ok(((self.dram[index + 1] as i16) << 8 | (self.dram[index + 0] as i16)) as i64 as u64)
     }
 
-    fn load32(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok((self.dram[index + 3] as u32) << 24
-            | (self.dram[index + 2] as u32) << 16
-            | (self.dram[index + 1] as u32) << 8
-            | (self.dram[index + 0] as u32))
+        Ok(((self.dram[index + 3] as i32) << 24
+            | (self.dram[index + 2] as i32) << 16
+            | (self.dram[index + 1] as i32) << 8
+            | (self.dram[index + 0] as i32)) as i64 as u64)
     }
 
-    fn load64(&self, addr: u32) -> Result<u64, (Option<u32>, TrapCause, String)> {
+    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         Ok((self.dram[index + 7] as u64) << 56
             | (self.dram[index + 6] as u64) << 48
@@ -124,14 +125,22 @@ impl Device for Dram {
             | (self.dram[index + 0] as u64))
     }
 
-    fn load_u8(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load_u8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok(self.dram[index] as u32)
+        Ok(self.dram[index] as u64)
     }
 
-    fn load_u16(&self, addr: u32) -> Result<u32, (Option<u32>, TrapCause, String)> {
+    fn load_u16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
-        Ok(((self.dram[index + 1] as u16) << 8 | (self.dram[index + 0] as u16)) as u32)
+        Ok(((self.dram[index + 1] as u16) << 8 | (self.dram[index + 0] as u16)) as u64)
+    }
+
+    fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        let index = self.addr2index(addr);
+        Ok(((self.dram[index + 3] as u32) << 24
+            | (self.dram[index + 2] as u32) << 16
+            | (self.dram[index + 1] as u32) << 8
+            | (self.dram[index + 0] as u32)) as u64)
     }
 }
 
@@ -149,8 +158,8 @@ mod tests {
         };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
-            Dram::store8(dram, addr, data as u32).unwrap();
-            assert_eq!(data as u32, Dram::load_u8(dram, addr).unwrap());
+            Dram::store8(dram, addr, data as u64).unwrap();
+            assert_eq!(data as u64, Dram::load_u8(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -159,9 +168,9 @@ mod tests {
         test_8(0b01111111);
 
         let minus_num = -42;
-        Dram::store8(dram, addr, minus_num as u32).unwrap();
+        Dram::store8(dram, addr, minus_num as u64).unwrap();
         assert_ne!(minus_num, Dram::load_u8(dram, addr).unwrap() as i32);
-        Dram::store16(dram, addr, minus_num as u32).unwrap();
+        Dram::store16(dram, addr, minus_num as u64).unwrap();
         assert_eq!(214, Dram::load_u8(dram, addr).unwrap());
     }
 
@@ -174,8 +183,8 @@ mod tests {
         };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
-            Dram::store8(dram, addr, data as u32).unwrap();
-            assert_eq!(data as u32, Dram::load8(dram, addr).unwrap());
+            Dram::store8(dram, addr, data as u64).unwrap();
+            assert_eq!(data as u64, Dram::load8(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -197,8 +206,8 @@ mod tests {
         };
         let mut addr = 0;
         let mut test_16 = |data: i32| {
-            Dram::store16(dram, addr, data as u32).unwrap();
-            assert_eq!(data as u32, Dram::load16(dram, addr).unwrap());
+            Dram::store16(dram, addr, data as u64).unwrap();
+            assert_eq!(data as u64, Dram::load16(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -221,8 +230,8 @@ mod tests {
         };
         let mut addr = 0;
         let mut test_u16 = |data: i32| {
-            Dram::store16(dram, addr, data as u32).unwrap();
-            assert_eq!(data as u32, Dram::load_u16(dram, addr).unwrap());
+            Dram::store16(dram, addr, data as u64).unwrap();
+            assert_eq!(data as u64, Dram::load_u16(dram, addr).unwrap());
             addr += 2;
         };
 
@@ -232,9 +241,9 @@ mod tests {
         test_u16(0b0111111111111111);
 
         let minus_num = -42;
-        Dram::store16(dram, addr, minus_num as u32).unwrap();
+        Dram::store16(dram, addr, minus_num as u64).unwrap();
         assert_ne!(minus_num, Dram::load_u16(dram, addr).unwrap() as i32);
-        Dram::store16(dram, addr, minus_num as u32).unwrap();
+        Dram::store16(dram, addr, minus_num as u64).unwrap();
         assert_eq!(65494, Dram::load_u16(dram, addr).unwrap());
     }
 
@@ -248,8 +257,8 @@ mod tests {
         };
         let mut addr = 0;
         let mut test_32 = |data: i32| {
-            Dram::store32(dram, addr, data as u32).unwrap();
-            assert_eq!(data as u32, Dram::load32(dram, addr).unwrap());
+            Dram::store32(dram, addr, data as u64).unwrap();
+            assert_eq!(data as u64, Dram::load32(dram, addr).unwrap());
             addr += 2;
         };
 

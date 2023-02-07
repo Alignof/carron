@@ -19,6 +19,15 @@ pub fn consume<T: std::cmp::PartialEq, U: std::iter::Iterator + Iterator<Item = 
     }
 }
 
+pub fn consume_ends_with(token: &mut Peekable<std::str::Lines<'_>>, expected: &str) -> bool {
+    if token.peek().unwrap().ends_with(&expected) {
+        token.next();
+        true
+    } else {
+        false
+    }
+}
+
 pub fn expect<
     T: std::cmp::PartialEq + std::fmt::Display + Copy,
     U: std::iter::Iterator + Iterator<Item = T>,
@@ -27,6 +36,6 @@ pub fn expect<
     expected: T,
 ) {
     if token.next() != Some(expected) {
-        panic!("dtb parse error! ('{}' not found)", expected);
+        panic!("dtb parse error! ('{expected}' not found)");
     }
 }

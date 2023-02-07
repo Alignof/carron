@@ -1,22 +1,22 @@
+use crate::cpu::Cpu;
 use crate::fesvr::FrontendServer;
 use crate::log;
 use crate::Arguments;
-use crate::CPU;
 use libc::c_void;
 
-fn memread(cpu: &CPU, addr: u32, len: u64) -> Vec<u8> {
+fn memread(cpu: &mut Cpu, addr: u64, len: u64) -> Vec<u8> {
     let mut buf = Vec::new();
-    for off in 0..len as u32 {
+    for off in 0..len {
         buf.push(cpu.bus.load8(addr + off).unwrap() as u8);
     }
 
     buf
 }
 
-fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
-    for off in 0..len as u32 {
+fn memwrite(cpu: &mut Cpu, addr: u64, len: usize, data: Vec<u8>) {
+    for off in 0..len as u64 {
         cpu.bus
-            .store8(addr + off, data[off as usize] as u32)
+            .store8(addr + off, u64::from(data[off as usize]))
             .unwrap();
     }
 }
@@ -24,7 +24,7 @@ fn memwrite(cpu: &mut CPU, addr: u32, len: usize, data: Vec<u8>) {
 impl FrontendServer {
     pub fn openat(
         &mut self,
-        cpu: &CPU,
+        cpu: &mut Cpu,
         dirfd: u64,
         name_addr: u64,
         len: u64,
@@ -32,7 +32,7 @@ impl FrontendServer {
         mode: u64,
     ) -> i64 {
         log::infoln!("sys_openat(56)");
-        let name: Vec<u8> = memread(cpu, name_addr as u32, len);
+        let name: Vec<u8> = memread(cpu, name_addr, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
         let fd = unsafe {
             libc::openat(
@@ -59,11 +59,11 @@ impl FrontendServer {
 
     pub fn lseek(&self, fd: u64, ptr: u64, dir: u64) -> i64 {
         log::infoln!("sys_lseek(62)");
-        let ret = unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) };
-        ret as i64
+
+        unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) }
     }
 
-    pub fn read(&self, cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
+    pub fn read(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
         log::infoln!("sys_read(63)");
         let buf: Vec<u8> = vec![0; len as usize];
         let read_len = unsafe {
@@ -74,15 +74,15 @@ impl FrontendServer {
             )
         };
         if read_len > 0 {
-            memwrite(cpu, dst_addr as u32, read_len as usize, buf);
+            memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
         read_len as i64
     }
 
-    pub fn write(&self, cpu: &CPU, fd: u64, dst_addr: u64, len: u64) -> i64 {
+    pub fn write(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
         log::infoln!("sys_write(64)");
-        let buf = memread(cpu, dst_addr as u32, len);
+        let buf = memread(cpu, dst_addr, len);
         let wrote_len = unsafe {
             libc::write(
                 self.fd_lookup(fd) as i32,
@@ -94,7 +94,7 @@ impl FrontendServer {
         wrote_len as i64
     }
 
-    pub fn pread(&self, cpu: &mut CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
+    pub fn pread(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
         log::infoln!("sys_pread(67)");
         let buf: Vec<u8> = vec![0; len as usize];
         let read_len = unsafe {
@@ -106,15 +106,15 @@ impl FrontendServer {
             )
         };
         if read_len > 0 {
-            memwrite(cpu, dst_addr as u32, read_len as usize, buf);
+            memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
         read_len as i64
     }
 
-    pub fn pwrite(&self, cpu: &CPU, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
+    pub fn pwrite(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
         log::infoln!("sys_pwrite(68)");
-        let buf = memread(cpu, dst_addr as u32, len);
+        let buf = memread(cpu, dst_addr, len);
         let wrote_len = unsafe {
             libc::pwrite(
                 self.fd_lookup(fd) as i32,
@@ -129,7 +129,7 @@ impl FrontendServer {
 
     pub fn fstatat(
         &self,
-        cpu: &mut CPU,
+        cpu: &mut Cpu,
         dirfd: u64,
         name_addr: u64,
         len: u64,
@@ -137,7 +137,7 @@ impl FrontendServer {
         flags: u64,
     ) -> i64 {
         log::infoln!("sys_fstatat(79)");
-        let name: Vec<u8> = memread(cpu, name_addr as u32, len);
+        let name: Vec<u8> = memread(cpu, name_addr, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
         let (ret, rbuf) = unsafe {
             const PADDING: u64 = 0;
@@ -153,7 +153,7 @@ impl FrontendServer {
                 vec![
                     buf.st_dev,
                     buf.st_ino,
-                    (buf.st_nlink as u64) << 32 | buf.st_mode as u64,
+                    buf.st_nlink << 32 | buf.st_mode as u64,
                     (buf.st_uid as u64) << 32 | buf.st_gid as u64,
                     buf.st_rdev,
                     PADDING,
@@ -177,13 +177,13 @@ impl FrontendServer {
                 .flat_map(|w| w.to_le_bytes().to_vec())
                 .collect::<Vec<u8>>();
 
-            memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
+            memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
         ret as i64
     }
 
-    pub fn fstat(&self, cpu: &mut CPU, fd: u64, dst_addr: u64) -> i64 {
+    pub fn fstat(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64) -> i64 {
         log::infoln!("sys_fstat(80)");
         let (ret, rbuf) = unsafe {
             const PADDING: u64 = 0;
@@ -194,7 +194,7 @@ impl FrontendServer {
                 vec![
                     buf.st_dev,
                     buf.st_ino,
-                    (buf.st_nlink as u64) << 32 | buf.st_mode as u64,
+                    buf.st_nlink << 32 | buf.st_mode as u64,
                     (buf.st_uid as u64) << 32 | buf.st_gid as u64,
                     buf.st_rdev,
                     PADDING,
@@ -218,7 +218,7 @@ impl FrontendServer {
                 .flat_map(|w| w.to_le_bytes().to_vec())
                 .collect::<Vec<u8>>();
 
-            memwrite(cpu, dst_addr as u32, rbuf.len(), rbuf);
+            memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
         ret as i64
@@ -231,7 +231,7 @@ impl FrontendServer {
         0
     }
 
-    pub fn getmainvars(&self, cpu: &mut CPU, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {
+    pub fn getmainvars(&self, cpu: &mut Cpu, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {
         log::infoln!("sys_getmainvars(2011)");
 
         let elfpath = format!("{}\0", args.filename);
@@ -259,7 +259,7 @@ impl FrontendServer {
                 &mut argv
                     .iter()
                     .cloned()
-                    .flat_map(|x| format!("{}\0", x).into_bytes())
+                    .flat_map(|x| format!("{x}\0").into_bytes())
                     .collect(),
             );
         }
@@ -268,7 +268,7 @@ impl FrontendServer {
             return -12;
         }
 
-        memwrite(cpu, dst_addr as u32, buf.len(), buf);
+        memwrite(cpu, dst_addr, buf.len(), buf);
         0
     }
 }

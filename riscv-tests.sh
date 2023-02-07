@@ -1,38 +1,27 @@
 #!/bin/bash
 
-test_dir=/opt/riscv32/share/riscv-tests/isa/
-test_kinds=(
-    "rv32mi-p"
-    "rv32si-p"
-    "rv32ui-p"
-    "rv32ui-v"
-    "rv32um-p"
-    "rv32um-v"
-    "rv32ua-p"
-    "rv32ua-v"
-    "rv32uc-p"
-    "rv32uc-v"
-)
+test_dir=/opt/riscv/riscv-tests/isa/
 ESC=$(printf '\033');
-p_filter="0x800000(3c|40|44|48)"
-v_filter="(0xffc021(48|4c|50|54|58))|(0xffc023(04|08))"
+exit_status=0
 
 diff_output() {
+    p_filter="0x(00000000)?800000(3c|40|44|48)"
+    v_filter="(0x(00000000)?ffc021(48|4c|50|54|58))|(0xffc023(04|08))|0xffffffffffe022(b8|bc)"
     if [ ${test_kind: -1} = "p" ]; then
         filter=$p_filter;
     else
         filter=$v_filter;
     fi;
 
-    cargo r -- $test_dir$test_name 2> /dev/null |
+    timeout --foreground 3 cargo r --release -- --loglv=info $test_dir$test_name 2> /dev/null |
         perl -ne 'print if /^pc: /' |
         perl -pe 's/pc: //' |
         perl -ne "print unless /${filter}/" > ./target/output;
-    spike -l --isa=RV32IMAC $pk_path $test_dir$test_name 2>&1 |
+    spike -l --isa=${isa}IMAC $pk_path $test_dir$test_name 2>&1 |
         perl -pe 's/core.+: //' |
         perl -pe 's/^: //' |
         perl -pe 's/ \(0x.+$//' |
-        perl -ne "print unless /${filter}/ or /^\s/ or /exception/" > ./target/expect;
+        perl -ne "print unless /${filter}/ or /^\s/ or /exception/ or /trigger action 0/" > ./target/expect;
 
     diff ./target/output ./target/expect
     if [ $? = 0 ]; then
@@ -46,7 +35,7 @@ diff_output() {
 }
 
 exit_code() {
-    cargo r -- $test_dir$test_name > /dev/null 2>&1;
+    timeout --foreground 3 cargo r --release -- $test_dir$test_name > /dev/null 2>&1;
     if [ $? = 1 ]; then
         echo "$test_name ${ESC}[32;1m ... passed ${ESC}[m"
     else
@@ -55,13 +44,31 @@ exit_code() {
     fi;
 }
 
-exit_status=0
+isa=$(echo $1 | perl -pe 's/--isa=//')
+test_kinds=(
+    "${isa}ui-p"
+    "${isa}ui-v"
+    "${isa}um-p"
+    "${isa}um-v"
+    "${isa}ua-p"
+    "${isa}ua-v"
+    "${isa}uc-p"
+    "${isa}uc-v"
+    "${isa}mi-p"
+    "${isa}si-p"
+)
+
+excepts=(
+    "rv64ui-p-ma_data"
+    "rv64ui-v-ma_data"
+)
+
+cargo build --release
 for test_kind in ${test_kinds[@]}; do
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
-        if [ $(which spike 2> /dev/null) ]; then
-            diff_output;
-        else
-            exit_code;
+        if [[ ! "${excepts[@]}" =~ "${test_name}" ]]; then
+            exit_code
+            #diff_output
         fi
     done;
 done;

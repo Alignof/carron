@@ -1,15 +1,15 @@
 use crate::cpu::csr::{CSRname, CSRs};
-use crate::cpu::{PrivilegedLevel, TransFor, TrapCause};
-use crate::CPU;
+use crate::cpu::{Cpu, PrivilegedLevel, TransFor, TrapCause};
+use crate::Isa;
 
 pub struct Triggers {
     pub tselect: usize,
-    pub tdata1: [u32; 8],
-    pub tdata2: [u32; 8],
+    pub tdata1: [u64; 8],
+    pub tdata2: [u64; 8],
 }
 
 impl CSRs {
-    pub fn update_triggers(&mut self, dist: usize, src: u32) {
+    pub fn update_triggers(&mut self, dist: usize, src: u64) {
         match dist {
             0x7a0 => {
                 // tselect
@@ -31,15 +31,18 @@ impl CSRs {
     }
 }
 
-impl CPU {
+impl Cpu {
     pub fn check_breakpoint(
         &mut self,
         purpose: TransFor,
-        addr: u32,
-    ) -> Result<u32, (Option<u32>, TrapCause, String)> {
+        addr: u64,
+    ) -> Result<(), (Option<u64>, TrapCause, String)> {
         for trigger_num in 0..self.csrs.triggers.tselect + 1 {
             let tdata1 = self.csrs.triggers.tdata1[trigger_num];
-            let trigger_type = tdata1 >> 28 & 0xF;
+            let trigger_type = match *self.isa {
+                Isa::Rv32 => tdata1 >> 28 & 0xF,
+                Isa::Rv64 => tdata1 >> 60 & 0xF,
+            };
 
             match trigger_type {
                 0x0 => (),
@@ -56,7 +59,7 @@ impl CPU {
                         || self.priv_lv == PrivilegedLevel::Supervisor && mode_s == 0x0
                         || self.priv_lv == PrivilegedLevel::User && mode_u == 0x0
                     {
-                        return Ok(addr);
+                        return Ok(());
                     }
 
                     if match_mode != 0x0 {
@@ -99,10 +102,10 @@ impl CPU {
                 0x3 => panic!("Instruction count trigger is not implemented."),
                 0x4 => panic!("Interrupt trigger is not implemented."),
                 0x5 => panic!("Exception trigger is not implemented."),
-                _ => panic!("this trigger is not supported: {}", trigger_type),
+                _ => panic!("this trigger is not supported: {trigger_type}"),
             }
         }
 
-        Ok(addr)
+        Ok(())
     }
 }

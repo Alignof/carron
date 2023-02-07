@@ -1,12 +1,13 @@
 mod c_extension;
+use super::Cpu;
 use crate::cpu::instruction::Instruction;
-use crate::cpu::{TrapCause, CPU};
+use crate::cpu::TrapCause;
 
 pub fn exe_cinst(
     inst: &Instruction,
-    cpu: &mut CPU,
-) -> Result<(), (Option<u32>, TrapCause, String)> {
-    const INST_SIZE: u32 = 2;
+    cpu: &mut Cpu,
+) -> Result<(), (Option<u64>, TrapCause, String)> {
+    const INST_SIZE: u64 = 2;
 
     // store previous program counter for excluding branch case
     let prev_pc = cpu.pc;

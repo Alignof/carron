@@ -12,7 +12,7 @@ fn main() {
     let path = args.pkpath.as_ref().unwrap_or(&args.filename);
     let loader = match elfload::ElfLoader::try_new(path) {
         Ok(loader) => loader,
-        Err(error) => panic!("There was a problem opening the file: {:?}", error),
+        Err(error) => panic!("There was a problem opening the file: {error:?}"),
     };
 
     if loader.is_elf() {

@@ -1,9 +1,9 @@
 [package]
 name = "carron"
-version = "0.9.6"
+version = "0.10.0"
 authors = ["n.takana <Alignof@outlook.com>"]
 edition = "2021"
-description = "RV32IMAC emulator"
+description = "RV64IMAC emulator"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
