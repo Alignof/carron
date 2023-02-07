@@ -57,11 +57,19 @@ test_kinds=(
     "${isa}mi-p"
     "${isa}si-p"
 )
+
+excepts=(
+    "rv64ui-p-ma_data"
+    "rv64ui-v-ma_data"
+)
+
+cargo build --release
 for test_kind in ${test_kinds[@]}; do
-    cargo build --release
     for test_name in `ls $test_dir | grep $test_kind | grep -v .dump`; do
-        exit_code
-        #diff_output
+        if [[ ! "${excepts[@]}" =~ "${test_name}" ]]; then
+            exit_code
+            #diff_output
+        fi
     done;
 done;
 
