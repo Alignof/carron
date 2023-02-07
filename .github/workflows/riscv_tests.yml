@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - develop
   pull_request:
     branches:
       - master
@@ -23,8 +24,6 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ghcr.io/${{ github.repository }}
-          flavor: |
-            prefix=${{ format('{0}-', matrix.context) }}
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v2
@@ -40,13 +39,12 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v3
         with:
-          context: ${{ matrix.context }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.context }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.context }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Run test 
         run: |
-          docker run --volume "$(pwd):/data" ghcr.io/alignof/riscv_tests:latest
+          docker run --volume "$(pwd):/data" ${{ steps.meta.outputs.tags }}
