@@ -34,14 +34,17 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: debug test 
+        run: echo ${{ steps.meta.outputs.tags }}
+
       - name: Build and Push
         uses: docker/build-push-action@v3
         with:
           push: ${{ github.event_name == 'push' }}
-          tags: ghcr.io/alignof/riscv-tests-docker:latest
+          tags: ghcr.io/alignof/carron:riscv-tests
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Run test 
         run: |
-          docker run --volume "$(pwd):/data" ghcr.io/alignof/riscv-tests-docker:latest
+          docker run --volume "$(pwd):/data" ghcr.io/alignof/carron:riscv-tests
