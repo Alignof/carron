@@ -43,7 +43,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            "clint is allow load/store32 but try store8".to_string(),
+            "clint only allows load/store32 but try store8".to_string(),
         ))
     }
 
@@ -51,7 +51,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            "clint is allow load/store32 but try store16".to_string(),
+            "clint only allows load/store32 but try store16".to_string(),
         ))
     }
 
@@ -82,7 +82,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load8".to_string(),
+            "clint only allows load/store32 but try load8".to_string(),
         ))
     }
 
@@ -90,7 +90,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load16".to_string(),
+            "clint only allows load/store32 but try load16".to_string(),
         ))
     }
 
@@ -117,7 +117,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load_u8".to_string(),
+            "clint only allows load/store32 but try load_u8".to_string(),
         ))
     }
 
@@ -125,7 +125,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load_u16".to_string(),
+            "clint only allows load/store32 but try load_u16".to_string(),
         ))
     }
 
@@ -133,7 +133,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load_u32".to_string(),
+            "clint only allows load/store32 but try load_u32".to_string(),
         ))
     }
 }
