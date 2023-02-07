@@ -1,7 +1,7 @@
-pub mod clint;
-pub mod device_tree;
+mod clint;
+mod device_tree;
 pub mod dram;
-pub mod mrom;
+mod mrom;
 
 use crate::{elfload, Isa, TrapCause};
 use clint::Clint;
