@@ -89,7 +89,7 @@ impl Device for Dram {
     }
 
     // load
-    fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         Ok(self.dram[index] as i8 as i64 as u64)
     }

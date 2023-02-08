@@ -78,7 +78,7 @@ impl Device for Clint {
     }
 
     // load
-    fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,

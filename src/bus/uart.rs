@@ -90,9 +90,17 @@ impl Device for Uart {
     }
 
     // load
-    fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        const RX: usize = UartRegister::RX_TX as usize;
+        const LSR_DR: u8 = 0x01;
         let index = self.addr2index(addr);
-        Ok(self.uart[index] as i8 as i64 as u64)
+        match index {
+            RX => {
+                self.uart[UartRegister::LSR as usize] &= !LSR_DR;
+                Ok(self.uart[UartRegister::RX_TX as usize] as u64)
+            }
+            _ => Ok(self.uart[index] as i8 as i64 as u64),
+        }
     }
 
     fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
