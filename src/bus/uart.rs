@@ -60,8 +60,15 @@ impl Device for Uart {
 
     // store
     fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
+        const TX: usize = UartRegister::RX_TX as usize;
         let index = self.addr2index(addr);
-        self.uart[index] = (data & 0xFF) as u8;
+
+        match index {
+            TX => {
+                print!("{}", char::from_u32(data as u32).unwrap());
+            }
+            _ => self.uart[index] = (data & 0xFF) as u8,
+        }
         Ok(())
     }
 
@@ -91,16 +98,13 @@ impl Device for Uart {
 
     // load
     fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
-        const RX: usize = UartRegister::RX_TX as usize;
         const LSR_DR: u8 = 0x01;
         let index = self.addr2index(addr);
-        match index {
-            RX => {
-                self.uart[UartRegister::LSR as usize] &= !LSR_DR;
-                Ok(self.uart[UartRegister::RX_TX as usize] as u64)
-            }
-            _ => Ok(self.uart[index] as i8 as i64 as u64),
+
+        if index == UartRegister::RX_TX as usize {
+            self.uart[UartRegister::LSR as usize] &= !LSR_DR;
         }
+        Ok(self.uart[index] as i8 as i64 as u64)
     }
 
     fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
