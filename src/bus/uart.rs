@@ -27,6 +27,12 @@ enum UartLsr {
     FIFOE,
 }
 
+impl UartLsr {
+    pub fn mask(self) -> u8 {
+        1 << self as u8
+    }
+}
+
 pub struct Uart {
     pub uart: Vec<u8>,
     rx_queue: VecDeque<u8>,
@@ -112,7 +118,7 @@ impl Device for Uart {
         let index = self.addr2index(addr);
 
         if index == UartRegister::RX_TX as usize {
-            self.uart[UartRegister::LSR as usize] &= !(1 << UartLsr::DR as u8);
+            self.uart[UartRegister::LSR as usize] &= !UartLsr::DR.mask();
         }
         Ok(self.uart[index] as i8 as i64 as u64)
     }
