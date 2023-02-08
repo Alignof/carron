@@ -1,3 +1,5 @@
+mod io;
+
 use super::Device;
 use crate::TrapCause;
 use std::collections::VecDeque;
@@ -12,6 +14,17 @@ enum UartRegister {
     LSR,     // read: LSR
     MSR,     // read: MSR
     SCR,     // I/O: SCR
+}
+
+enum UartLsr {
+    DR,
+    OE,
+    PE,
+    FE,
+    BI,
+    THRE,
+    TEMT,
+    FIFOE,
 }
 
 pub struct Uart {
@@ -64,9 +77,7 @@ impl Device for Uart {
         let index = self.addr2index(addr);
 
         match index {
-            TX => {
-                print!("{}", char::from_u32(data as u32).unwrap());
-            }
+            TX => self.tx_byte(char::from_u32(data as u32).unwrap()),
             _ => self.uart[index] = (data & 0xFF) as u8,
         }
         Ok(())
@@ -98,11 +109,10 @@ impl Device for Uart {
 
     // load
     fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
-        const LSR_DR: u8 = 0x01;
         let index = self.addr2index(addr);
 
         if index == UartRegister::RX_TX as usize {
-            self.uart[UartRegister::LSR as usize] &= !LSR_DR;
+            self.uart[UartRegister::LSR as usize] &= !(1 << UartLsr::DR as u8);
         }
         Ok(self.uart[index] as i8 as i64 as u64)
     }
