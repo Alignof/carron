@@ -2,6 +2,7 @@ use super::Device;
 use crate::TrapCause;
 use std::collections::VecDeque;
 
+#[allow(non_camel_case_types)]
 enum UartRegister {
     RX_TX,   // read: RX, write: TX
     IER,     // write: IER
@@ -30,9 +31,14 @@ impl Uart {
     #[allow(arithmetic_overflow)]
     pub fn new() -> Self {
         const UART_SIZE: usize = 0x100;
+        let mut uart = vec![0; UART_SIZE];
+        uart[UartRegister::IIR_FCR as usize] = 0x1; // IIR_NO_INT
+        uart[UartRegister::LSR as usize] = 0x60; // LSR_TEMT | LSR_THRE
+        uart[UartRegister::MSR as usize] = 0xb0; // UART_MSR_DCD | UART_MSR_DSR | UART_MSR_CTS
+        uart[UartRegister::MCR as usize] = 0x08; // MCR_OUT2
 
         Uart {
-            uart: vec![0; UART_SIZE],
+            uart,
             rx_queue: VecDeque::new(),
             base_addr: 0x1000_0000,
             size: UART_SIZE,
