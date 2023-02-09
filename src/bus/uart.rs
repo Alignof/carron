@@ -4,6 +4,7 @@ use super::Device;
 use crate::TrapCause;
 use std::collections::VecDeque;
 
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 enum UartRegister {
     RX_TX,   // read: RX, write: TX
@@ -16,6 +17,7 @@ enum UartRegister {
     SCR,     // I/O: SCR
 }
 
+#[allow(dead_code)]
 enum IerMask {
     RDI = 0x1,
     THRI = 0x2,
@@ -23,6 +25,7 @@ enum IerMask {
     MSI = 0x8,
 }
 
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 enum IirFcrMask {
     MSI = 0x00,
@@ -33,6 +36,7 @@ enum IirFcrMask {
     ID = 0x0e,
 }
 
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 enum FcrMask {
     ENABLE_FIFO = 0x01,
@@ -41,6 +45,7 @@ enum FcrMask {
     DMA_SELECT = 0x08,
 }
 
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 enum LsrMask {
     FIFOE = 0x80,
