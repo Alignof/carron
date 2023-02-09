@@ -16,21 +16,42 @@ enum UartRegister {
     SCR,     // I/O: SCR
 }
 
-enum UartLsr {
-    DR,
-    OE,
-    PE,
-    FE,
-    BI,
-    THRE,
-    TEMT,
-    FIFOE,
+enum IerMask {
+    RDI = 0x1,
+    THRI = 0x2,
+    RLSI = 0x4,
+    MSI = 0x8,
 }
 
-impl UartLsr {
-    pub fn mask(self) -> u8 {
-        1 << self as u8
-    }
+#[allow(non_camel_case_types)]
+enum IirFcrMask {
+    MSI = 0x00,
+    NO_INT = 0x01,
+    THRI = 0x02,
+    RDI = 0x04,
+    RLSI = 0x06,
+    ID = 0x0e,
+}
+
+#[allow(non_camel_case_types)]
+enum FcrMask {
+    ENABLE_FIFO = 0x01,
+    CLEAR_RCVR = 0x02,
+    CLEAR_XMIT = 0x04,
+    DMA_SELECT = 0x08,
+}
+
+#[allow(non_camel_case_types)]
+enum LsrMask {
+    FIFOE = 0x80,
+    TEMT = 0x40,
+    THRE = 0x20,
+    BI = 0x10,
+    FE = 0x08,
+    PE = 0x04,
+    OE = 0x02,
+    DR = 0x01,
+    BRK_ERROR_BITS = 0x1E,
 }
 
 pub struct Uart {
