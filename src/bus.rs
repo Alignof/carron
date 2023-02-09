@@ -2,19 +2,22 @@ mod clint;
 mod device_tree;
 pub mod dram;
 mod mrom;
+mod plic;
 mod uart;
 
 use crate::{elfload, Isa, TrapCause};
 use clint::Clint;
 use dram::Dram;
 use mrom::Mrom;
+use plic::Plic;
 use uart::Uart;
 
 pub struct Bus {
     pub mrom: mrom::Mrom,
     pub clint: clint::Clint,
     pub dram: dram::Dram,
-    pub uart: uart::Uart,
+    uart: uart::Uart,
+    plic: plic::Plic,
 }
 
 impl Bus {
@@ -31,6 +34,7 @@ impl Bus {
             clint: Clint::new(),
             dram,
             uart: Uart::new(),
+            plic: Plic::new(),
         }
     }
 
@@ -44,6 +48,8 @@ impl Bus {
             self.dram.store8(addr, data)
         } else if self.uart.in_range(addr) {
             self.uart.store8(addr, data)
+        } else if self.plic.in_range(addr) {
+            self.plic.store8(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -66,6 +72,8 @@ impl Bus {
             self.dram.store16(addr, data)
         } else if self.uart.in_range(addr) {
             self.uart.store16(addr, data)
+        } else if self.plic.in_range(addr) {
+            self.plic.store16(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -88,6 +96,8 @@ impl Bus {
             self.dram.store32(addr, data)
         } else if self.uart.in_range(addr) {
             self.uart.store32(addr, data)
+        } else if self.plic.in_range(addr) {
+            self.plic.store32(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -110,6 +120,8 @@ impl Bus {
             self.dram.store64(addr, data)
         } else if self.uart.in_range(addr) {
             self.uart.store64(addr, data)
+        } else if self.plic.in_range(addr) {
+            self.plic.store64(addr, data)
         } else {
             Err((
                 Some(addr),
@@ -129,6 +141,8 @@ impl Bus {
             self.dram.load8(addr)
         } else if self.uart.in_range(addr) {
             self.uart.load8(addr)
+        } else if self.plic.in_range(addr) {
+            self.plic.load8(addr)
         } else {
             Err((
                 Some(addr),
@@ -147,6 +161,8 @@ impl Bus {
             self.dram.load16(addr)
         } else if self.uart.in_range(addr) {
             self.uart.load16(addr)
+        } else if self.plic.in_range(addr) {
+            self.plic.load16(addr)
         } else {
             Err((
                 Some(addr),
@@ -165,6 +181,8 @@ impl Bus {
             self.dram.load32(addr)
         } else if self.uart.in_range(addr) {
             self.uart.load32(addr)
+        } else if self.plic.in_range(addr) {
+            self.plic.load32(addr)
         } else {
             Err((
                 Some(addr),
@@ -183,6 +201,8 @@ impl Bus {
             self.dram.load64(addr)
         } else if self.uart.in_range(addr) {
             self.uart.load64(addr)
+        } else if self.plic.in_range(addr) {
+            self.plic.load64(addr)
         } else {
             Err((
                 Some(addr),
@@ -201,6 +221,8 @@ impl Bus {
             self.dram.load_u8(addr)
         } else if self.uart.in_range(addr) {
             self.uart.load_u8(addr)
+        } else if self.plic.in_range(addr) {
+            self.plic.load_u8(addr)
         } else {
             Err((
                 Some(addr),
@@ -219,6 +241,8 @@ impl Bus {
             self.dram.load_u16(addr)
         } else if self.uart.in_range(addr) {
             self.uart.load_u16(addr)
+        } else if self.plic.in_range(addr) {
+            self.plic.load_u16(addr)
         } else {
             Err((
                 Some(addr),
@@ -237,6 +261,8 @@ impl Bus {
             self.dram.load_u32(addr)
         } else if self.uart.in_range(addr) {
             self.uart.load_u32(addr)
+        } else if self.plic.in_range(addr) {
+            self.plic.load_u32(addr)
         } else {
             Err((
                 Some(addr),

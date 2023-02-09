@@ -64,7 +64,7 @@ impl Device for Plic {
         Ok(())
     }
 
-    fn store64(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
+    fn store64(&mut self, addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
