@@ -101,12 +101,22 @@ impl Device for Uart {
     // store
     fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         const TX: usize = UartRegister::RX_TX as usize;
+        const IER: usize = UartRegister::IER as usize;
+        const FCR: usize = UartRegister::IIR_FCR as usize;
+        const LCR: usize = UartRegister::LCR as usize;
+        const MCR: usize = UartRegister::MCR as usize;
         let index = self.addr2index(addr);
 
         match index {
             TX => self.tx_byte(char::from_u32(data as u32).unwrap()),
             _ => self.uart[index] = (data & 0xFF) as u8,
         }
+
+        match index {
+            IER | FCR | LCR | MCR => self.update_interrupt(),
+            _ => (),
+        }
+
         Ok(())
     }
 
@@ -140,6 +150,7 @@ impl Device for Uart {
 
         if index == UartRegister::RX_TX as usize {
             self.uart[UartRegister::LSR as usize] &= !(LsrMask::DR as u8);
+            self.update_interrupt();
         }
         Ok(self.uart[index] as i8 as i64 as u64)
     }
