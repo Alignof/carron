@@ -139,7 +139,7 @@ impl Device for Uart {
         let index = self.addr2index(addr);
 
         if index == UartRegister::RX_TX as usize {
-            self.uart[UartRegister::LSR as usize] &= !UartLsr::DR.mask();
+            self.uart[UartRegister::LSR as usize] &= !(LsrMask::DR as u8);
         }
         Ok(self.uart[index] as i8 as i64 as u64)
     }
