@@ -25,7 +25,7 @@ fn sysret_errno(ret: i64) -> i64 {
     if ret == -1 {
         unsafe { -(*libc::__errno_location() as i64) }
     } else {
-        ret as i64
+        ret
     }
 }
 
