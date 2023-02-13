@@ -21,6 +21,14 @@ fn memwrite(cpu: &mut Cpu, addr: u64, len: usize, data: Vec<u8>) {
     }
 }
 
+fn sysret_errno(ret: i64) -> i64 {
+    if ret == -1 {
+        unsafe { -(*libc::__errno_location() as i64) }
+    } else {
+        ret as i64
+    }
+}
+
 impl FrontendServer {
     pub fn openat(
         &mut self,
@@ -34,17 +42,17 @@ impl FrontendServer {
         log::infoln!("sys_openat(56)");
         let name: Vec<u8> = memread(cpu, name_addr, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
-        let fd = unsafe {
+        let fd = sysret_errno(unsafe {
             libc::openat(
                 dirfd as i32,
                 name.as_ptr() as *const i8,
                 flags as i32,
                 mode as i32,
-            )
-        };
+            ) as i64
+        });
 
         if fd < 0 {
-            -1
+            sysret_errno(-1)
         } else {
             self.fd_alloc(fd as u64)
         }
@@ -52,7 +60,10 @@ impl FrontendServer {
 
     pub fn close(&mut self, fd: u64) -> i64 {
         log::infoln!("sys_close(57)");
-        unsafe { libc::close(self.fd_lookup(fd) as i32) };
+        if unsafe { libc::close(self.fd_lookup(fd) as i32) } < 0 {
+            return sysret_errno(-1);
+        }
+
         self.fd_dealloc(fd);
         0
     }
@@ -60,7 +71,7 @@ impl FrontendServer {
     pub fn lseek(&self, fd: u64, ptr: u64, dir: u64) -> i64 {
         log::infoln!("sys_lseek(62)");
 
-        unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) }
+        sysret_errno(unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) })
     }
 
     pub fn read(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
@@ -73,11 +84,13 @@ impl FrontendServer {
                 len as usize,
             )
         };
+
+        let ret_errno = sysret_errno(read_len as i64);
         if read_len > 0 {
             memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
-        read_len as i64
+        ret_errno as i64
     }
 
     pub fn write(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
@@ -90,8 +103,9 @@ impl FrontendServer {
                 len as usize,
             )
         };
+        let ret = sysret_errno(wrote_len as i64);
 
-        wrote_len as i64
+        ret as i64
     }
 
     pub fn pread(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
@@ -105,11 +119,12 @@ impl FrontendServer {
                 off as i64,
             )
         };
+        let ret_errno = sysret_errno(read_len as i64);
         if read_len > 0 {
             memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
-        read_len as i64
+        ret_errno as i64
     }
 
     pub fn pwrite(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
@@ -171,6 +186,7 @@ impl FrontendServer {
             )
         };
 
+        let ret = sysret_errno(ret.into());
         if ret != -1 {
             let rbuf = rbuf
                 .iter()
@@ -212,6 +228,7 @@ impl FrontendServer {
             )
         };
 
+        let ret = sysret_errno(ret as i64);
         if ret != -1 {
             let rbuf = rbuf
                 .iter()
