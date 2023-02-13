@@ -27,7 +27,7 @@ impl Bus {
         let mut mrom = Mrom::new(dram.base_addr, isa);
 
         // create and load DTB
-        mrom.load_dtb(dram.base_addr);
+        mrom.load_dtb(dram.base_addr, isa);
 
         Bus {
             mrom,
