@@ -93,8 +93,10 @@ impl Arguments {
             .values_of("main_args")
             .map(|args| args.map(|s| s.to_string()).collect::<Vec<String>>())
             .map(|mut args| {
-                args.insert(0, std::env::args().nth(0).unwrap());
-                args.insert(1, filename.clone());
+                args.insert(0, filename.clone());
+                if let Some(pk) = &pkpath {
+                    args.insert(0, pk.to_string());
+                }
                 args
             });
 
