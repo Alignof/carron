@@ -119,53 +119,37 @@ impl Cpu {
         Ok(())
     }
 
-    fn interrupt(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
-        // check Machine Trap Delegation Registers
-        let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
-        if self.priv_lv != PrivilegedLevel::Machine && (mideleg & 1 << cause_of_trap as u32) != 0 {
-            log::infoln!("delegated");
-            self.csrs
-                .write(CSRname::scause.wrap(), cause_of_trap as u64);
-            self.csrs.write(CSRname::sepc.wrap(), self.pc);
-            self.csrs.write(CSRname::stval.wrap(), tval_addr);
-            self.priv_lv = PrivilegedLevel::Supervisor;
-
-            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap();
-            self.update_pc(new_pc);
-        } else {
-            let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
-            self.csrs
-                .write(CSRname::mcause.wrap(), cause_of_trap as u64);
-            self.csrs.write(CSRname::mepc.wrap(), self.pc);
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
-            self.csrs.write_xstatus(
-                // sstatus.MPIE = sstatus.MIE
-                PrivilegedLevel::Machine,
-                Xstatus::MPIE,
-                self.csrs
-                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE),
-            );
-            self.csrs
-                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MIE, 0b0); // msatus.MIE = 0
-            self.csrs
-                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u64); // set prev_priv to MPP
-            self.priv_lv = PrivilegedLevel::Machine;
-
-            let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
-            let new_pc = if mtvec & 0b1 == 1 {
-                (mtvec - 1) + 4 * mcause.trailing_zeros() as u64
-            } else {
-                mtvec
-            };
-            self.update_pc(new_pc);
+    fn get_deleg(&self, cause_of_trap: TrapCause) -> u64 {
+        match cause_of_trap {
+            TrapCause::InstAddrMisaligned
+            | TrapCause::InstAccessFault
+            | TrapCause::IllegalInst
+            | TrapCause::Breakpoint
+            | TrapCause::UmodeEcall
+            | TrapCause::SmodeEcall
+            | TrapCause::MmodeEcall
+            | TrapCause::LoadAddrMisaligned
+            | TrapCause::LoadAccessFault
+            | TrapCause::StoreAMOAddrMisaligned
+            | TrapCause::StoreAMOAccessFault
+            | TrapCause::InstPageFault
+            | TrapCause::LoadPageFault
+            | TrapCause::StoreAMOPageFault => self.csrs.read(CSRname::medeleg.wrap()).unwrap(),
+            TrapCause::MachineTimerInterrupt
+            | TrapCause::MachineSoftwareInterrupt
+            | TrapCause::SupervisorSoftwareInterrupt => {
+                self.csrs.read(CSRname::mideleg.wrap()).unwrap()
+            }
         }
     }
 
-    pub fn exception(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
+    pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
         // check Machine Trap Delegation Registers
-        let medeleg = self.csrs.read(CSRname::medeleg.wrap()).unwrap();
-        if self.priv_lv != PrivilegedLevel::Machine && (medeleg & 1 << cause_of_trap as u32) != 0 {
-            // https://msyksphinz.hatenablog.com/entry/2018/04/03/040000
+        let deleg = self.get_deleg(cause_of_trap);
+        let new_pc = if self.priv_lv != PrivilegedLevel::Machine
+            && (deleg & 1 << cause_of_trap as u32) != 0
+        {
+            let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
             log::infoln!("delegated");
             self.csrs
                 .write(CSRname::scause.wrap(), cause_of_trap as u64);
@@ -187,9 +171,14 @@ impl Cpu {
             ); // set prev_priv to SPP
             self.priv_lv = PrivilegedLevel::Supervisor;
 
-            let new_pc = self.csrs.read(CSRname::stvec.wrap()).unwrap();
-            self.update_pc(new_pc);
+            let stvec = self.csrs.read(CSRname::stvec.wrap()).unwrap();
+            if stvec & 0b1 == 1 {
+                (stvec - 1) + 4 * scause.trailing_zeros() as u64
+            } else {
+                stvec
+            }
         } else {
+            let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
             self.csrs
                 .write(CSRname::mcause.wrap(), cause_of_trap as u64);
             self.csrs.write(CSRname::mepc.wrap(), self.pc);
@@ -207,36 +196,15 @@ impl Cpu {
                 .write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u64); // set prev_priv to MPP
             self.priv_lv = PrivilegedLevel::Machine;
 
-            let new_pc = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
-            self.update_pc(new_pc);
-        }
-    }
-
-    pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
-        match cause_of_trap {
-            TrapCause::InstAddrMisaligned
-            | TrapCause::InstAccessFault
-            | TrapCause::IllegalInst
-            | TrapCause::Breakpoint
-            | TrapCause::UmodeEcall
-            | TrapCause::SmodeEcall
-            | TrapCause::MmodeEcall
-            | TrapCause::LoadAddrMisaligned
-            | TrapCause::LoadAccessFault
-            | TrapCause::StoreAMOAddrMisaligned
-            | TrapCause::StoreAMOAccessFault
-            | TrapCause::InstPageFault
-            | TrapCause::LoadPageFault
-            | TrapCause::StoreAMOPageFault => {
-                self.exception(tval_addr, cause_of_trap);
+            let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
+            if mtvec & 0b1 == 1 {
+                (mtvec - 1) + 4 * mcause.trailing_zeros() as u64
+            } else {
+                mtvec
             }
-            TrapCause::MachineTimerInterrupt
-            | TrapCause::MachineSoftwareInterrupt
-            | TrapCause::SupervisorSoftwareInterrupt => {
-                self.interrupt(tval_addr, cause_of_trap);
-            }
-        }
+        };
 
+        self.update_pc(new_pc);
         log::infoln!("new pc: 0x{:x}", self.pc);
     }
 }

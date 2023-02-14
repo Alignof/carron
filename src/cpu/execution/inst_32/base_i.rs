@@ -260,7 +260,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             // nop (pipeline are not yet implemented)
         }
         OpecodeKind::OP_ECALL => {
-            cpu.exception(
+            cpu.trap(
                 cpu.pc,
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
@@ -271,7 +271,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             );
         }
         OpecodeKind::OP_EBREAK => {
-            cpu.exception(cpu.pc, TrapCause::Breakpoint);
+            cpu.trap(cpu.pc, TrapCause::Breakpoint);
         }
         OpecodeKind::OP_LWU => {
             let load_addr = cpu.trans_addr(
