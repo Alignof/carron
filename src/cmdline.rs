@@ -91,7 +91,12 @@ impl Arguments {
 
         let main_args = app
             .values_of("main_args")
-            .map(|args| args.map(|s| s.to_string()).collect::<Vec<String>>());
+            .map(|args| args.map(|s| s.to_string()).collect::<Vec<String>>())
+            .map(|mut args| {
+                args.insert(0, std::env::args().nth(0).unwrap());
+                args.insert(1, filename.clone());
+                args
+            });
 
         Arguments {
             filename,
