@@ -52,12 +52,6 @@ impl Device for Dram {
         (addr - self.base_addr) as usize
     }
 
-    // get 1 byte
-    fn raw_byte(&self, addr: u64) -> u8 {
-        let index = self.addr2index(addr);
-        self.dram[index]
-    }
-
     // store
     fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
@@ -95,7 +89,7 @@ impl Device for Dram {
     }
 
     // load
-    fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         Ok(self.dram[index] as i8 as i64 as u64)
     }

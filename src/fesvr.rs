@@ -142,10 +142,12 @@ impl Emulator {
                     .unwrap();
             }
 
-            self.cpu
-                .bus
-                .store64(fromhost_addr, (tohost << 48 >> 48) | 1)
-                .unwrap();
+            if self.cpu.bus.load64(fromhost_addr).unwrap() == 0 {
+                self.cpu
+                    .bus
+                    .store64(fromhost_addr, (tohost << 48 >> 48) | 1)
+                    .unwrap();
+            }
         }
     }
 }
