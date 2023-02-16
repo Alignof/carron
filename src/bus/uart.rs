@@ -38,6 +38,17 @@ enum IirFcrMask {
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
+enum LcrMask {
+    DLAB = 0x80,
+    SBC = 0x40,
+    SPAR = 0x20,
+    EPAR = 0x10,
+    PARITY = 0x08,
+    STOP = 0x04,
+}
+
+#[allow(dead_code)]
+#[allow(non_camel_case_types)]
 enum FcrMask {
     ENABLE_FIFO = 0x01,
     CLEAR_RCVR = 0x02,
@@ -151,13 +162,22 @@ impl Device for Uart {
 
     // load
     fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        const RX: usize = UartRegister::RX_TX as usize;
         let index = self.addr2index(addr);
 
-        if index == UartRegister::RX_TX as usize {
-            self.uart[UartRegister::LSR as usize] &= !(LsrMask::DR as u8);
-            self.update_interrupt();
+        match index {
+            RX => {
+                let data = if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
+                    self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8
+                } else {
+                    self.rx_byte()
+                };
+                self.update_interrupt();
+
+                Ok(data as i8 as i64 as u64)
+            }
+            _ => Ok(self.uart[index] as i8 as i64 as u64),
         }
-        Ok(self.uart[index] as i8 as i64 as u64)
     }
 
     fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
