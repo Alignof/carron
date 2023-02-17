@@ -90,7 +90,7 @@ impl FrontendServer {
             memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
-        ret_errno as i64
+        ret_errno
     }
 
     pub fn write(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
@@ -103,9 +103,8 @@ impl FrontendServer {
                 len as usize,
             )
         };
-        let ret = sysret_errno(wrote_len as i64);
 
-        ret as i64
+        sysret_errno(wrote_len as i64)
     }
 
     pub fn pread(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
@@ -124,7 +123,7 @@ impl FrontendServer {
             memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
-        ret_errno as i64
+        ret_errno
     }
 
     pub fn pwrite(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
@@ -196,7 +195,7 @@ impl FrontendServer {
             memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
-        ret as i64
+        ret
     }
 
     pub fn fstat(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64) -> i64 {
@@ -238,7 +237,7 @@ impl FrontendServer {
             memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
-        ret as i64
+        ret
     }
 
     pub fn exit(&self, exit_code: &mut Option<i32>, code: u64) -> i64 {
@@ -251,8 +250,8 @@ impl FrontendServer {
     pub fn getmainvars(&self, cpu: &mut Cpu, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {
         log::infoln!("sys_getmainvars(2011)");
 
-        let arg_size = args.main_args.as_ref().map(|x| x.len()).unwrap_or(0) as usize;
-        let mut words: Vec<u64> = vec![0; arg_size as usize + 3];
+        let arg_size = args.main_args.as_ref().map(|x| x.len()).unwrap_or(0);
+        let mut words: Vec<u64> = vec![0; arg_size + 3];
         words[0] = arg_size as u64; // argc
         words[arg_size + 1] = 0; // argv[argc] = NULL
         words[arg_size + 2] = 0; // envp[0] = NULL
