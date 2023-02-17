@@ -179,15 +179,20 @@ impl Mmu {
                         Isa::Rv64 => 8,
                     };
                     let mut level: i32 = match *self.isa {
-                        Isa::Rv32 => 1,
-                        Isa::Rv64 => 2,
+                        Isa::Rv32 => 1, // 2 - 1
+                        Isa::Rv64 => 2, // 3 - 1
                     };
 
                     let pte = loop {
                         let pte_addr = ppn * PAGESIZE + vpn[level as usize] * pte_size;
                         log::debugln!("pte_addr({}): 0x{:x}", level, pte_addr);
                         let pte =
-                            self.check_pte_validity(purpose, dram.load64(pte_addr).unwrap())?;
+                            match *self.isa {
+                                Isa::Rv32 => self
+                                    .check_pte_validity(purpose, dram.load32(pte_addr).unwrap())?,
+                                Isa::Rv64 => self
+                                    .check_pte_validity(purpose, dram.load64(pte_addr).unwrap())?,
+                            };
                         log::debugln!("pte({}): 0x{:x}", level, pte);
 
                         if self.is_leaf_pte(pte) {
@@ -200,7 +205,7 @@ impl Mmu {
                         }
 
                         ppn = match *self.isa {
-                            Isa::Rv32 => pte >> 10 & 0xffff_ffff,
+                            Isa::Rv32 => pte >> 10 & 0x3fff_ffff,
                             Isa::Rv64 => pte >> 10 & 0xfff_ffff_ffff,
                         };
                         log::debugln!("PPN{}: 0x{:x}", level, ppn);
@@ -208,65 +213,48 @@ impl Mmu {
 
                     self.check_leaf_pte(purpose, priv_lv, csrs, pte)?;
                     let ppn = match *self.isa {
-                        Isa::Rv32 => vec![pte >> 10 & 0x1FF, pte >> 20 & 0xFFF],
+                        Isa::Rv32 => vec![pte >> 10 & 0x3FF, pte >> 20 & 0xFFF],
                         Isa::Rv64 => {
                             vec![pte >> 10 & 0x1FF, pte >> 19 & 0x1FF, pte >> 28 & 0x3FF_FFFF]
                         }
                     };
 
-                    match *self.isa {
+                    let paddr = match *self.isa {
                         Isa::Rv32 => match level {
-                            0 => self.pmp(
-                                purpose,
-                                ppn[1] << 22 | ppn[0] << 12 | page_off,
-                                priv_lv,
-                                csrs,
-                            ),
+                            0 => ppn[1] << 22 | ppn[0] << 12 | page_off,
                             1 => {
                                 if ppn[0] != 0 {
                                     return Err(self.trap_cause(purpose));
                                 }
-                                self.pmp(
-                                    purpose,
-                                    ppn[1] << 22 | vpn[0] << 12 | page_off,
-                                    priv_lv,
-                                    csrs,
-                                )
+                                ppn[1] << 22 | vpn[0] << 12 | page_off
                             }
-                            _ => Err(self.trap_cause(purpose)),
+                            _ => return Err(self.trap_cause(purpose)),
                         },
                         Isa::Rv64 => match level {
-                            0 => self.pmp(
-                                purpose,
-                                ppn[2] << 30 | ppn[1] << 21 | ppn[0] << 12 | page_off,
-                                priv_lv,
-                                csrs,
-                            ),
+                            0 => ppn[2] << 30 | ppn[1] << 21 | ppn[0] << 12 | page_off,
                             1 => {
                                 if ppn[0] != 0 {
                                     return Err(self.trap_cause(purpose));
                                 }
-                                self.pmp(
-                                    purpose,
-                                    ppn[2] << 30 | ppn[1] << 21 | vpn[0] << 12 | page_off,
-                                    priv_lv,
-                                    csrs,
-                                )
+                                ppn[2] << 30 | ppn[1] << 21 | vpn[0] << 12 | page_off
                             }
                             2 => {
                                 if ppn[0] != 0 || ppn[1] != 0 {
                                     return Err(self.trap_cause(purpose));
                                 }
-                                self.pmp(
-                                    purpose,
-                                    ppn[2] << 30 | vpn[1] << 21 | vpn[0] << 12 | page_off,
-                                    priv_lv,
-                                    csrs,
-                                )
+                                ppn[2] << 30 | vpn[1] << 21 | vpn[0] << 12 | page_off
                             }
-                            _ => Err(self.trap_cause(purpose)),
+                            _ => return Err(self.trap_cause(purpose)),
                         },
-                    }
+                    };
+
+                    log::debugln!(
+                        "raw address:{:x}\n\t=> transrated address:{:x}",
+                        addr,
+                        paddr,
+                    );
+
+                    self.pmp(purpose, paddr, priv_lv, csrs)
                 }
             },
             // return raw address if privileged level is Machine
