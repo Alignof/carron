@@ -40,6 +40,10 @@ impl Bus {
 
     // store
     pub fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
+        if (0x80000000..0x8000a5f4).contains(&addr) {
+            panic!("breaking code area by store8: {addr:#x}");
+        }
+
         if self.mrom.in_range(addr) {
             self.mrom.store8(addr, data)
         } else if self.clint.in_range(addr) {
@@ -64,6 +68,10 @@ impl Bus {
         addr: u64,
         data: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
+        if (0x80000000..0x8000a5f4).contains(&addr) {
+            panic!("breaking code area by store16: {addr:#x}");
+        }
+
         if self.mrom.in_range(addr) {
             self.mrom.store16(addr, data)
         } else if self.clint.in_range(addr) {
@@ -88,6 +96,10 @@ impl Bus {
         addr: u64,
         data: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
+        if (0x80000000..0x8000a5f4).contains(&addr) {
+            panic!("breaking code area by store32: {addr:#x}");
+        }
+
         if self.mrom.in_range(addr) {
             self.mrom.store32(addr, data)
         } else if self.clint.in_range(addr) {
@@ -112,6 +124,10 @@ impl Bus {
         addr: u64,
         data: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
+        if (0x80000000..0x8000a5f4).contains(&addr) {
+            panic!("breaking code area by store64: {addr:#x}");
+        }
+
         if self.mrom.in_range(addr) {
             self.mrom.store64(addr, data)
         } else if self.clint.in_range(addr) {

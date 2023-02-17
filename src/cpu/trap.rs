@@ -121,9 +121,10 @@ impl Cpu {
 
     fn get_deleg(&self, cause_of_trap: TrapCause) -> u64 {
         match cause_of_trap {
+            TrapCause::IllegalInst => panic!("illegal inst"),
             TrapCause::InstAddrMisaligned
             | TrapCause::InstAccessFault
-            | TrapCause::IllegalInst
+            //| TrapCause::IllegalInst
             | TrapCause::Breakpoint
             | TrapCause::UmodeEcall
             | TrapCause::SmodeEcall
