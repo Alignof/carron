@@ -222,12 +222,17 @@ impl Mmu {
                                 priv_lv,
                                 csrs,
                             ),
-                            1 => self.pmp(
-                                purpose,
-                                ppn[1] << 22 | vpn[0] << 12 | page_off,
-                                priv_lv,
-                                csrs,
-                            ),
+                            1 => {
+                                if ppn[0] != 0 {
+                                    return Err(self.trap_cause(purpose));
+                                }
+                                self.pmp(
+                                    purpose,
+                                    ppn[1] << 22 | vpn[0] << 12 | page_off,
+                                    priv_lv,
+                                    csrs,
+                                )
+                            }
                             _ => Err(self.trap_cause(purpose)),
                         },
                         Isa::Rv64 => match level {
@@ -237,18 +242,28 @@ impl Mmu {
                                 priv_lv,
                                 csrs,
                             ),
-                            1 => self.pmp(
-                                purpose,
-                                ppn[2] << 30 | ppn[1] << 21 | vpn[0] << 12 | page_off,
-                                priv_lv,
-                                csrs,
-                            ),
-                            2 => self.pmp(
-                                purpose,
-                                ppn[2] << 30 | vpn[1] << 21 | vpn[0] << 12 | page_off,
-                                priv_lv,
-                                csrs,
-                            ),
+                            1 => {
+                                if ppn[0] != 0 {
+                                    return Err(self.trap_cause(purpose));
+                                }
+                                self.pmp(
+                                    purpose,
+                                    ppn[2] << 30 | ppn[1] << 21 | vpn[0] << 12 | page_off,
+                                    priv_lv,
+                                    csrs,
+                                )
+                            }
+                            2 => {
+                                if ppn[0] != 0 || ppn[1] != 0 {
+                                    return Err(self.trap_cause(purpose));
+                                }
+                                self.pmp(
+                                    purpose,
+                                    ppn[2] << 30 | vpn[1] << 21 | vpn[0] << 12 | page_off,
+                                    priv_lv,
+                                    csrs,
+                                )
+                            }
                             _ => Err(self.trap_cause(purpose)),
                         },
                     }
