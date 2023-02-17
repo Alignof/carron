@@ -103,7 +103,6 @@ impl FrontendServer {
                 len as usize,
             )
         };
-        
 
         sysret_errno(wrote_len as i64)
     }
