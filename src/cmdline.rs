@@ -89,16 +89,17 @@ impl Arguments {
 
         let result_reg = app.value_of("result_reg").map(|x| x.parse().unwrap());
 
-        let mut main_args = vec![
-            pkpath.clone(),
-            Some(filename.clone()),
-        ]
-        .iter()
-        .flat_map(|x| x.clone())
-        .collect::<Vec<String>>();
+        let mut main_args = vec![pkpath.clone(), Some(filename.clone())]
+            .iter()
+            .flat_map(|x| x.clone())
+            .collect::<Vec<String>>();
 
-        if let Some(mut args) = app.values_of("main_args")
-            .map(|args| args.map(|s| s.to_string()).collect::<Vec<String>>()) { main_args.append(&mut args) }
+        if let Some(mut args) = app
+            .values_of("main_args")
+            .map(|args| args.map(|s| s.to_string()).collect::<Vec<String>>())
+        {
+            main_args.append(&mut args)
+        }
 
         Arguments {
             filename,
