@@ -21,6 +21,14 @@ fn memwrite(cpu: &mut Cpu, addr: u64, len: usize, data: Vec<u8>) {
     }
 }
 
+fn sysret_errno(ret: i64) -> i64 {
+    if ret == -1 {
+        unsafe { -(*libc::__errno_location() as i64) }
+    } else {
+        ret
+    }
+}
+
 impl FrontendServer {
     pub fn openat(
         &mut self,
@@ -34,17 +42,17 @@ impl FrontendServer {
         log::infoln!("sys_openat(56)");
         let name: Vec<u8> = memread(cpu, name_addr, len);
         let name: &str = std::str::from_utf8(name.split_last().unwrap().1).unwrap();
-        let fd = unsafe {
+        let fd = sysret_errno(unsafe {
             libc::openat(
                 dirfd as i32,
                 name.as_ptr() as *const i8,
                 flags as i32,
                 mode as i32,
-            )
-        };
+            ) as i64
+        });
 
         if fd < 0 {
-            -1
+            sysret_errno(-1)
         } else {
             self.fd_alloc(fd as u64)
         }
@@ -52,7 +60,10 @@ impl FrontendServer {
 
     pub fn close(&mut self, fd: u64) -> i64 {
         log::infoln!("sys_close(57)");
-        unsafe { libc::close(self.fd_lookup(fd) as i32) };
+        if unsafe { libc::close(self.fd_lookup(fd) as i32) } < 0 {
+            return sysret_errno(-1);
+        }
+
         self.fd_dealloc(fd);
         0
     }
@@ -60,7 +71,7 @@ impl FrontendServer {
     pub fn lseek(&self, fd: u64, ptr: u64, dir: u64) -> i64 {
         log::infoln!("sys_lseek(62)");
 
-        unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) }
+        sysret_errno(unsafe { libc::lseek(self.fd_lookup(fd) as i32, ptr as i64, dir as i32) })
     }
 
     pub fn read(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
@@ -73,11 +84,13 @@ impl FrontendServer {
                 len as usize,
             )
         };
+
+        let ret_errno = sysret_errno(read_len as i64);
         if read_len > 0 {
             memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
-        read_len as i64
+        ret_errno
     }
 
     pub fn write(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64) -> i64 {
@@ -91,7 +104,7 @@ impl FrontendServer {
             )
         };
 
-        wrote_len as i64
+        sysret_errno(wrote_len as i64)
     }
 
     pub fn pread(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
@@ -105,11 +118,12 @@ impl FrontendServer {
                 off as i64,
             )
         };
+        let ret_errno = sysret_errno(read_len as i64);
         if read_len > 0 {
             memwrite(cpu, dst_addr, read_len as usize, buf);
         }
 
-        read_len as i64
+        ret_errno
     }
 
     pub fn pwrite(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64, len: u64, off: u64) -> i64 {
@@ -171,6 +185,7 @@ impl FrontendServer {
             )
         };
 
+        let ret = sysret_errno(ret.into());
         if ret != -1 {
             let rbuf = rbuf
                 .iter()
@@ -180,7 +195,7 @@ impl FrontendServer {
             memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
-        ret as i64
+        ret
     }
 
     pub fn fstat(&self, cpu: &mut Cpu, fd: u64, dst_addr: u64) -> i64 {
@@ -212,6 +227,7 @@ impl FrontendServer {
             )
         };
 
+        let ret = sysret_errno(ret as i64);
         if ret != -1 {
             let rbuf = rbuf
                 .iter()
@@ -221,7 +237,7 @@ impl FrontendServer {
             memwrite(cpu, dst_addr, rbuf.len(), rbuf);
         }
 
-        ret as i64
+        ret
     }
 
     pub fn exit(&self, exit_code: &mut Option<i32>, code: u64) -> i64 {
@@ -234,38 +250,34 @@ impl FrontendServer {
     pub fn getmainvars(&self, cpu: &mut Cpu, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {
         log::infoln!("sys_getmainvars(2011)");
 
-        let elfpath = format!("{}\0", args.filename);
-        let pkpath = format!("{}\0", args.pkpath.as_ref().unwrap());
-        let mut words: Vec<u64> = vec![0; 5];
-        words[0] = 2 + args.main_args.as_ref().unwrap_or(&Vec::new()).len() as u64; // argc
-        words[1] = dst_addr + 8 * 5; // pkpath addr
-        words[2] = words[1] + pkpath.len() as u64; // elfpath addr
-        words[3] = if args.main_args.is_some() {
-            // arguments addr of main func
-            words[2] + elfpath.len() as u64
-        } else {
-            0 // argv[argc] = NULL
-        };
-        words[4] = 0; // envp[0] = NULL
+        let arg_size = args.main_args.len();
+        let mut words: Vec<u64> = vec![0; arg_size + 3];
+        words[0] = arg_size as u64; // argc
+        words[arg_size + 1] = 0; // argv[argc] = NULL
+        words[arg_size + 2] = 0; // envp[0] = NULL
+
+        let mut sz = (arg_size as u64 + 3) * 8;
+        for (i, arg) in args.main_args.iter().enumerate() {
+            words[i + 1] = dst_addr + sz;
+            sz += arg.len() as u64 + 1;
+        }
 
         let mut buf: Vec<u8> = words
             .iter()
             .flat_map(|w| w.to_le_bytes().to_vec())
             .collect::<Vec<u8>>();
-        buf.append(&mut pkpath.into_bytes());
-        buf.append(&mut elfpath.into_bytes());
-        if let Some(argv) = &args.main_args {
-            buf.append(
-                &mut argv
-                    .iter()
-                    .cloned()
-                    .flat_map(|x| format!("{x}\0").into_bytes())
-                    .collect(),
-            );
-        }
+
+        buf.append(
+            &mut args
+                .main_args
+                .iter()
+                .cloned()
+                .flat_map(|x| format!("{x}\0").into_bytes())
+                .collect(),
+        );
 
         if buf.len() > limit as usize {
-            return -12;
+            return -12; // ENOMEM
         }
 
         memwrite(cpu, dst_addr, buf.len(), buf);

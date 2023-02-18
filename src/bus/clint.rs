@@ -38,18 +38,12 @@ impl Device for Clint {
         (addr - self.base_addr) as usize
     }
 
-    // get 1 byte
-    fn raw_byte(&self, addr: u64) -> u8 {
-        let addr = self.addr2index(addr);
-        self.clint[addr]
-    }
-
     // store
     fn store8(&mut self, addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            "clint is allow load/store32 but try store8".to_string(),
+            "clint only allows load/store32 but try store8".to_string(),
         ))
     }
 
@@ -57,7 +51,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            "clint is allow load/store32 but try store16".to_string(),
+            "clint only allows load/store32 but try store16".to_string(),
         ))
     }
 
@@ -84,11 +78,11 @@ impl Device for Clint {
     }
 
     // load
-    fn load8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load8".to_string(),
+            "clint only allows load/store32 but try load8".to_string(),
         ))
     }
 
@@ -96,7 +90,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load16".to_string(),
+            "clint only allows load/store32 but try load16".to_string(),
         ))
     }
 
@@ -123,7 +117,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load_u8".to_string(),
+            "clint only allows load/store32 but try load_u8".to_string(),
         ))
     }
 
@@ -131,7 +125,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load_u16".to_string(),
+            "clint only allows load/store32 but try load_u16".to_string(),
         ))
     }
 
@@ -139,7 +133,7 @@ impl Device for Clint {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "clint is allow load/store32 but try load_u32".to_string(),
+            "clint only allows load/store32 but try load_u32".to_string(),
         ))
     }
 }

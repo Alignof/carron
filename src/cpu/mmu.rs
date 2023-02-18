@@ -163,146 +163,100 @@ impl Mmu {
         self.update_ppn_and_mode(csrs);
 
         match priv_lv {
-            PrivilegedLevel::Supervisor | PrivilegedLevel::User => {
-                match self.trans_mode {
-                    AddrTransMode::Bare => Ok(addr),
-                    AddrTransMode::Sv32 => {
-                        const PTESIZE: u64 = 4;
-                        let VPN1 = addr >> 22 & 0x3FF;
-                        let VPN0 = addr >> 12 & 0x3FF;
-                        let page_off = addr & 0xFFF;
+            PrivilegedLevel::Supervisor | PrivilegedLevel::User => match self.trans_mode {
+                AddrTransMode::Bare => Ok(addr),
+                AddrTransMode::Sv32 | AddrTransMode::Sv39 => {
+                    let page_off = addr & 0xFFF;
+                    let mut ppn = self.ppn;
+                    let vpn = match *self.isa {
+                        Isa::Rv32 => vec![addr >> 12 & 0x3FF, addr >> 22 & 0x3FF],
+                        Isa::Rv64 => {
+                            vec![addr >> 12 & 0x1FF, addr >> 21 & 0x1FF, addr >> 30 & 0x1FF]
+                        }
+                    };
+                    let pte_size: u64 = match *self.isa {
+                        Isa::Rv32 => 4,
+                        Isa::Rv64 => 8,
+                    };
+                    let mut level: i32 = match *self.isa {
+                        Isa::Rv32 => 1, // 2 - 1
+                        Isa::Rv64 => 2, // 3 - 1
+                    };
 
-                        // first table walk
-                        let PTE_addr = self.ppn * PAGESIZE + VPN1 * PTESIZE;
-                        log::debugln!("PTE_addr(1): 0x{:x}", PTE_addr);
-                        let PTE =
-                            self.check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())?;
-                        log::debugln!("PTE(1): 0x{:x}", PTE);
-                        let PPN1 = PTE >> 20 & 0xFFF;
-                        log::debugln!("PPN1: 0x{:x}", PPN1);
+                    let pte = loop {
+                        let pte_addr = ppn * PAGESIZE + vpn[level as usize] * pte_size;
+                        log::debugln!("pte_addr({}): 0x{:x}", level, pte_addr);
+                        let pte =
+                            match *self.isa {
+                                Isa::Rv32 => self
+                                    .check_pte_validity(purpose, dram.load32(pte_addr).unwrap())?,
+                                Isa::Rv64 => self
+                                    .check_pte_validity(purpose, dram.load64(pte_addr).unwrap())?,
+                            };
+                        log::debugln!("pte({}): 0x{:x}", level, pte);
 
-                        // complete the trans addr if PTE is the leaf
-                        let PPN0 = if self.is_leaf_pte(PTE) {
-                            // check misaligned superpage
-                            if (PTE >> 10 & 0x1FF) != 0 {
-                                return Err(self.trap_cause(purpose)); // exception
-                            }
-
-                            // check leaf pte and return PPN0
-                            match self.check_leaf_pte(purpose, priv_lv, csrs, PTE) {
-                                Ok(_) => VPN0,
-                                Err(cause) => return Err(cause),
-                            }
-                        } else {
-                            // second table walk
-                            let PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE;
-                            log::debugln!(
-                                "PTE_addr = (PTE >> 10 & 0x3FFFFF) * PAGESIZE + VPN0 * PTESIZE\n\
-                                0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
-                                PTE_addr,
-                                (PTE >> 10 & 0x3FFFFF),
-                                PAGESIZE,
-                                VPN0,
-                                PTESIZE
-                            );
-
-                            let PTE =
-                                self.check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())?;
-                            log::debugln!("PTE(2): 0x{:x}", PTE);
-
-                            // check PTE to be leaf
-                            if !self.is_leaf_pte(PTE) {
-                                return Err(self.trap_cause(purpose)); // misaligned superpage
-                            }
-
-                            // check leaf pte and return PPN0
-                            match self.check_leaf_pte(purpose, priv_lv, csrs, PTE) {
-                                Ok(PTE) => PTE >> 10 & 0x3FF,
-                                Err(cause) => return Err(cause),
-                            }
-                        };
-
-                        log::debugln!(
-                            "raw address:{:x}\n\t=> transrated address:{:x}",
-                            addr,
-                            PPN1 << 22 | PPN0 << 12 | page_off
-                        );
-
-                        // check pmp and return transrated address
-                        self.pmp(purpose, PPN1 << 22 | PPN0 << 12 | page_off, priv_lv, csrs)
-                    }
-                    AddrTransMode::Sv39 => {
-                        const PTESIZE: u64 = 8;
-                        const PPN_MASK: u64 = 0xFFFFFFFFFFF;
-                        let vpn = vec![addr >> 12 & 0x1FF, addr >> 21 & 0x1FF, addr >> 30 & 0x1FF];
-                        let mut ppn = vpn.clone();
-                        let page_off = addr & 0xFFF;
-                        let pte_offset = vec![10, 19, 28];
-                        let pte_mask = vec![0x1FF, 0x1FF, 0x3FFFFFF];
-                        let mut levels = 2;
-
-                        // first table levels
-                        let mut PTE_addr = self.ppn * PAGESIZE + vpn[levels] * PTESIZE;
-                        log::debugln!("PTE_addr(2): 0x{:x}", PTE_addr);
-                        let mut PTE =
-                            self.check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())?;
-                        log::debugln!("PTE(2): 0x{:x}", PTE);
-                        ppn[levels] = PTE >> pte_offset[levels] & pte_mask[levels];
-                        log::debugln!("PPN2: 0x{:x}", ppn[levels]);
-
-                        // complete the trans addr if PTE is the leaf
-                        while !self.is_leaf_pte(PTE) {
-                            levels -= 1;
-                            PTE_addr = (PTE >> 10 & PPN_MASK) * PAGESIZE + vpn[levels] * PTESIZE;
-                            log::debugln!(
-                                "PTE_addr = (PTE >> 10 & 0xFFFFFFFFFFF) * PAGESIZE + VPN{} * PTESIZE\n\
-                                0x{:x} = 0x{:x} * 0x{:x} + 0x{:x} * 0x{:x}",
-                                levels,
-                                PTE_addr,
-                                (PTE >> 10 & PPN_MASK),
-                                PAGESIZE,
-                                vpn[levels],
-                                PTESIZE
-                            );
-
-                            PTE =
-                                self.check_pte_validity(purpose, dram.load64(PTE_addr).unwrap())?;
-                            log::debugln!("PTE({}): 0x{:x}", levels, PTE);
-
-                            ppn[levels] = PTE >> pte_offset[levels] & pte_mask[levels];
-
-                            if levels == usize::MAX {
-                                return Err(self.trap_cause(purpose)); // exception
-                            }
+                        if self.is_leaf_pte(pte) {
+                            break pte;
                         }
 
-                        // check misaligned superpage
-                        if levels > 0 && (PTE >> 10 & ((1 << (pte_offset[levels] - 10)) - 1)) != 0 {
-                            return Err(self.trap_cause(purpose)); // exception
+                        level -= 1;
+                        if level < 0 {
+                            return Err(self.trap_cause(purpose));
                         }
 
-                        // check leaf pte and return PPN0
-                        ppn[levels] = match self.check_leaf_pte(purpose, priv_lv, csrs, PTE) {
-                            Ok(PTE) => PTE >> pte_offset[levels] & pte_mask[levels],
-                            Err(cause) => return Err(cause),
+                        ppn = match *self.isa {
+                            Isa::Rv32 => pte >> 10 & 0x3fff_ffff,
+                            Isa::Rv64 => pte >> 10 & 0xfff_ffff_ffff,
                         };
+                        log::debugln!("PPN{}: 0x{:x}", level, ppn);
+                    };
 
-                        log::debugln!(
-                            "raw address:{:x}\n\t=> transrated address:{:x}",
-                            addr,
-                            ppn[2] << 30 | ppn[1] << 21 | ppn[0] << 12 | page_off
-                        );
+                    self.check_leaf_pte(purpose, priv_lv, csrs, pte)?;
+                    let ppn = match *self.isa {
+                        Isa::Rv32 => vec![pte >> 10 & 0x3FF, pte >> 20 & 0xFFF],
+                        Isa::Rv64 => {
+                            vec![pte >> 10 & 0x1FF, pte >> 19 & 0x1FF, pte >> 28 & 0x3FF_FFFF]
+                        }
+                    };
 
-                        // check pmp and return transrated address
-                        self.pmp(
-                            purpose,
-                            ppn[2] << 30 | ppn[1] << 21 | ppn[0] << 12 | page_off,
-                            priv_lv,
-                            csrs,
-                        )
-                    }
+                    let paddr = match *self.isa {
+                        Isa::Rv32 => match level {
+                            0 => ppn[1] << 22 | ppn[0] << 12 | page_off,
+                            1 => {
+                                if ppn[0] != 0 {
+                                    return Err(self.trap_cause(purpose));
+                                }
+                                ppn[1] << 22 | vpn[0] << 12 | page_off
+                            }
+                            _ => return Err(self.trap_cause(purpose)),
+                        },
+                        Isa::Rv64 => match level {
+                            0 => ppn[2] << 30 | ppn[1] << 21 | ppn[0] << 12 | page_off,
+                            1 => {
+                                if ppn[0] != 0 {
+                                    return Err(self.trap_cause(purpose));
+                                }
+                                ppn[2] << 30 | ppn[1] << 21 | vpn[0] << 12 | page_off
+                            }
+                            2 => {
+                                if ppn[0] != 0 || ppn[1] != 0 {
+                                    return Err(self.trap_cause(purpose));
+                                }
+                                ppn[2] << 30 | vpn[1] << 21 | vpn[0] << 12 | page_off
+                            }
+                            _ => return Err(self.trap_cause(purpose)),
+                        },
+                    };
+
+                    log::debugln!(
+                        "raw address:{:x}\n\t=> transrated address:{:x}",
+                        addr,
+                        paddr,
+                    );
+
+                    self.pmp(purpose, paddr, priv_lv, csrs)
                 }
-            }
+            },
             // return raw address if privileged level is Machine
             _ => self.pmp(purpose, addr, priv_lv, csrs),
         }
