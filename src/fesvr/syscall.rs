@@ -250,33 +250,31 @@ impl FrontendServer {
     pub fn getmainvars(&self, cpu: &mut Cpu, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {
         log::infoln!("sys_getmainvars(2011)");
 
-        let arg_size = args.main_args.as_ref().map(|x| x.len()).unwrap_or(0);
+        let arg_size = args.main_args.len();
         let mut words: Vec<u64> = vec![0; arg_size + 3];
         words[0] = arg_size as u64; // argc
         words[arg_size + 1] = 0; // argv[argc] = NULL
         words[arg_size + 2] = 0; // envp[0] = NULL
 
-        if let Some(main_args) = &args.main_args {
-            let mut sz = (arg_size as u64 + 3) * 8;
-            for (i, arg) in main_args.iter().enumerate() {
-                words[i + 1] = dst_addr + sz;
-                sz += arg.len() as u64 + 1;
-            }
+        let mut sz = (arg_size as u64 + 3) * 8;
+        for (i, arg) in args.main_args.iter().enumerate() {
+            words[i + 1] = dst_addr + sz;
+            sz += arg.len() as u64 + 1;
         }
 
         let mut buf: Vec<u8> = words
             .iter()
             .flat_map(|w| w.to_le_bytes().to_vec())
             .collect::<Vec<u8>>();
-        if let Some(argv) = &args.main_args {
-            buf.append(
-                &mut argv
-                    .iter()
-                    .cloned()
-                    .flat_map(|x| format!("{x}\0").into_bytes())
-                    .collect(),
-            );
-        }
+
+        buf.append(
+            &mut args
+                .main_args
+                .iter()
+                .cloned()
+                .flat_map(|x| format!("{x}\0").into_bytes())
+                .collect(),
+        );
 
         if buf.len() > limit as usize {
             return -12; // ENOMEM

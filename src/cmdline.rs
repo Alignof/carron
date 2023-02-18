@@ -18,7 +18,7 @@ pub struct Arguments {
     pub init_pc: Option<u64>,
     pub break_point: Option<u64>,
     pub result_reg: Option<usize>,
-    pub main_args: Option<Vec<String>>,
+    pub main_args: Vec<String>,
 }
 
 impl Arguments {
@@ -89,16 +89,17 @@ impl Arguments {
 
         let result_reg = app.value_of("result_reg").map(|x| x.parse().unwrap());
 
-        let main_args = app
-            .values_of("main_args")
+        let mut main_args = vec![
+            pkpath.clone().map(|x| x.to_string()),
+            Some(filename.clone()),
+        ]
+        .iter()
+        .flat_map(|x| x.clone())
+        .collect::<Vec<String>>();
+
+        app.values_of("main_args")
             .map(|args| args.map(|s| s.to_string()).collect::<Vec<String>>())
-            .map(|mut args| {
-                args.insert(0, filename.clone());
-                if let Some(pk) = &pkpath {
-                    args.insert(0, pk.to_string());
-                }
-                args
-            });
+            .map(|mut args| main_args.append(&mut args));
 
         Arguments {
             filename,
