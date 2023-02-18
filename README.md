@@ -28,6 +28,8 @@ The emulator passed riscv-tests shown below.
 - [x] rv64ua-p
 - [x] rv64ua-v
 
+This emulator can also run self-hosted binaries of [cc\_sakura](https://github.com/Alignof/cc_sakura), my handmade C compiler.
+
 ## Install
 ```zsh
 git clone https://github.com/Alignof/carron.git
@@ -38,9 +40,9 @@ cargo build --release
 ## Usage
 ```zsh
 $ ./carron --help
-carron 0.10.0
+carron 1.0.0
 n.takana <Alignof@outlook.com>
-RV32IMAC emulator
+RV64IMAC emulator
 
 USAGE:
     carron [OPTIONS] <filename> [main_args]...
