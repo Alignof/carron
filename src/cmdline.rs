@@ -14,7 +14,7 @@ pub enum ExeOption {
 pub struct Arguments {
     pub filename: String,
     pub exe_option: ExeOption,
-    pub pkpath: Option<String>,
+    pub pk_path: Option<String>,
     pub kernel_path: Option<String>,
     pub init_pc: Option<u64>,
     pub break_point: Option<u64>,
@@ -51,7 +51,7 @@ impl Arguments {
             None => panic!("please specify target ELF file."),
         };
 
-        let pkpath = app.value_of("pk").map(|s| s.to_string());
+        let pk_path = app.value_of("pk").map(|s| s.to_string());
 
         let flag_map = || {
             (
@@ -91,7 +91,7 @@ impl Arguments {
 
         let result_reg = app.value_of("result_reg").map(|x| x.parse().unwrap());
 
-        let mut main_args = vec![pkpath.clone(), Some(filename.clone())]
+        let mut main_args = vec![pk_path.clone(), Some(filename.clone())]
             .iter()
             .flat_map(|x| x.clone())
             .collect::<Vec<String>>();
@@ -106,7 +106,7 @@ impl Arguments {
         Arguments {
             filename,
             exe_option,
-            pkpath,
+            pk_path,
             kernel_path: app.value_of("kernel").map(|s| s.to_string()),
             init_pc,
             break_point,
