@@ -21,9 +21,9 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader, isa: Isa) -> Self {
+    pub fn new(loader: elfload::ElfLoader, kernel_path: Option<String>, isa: Isa) -> Self {
         // load proxy kernel before user program when it's given
-        let dram = Dram::new(loader);
+        let dram = Dram::new(loader, kernel_path, isa);
         let mut mrom = Mrom::new(dram.base_addr, isa);
 
         // create and load DTB

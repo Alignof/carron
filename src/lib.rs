@@ -30,7 +30,7 @@ impl Emulator {
         let (tohost_addr, fromhost_addr) = loader.get_host_addr(isa);
 
         Emulator {
-            cpu: Cpu::new(loader, args.init_pc, isa),
+            cpu: Cpu::new(loader, args.init_pc, args.kernel_path.clone(), isa),
             frontend_server: FrontendServer::new(),
             tohost_addr,
             fromhost_addr,

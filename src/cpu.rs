@@ -69,9 +69,14 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u64>, isa: Isa) -> Self {
+    pub fn new(
+        loader: elfload::ElfLoader,
+        pc_from_cl: Option<u64>,
+        kernel_path: Option<String>,
+        isa: Isa,
+    ) -> Self {
         // initialize bus and get the entry point
-        let bus = bus::Bus::new(loader, isa);
+        let bus = bus::Bus::new(loader, kernel_path, isa);
         let isa = Rc::new(isa);
 
         Cpu {
