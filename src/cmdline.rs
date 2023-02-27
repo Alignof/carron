@@ -16,6 +16,7 @@ pub struct Arguments {
     pub exe_option: ExeOption,
     pub pk_path: Option<String>,
     pub kernel_path: Option<String>,
+    pub initrd_path: Option<String>,
     pub init_pc: Option<u64>,
     pub break_point: Option<u64>,
     pub result_reg: Option<usize>,
@@ -38,6 +39,7 @@ impl Arguments {
             )
             .arg(arg!(--pk <proxy_kernel> "Run with proxy kernel").required(false))
             .arg(arg!(--kernel <kernel> "Run with kernel").required(false))
+            .arg(arg!(--initrd <initrd> "Set initrd").required(false))
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
             .arg(arg!(--break_point <address> ... "Set break point as hex").required(false))
             .arg(arg!(--result_reg <register_number> ... "Set result register").required(false))
@@ -108,6 +110,7 @@ impl Arguments {
             exe_option,
             pk_path,
             kernel_path: app.value_of("kernel").map(|s| s.to_string()),
+            initrd_path: app.value_of("initrd").map(|s| s.to_string()),
             init_pc,
             break_point,
             result_reg,
