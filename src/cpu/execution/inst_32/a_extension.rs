@@ -4,11 +4,8 @@ use crate::cpu::{Cpu, TransAlign, TransFor, TrapCause};
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_LR_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             let _rl = inst.imm.unwrap() & 0x1;
             let _aq = inst.imm.unwrap() >> 1 & 0x1;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
@@ -35,11 +32,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.reservation_set.clear();
         }
         OpecodeKind::OP_AMOSWAP_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -51,11 +45,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOADD_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -70,11 +61,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOXOR_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -87,11 +75,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .store32(store_addr, cpu.regs.read(inst.rd) ^ cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOAND_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -104,11 +89,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .store32(store_addr, cpu.regs.read(inst.rd) & cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOOR_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -121,11 +103,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .store32(store_addr, cpu.regs.read(inst.rd) | cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOMIN_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -143,11 +122,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOMAX_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -165,11 +141,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOMINU_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -184,11 +157,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOMAXU_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -203,11 +173,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_LR_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             let _rl = inst.imm.unwrap() & 0x1;
             let _aq = inst.imm.unwrap() >> 1 & 0x1;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
@@ -234,11 +201,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.reservation_set.clear();
         }
         OpecodeKind::OP_AMOSWAP_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -250,11 +214,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.bus.store64(store_addr, cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOADD_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -269,11 +230,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOXOR_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -286,11 +244,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .store64(store_addr, cpu.regs.read(inst.rd) ^ cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOAND_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -303,11 +258,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .store64(store_addr, cpu.regs.read(inst.rd) & cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOOR_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -320,11 +272,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .store64(store_addr, cpu.regs.read(inst.rd) | cpu.regs.read(inst.rs2))?;
         }
         OpecodeKind::OP_AMOMIN_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -342,11 +291,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOMAX_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -364,11 +310,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOMINU_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
@@ -383,11 +326,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOMAXU_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
             let store_addr = cpu
                 .trans_addr(
