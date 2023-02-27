@@ -6,22 +6,15 @@ fn atomic_memory_operations_32<F: Fn(u64, u64) -> u64>(
     inst: &Instruction,
     cpu: &mut Cpu,
 ) -> Result<(), (Option<u64>, TrapCause, String)> {
-    let load_addr = cpu.trans_addr(
+    let amo_addr = cpu.trans_addr(
         TransFor::StoreAMO,
         TransAlign::Size32,
         cpu.regs.read(inst.rs1),
     )?;
-    let loaded_data = cpu.bus.load32(load_addr)?;
+    let loaded_data = cpu.bus.load32(amo_addr)?;
     cpu.regs.write(inst.rd, loaded_data);
-    let store_addr = cpu
-        .trans_addr(
-            TransFor::StoreAMO,
-            TransAlign::Size32,
-            cpu.regs.read(inst.rs1),
-        )
-        .expect("transition address failed in AMO");
     cpu.bus
-        .store32(store_addr, operation(loaded_data, cpu.regs.read(inst.rs2)))?;
+        .store32(amo_addr, operation(loaded_data, cpu.regs.read(inst.rs2)))?;
 
     Ok(())
 }
@@ -31,22 +24,15 @@ fn atomic_memory_operations_64<F: Fn(u64, u64) -> u64>(
     inst: &Instruction,
     cpu: &mut Cpu,
 ) -> Result<(), (Option<u64>, TrapCause, String)> {
-    let load_addr = cpu.trans_addr(
+    let amo_addr = cpu.trans_addr(
         TransFor::StoreAMO,
         TransAlign::Size64,
         cpu.regs.read(inst.rs1),
     )?;
-    let loaded_data = cpu.bus.load64(load_addr)?;
+    let loaded_data = cpu.bus.load64(amo_addr)?;
     cpu.regs.write(inst.rd, loaded_data);
-    let store_addr = cpu
-        .trans_addr(
-            TransFor::StoreAMO,
-            TransAlign::Size64,
-            cpu.regs.read(inst.rs1),
-        )
-        .expect("transition address failed in AMO");
     cpu.bus
-        .store64(store_addr, operation(loaded_data, cpu.regs.read(inst.rs2)))?;
+        .store64(amo_addr, operation(loaded_data, cpu.regs.read(inst.rs2)))?;
 
     Ok(())
 }
