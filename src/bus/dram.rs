@@ -34,17 +34,14 @@ impl Dram {
             }
         }
 
-        match kernel_path {
-            Some(path) => {
-                let file = File::open(path).unwrap();
-                let mapped_kernel = unsafe { Mmap::map(&file).unwrap() };
-                let kernel_offset = match isa {
-                    Isa::Rv32 => 0x400000,
-                    Isa::Rv64 => 0x200000,
-                };
-                new_dram.splice(kernel_offset.., mapped_kernel.iter().cloned());
-            }
-            None => (),
+        if let Some(path) = kernel_path {
+            let file = File::open(path).unwrap();
+            let mapped_kernel = unsafe { Mmap::map(&file).unwrap() };
+            let kernel_offset = match isa {
+                Isa::Rv32 => 0x400000,
+                Isa::Rv64 => 0x200000,
+            };
+            new_dram.splice(kernel_offset.., mapped_kernel.iter().cloned());
         }
 
         let dram_size = new_dram.len();

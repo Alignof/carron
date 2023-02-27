@@ -174,10 +174,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_AMOMINU_D => {
-            atomic_memory_operations_64(|x, y| std::cmp::min(x, y), inst, cpu)?;
+            atomic_memory_operations_64(std::cmp::min, inst, cpu)?;
         }
         OpecodeKind::OP_AMOMAXU_D => {
-            atomic_memory_operations_64(|x, y| std::cmp::max(x, y), inst, cpu)?;
+            atomic_memory_operations_64(std::cmp::max, inst, cpu)?;
         }
         _ => panic!("not an A extension"),
     }
