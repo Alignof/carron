@@ -1,5 +1,8 @@
+use memmap::Mmap;
+use std::fs::File;
+
 use super::Device;
-use crate::{elfload, TrapCause};
+use crate::{elfload, Isa, TrapCause};
 
 pub struct Dram {
     dram: Vec<u8>,
@@ -8,7 +11,7 @@ pub struct Dram {
 }
 
 impl Dram {
-    pub fn new(loader: elfload::ElfLoader) -> Self {
+    pub fn new(loader: elfload::ElfLoader, kernel_path: Option<String>, isa: Isa) -> Self {
         const DRAM_SIZE: usize = 1024 * 1024 * 128; // 2^27
         let virt_entry = loader.get_entry_point().expect("entry point not found.");
 
@@ -29,6 +32,19 @@ impl Dram {
                     loader.mem_data[mmap_start..mmap_end].iter().cloned(),
                 );
             }
+        }
+
+        match kernel_path {
+            Some(path) => {
+                let file = File::open(path).unwrap();
+                let mapped_kernel = unsafe { Mmap::map(&file).unwrap() };
+                let kernel_offset = match isa {
+                    Isa::Rv32 => 0x400000,
+                    Isa::Rv64 => 0x200000,
+                };
+                new_dram.splice(kernel_offset.., mapped_kernel.iter().cloned());
+            }
+            None => (),
         }
 
         let dram_size = new_dram.len();
