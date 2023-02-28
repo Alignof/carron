@@ -5,7 +5,7 @@ mod mrom;
 mod plic;
 mod uart;
 
-use crate::{elfload, Isa, TrapCause};
+use crate::{elfload, Arguments, Isa, TrapCause};
 use clint::Clint;
 use dram::Dram;
 use mrom::Mrom;
@@ -21,9 +21,9 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader, kernel_path: &Option<String>, isa: Isa) -> Self {
+    pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
         // load proxy kernel before user program when it's given
-        let dram = Dram::new(loader, kernel_path, isa);
+        let dram = Dram::new(loader, args, isa);
         let mut mrom = Mrom::new(dram.base_addr, isa);
 
         // create and load DTB

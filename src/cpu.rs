@@ -71,7 +71,7 @@ pub struct Cpu {
 impl Cpu {
     pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
         // initialize bus and get the entry point
-        let bus = bus::Bus::new(loader, &args.kernel_path, isa);
+        let bus = bus::Bus::new(loader, args, isa);
         let isa = Rc::new(isa);
 
         Cpu {

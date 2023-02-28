@@ -2,7 +2,7 @@ use memmap::Mmap;
 use std::fs::File;
 
 use super::Device;
-use crate::{elfload, Isa, TrapCause};
+use crate::{elfload, Arguments, Isa, TrapCause};
 
 pub struct Dram {
     dram: Vec<u8>,
@@ -11,7 +11,7 @@ pub struct Dram {
 }
 
 impl Dram {
-    pub fn new(loader: elfload::ElfLoader, kernel_path: &Option<String>, isa: Isa) -> Self {
+    pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
         const DRAM_SIZE: usize = 1024 * 1024 * 128; // 2^27
         let virt_entry = loader.get_entry_point().expect("entry point not found.");
 
@@ -34,17 +34,35 @@ impl Dram {
             }
         }
 
-        if let Some(path) = kernel_path {
+        if let Some(path) = &args.kernel_path {
             let file = File::open(path).unwrap();
             let mapped_kernel = unsafe { Mmap::map(&file).unwrap() };
             let kernel_offset = match isa {
                 Isa::Rv32 => 0x400000,
                 Isa::Rv64 => 0x200000,
             };
-            new_dram.splice(kernel_offset.., mapped_kernel.iter().cloned());
+            new_dram.splice(
+                kernel_offset..kernel_offset + mapped_kernel.len(),
+                mapped_kernel.iter().cloned(),
+            );
         }
 
-        let dram_size = new_dram.len();
+        if let Some(path) = &args.initrd_path {
+            let file = File::open(path).unwrap();
+            let mapped_initrd = unsafe { Mmap::map(&file).unwrap() };
+
+            const INITRD_END: usize = 0x8000_0000 + DRAM_SIZE - 0x1000;
+            let initrd_start = INITRD_END - mapped_initrd.len();
+            let initrd_offset = dbg!(initrd_start - virt_entry as usize);
+            new_dram.splice(
+                initrd_offset..initrd_offset + mapped_initrd.len(),
+                mapped_initrd.iter().cloned(),
+            );
+        }
+
+        let dram_size = dbg!(new_dram.len());
+        dbg!(&new_dram[0x200000..0x200200]);
+        dbg!(&new_dram[0x0719_2600..0x0719_2800]);
         Dram {
             dram: new_dram,
             base_addr: virt_entry,
