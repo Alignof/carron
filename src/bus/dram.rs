@@ -188,6 +188,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
@@ -213,6 +215,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
@@ -236,6 +240,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_16 = |data: i32| {
@@ -260,6 +266,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_u16 = |data: i32| {
@@ -287,6 +295,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_32 = |data: i32| {
