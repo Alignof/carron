@@ -200,11 +200,11 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
 
 #[cfg(test)]
 mod exe_16 {
-    use crate::bus;
+    use crate::cmdline::ExeOption;
     use crate::cpu::execution::inst_16::c_extension::exec;
     use crate::cpu::instruction::{Instruction, OpecodeKind::*};
     use crate::cpu::{csr, mmu, reg, Cpu, PrivilegedLevel};
-    use crate::{elfload, Isa};
+    use crate::{bus, elfload, Arguments, Isa};
     use std::collections::HashSet;
     use std::rc::Rc;
 
@@ -213,7 +213,18 @@ mod exe_16 {
         let dummy_elf =
             elfload::ElfLoader::try_new("./HelloWorld").expect("creating dummy_elf failed");
         let isa = Isa::Rv32;
-        let bus = bus::Bus::new(dummy_elf, isa);
+        let args = Arguments {
+            filename: "./HelloWorld".to_string(),
+            exe_option: ExeOption::OPT_DEFAULT,
+            pk_path: None,
+            kernel_path: None,
+            initrd_path: None,
+            init_pc: None,
+            break_point: None,
+            result_reg: None,
+            main_args: Vec::new(),
+        };
+        let bus = bus::Bus::new(dummy_elf, &args, isa);
         let mut cpu: Cpu = Cpu {
             pc: bus.mrom.base_addr,
             bus,

@@ -1,6 +1,8 @@
 use crate::Isa;
 
-fn dts_32(dram_addr: u64) -> String {
+fn dts_32(dram_addr: u64, initrd_start: Option<usize>, initrd_end: Option<usize>) -> String {
+    let initrd_start = initrd_start.unwrap_or(0);
+    let initrd_end = initrd_end.unwrap_or(0);
     format!(
         "/dts-v1/;
             / {{
@@ -10,6 +12,8 @@ fn dts_32(dram_addr: u64) -> String {
               model = \"ucbbar,spike-bare\";
               chosen {{
                 stdout-path = &SERIAL0;
+                linux,initrd-start = <{initrd_start}>;
+                linux,initrd-end = <{initrd_end}>;
                 bootargs = \"console=ttyS0 earlycon\";
               }};
               cpus {{
@@ -75,7 +79,9 @@ fn dts_32(dram_addr: u64) -> String {
     )
 }
 
-fn dts_64(dram_addr: u64) -> String {
+fn dts_64(dram_addr: u64, initrd_start: Option<usize>, initrd_end: Option<usize>) -> String {
+    let initrd_start = initrd_start.unwrap_or(0);
+    let initrd_end = initrd_end.unwrap_or(0);
     format!(
         "/dts-v1/;
 
@@ -86,6 +92,8 @@ fn dts_64(dram_addr: u64) -> String {
           model = \"ucbbar,spike-bare\";
           chosen {{
             stdout-path = &SERIAL0;
+            linux,initrd-start = <{initrd_start}>;
+            linux,initrd-end = <{initrd_end}>;
             bootargs = \"console=ttyS0 earlycon\";
           }};
           cpus {{
@@ -151,9 +159,14 @@ fn dts_64(dram_addr: u64) -> String {
     )
 }
 
-pub fn make_dts(dram_addr: u64, isa: Isa) -> String {
+pub fn make_dts(
+    dram_addr: u64,
+    initrd_start: Option<usize>,
+    initrd_end: Option<usize>,
+    isa: Isa,
+) -> String {
     match isa {
-        Isa::Rv32 => dts_32(dram_addr),
-        Isa::Rv64 => dts_64(dram_addr),
+        Isa::Rv32 => dts_32(dram_addr, initrd_start, initrd_end),
+        Isa::Rv64 => dts_64(dram_addr, initrd_start, initrd_end),
     }
 }
