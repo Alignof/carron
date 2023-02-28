@@ -8,6 +8,8 @@ pub struct Dram {
     dram: Vec<u8>,
     pub base_addr: u64,
     size: usize,
+    pub initrd_start: Option<usize>,
+    pub initrd_end: Option<usize>,
 }
 
 impl Dram {
@@ -47,13 +49,17 @@ impl Dram {
             );
         }
 
+        let mut initrd_start: Option<usize> = None;
+        let mut initrd_end: Option<usize> = None;
         if let Some(path) = &args.initrd_path {
             let file = File::open(path).unwrap();
             let mapped_initrd = unsafe { Mmap::map(&file).unwrap() };
 
             const INITRD_END: usize = 0x8000_0000 + DRAM_SIZE - 0x1000;
-            let initrd_start = INITRD_END - mapped_initrd.len();
-            let initrd_offset = dbg!(initrd_start - virt_entry as usize);
+            let initrd_head = INITRD_END - mapped_initrd.len();
+            let initrd_offset = dbg!(initrd_head - virt_entry as usize);
+            initrd_start = Some(INITRD_END - mapped_initrd.len());
+            initrd_end = Some(INITRD_END);
             new_dram.splice(
                 initrd_offset..initrd_offset + mapped_initrd.len(),
                 mapped_initrd.iter().cloned(),
@@ -67,6 +73,8 @@ impl Dram {
             dram: new_dram,
             base_addr: virt_entry,
             size: dram_size,
+            initrd_start,
+            initrd_end,
         }
     }
 }
