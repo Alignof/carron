@@ -153,7 +153,7 @@ impl Cpu {
             log::infoln!("delegated");
             self.csrs
                 .write(CSRname::scause.wrap(), cause_of_trap as u64);
-            self.csrs.write(CSRname::sepc.wrap(), self.pc);
+            self.csrs.write(CSRname::sepc.wrap(), self.pc());
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.csrs.write_xstatus(
                 // sstatus.SPIE = sstatus.SIE
@@ -181,7 +181,7 @@ impl Cpu {
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
             self.csrs
                 .write(CSRname::mcause.wrap(), cause_of_trap as u64);
-            self.csrs.write(CSRname::mepc.wrap(), self.pc);
+            self.csrs.write(CSRname::mepc.wrap(), self.pc());
             self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.csrs.write_xstatus(
                 // sstatus.MPIE = sstatus.MIE
@@ -205,6 +205,6 @@ impl Cpu {
         };
 
         self.update_pc(new_pc);
-        log::infoln!("new pc: 0x{:x}", self.pc);
+        log::infoln!("new pc: 0x{:x}", self.pc());
     }
 }

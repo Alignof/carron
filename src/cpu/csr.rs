@@ -311,7 +311,7 @@ impl CSRs {
 
 impl Default for CSRs {
     fn default() -> Self {
-        Self::new(Isa::Rv64.into())
+        Self::new(Isa::Rv64.into(), Rc::new(RefCell::new(0)))
     }
 }
 

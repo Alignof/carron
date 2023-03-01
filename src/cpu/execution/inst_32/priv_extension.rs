@@ -12,7 +12,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 == 1
             {
                 return Err((
-                    Some(cpu.bus.load32(cpu.pc)?),
+                    Some(cpu.bus.load32(cpu.pc())?),
                     TrapCause::IllegalInst,
                     "exec sret but mstatus.TSR == 1".to_string(),
                 ));
@@ -45,7 +45,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
 
             if cpu.csrs.read(CSRname::mstatus.wrap())? >> 22 & 1 == 1 {
                 // mstatus.TSR == 1
-                let except_pc = cpu.pc;
+                let except_pc = cpu.pc();
                 cpu.trap(except_pc, TrapCause::IllegalInst);
             } else {
                 let new_pc = cpu.csrs.read(CSRname::sepc.wrap())?;
@@ -88,7 +88,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                     .read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM)
                     == 1
             {
-                cpu.trap(cpu.bus.load32(cpu.pc)?, TrapCause::IllegalInst);
+                cpu.trap(cpu.bus.load32(cpu.pc())?, TrapCause::IllegalInst);
             }
         }
         _ => panic!("not an privileged extension"),

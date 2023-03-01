@@ -107,15 +107,15 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .write(inst.rd, cpu.regs.read(inst.rs1) & cpu.regs.read(inst.rs2));
         }
         OpecodeKind::OP_C_J => {
-            cpu.pc += inst.imm.unwrap() as u64;
+            cpu.add2pc(inst.imm.unwrap());
         }
         OpecodeKind::OP_C_JAL => {
-            cpu.regs.write(Some(1), cpu.pc + INST_SIZE);
+            cpu.regs.write(Some(1), cpu.pc() + INST_SIZE);
             cpu.add2pc(inst.imm.unwrap());
         }
         OpecodeKind::OP_C_JALR => {
             // calc next_pc before updated
-            let next_pc = cpu.pc + INST_SIZE;
+            let next_pc = cpu.pc() + INST_SIZE;
             // setting the least-significant bit of
             // the result to zero                ->vvvvvv
             cpu.update_pc(cpu.regs.read(inst.rs1) & !0x1);
@@ -205,6 +205,7 @@ mod exe_16 {
     use crate::cpu::instruction::{Instruction, OpecodeKind::*};
     use crate::cpu::{csr, mmu, reg, Cpu, PrivilegedLevel};
     use crate::{bus, elfload, Arguments, Isa};
+    use std::cell::RefCell;
     use std::collections::HashSet;
     use std::rc::Rc;
 
@@ -225,11 +226,12 @@ mod exe_16 {
             main_args: Vec::new(),
         };
         let bus = bus::Bus::new(dummy_elf, &args, isa);
+        let pc = Rc::new(RefCell::new(bus.mrom.base_addr));
         let mut cpu: Cpu = Cpu {
-            pc: bus.mrom.base_addr,
+            pc: pc.clone(),
             bus,
             regs: reg::Register::new(Rc::new(isa)),
-            csrs: csr::CSRs::new(Rc::new(isa)).init(),
+            csrs: csr::CSRs::new(Rc::new(isa), pc.clone()).init(),
             mmu: mmu::Mmu::new(Rc::new(isa)),
             reservation_set: HashSet::new(),
             isa: Rc::new(isa),

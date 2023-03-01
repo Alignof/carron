@@ -3,7 +3,7 @@ use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::{Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause};
 
 fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
-    let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc)?;
+    let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc())?;
     let invalid_instruction = Some(cpu.bus.load_u32(inst_addr).expect("get instruction failed"));
 
     if dist >= 4096 {

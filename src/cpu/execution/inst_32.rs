@@ -11,7 +11,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, T
     const INST_SIZE: u64 = 4;
 
     // store previous program counter for excluding branch case
-    let prev_pc = cpu.pc;
+    let prev_pc = cpu.pc();
 
     match inst.opc_to_extension() {
         Extensions::BaseI => base_i::exec(inst, cpu)?,
@@ -23,7 +23,7 @@ pub fn exe_inst(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, T
     }
 
     // add the program counter when it isn't a branch instruction
-    if cpu.pc == prev_pc {
+    if cpu.pc() == prev_pc {
         cpu.add2pc(INST_SIZE as i32);
     }
 

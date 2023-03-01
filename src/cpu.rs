@@ -77,7 +77,7 @@ impl Cpu {
         let pc = Rc::new(RefCell::new(args.init_pc.unwrap_or(bus.mrom.base_addr)));
 
         Cpu {
-            pc,
+            pc: pc.clone(),
             bus,
             regs: reg::Register::new(isa.clone()),
             csrs: csr::CSRs::new(isa.clone(), pc.clone()).init(),
@@ -88,7 +88,7 @@ impl Cpu {
         }
     }
 
-    fn pc(&self) -> u64 {
+    pub fn pc(&self) -> u64 {
         *self.pc.borrow()
     }
 
