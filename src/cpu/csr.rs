@@ -101,11 +101,28 @@ impl CSRs {
 
     pub fn read(&self, src: Option<usize>) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let dist = src.unwrap();
+        let basic_csrs_read = || self.csrs[dist].fix2regsz(&self.isa);
+
         match dist {
             0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.umask()),
             0x100 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.smask()),
             0x341 | 0x141 => self.read_xepc(dist),
-            _ => Ok(self.csrs[dist].fix2regsz(&self.isa)),
+            0x000..=0x005 | 0x040..=0x044 => Ok(basic_csrs_read()),
+            0x102..=0x106 => Ok(basic_csrs_read()),
+            0x140 | 0x142..=0x144 => Ok(basic_csrs_read()),
+            0x180 => Ok(basic_csrs_read()),
+            0x300..=0x306 | 0x320..=0x33f => Ok(basic_csrs_read()),
+            0x340 | 0x342..=0x344 => Ok(basic_csrs_read()),
+            0x3a0..=0x3a3 | 0x3b0..=0x3bf => Ok(basic_csrs_read()),
+            0x7a0..=0x7a3 | 0x7b0..=0x7b3 => Ok(basic_csrs_read()),
+            0xb00..=0xb1f | 0xb80..=0xb9f => Ok(basic_csrs_read()),
+            0xc00..=0xc1f | 0xc80..=0xc9f => Ok(basic_csrs_read()),
+            0xf11..=0xf14 => Ok(basic_csrs_read()),
+            _ => Err((
+                Some(dist as u64),
+                TrapCause::IllegalInst,
+                format!("unknown CSR number: {dist}"),
+            )),
         }
     }
 
