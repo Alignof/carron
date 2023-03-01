@@ -60,7 +60,23 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         }
     }
 
-    Ok(())
+    match dist {
+        0x000..=0x005 | 0x040..=0x044 => Ok(()),
+        0x100 | 0x102..=0x106 => Ok(()),
+        0x140..=0x144 => Ok(()),
+        0x180 => Ok(()),
+        0x300..=0x306 | 0x320..=0x33f | 0x340..=0x344 => Ok(()),
+        0x3a0..=0x3a3 | 0x3b0..=0x3bf => Ok(()),
+        0x7a0..=0x7a3 | 0x7b0..=0x7b3 => Ok(()),
+        0xb00..=0xb1f | 0xb80..=0xb9f => Ok(()),
+        0xc00..=0xc1f | 0xc80..=0xc9f => Ok(()),
+        0xf11..=0xf14 => Ok(()),
+        _ => Err((
+            Some(dist as u64),
+            TrapCause::IllegalInst,
+            format!("unknown CSR number: {dist}"),
+        )),
+    }
 }
 
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
