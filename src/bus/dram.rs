@@ -57,7 +57,7 @@ impl Dram {
 
             const INITRD_END: usize = 0x8000_0000 + DRAM_SIZE - 0x1000;
             let initrd_head = INITRD_END - mapped_initrd.len();
-            let initrd_offset = dbg!(initrd_head - virt_entry as usize);
+            let initrd_offset = initrd_head - virt_entry as usize;
             initrd_start = Some(INITRD_END - mapped_initrd.len());
             initrd_end = Some(INITRD_END);
             new_dram.splice(
@@ -66,9 +66,7 @@ impl Dram {
             );
         }
 
-        let dram_size = dbg!(new_dram.len());
-        dbg!(&new_dram[0x200000..0x200200]);
-        dbg!(&new_dram[0x0719_2600..0x0719_2800]);
+        let dram_size = new_dram.len();
         Dram {
             dram: new_dram,
             base_addr: virt_entry,
