@@ -27,10 +27,10 @@ impl CSRs {
 
     pub fn init(mut self) -> Self {
         match *self.isa {
-            Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105),
+            Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105, 0), // pc == 0
             Isa::Rv64 => {
-                self.write(CSRname::misa.wrap(), 0x8000000000141105);
-                self.write(CSRname::mstatus.wrap(), 0x0000000a00000000);
+                self.write(CSRname::misa.wrap(), 0x8000000000141105, 0);
+                self.write(CSRname::mstatus.wrap(), 0x0000000a00000000, 0);
             }
         }
         self
@@ -57,36 +57,67 @@ impl CSRs {
         }
     }
 
-    pub fn bitset(&mut self, dist: Option<usize>, src: u64) {
+    fn check_warl(&mut self, dst: usize, original: u64, pc: u64) {
+        const MISA: usize = CSRname::misa as usize;
+        const MSTATUS: usize = CSRname::mstatus as usize;
+
+        match dst {
+            MISA => {
+                if self.read(CSRname::misa.wrap()).unwrap() >> 2 & 0x1 == 0 && pc % 4 != 0 {
+                    self.csrs[MISA] |= 0b100;
+                }
+            }
+            MSTATUS => match *self.isa {
+                Isa::Rv32 => (),
+                Isa::Rv64 => {
+                    if self.read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL) == 0b00 {
+                        self.csrs[MSTATUS] |= ((original >> 32) & 0b11) << 32;
+                    }
+                }
+            },
+            _ => (),
+        }
+    }
+
+    pub fn bitset(&mut self, dist: Option<usize>, src: u64, pc: u64) {
         let mask = src.fix2regsz(&self.isa);
+        let dist = dist.unwrap();
         if mask != 0 {
-            match dist.unwrap() {
+            let original = self.csrs[dist];
+            match dist {
                 0x000 => self.csrs[0x300] |= mask & self.umask(),
                 0x100 => self.csrs[0x300] |= mask & self.smask(),
-                _ => self.csrs[dist.unwrap()] |= mask,
+                _ => self.csrs[dist] |= mask,
             }
+            self.check_warl(dist, original, pc);
         }
     }
 
-    pub fn bitclr(&mut self, dist: Option<usize>, src: u64) {
+    pub fn bitclr(&mut self, dist: Option<usize>, src: u64, pc: u64) {
         let mask = src.fix2regsz(&self.isa);
+        let dist = dist.unwrap();
         if mask != 0 {
-            match dist.unwrap() {
+            let original = self.csrs[dist];
+            match dist {
                 0x000 => self.csrs[0x300] &= !(mask & self.umask()),
                 0x100 => self.csrs[0x300] &= !(mask & self.smask()),
-                _ => self.csrs[dist.unwrap()] &= !mask,
+                _ => self.csrs[dist] &= !mask,
             }
+            self.check_warl(dist, original, pc);
         }
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: u64) {
+    pub fn write(&mut self, dist: Option<usize>, src: u64, pc: u64) {
         let src = src.fix2regsz(&self.isa);
-        match dist.unwrap() {
+        let dist = dist.unwrap();
+        let original = self.csrs[dist];
+        match dist {
             0x000 => self.csrs[0x300] = src & self.umask(),
             0x100 => self.csrs[0x300] = src & self.smask(),
             other => self.csrs[other] = src,
         }
-        self.update_triggers(dist.unwrap(), src);
+        self.check_warl(dist, original, pc);
+        self.update_triggers(dist, src);
     }
 
     fn read_xepc(&self, dist: usize) -> Result<u64, (Option<u64>, TrapCause, String)> {

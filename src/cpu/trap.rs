@@ -14,7 +14,7 @@ impl Cpu {
         let mtimecmp: u64 = self.bus.load64(MTIMECMP).unwrap();
 
         if (mie >> MTIP) & 0b1 == 1 && mtime >= mtimecmp {
-            self.csrs.write(CSRname::mip.wrap(), 1 << MTIP)
+            self.csrs.write(CSRname::mip.wrap(), 1 << MTIP, self.pc)
         }
 
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
@@ -35,7 +35,7 @@ impl Cpu {
                 {
                     if is_interrupt_enabled(MTIP) {
                         // TODO: bit clear when mtimecmp written
-                        self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+                        self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP, self.pc);
                         return Err((
                             None,
                             TrapCause::MachineTimerInterrupt,
@@ -61,7 +61,7 @@ impl Cpu {
             PrivilegedLevel::Supervisor => {
                 if is_interrupt_enabled(MTIP) {
                     // TODO: bit clear when mtimecmp written
-                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP, self.pc);
                     return Err((
                         None,
                         TrapCause::MachineTimerInterrupt,
@@ -91,7 +91,7 @@ impl Cpu {
             PrivilegedLevel::User => {
                 if is_interrupt_enabled(MTIP) {
                     // TODO: bit clear when mtimecmp written
-                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP, self.pc);
                     return Err((
                         None,
                         TrapCause::MachineTimerInterrupt,
@@ -152,9 +152,9 @@ impl Cpu {
             let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
             log::infoln!("delegated");
             self.csrs
-                .write(CSRname::scause.wrap(), cause_of_trap as u64);
-            self.csrs.write(CSRname::sepc.wrap(), self.pc);
-            self.csrs.write(CSRname::stval.wrap(), tval_addr);
+                .write(CSRname::scause.wrap(), cause_of_trap as u64, self.pc);
+            self.csrs.write(CSRname::sepc.wrap(), self.pc, self.pc);
+            self.csrs.write(CSRname::stval.wrap(), tval_addr, self.pc);
             self.csrs.write_xstatus(
                 // sstatus.SPIE = sstatus.SIE
                 PrivilegedLevel::Supervisor,
@@ -180,9 +180,9 @@ impl Cpu {
         } else {
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
             self.csrs
-                .write(CSRname::mcause.wrap(), cause_of_trap as u64);
-            self.csrs.write(CSRname::mepc.wrap(), self.pc);
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+                .write(CSRname::mcause.wrap(), cause_of_trap as u64, self.pc);
+            self.csrs.write(CSRname::mepc.wrap(), self.pc, self.pc);
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr, self.pc);
             self.csrs.write_xstatus(
                 // sstatus.MPIE = sstatus.MIE
                 PrivilegedLevel::Machine,
