@@ -14,7 +14,7 @@ fn dts_32(dram_addr: u64, initrd_start: Option<usize>, initrd_end: Option<usize>
                 stdout-path = &SERIAL0;
                 linux,initrd-start = <{initrd_start}>;
                 linux,initrd-end = <{initrd_end}>;
-                bootargs = \"console=ttyS0 earlycon\";
+                bootargs = \"root=/dev/ram console=ttyS0 earlycon\";
               }};
               cpus {{
                 #address-cells = <1>;
@@ -94,7 +94,7 @@ fn dts_64(dram_addr: u64, initrd_start: Option<usize>, initrd_end: Option<usize>
             stdout-path = &SERIAL0;
             linux,initrd-start = <{initrd_start}>;
             linux,initrd-end = <{initrd_end}>;
-            bootargs = \"console=ttyS0 earlycon\";
+            bootargs = \"root=/dev/ram console=ttyS0 earlycon\";
           }};
           cpus {{
             #address-cells = <1>;
