@@ -3,17 +3,19 @@ mod breakpoint;
 use super::{CrossIsaUtil, PrivilegedLevel, TrapCause};
 use crate::Isa;
 use breakpoint::Triggers;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub struct CSRs {
     csrs: [u64; 4096],
     triggers: Triggers,
     isa: Rc<Isa>,
+    pc: Rc<RefCell<u64>>,
 }
 
 #[allow(clippy::identity_op)]
 impl CSRs {
-    pub fn new(isa: Rc<Isa>) -> Self {
+    pub fn new(isa: Rc<Isa>, pc: Rc<RefCell<u64>>) -> Self {
         CSRs {
             csrs: [0; 4096],
             triggers: Triggers {
@@ -22,15 +24,16 @@ impl CSRs {
                 tdata2: [0; 8],
             },
             isa,
+            pc,
         }
     }
 
     pub fn init(mut self) -> Self {
         match *self.isa {
-            Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105, 0), // pc == 0
+            Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105),
             Isa::Rv64 => {
-                self.write(CSRname::misa.wrap(), 0x8000000000141105, 0);
-                self.write(CSRname::mstatus.wrap(), 0x0000000a00000000, 0);
+                self.write(CSRname::misa.wrap(), 0x8000000000141105);
+                self.write(CSRname::mstatus.wrap(), 0x0000000a00000000);
             }
         }
         self
@@ -57,13 +60,15 @@ impl CSRs {
         }
     }
 
-    fn check_warl(&mut self, dst: usize, original: u64, pc: u64) {
+    fn check_warl(&mut self, dst: usize, original: u64) {
         const MISA: usize = CSRname::misa as usize;
         const MSTATUS: usize = CSRname::mstatus as usize;
 
         match dst {
             MISA => {
-                if self.read(CSRname::misa.wrap()).unwrap() >> 2 & 0x1 == 0 && pc % 4 != 0 {
+                if self.read(CSRname::misa.wrap()).unwrap() >> 2 & 0x1 == 0
+                    && *self.pc.borrow() % 4 != 0
+                {
                     self.csrs[MISA] |= 0b100;
                 }
             }
@@ -79,7 +84,7 @@ impl CSRs {
         }
     }
 
-    pub fn bitset(&mut self, dist: Option<usize>, src: u64, pc: u64) {
+    pub fn bitset(&mut self, dist: Option<usize>, src: u64) {
         let mask = src.fix2regsz(&self.isa);
         let dist = dist.unwrap();
         if mask != 0 {
@@ -89,11 +94,11 @@ impl CSRs {
                 0x100 => self.csrs[0x300] |= mask & self.smask(),
                 _ => self.csrs[dist] |= mask,
             }
-            self.check_warl(dist, original, pc);
+            self.check_warl(dist, original);
         }
     }
 
-    pub fn bitclr(&mut self, dist: Option<usize>, src: u64, pc: u64) {
+    pub fn bitclr(&mut self, dist: Option<usize>, src: u64) {
         let mask = src.fix2regsz(&self.isa);
         let dist = dist.unwrap();
         if mask != 0 {
@@ -103,11 +108,11 @@ impl CSRs {
                 0x100 => self.csrs[0x300] &= !(mask & self.smask()),
                 _ => self.csrs[dist] &= !mask,
             }
-            self.check_warl(dist, original, pc);
+            self.check_warl(dist, original);
         }
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: u64, pc: u64) {
+    pub fn write(&mut self, dist: Option<usize>, src: u64) {
         let src = src.fix2regsz(&self.isa);
         let dist = dist.unwrap();
         let original = self.csrs[dist];
@@ -116,7 +121,7 @@ impl CSRs {
             0x100 => self.csrs[0x300] = src & self.smask(),
             other => self.csrs[other] = src,
         }
-        self.check_warl(dist, original, pc);
+        self.check_warl(dist, original);
         self.update_triggers(dist, src);
     }
 

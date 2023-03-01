@@ -9,6 +9,7 @@ mod trap;
 
 use crate::{bus, elfload, log, Arguments, Isa};
 use csr::{CSRname, Xstatus};
+use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::Rc;
 
@@ -58,7 +59,7 @@ pub enum TransFor {
 }
 
 pub struct Cpu {
-    pub pc: u64,
+    pc: Rc<RefCell<u64>>,
     pub bus: bus::Bus,
     pub regs: reg::Register,
     csrs: csr::CSRs,
@@ -73,12 +74,13 @@ impl Cpu {
         // initialize bus and get the entry point
         let bus = bus::Bus::new(loader, args, isa);
         let isa = Rc::new(isa);
+        let pc = Rc::new(RefCell::new(args.init_pc.unwrap_or(bus.mrom.base_addr)));
 
         Cpu {
-            pc: args.init_pc.unwrap_or(bus.mrom.base_addr),
+            pc,
             bus,
             regs: reg::Register::new(isa.clone()),
-            csrs: csr::CSRs::new(isa.clone()).init(),
+            csrs: csr::CSRs::new(isa.clone(), pc.clone()).init(),
             mmu: mmu::Mmu::new(isa.clone()),
             reservation_set: HashSet::new(),
             isa,
@@ -86,12 +88,16 @@ impl Cpu {
         }
     }
 
+    fn pc(&self) -> u64 {
+        *self.pc.borrow()
+    }
+
     fn add2pc(&mut self, addval: i32) {
-        self.pc = (self.pc as i64 + addval as i64) as u64;
+        *self.pc.borrow_mut() = (self.pc() as i64 + addval as i64) as u64;
     }
 
     fn update_pc(&mut self, newpc: u64) {
-        self.pc = newpc;
+        *self.pc.borrow_mut() = newpc;
     }
 
     pub fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
