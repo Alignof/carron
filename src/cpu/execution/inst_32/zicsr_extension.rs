@@ -68,7 +68,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         0xc00..=0xc7f,
         0xc80..=0xcbf,
         0xcc0..=0xcff,
-        //0x100..=0x1ff,
+        0x100..=0x1ff,
         0x500..=0x57f,
         0x580..=0x5bf,
         0x5c0..=0x5ff,
@@ -105,8 +105,30 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
     ];
 
     if csrs_ranges.iter().any(|x| x.contains(&dist)) {
-        Ok(())
+        match dist {
+            // == depends on privilege ==
+            // scounteren(0x106) only allow higher
+            0x106 => match cpu.priv_lv {
+                PrivilegedLevel::User => Err((
+                    Some(dist as u64),
+                    TrapCause::IllegalInst,
+                    format!("unknown CSR number: {dist}"),
+                )),
+                _ => Ok(()),
+            },
+            // stimecmp(0x14d) only supervisor
+            0x14d => match cpu.priv_lv {
+                PrivilegedLevel::Supervisor => Ok(()),
+                _ => Err((
+                    Some(dist as u64),
+                    TrapCause::IllegalInst,
+                    format!("unknown CSR number: {dist}"),
+                )),
+            },
+            _ => Ok(()),
+        }
     } else {
+        // out of range
         Err((
             Some(dist as u64),
             TrapCause::IllegalInst,

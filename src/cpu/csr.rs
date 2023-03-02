@@ -78,7 +78,7 @@ impl CSRs {
             MSTATUS => match *self.isa {
                 Isa::Rv32 => mask,
                 Isa::Rv64 => {
-                    if dbg!(self.read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL)) == 0b10 {
+                    if self.read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL) == 0b10 {
                         mask & !(0b11 << 32)
                     } else {
                         mask
@@ -104,7 +104,7 @@ impl CSRs {
 
     pub fn bitclr(&mut self, dist: Option<usize>, src: u64) {
         let dist = dist.unwrap();
-        let mask = dbg!(self.mask_warl(dist, dbg!(src.fix2regsz(&self.isa))));
+        let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
             match dist {
                 USTATUS => self.csrs[MSTATUS] &= !(mask & self.umask()),
