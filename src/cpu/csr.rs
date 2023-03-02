@@ -6,6 +6,9 @@ use breakpoint::Triggers;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+const MISA: usize = CSRname::misa as usize;
+const MSTATUS: usize = CSRname::mstatus as usize;
+
 pub struct CSRs {
     csrs: [u64; 4096],
     triggers: Triggers,
@@ -60,68 +63,73 @@ impl CSRs {
         }
     }
 
-    fn check_warl(&mut self, dst: usize, original: u64) {
-        const MISA: usize = CSRname::misa as usize;
-        const MSTATUS: usize = CSRname::mstatus as usize;
-
+    fn mask_warl(&mut self, dst: usize, mask: u64) -> u64 {
         match dst {
             MISA => {
-                if self.read(CSRname::misa.wrap()).unwrap() >> 2 & 0x1 == 0
-                    && *self.pc.borrow() % 4 != 0
-                {
-                    self.csrs[MISA] |= 0b100;
+                if *self.pc.borrow() % 4 != 0 {
+                    mask & !0b100 // clear C extension flag
+                } else {
+                    mask
                 }
             }
             MSTATUS => match *self.isa {
-                Isa::Rv32 => (),
+                Isa::Rv32 => mask,
                 Isa::Rv64 => {
-                    if self.read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL) == 0b00 {
-                        self.csrs[MSTATUS] |= ((original >> 32) & 0b11) << 32;
+                    if dbg!(self.read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL)) == 0b10 {
+                        mask & !(0b11 << 32)
+                    } else {
+                        mask
                     }
                 }
             },
-            _ => (),
+            _ => mask,
         }
     }
 
     pub fn bitset(&mut self, dist: Option<usize>, src: u64) {
-        let mask = src.fix2regsz(&self.isa);
         let dist = dist.unwrap();
+        let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
-            let original = self.csrs[dist];
             match dist {
                 0x000 => self.csrs[0x300] |= mask & self.umask(),
                 0x100 => self.csrs[0x300] |= mask & self.smask(),
                 _ => self.csrs[dist] |= mask,
             }
-            self.check_warl(dist, original);
         }
     }
 
     pub fn bitclr(&mut self, dist: Option<usize>, src: u64) {
-        let mask = src.fix2regsz(&self.isa);
         let dist = dist.unwrap();
+        let mask = dbg!(self.mask_warl(dist, dbg!(src.fix2regsz(&self.isa))));
         if mask != 0 {
-            let original = self.csrs[dist];
             match dist {
                 0x000 => self.csrs[0x300] &= !(mask & self.umask()),
                 0x100 => self.csrs[0x300] &= !(mask & self.smask()),
                 _ => self.csrs[dist] &= !mask,
             }
-            self.check_warl(dist, original);
         }
     }
 
     pub fn write(&mut self, dist: Option<usize>, src: u64) {
-        let src = src.fix2regsz(&self.isa);
         let dist = dist.unwrap();
-        let original = self.csrs[dist];
+        let src = src.fix2regsz(&self.isa);
         match dist {
             0x000 => self.csrs[0x300] = src & self.umask(),
             0x100 => self.csrs[0x300] = src & self.smask(),
+            MISA => {
+                if *self.pc.borrow() % 4 != 0 {
+                    let c_ext_bit = (self.csrs[MISA] >> 2) & 1;
+                    self.csrs[MISA] = (src & !0b100) | c_ext_bit
+                } else {
+                    self.csrs[MISA] = src
+                }
+            }
+            MSTATUS => match *self.isa {
+                Isa::Rv32 => self.csrs[dist] = src,
+                Isa::Rv64 => self.csrs[dist] = src & !(0b11 << 32) | (0b10 << 32),
+            },
             other => self.csrs[other] = src,
         }
-        self.check_warl(dist, original);
         self.update_triggers(dist, src);
     }
 
@@ -137,28 +145,12 @@ impl CSRs {
 
     pub fn read(&self, src: Option<usize>) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let dist = src.unwrap();
-        let basic_csrs_read = || self.csrs[dist].fix2regsz(&self.isa);
 
         match dist {
             0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.umask()),
             0x100 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.smask()),
             0x341 | 0x141 => self.read_xepc(dist),
-            0x000..=0x005 | 0x040..=0x044 => Ok(basic_csrs_read()),
-            0x102..=0x106 => Ok(basic_csrs_read()),
-            0x140 | 0x142..=0x144 => Ok(basic_csrs_read()),
-            0x180 => Ok(basic_csrs_read()),
-            0x300..=0x306 | 0x320..=0x33f => Ok(basic_csrs_read()),
-            0x340 | 0x342..=0x344 => Ok(basic_csrs_read()),
-            0x3a0..=0x3a3 | 0x3b0..=0x3bf => Ok(basic_csrs_read()),
-            0x7a0..=0x7a3 | 0x7b0..=0x7b3 => Ok(basic_csrs_read()),
-            0xb00..=0xb1f | 0xb80..=0xb9f => Ok(basic_csrs_read()),
-            0xc00..=0xc1f | 0xc80..=0xc9f => Ok(basic_csrs_read()),
-            0xf11..=0xf14 => Ok(basic_csrs_read()),
-            _ => Err((
-                Some(dist as u64),
-                TrapCause::IllegalInst,
-                format!("unknown CSR number: {dist}"),
-            )),
+            _ => Ok(self.csrs[dist].fix2regsz(&self.isa)),
         }
     }
 
