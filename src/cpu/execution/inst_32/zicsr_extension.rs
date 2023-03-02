@@ -104,7 +104,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         0xfc0..=0xfff,
     ];
 
-    if csrs_ranges.iter().find(|x| x.contains(&dist)).is_some() {
+    if csrs_ranges.iter().any(|x| x.contains(&dist)) {
         Ok(())
     } else {
         Err((

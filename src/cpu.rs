@@ -80,7 +80,7 @@ impl Cpu {
             pc: pc.clone(),
             bus,
             regs: reg::Register::new(isa.clone()),
-            csrs: csr::CSRs::new(isa.clone(), pc.clone()).init(),
+            csrs: csr::CSRs::new(isa.clone(), pc).init(),
             mmu: mmu::Mmu::new(isa.clone()),
             reservation_set: HashSet::new(),
             isa,
