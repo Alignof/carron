@@ -7,7 +7,10 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 const MISA: usize = CSRname::misa as usize;
+const USTATUS: usize = CSRname::ustatus as usize;
+const SSTATUS: usize = CSRname::sstatus as usize;
 const MSTATUS: usize = CSRname::mstatus as usize;
+const MHPMCOUNTER3: usize = CSRname::mhpmcounter3 as usize;
 
 pub struct CSRs {
     csrs: [u64; 4096],
@@ -82,6 +85,7 @@ impl CSRs {
                     }
                 }
             },
+            MHPMCOUNTER3 => 0,
             _ => mask,
         }
     }
@@ -91,8 +95,8 @@ impl CSRs {
         let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
             match dist {
-                0x000 => self.csrs[0x300] |= mask & self.umask(),
-                0x100 => self.csrs[0x300] |= mask & self.smask(),
+                USTATUS => self.csrs[MSTATUS] |= mask & self.umask(),
+                SSTATUS => self.csrs[MSTATUS] |= mask & self.smask(),
                 _ => self.csrs[dist] |= mask,
             }
         }
@@ -103,8 +107,8 @@ impl CSRs {
         let mask = dbg!(self.mask_warl(dist, dbg!(src.fix2regsz(&self.isa))));
         if mask != 0 {
             match dist {
-                0x000 => self.csrs[0x300] &= !(mask & self.umask()),
-                0x100 => self.csrs[0x300] &= !(mask & self.smask()),
+                USTATUS => self.csrs[MSTATUS] &= !(mask & self.umask()),
+                SSTATUS => self.csrs[MSTATUS] &= !(mask & self.smask()),
                 _ => self.csrs[dist] &= !mask,
             }
         }
@@ -114,8 +118,8 @@ impl CSRs {
         let dist = dist.unwrap();
         let src = src.fix2regsz(&self.isa);
         match dist {
-            0x000 => self.csrs[0x300] = src & self.umask(),
-            0x100 => self.csrs[0x300] = src & self.smask(),
+            USTATUS => self.csrs[MSTATUS] = src & self.umask(),
+            SSTATUS => self.csrs[MSTATUS] = src & self.smask(),
             MISA => {
                 if *self.pc.borrow() % 4 != 0 {
                     let c_ext_bit = (self.csrs[MISA] >> 2) & 1;
@@ -128,6 +132,7 @@ impl CSRs {
                 Isa::Rv32 => self.csrs[dist] = src,
                 Isa::Rv64 => self.csrs[dist] = src & !(0b11 << 32) | (0b10 << 32),
             },
+            MHPMCOUNTER3 => (), // protect from any value
             other => self.csrs[other] = src,
         }
         self.update_triggers(dist, src);
@@ -338,6 +343,7 @@ pub enum CSRname {
     tdata3 = 0x7a3,
     tdata4 = 0x7a4,
     tdata5 = 0x7a5,
+    mhpmcounter3 = 0xb03,
 }
 
 impl CSRname {
