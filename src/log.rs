@@ -60,4 +60,4 @@ macro_rules! diff {
 }
 
 #[allow(unused_imports)]
-pub(crate) use {debug, debugln, info, infoln};
+pub(crate) use {debug, debugln, diff, diffln, info, infoln};

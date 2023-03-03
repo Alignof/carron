@@ -85,6 +85,7 @@ impl Arguments {
 
         LOG_LEVEL.get_or_init(|| match app.value_of("loglv") {
             Some("nolog") => LogLv::NoLog,
+            Some("diff") => LogLv::Diff,
             Some("info") => LogLv::Info,
             Some("debug") => LogLv::Debug,
             Some("trace") => LogLv::Trace,

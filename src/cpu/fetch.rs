@@ -13,7 +13,10 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
     if is_cinst {
         match *cpu.isa {
             Isa::Rv32 => log::infoln!("pc: 0x{:08x}", cpu.pc()),
-            Isa::Rv64 => log::infoln!("pc: 0x{:016x}", cpu.pc()),
+            Isa::Rv64 => {
+                log::infoln!("pc: 0x{:016x}", cpu.pc());
+                log::diffln!("0x{:016x}\n:", cpu.pc());
+            }
         };
         match cpu.bus.load_u16(index_pc) {
             Ok(new_inst) => Ok(Box::new(new_inst as u16)),
@@ -31,7 +34,10 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
         };
         match *cpu.isa {
             Isa::Rv32 => log::infoln!("pc: 0x{:08x}", cpu.pc()),
-            Isa::Rv64 => log::infoln!("pc: 0x{:016x}", cpu.pc()),
+            Isa::Rv64 => {
+                log::infoln!("pc: 0x{:016x}", cpu.pc());
+                log::diffln!("0x{:016x}\n:", cpu.pc());
+            }
         };
         Ok(Box::new(inst_upper << 16 | inst_lower))
     }
