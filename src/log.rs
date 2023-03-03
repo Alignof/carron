@@ -4,6 +4,7 @@ pub static LOG_LEVEL: OnceCell<LogLv> = OnceCell::new();
 #[derive(PartialEq, Eq, PartialOrd)]
 pub enum LogLv {
     NoLog,
+    Diff,
     Info,
     Debug,
     Trace,
@@ -37,6 +38,22 @@ macro_rules! infoln {
 macro_rules! info {
     ($($rest:tt)*) => {
         if &crate::log::LogLv::Info <= crate::log::LOG_LEVEL.get().unwrap() {
+            std::print!($($rest)*);
+        }
+    }
+}
+
+macro_rules! diffln {
+    ($($rest:tt)*) => {
+        if &crate::log::LogLv::Diff == crate::log::LOG_LEVEL.get().unwrap() {
+            std::println!($($rest)*);
+        }
+    }
+}
+
+macro_rules! diff {
+    ($($rest:tt)*) => {
+        if &crate::log::LogLv::Diff <= crate::log::LOG_LEVEL.get().unwrap() {
             std::print!($($rest)*);
         }
     }
