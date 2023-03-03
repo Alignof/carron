@@ -231,7 +231,7 @@ mod exe_16 {
             pc: pc.clone(),
             bus,
             regs: reg::Register::new(Rc::new(isa)),
-            csrs: csr::CSRs::new(Rc::new(isa), pc.clone()).init(),
+            csrs: csr::CSRs::new(Rc::new(isa), pc).init(),
             mmu: mmu::Mmu::new(Rc::new(isa)),
             reservation_set: HashSet::new(),
             isa: Rc::new(isa),

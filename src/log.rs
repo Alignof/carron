@@ -51,6 +51,7 @@ macro_rules! diffln {
     }
 }
 
+#[allow(unused_macros)]
 macro_rules! diff {
     ($($rest:tt)*) => {
         if &crate::log::LogLv::Diff <= crate::log::LOG_LEVEL.get().unwrap() {
