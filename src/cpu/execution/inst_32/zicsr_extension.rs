@@ -110,7 +110,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
             // scounteren(0x106) only allow higher
             0x106 => match cpu.priv_lv {
                 PrivilegedLevel::User => Err((
-                    Some(dist as u64),
+                    invalid_instruction,
                     TrapCause::IllegalInst,
                     format!("unknown CSR number: {dist}"),
                 )),
@@ -120,7 +120,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
             0x14d => match cpu.priv_lv {
                 PrivilegedLevel::Supervisor => Ok(()),
                 _ => Err((
-                    Some(dist as u64),
+                    invalid_instruction,
                     TrapCause::IllegalInst,
                     format!("unknown CSR number: {dist}"),
                 )),
@@ -130,7 +130,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
     } else {
         // out of range
         Err((
-            Some(dist as u64),
+            invalid_instruction,
             TrapCause::IllegalInst,
             format!("unknown CSR number: {dist}"),
         ))
