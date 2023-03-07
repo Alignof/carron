@@ -14,7 +14,7 @@ pub struct Dram {
 
 impl Dram {
     pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
-        const DRAM_SIZE: usize = 1024 * 1024 * 128; // 2^27
+        const DRAM_SIZE: usize = 1024 * 1024 * 1024 * 2; // 2^27
         let virt_entry = loader.get_entry_point().expect("entry point not found.");
 
         // create new dram
