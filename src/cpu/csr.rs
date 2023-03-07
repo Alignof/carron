@@ -77,13 +77,7 @@ impl CSRs {
             }
             MSTATUS => match *self.isa {
                 Isa::Rv32 => mask,
-                Isa::Rv64 => {
-                    if self.read_xstatus(PrivilegedLevel::Machine, Xstatus::UXL) == 0b10 {
-                        mask & !(0b11 << 32)
-                    } else {
-                        mask
-                    }
-                }
+                Isa::Rv64 => mask & !(0b1111 << 32),
             },
             MHPMCOUNTER3 => 0,
             _ => mask,
@@ -130,7 +124,7 @@ impl CSRs {
             }
             MSTATUS => match *self.isa {
                 Isa::Rv32 => self.csrs[dist] = src,
-                Isa::Rv64 => self.csrs[dist] = src & !(0b11 << 32) | (0b10 << 32),
+                Isa::Rv64 => self.csrs[dist] = src | 0b1010 << 32,
             },
             MHPMCOUNTER3 => (), // protect from any value
             other => self.csrs[other] = src,
