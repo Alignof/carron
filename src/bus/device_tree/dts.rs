@@ -40,7 +40,7 @@ fn dts_32(dram_addr: u64, initrd_start: Option<usize>, initrd_end: Option<usize>
               }};
               memory@{dram_addr:x} {{
                 device_type = \"memory\";
-                reg = <0x0 0x{dram_addr:#x} 0x0 0x{dram_addr:x}>;
+                reg = <0x0 {dram_addr:#x} 0x0 0x80000000>;
               }};
               soc {{
                 #address-cells = <2>;
