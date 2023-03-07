@@ -49,6 +49,8 @@ impl Emulator {
                 }
             }
 
+            self.cpu.regs.show();
+
             if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost() {
                 self.handle_syscall();
             }

@@ -18,7 +18,7 @@ impl Execution for Instruction {
             _ => inst_32::exe_inst(self, cpu)?,
         }
 
-        cpu.regs.show();
+        //cpu.regs.show();
         Ok(())
     }
 }
