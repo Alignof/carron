@@ -4,6 +4,7 @@ use crate::cpu::Cpu;
 use crate::{log, Isa};
 
 pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, String)> {
+    log::diffln!("0x{:016x}\n:", cpu.pc());
     let index_pc: u64 = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc())?;
     let is_cinst: bool = match cpu.bus.load_u8(index_pc) {
         Ok(inst_byte) => inst_byte & 0x3 != 0x3,
@@ -15,7 +16,6 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
             Isa::Rv32 => log::infoln!("pc: 0x{:08x}", cpu.pc()),
             Isa::Rv64 => {
                 log::infoln!("pc: 0x{:016x}", cpu.pc());
-                log::diffln!("0x{:016x}\n:", cpu.pc());
             }
         };
         match cpu.bus.load_u16(index_pc) {
@@ -36,7 +36,6 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
             Isa::Rv32 => log::infoln!("pc: 0x{:08x}", cpu.pc()),
             Isa::Rv64 => {
                 log::infoln!("pc: 0x{:016x}", cpu.pc());
-                log::diffln!("0x{:016x}\n:", cpu.pc());
             }
         };
         Ok(Box::new(inst_upper << 16 | inst_lower))
