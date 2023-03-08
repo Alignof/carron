@@ -247,7 +247,14 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_SRA => {
             cpu.regs.write(
                 inst.rd,
-                ((cpu.regs.read(inst.rs1) as i32) >> cpu.regs.read(inst.rs2)) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => {
+                        ((cpu.regs.read(inst.rs1) as i32) >> cpu.regs.read(inst.rs2)) as u64
+                    }
+                    Isa::Rv64 => {
+                        ((cpu.regs.read(inst.rs1) as i64) >> cpu.regs.read(inst.rs2)) as u64
+                    }
+                },
             );
         }
         OpecodeKind::OP_OR => {
