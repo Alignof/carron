@@ -35,6 +35,7 @@ impl CSRs {
     }
 
     pub fn init(mut self) -> Self {
+        self.write(CSRname::marchid.wrap(), 0x5);
         match *self.isa {
             Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105),
             Isa::Rv64 => {
@@ -338,6 +339,7 @@ pub enum CSRname {
     tdata4 = 0x7a4,
     tdata5 = 0x7a5,
     mhpmcounter3 = 0xb03,
+    marchid = 0xf12,
 }
 
 impl CSRname {
