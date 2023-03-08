@@ -124,7 +124,7 @@ impl CSRs {
             }
             MSTATUS => match *self.isa {
                 Isa::Rv32 => self.csrs[dist] = src,
-                Isa::Rv64 => self.csrs[dist] = src | 0b1010 << 32,
+                Isa::Rv64 => self.csrs[dist] = (src & !(0b1111 << 32)) | 0b1010 << 32,
             },
             MHPMCOUNTER3 => (), // protect from any value
             other => self.csrs[other] = src,
@@ -208,75 +208,75 @@ impl CSRs {
         match xfield {
             Xstatus::UIE => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 0)) | ((data & 0x1) << 0)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 0)) | (((data & 0x1) << 0) & mask)
             }
             Xstatus::SIE => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 1)) | ((data & 0x1) << 1)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 1)) | (((data & 0x1) << 1) & mask)
             }
             Xstatus::MIE => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 3)) | ((data & 0x1) << 3)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 3)) | (((data & 0x1) << 3) & mask)
             }
             Xstatus::UPIE => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 4)) | ((data & 0x1) << 4)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 4)) | (((data & 0x1) << 4) & mask)
             }
             Xstatus::SPIE => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 5)) | ((data & 0x1) << 5)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 5)) | (((data & 0x1) << 5) & mask)
             }
             Xstatus::MPIE => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 7)) | ((data & 0x1) << 7)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 7)) | (((data & 0x1) << 7) & mask)
             }
             Xstatus::SPP => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 8)) | ((data & 0x1) << 8)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 8)) | (((data & 0x1) << 8) & mask)
             }
             Xstatus::MPP => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x3 << 11)) | ((data & 0x3) << 11)) & mask
+                    (self.csrs[xstatus] & !(0x3 << 11)) | (((data & 0x3) << 11) & mask)
             }
             Xstatus::FS => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x3 << 13)) | ((data & 0x3) << 13)) & mask
+                    (self.csrs[xstatus] & !(0x3 << 13)) | (((data & 0x3) << 13) & mask)
             }
             Xstatus::XS => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x3 << 15)) | ((data & 0x3) << 15)) & mask
+                    (self.csrs[xstatus] & !(0x3 << 15)) | (((data & 0x3) << 15) & mask)
             }
             Xstatus::MPRV => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 17)) | ((data & 0x1) << 17)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 17)) | (((data & 0x1) << 17) & mask)
             }
             Xstatus::SUM => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 18)) | ((data & 0x1) << 18)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 18)) | (((data & 0x1) << 18) & mask)
             }
             Xstatus::MXR => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 19)) | ((data & 0x1) << 19)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 19)) | (((data & 0x1) << 19) & mask)
             }
             Xstatus::TVM => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 20)) | ((data & 0x1) << 20)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 20)) | (((data & 0x1) << 20) & mask)
             }
             Xstatus::TW => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 21)) | ((data & 0x1) << 21)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 21)) | (((data & 0x1) << 21) & mask)
             }
             Xstatus::TSR => {
                 self.csrs[xstatus] =
-                    ((self.csrs[xstatus] & !(0x1 << 22)) | ((data & 0x1) << 22)) & mask
+                    (self.csrs[xstatus] & !(0x1 << 22)) | (((data & 0x1) << 22) & mask)
             }
             Xstatus::SD => {
                 self.csrs[xstatus] = match *self.isa {
                     Isa::Rv32 => {
-                        ((self.csrs[xstatus] & !(0x1 << 31)) | ((data & 0x1) << 31)) & mask
+                        (self.csrs[xstatus] & !(0x1 << 31)) | (((data & 0x1) << 31) & mask)
                     }
                     Isa::Rv64 => {
-                        ((self.csrs[xstatus] & !(0x1 << 63)) | ((data & 0x1) << 63)) & mask
+                        (self.csrs[xstatus] & !(0x1 << 63)) | (((data & 0x1) << 63) & mask)
                     }
                 }
             }
@@ -284,7 +284,7 @@ impl CSRs {
                 self.csrs[xstatus] = match *self.isa {
                     Isa::Rv32 => panic!("attempting write to UXL in rv32"),
                     Isa::Rv64 => {
-                        ((self.csrs[xstatus] & !(0x3 << 32)) | ((data & 0x3) << 32)) & mask
+                        (self.csrs[xstatus] & !(0x3 << 32)) | (((data & 0x3) << 32) & mask)
                     }
                 }
             }
@@ -292,7 +292,7 @@ impl CSRs {
                 self.csrs[xstatus] = match *self.isa {
                     Isa::Rv32 => panic!("attempting write to SXL in rv32"),
                     Isa::Rv64 => {
-                        ((self.csrs[xstatus] & !(0x3 << 34)) | ((data & 0x3) << 34)) & mask
+                        (self.csrs[xstatus] & !(0x3 << 34)) | (((data & 0x3) << 34) & mask)
                     }
                 }
             }
