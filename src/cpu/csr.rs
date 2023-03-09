@@ -299,6 +299,10 @@ impl CSRs {
             }
         }
     }
+
+    pub fn timer_increment(&mut self, inc: u64) {
+        self.csrs[CSRname::timer as usize] += inc;
+    }
 }
 
 impl Default for CSRs {
@@ -339,6 +343,7 @@ pub enum CSRname {
     tdata4 = 0x7a4,
     tdata5 = 0x7a5,
     mhpmcounter3 = 0xb03,
+    timer = 0xc01,
     marchid = 0xf12,
 }
 
