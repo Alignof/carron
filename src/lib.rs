@@ -9,6 +9,9 @@ use cmdline::Arguments;
 use cpu::{Cpu, TrapCause};
 use fesvr::FrontendServer;
 
+const INTERLEAVE: u64 = 5000;
+const INSNS_PER_RTC_TICK: u64 = 100;
+
 #[derive(Copy, Clone)]
 pub enum Isa {
     Rv32,
@@ -41,29 +44,34 @@ impl Emulator {
 
     pub fn emulation(&mut self) {
         loop {
-            match self.cpu.exec_one_cycle() {
-                Ok(()) => (),
-                Err((addr, cause, msg)) => {
-                    log::infoln!("[exception: {:?}] {}", cause, msg);
-                    self.cpu.trap(addr.unwrap_or(self.cpu.pc()), cause);
+            for _ in 0..INTERLEAVE {
+                match self.cpu.exec_one_cycle() {
+                    Ok(()) => (),
+                    Err((addr, cause, msg)) => {
+                        log::infoln!("[exception: {:?}] {}", cause, msg);
+                        self.cpu.trap(addr.unwrap_or(self.cpu.pc()), cause);
+                    }
+                }
+
+                self.cpu.regs.show();
+
+                if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost()
+                {
+                    self.handle_syscall();
+                }
+
+                if let Some(break_point) = self.args.break_point {
+                    if break_point == self.cpu.pc() {
+                        self.exit_code = Some(0);
+                    }
+                }
+
+                if let Some(exit_code) = self.exit_code {
+                    std::process::exit(exit_code);
                 }
             }
 
-            self.cpu.regs.show();
-
-            if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost() {
-                self.handle_syscall();
-            }
-
-            if let Some(break_point) = self.args.break_point {
-                if break_point == self.cpu.pc() {
-                    self.exit_code = Some(0);
-                }
-            }
-
-            if let Some(exit_code) = self.exit_code {
-                std::process::exit(exit_code);
-            }
+            self.cpu.timer_increment(INTERLEAVE / INSNS_PER_RTC_TICK);
         }
     }
 }

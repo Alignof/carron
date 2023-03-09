@@ -23,9 +23,6 @@ impl Cpu {
             (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
         };
 
-        // mtime += 1
-        self.bus.store64(MTIME, mtime + 1).unwrap();
-
         match self.priv_lv {
             PrivilegedLevel::Machine => {
                 if self

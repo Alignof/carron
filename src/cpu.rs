@@ -167,6 +167,16 @@ impl Cpu {
             }
         }
     }
+
+    pub fn timer_increment(&mut self, inc: u64) {
+        // mtime(clint: 0x0200_BFF8)
+        const MTIME: u64 = 0x0200_BFF8;
+        let mtime: u64 = self.bus.load64(MTIME).unwrap();
+        self.bus.store64(MTIME, mtime + inc).unwrap();
+
+        // time(CSRs: 0xc01)
+        self.csrs.timer_increment(inc);
+    }
 }
 
 trait CrossIsaUtil {
