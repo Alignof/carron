@@ -10,7 +10,6 @@ mod trap;
 use crate::{bus, elfload, log, Arguments, Isa};
 use csr::{CSRname, Xstatus};
 use std::cell::RefCell;
-use std::collections::HashSet;
 use std::rc::Rc;
 
 #[derive(Copy, Clone, Debug)]
@@ -64,7 +63,7 @@ pub struct Cpu {
     pub regs: reg::Register,
     csrs: csr::CSRs,
     mmu: mmu::Mmu,
-    pub reservation_set: HashSet<usize>,
+    pub reservation_set: Option<usize>,
     isa: Rc<Isa>,
     pub priv_lv: PrivilegedLevel,
 }
@@ -82,7 +81,7 @@ impl Cpu {
             regs: reg::Register::new(isa.clone()),
             csrs: csr::CSRs::new(isa.clone(), pc).init(),
             mmu: mmu::Mmu::new(isa.clone()),
-            reservation_set: HashSet::new(),
+            reservation_set: None,
             isa,
             priv_lv: PrivilegedLevel::Machine,
         }

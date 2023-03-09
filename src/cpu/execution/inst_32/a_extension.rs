@@ -48,7 +48,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let _rl = inst.imm.unwrap() & 0x1;
             let _aq = inst.imm.unwrap() >> 1 & 0x1;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
-            cpu.reservation_set.insert(load_addr as usize);
+            cpu.reservation_set = Some(load_addr as usize);
         }
         OpecodeKind::OP_SC_W => {
             let store_addr = cpu.trans_addr(
@@ -58,17 +58,15 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
             // cache value == rs1 --> store rs2 to rs1 and assign zero to rd
             // cache value != rs1 --> ignore and assign non-zero to rd
-            if cpu.reservation_set.contains(&(store_addr as usize)) {
+            if cpu.reservation_set == Some(store_addr as usize) {
                 let _rl = inst.imm.unwrap() & 0x1;
                 let _aq = inst.imm.unwrap() >> 1 & 0x1;
                 cpu.bus.store32(store_addr, cpu.regs.read(inst.rs2))?;
-                cpu.reservation_set.remove(&(store_addr as usize));
+                cpu.reservation_set = None;
                 cpu.regs.write(inst.rd, 0);
             } else {
                 cpu.regs.write(inst.rd, 1);
             }
-
-            cpu.reservation_set.clear();
         }
         OpecodeKind::OP_AMOSWAP_W => {
             atomic_memory_operations_32(|_, y| y, inst, cpu)?;
@@ -122,7 +120,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             let _rl = inst.imm.unwrap() & 0x1;
             let _aq = inst.imm.unwrap() >> 1 & 0x1;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
-            cpu.reservation_set.insert(load_addr as usize);
+            cpu.reservation_set = Some(load_addr as usize);
         }
         OpecodeKind::OP_SC_D => {
             let store_addr = cpu.trans_addr(
@@ -132,17 +130,15 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
             // cache value == rs1 --> store rs2 to rs1 and assign zero to rd
             // cache value != rs1 --> ignore and assign non-zero to rd
-            if cpu.reservation_set.contains(&(store_addr as usize)) {
+            if cpu.reservation_set == Some(store_addr as usize) {
                 let _rl = inst.imm.unwrap() & 0x1;
                 let _aq = inst.imm.unwrap() >> 1 & 0x1;
                 cpu.bus.store64(store_addr, cpu.regs.read(inst.rs2))?;
-                cpu.reservation_set.remove(&(store_addr as usize));
+                cpu.reservation_set = None;
                 cpu.regs.write(inst.rd, 0);
             } else {
                 cpu.regs.write(inst.rd, 1);
             }
-
-            cpu.reservation_set.clear();
         }
         OpecodeKind::OP_AMOSWAP_D => {
             atomic_memory_operations_64(|_, y| y, inst, cpu)?;
