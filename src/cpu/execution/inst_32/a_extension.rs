@@ -12,9 +12,10 @@ fn atomic_memory_operations_32<F: Fn(u64, u64) -> u64>(
         cpu.regs.read(inst.rs1),
     )?;
     let loaded_data = cpu.bus.load32(amo_addr)?;
+    let rs2_data = cpu.regs.read(inst.rs2);
     cpu.regs.write(inst.rd, loaded_data);
     cpu.bus
-        .store32(amo_addr, operation(loaded_data, cpu.regs.read(inst.rs2)))?;
+        .store32(amo_addr, operation(loaded_data, rs2_data))?;
 
     Ok(())
 }
@@ -30,9 +31,10 @@ fn atomic_memory_operations_64<F: Fn(u64, u64) -> u64>(
         cpu.regs.read(inst.rs1),
     )?;
     let loaded_data = cpu.bus.load64(amo_addr)?;
+    let rs2_data = cpu.regs.read(inst.rs2);
     cpu.regs.write(inst.rd, loaded_data);
     cpu.bus
-        .store64(amo_addr, operation(loaded_data, cpu.regs.read(inst.rs2)))?;
+        .store64(amo_addr, operation(loaded_data, rs2_data))?;
 
     Ok(())
 }
