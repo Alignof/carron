@@ -140,9 +140,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_C_MV => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs2));
         }
-        OpecodeKind::OP_C_EBREAK => {
-            panic!("not yet implemented: OP_C_EBREAK");
-        }
+        OpecodeKind::OP_C_EBREAK => { /* NOP */ }
         // -- rv64 --
         OpecodeKind::OP_C_LD => {
             let load_addr = cpu.trans_addr(
@@ -209,7 +207,6 @@ mod exe_16 {
     use crate::cpu::{csr, mmu, reg, Cpu, PrivilegedLevel};
     use crate::{bus, elfload, Arguments, Isa};
     use std::cell::RefCell;
-    use std::collections::HashSet;
     use std::rc::Rc;
 
     #[test]
@@ -236,7 +233,7 @@ mod exe_16 {
             regs: reg::Register::new(Rc::new(isa)),
             csrs: csr::CSRs::new(Rc::new(isa), pc).init(),
             mmu: mmu::Mmu::new(Rc::new(isa)),
-            reservation_set: HashSet::new(),
+            reservation_set: None,
             isa: Rc::new(isa),
             priv_lv: PrivilegedLevel::Machine,
         };
