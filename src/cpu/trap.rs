@@ -1,6 +1,6 @@
 use super::csr::Xstatus;
 use super::{CSRname, Cpu, PrivilegedLevel};
-use crate::{log, TrapCause};
+use crate::{log, Isa, TrapCause};
 
 impl Cpu {
     pub fn check_interrupt(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
@@ -148,8 +148,20 @@ impl Cpu {
         {
             let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
             log::infoln!("delegated");
-            self.csrs
-                .write(CSRname::scause.wrap(), cause_of_trap as u64);
+            self.csrs.write(
+                CSRname::scause.wrap(),
+                match *self.isa {
+                    Isa::Rv32 => cause_of_trap as u64,
+                    Isa::Rv64 => match cause_of_trap {
+                        TrapCause::MachineTimerInterrupt
+                        | TrapCause::MachineSoftwareInterrupt
+                        | TrapCause::SupervisorSoftwareInterrupt => {
+                            (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
+                        }
+                        _ => cause_of_trap as u64,
+                    },
+                },
+            );
             self.csrs.write(CSRname::sepc.wrap(), self.pc());
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.csrs.write_xstatus(
@@ -176,8 +188,20 @@ impl Cpu {
             }
         } else {
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
-            self.csrs
-                .write(CSRname::mcause.wrap(), cause_of_trap as u64);
+            self.csrs.write(
+                CSRname::mcause.wrap(),
+                match *self.isa {
+                    Isa::Rv32 => cause_of_trap as u64,
+                    Isa::Rv64 => match cause_of_trap {
+                        TrapCause::MachineTimerInterrupt
+                        | TrapCause::MachineSoftwareInterrupt
+                        | TrapCause::SupervisorSoftwareInterrupt => {
+                            (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
+                        }
+                        _ => cause_of_trap as u64,
+                    },
+                },
+            );
             self.csrs.write(CSRname::mepc.wrap(), self.pc());
             self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.csrs.write_xstatus(
