@@ -4,7 +4,6 @@ use crate::cpu::Cpu;
 use crate::{log, Isa};
 
 pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, String)> {
-    *crate::log::INST_COUNT.lock().unwrap() += 1;
     log::diffln!("0x{:016x}\n:", cpu.pc());
 
     let index_pc: u64 = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc())?;
@@ -12,6 +11,14 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
         Ok(inst_byte) => inst_byte & 0x3 != 0x3,
         Err((inst, _, msg)) => return Err((inst, TrapCause::InstAccessFault, msg)),
     };
+
+    *crate::log::INST_COUNT.lock().unwrap() += 1;
+    //if *crate::log::INST_COUNT.lock().unwrap() == 44840000 {
+    if *crate::log::INST_COUNT.lock().unwrap() == 1000_0000 {
+        eprintln!("mtime: {:#x}", cpu.bus.load64(0x0200_BFF8)?);
+        eprintln!("mtimecmp: {:#x}", cpu.bus.load64(0x0200_4000)?);
+        panic!("for debug");
+    }
 
     if is_cinst {
         match *cpu.isa {
