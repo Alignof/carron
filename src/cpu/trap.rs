@@ -34,21 +34,21 @@ impl Cpu {
                         // TODO: bit clear when mtimecmp written
                         self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                         return Err((
-                            None,
+                            Some(0),
                             TrapCause::MachineTimerInterrupt,
                             "machine timer interrupt".to_string(),
                         ));
                     }
                     if is_interrupt_enabled(MSIP) {
                         return Err((
-                            None,
+                            Some(0),
                             TrapCause::MachineSoftwareInterrupt,
                             "machine software interrupt".to_string(),
                         ));
                     }
                     if is_interrupt_enabled(SSIP) {
                         return Err((
-                            None,
+                            Some(0),
                             TrapCause::SupervisorSoftwareInterrupt,
                             "supervisor software interrupt".to_string(),
                         ));
@@ -60,14 +60,14 @@ impl Cpu {
                     // TODO: bit clear when mtimecmp written
                     self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                     return Err((
-                        None,
+                        Some(0),
                         TrapCause::MachineTimerInterrupt,
                         "machine timer interrupt".to_string(),
                     ));
                 }
                 if is_interrupt_enabled(MSIP) {
                     return Err((
-                        None,
+                        Some(0),
                         TrapCause::MachineSoftwareInterrupt,
                         "machine software interrupt".to_string(),
                     ));
@@ -79,7 +79,7 @@ impl Cpu {
                     && is_interrupt_enabled(SSIP)
                 {
                     return Err((
-                        None,
+                        Some(0),
                         TrapCause::SupervisorSoftwareInterrupt,
                         "supervisor software interrupt".to_string(),
                     ));
@@ -90,21 +90,21 @@ impl Cpu {
                     // TODO: bit clear when mtimecmp written
                     self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
                     return Err((
-                        None,
+                        Some(0),
                         TrapCause::MachineTimerInterrupt,
                         "machine timer interrupt".to_string(),
                     ));
                 }
                 if is_interrupt_enabled(MSIP) {
                     return Err((
-                        None,
+                        Some(0),
                         TrapCause::MachineSoftwareInterrupt,
                         "machine software interrupt".to_string(),
                     ));
                 }
                 if is_interrupt_enabled(SSIP) {
                     return Err((
-                        None,
+                        Some(0),
                         TrapCause::SupervisorSoftwareInterrupt,
                         "supervisor software interrupt".to_string(),
                     ));
