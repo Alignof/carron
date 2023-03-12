@@ -4,6 +4,9 @@ use super::Device;
 use crate::TrapCause;
 use std::collections::VecDeque;
 
+const UART_QUEUE_SIZE: usize = 64;
+const MAX_BACKOFF: u64 = 16;
+
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 enum UartRegister {
@@ -58,6 +61,16 @@ enum FcrMask {
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
+enum McrMask {
+    LOOP = 0x10,
+    OUT2 = 0x08,
+    OUT1 = 0x04,
+    RTS = 0x02,
+    DTR = 0x01,
+}
+
+#[allow(dead_code)]
+#[allow(non_camel_case_types)]
 enum LsrMask {
     FIFOE = 0x80,
     TEMT = 0x40,
@@ -73,6 +86,7 @@ enum LsrMask {
 pub struct Uart {
     pub uart: Vec<u8>,
     rx_queue: VecDeque<u8>,
+    backoff_counter: u64,
     pub base_addr: u64,
     size: usize,
 }
@@ -84,7 +98,6 @@ impl Default for Uart {
 }
 
 impl Uart {
-    #[allow(arithmetic_overflow)]
     pub fn new() -> Self {
         const UART_SIZE: usize = 0x100;
         let mut uart = vec![0; UART_SIZE];
@@ -96,9 +109,35 @@ impl Uart {
         Uart {
             uart,
             rx_queue: VecDeque::new(),
+            backoff_counter: 0,
             base_addr: 0x1000_0000,
             size: UART_SIZE,
         }
+    }
+
+    pub fn tick(&mut self) {
+        if (self.uart[UartRegister::IIR_FCR as usize] & FcrMask::ENABLE_FIFO as u8 == 0)
+            || (self.uart[UartRegister::MCR as usize] & McrMask::LOOP as u8 != 0)
+            || (UART_QUEUE_SIZE <= self.rx_queue.len())
+        {
+            return;
+        }
+
+        if self.backoff_counter > 0 && self.backoff_counter < MAX_BACKOFF {
+            self.backoff_counter += 1;
+            return;
+        }
+
+        let input = 'x'; // input value here
+        if (input as i8) < 0 {
+            self.backoff_counter = 1;
+            return;
+        }
+
+        self.backoff_counter = 0;
+
+        self.rx_queue.push_back(input as u8);
+        self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
     }
 }
 

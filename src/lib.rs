@@ -73,6 +73,7 @@ impl Emulator {
 
             self.cpu.reservation_set = None;
             self.cpu.timer_increment(INTERLEAVE / INSNS_PER_RTC_TICK);
+            self.cpu.bus.uart.tick();
         }
     }
 }
