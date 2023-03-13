@@ -19,98 +19,52 @@ impl Cpu {
 
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
-        let is_interrupt_enabled = |bit: u64| {
-            (mie >> bit) & 0b1 == 1 && (mip >> bit) & 0b1 == 1 && (mideleg >> bit) & 0b1 == 0
+        let mstatus_mie = self
+            .csrs
+            .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE);
+        let m_enabled = match self.priv_lv {
+            PrivilegedLevel::Machine => (mstatus_mie != 0) as i64,
+            _ => 1,
         };
+        let enabled_interrupt_mask = mip & !mideleg & (-m_enabled as u64);
+        let enabled_interrupt_mask = if enabled_interrupt_mask == 0 {
+            let mstatus_sie = self
+                .csrs
+                .read_xstatus(PrivilegedLevel::Machine, Xstatus::SIE);
+            let s_enabled = match self.priv_lv {
+                PrivilegedLevel::Machine => 0,
+                PrivilegedLevel::Supervisor => (mstatus_sie != 0) as i64,
+                _ => 1,
+            };
 
-        match self.priv_lv {
-            PrivilegedLevel::Machine => {
-                if self
-                    .csrs
-                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE)
-                    == 1
-                {
-                    if is_interrupt_enabled(MTIP) {
-                        // TODO: bit clear when mtimecmp written
-                        self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
-                        return Err((
-                            Some(0),
-                            TrapCause::MachineTimerInterrupt,
-                            "machine timer interrupt".to_string(),
-                        ));
-                    }
-                    if is_interrupt_enabled(MSIP) {
-                        return Err((
-                            Some(0),
-                            TrapCause::MachineSoftwareInterrupt,
-                            "machine software interrupt".to_string(),
-                        ));
-                    }
-                    if is_interrupt_enabled(SSIP) {
-                        return Err((
-                            Some(0),
-                            TrapCause::SupervisorSoftwareInterrupt,
-                            "supervisor software interrupt".to_string(),
-                        ));
-                    }
-                }
-            }
-            PrivilegedLevel::Supervisor => {
-                if is_interrupt_enabled(MTIP) {
-                    // TODO: bit clear when mtimecmp written
-                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
-                    return Err((
-                        Some(0),
-                        TrapCause::MachineTimerInterrupt,
-                        "machine timer interrupt".to_string(),
-                    ));
-                }
-                if is_interrupt_enabled(MSIP) {
-                    return Err((
-                        Some(0),
-                        TrapCause::MachineSoftwareInterrupt,
-                        "machine software interrupt".to_string(),
-                    ));
-                }
-                if self
-                    .csrs
-                    .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::MIE)
-                    == 1
-                    && is_interrupt_enabled(SSIP)
-                {
-                    return Err((
-                        Some(0),
-                        TrapCause::SupervisorSoftwareInterrupt,
-                        "supervisor software interrupt".to_string(),
-                    ));
-                }
-            }
-            PrivilegedLevel::User => {
-                if is_interrupt_enabled(MTIP) {
-                    // TODO: bit clear when mtimecmp written
-                    self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
-                    return Err((
-                        Some(0),
-                        TrapCause::MachineTimerInterrupt,
-                        "machine timer interrupt".to_string(),
-                    ));
-                }
-                if is_interrupt_enabled(MSIP) {
-                    return Err((
-                        Some(0),
-                        TrapCause::MachineSoftwareInterrupt,
-                        "machine software interrupt".to_string(),
-                    ));
-                }
-                if is_interrupt_enabled(SSIP) {
-                    return Err((
-                        Some(0),
-                        TrapCause::SupervisorSoftwareInterrupt,
-                        "supervisor software interrupt".to_string(),
-                    ));
-                }
-            }
-            _ => (),
+            mip & mideleg & (-s_enabled as u64)
+        } else {
+            enabled_interrupt_mask
+        };
+        let is_interrupt_enabled = |bit: u64| (enabled_interrupt_mask & (1 << bit)) != 0;
+
+        if is_interrupt_enabled(MSIP) {
+            return Err((
+                Some(0),
+                TrapCause::MachineSoftwareInterrupt,
+                "machine software interrupt".to_string(),
+            ));
+        }
+        if is_interrupt_enabled(MTIP) {
+            // TODO: bit clear when mtimecmp written
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+            return Err((
+                Some(0),
+                TrapCause::MachineTimerInterrupt,
+                "machine timer interrupt".to_string(),
+            ));
+        }
+        if is_interrupt_enabled(SSIP) {
+            return Err((
+                Some(0),
+                TrapCause::SupervisorSoftwareInterrupt,
+                "supervisor software interrupt".to_string(),
+            ));
         }
 
         Ok(())
