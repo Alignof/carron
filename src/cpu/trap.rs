@@ -7,17 +7,10 @@ impl Cpu {
         const MSIP: u64 = 3;
         const SSIP: u64 = 1;
         const MTIP: u64 = 7;
-        const MTIME: u64 = 0x0200_BFF8;
-        const MTIMECMP: u64 = 0x0200_4000;
-        let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
-        let mtime: u64 = self.bus.load64(MTIME).unwrap();
-        let mtimecmp: u64 = self.bus.load64(MTIMECMP).unwrap();
-
-        if (mie >> MTIP) & 0b1 == 1 && mtime >= mtimecmp {
-            self.csrs.write(CSRname::mip.wrap(), 1 << MTIP)
-        }
 
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
+        let mie = self.csrs.read(CSRname::mip.wrap()).unwrap();
+        let pending_interrupts = mip & mie;
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
         let mstatus_mie = self
             .csrs
@@ -26,7 +19,7 @@ impl Cpu {
             PrivilegedLevel::Machine => (mstatus_mie != 0) as i64,
             _ => 1,
         };
-        let enabled_interrupt_mask = mip & !mideleg & (-m_enabled as u64);
+        let enabled_interrupt_mask = pending_interrupts & !mideleg & (-m_enabled as u64);
         let enabled_interrupt_mask = if enabled_interrupt_mask == 0 {
             let mstatus_sie = self
                 .csrs
@@ -37,13 +30,14 @@ impl Cpu {
                 _ => 1,
             };
 
-            mip & mideleg & (-s_enabled as u64)
+            pending_interrupts & mideleg & (-s_enabled as u64)
         } else {
             enabled_interrupt_mask
         };
         let is_interrupt_enabled = |bit: u64| (enabled_interrupt_mask & (1 << bit)) != 0;
 
         if is_interrupt_enabled(MSIP) {
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP);
             return Err((
                 Some(0),
                 TrapCause::MachineSoftwareInterrupt,
@@ -60,6 +54,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SSIP) {
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SSIP);
             return Err((
                 Some(0),
                 TrapCause::SupervisorSoftwareInterrupt,
