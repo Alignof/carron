@@ -170,8 +170,17 @@ impl Cpu {
     pub fn timer_increment(&mut self, inc: u64) {
         // mtime(clint: 0x0200_BFF8)
         const MTIME: u64 = 0x0200_BFF8;
+        const MTIMECMP: u64 = 0x0200_4000;
+        const MTIP: u64 = 7;
         let mtime: u64 = self.bus.load64(MTIME).unwrap();
+        let mtimecmp: u64 = self.bus.load64(MTIMECMP).unwrap();
         self.bus.store64(MTIME, mtime + inc).unwrap();
+
+        if mtime >= mtimecmp {
+            self.csrs.bitset(CSRname::mip.wrap(), 1 << MTIP)
+        } else {
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP)
+        }
 
         // time(CSRs: 0xc01)
         self.csrs.timer_increment(inc);
