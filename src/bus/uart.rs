@@ -128,7 +128,7 @@ impl Uart {
             return;
         }
 
-        let input = 'x'; // input value here
+        let input = '\0'; // input value here
         if (input as i8) < 0 {
             self.backoff_counter = 1;
             return;
