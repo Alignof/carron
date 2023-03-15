@@ -7,9 +7,21 @@ impl Cpu {
         const MSIP: u64 = 3;
         const SSIP: u64 = 1;
         const MTIP: u64 = 7;
+        const STIP: u64 = 5;
+
+        const MTIME: u64 = 0x0200_BFF8;
+        const MTIMECMP: u64 = 0x0200_4000;
+        let mtime: u64 = self.bus.load64(MTIME).unwrap();
+        let mtimecmp: u64 = self.bus.load64(MTIMECMP).unwrap();
+        if mtime >= mtimecmp {
+            self.csrs.bitset(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+        } else {
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+        }
 
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
-        let mie = self.csrs.read(CSRname::mip.wrap()).unwrap();
+        let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
+
         let pending_interrupts = mip & mie;
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
         let mstatus_mie = self
@@ -61,6 +73,15 @@ impl Cpu {
                 "supervisor software interrupt".to_string(),
             ));
         }
+        if is_interrupt_enabled(STIP) {
+            // TODO: bit clear when mtimecmp written
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << STIP);
+            return Err((
+                Some(0),
+                TrapCause::SupervisorTimerInterrupt,
+                "supervisor timer interrupt".to_string(),
+            ));
+        }
 
         Ok(())
     }
@@ -83,7 +104,8 @@ impl Cpu {
             | TrapCause::StoreAMOPageFault => self.csrs.read(CSRname::medeleg.wrap()).unwrap(),
             TrapCause::MachineTimerInterrupt
             | TrapCause::MachineSoftwareInterrupt
-            | TrapCause::SupervisorSoftwareInterrupt => {
+            | TrapCause::SupervisorSoftwareInterrupt
+            | TrapCause::SupervisorTimerInterrupt => {
                 self.csrs.read(CSRname::mideleg.wrap()).unwrap()
             }
         }
@@ -144,7 +166,8 @@ impl Cpu {
                     Isa::Rv64 => match cause_of_trap {
                         TrapCause::MachineTimerInterrupt
                         | TrapCause::MachineSoftwareInterrupt
-                        | TrapCause::SupervisorSoftwareInterrupt => {
+                        | TrapCause::SupervisorSoftwareInterrupt
+                        | TrapCause::SupervisorTimerInterrupt => {
                             (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
                         }
                         _ => cause_of_trap as u64,
