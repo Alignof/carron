@@ -10,6 +10,9 @@ const MISA: usize = CSRname::misa as usize;
 const USTATUS: usize = CSRname::ustatus as usize;
 const SSTATUS: usize = CSRname::sstatus as usize;
 const MSTATUS: usize = CSRname::mstatus as usize;
+const SIE: usize = CSRname::sie as usize;
+const SIP: usize = CSRname::sip as usize;
+const SIESIPMASK: u64 = 0x0333;
 const MHPMCOUNTER3: usize = CSRname::mhpmcounter3 as usize;
 
 pub struct CSRs {
@@ -92,6 +95,8 @@ impl CSRs {
             match dist {
                 USTATUS => self.csrs[MSTATUS] |= mask & self.umask(),
                 SSTATUS => self.csrs[MSTATUS] |= mask & self.smask(),
+                SIE => self.csrs[CSRname::mie as usize] |= mask & SIESIPMASK,
+                SIP => self.csrs[CSRname::mip as usize] |= mask & SIESIPMASK,
                 _ => self.csrs[dist] |= mask,
             }
         }
@@ -104,6 +109,8 @@ impl CSRs {
             match dist {
                 USTATUS => self.csrs[MSTATUS] &= !(mask & self.umask()),
                 SSTATUS => self.csrs[MSTATUS] &= !(mask & self.smask()),
+                SIE => self.csrs[CSRname::mie as usize] &= !(mask & SIESIPMASK),
+                SIP => self.csrs[CSRname::mip as usize] &= !(mask & SIESIPMASK),
                 _ => self.csrs[dist] &= !mask,
             }
         }
@@ -115,6 +122,8 @@ impl CSRs {
         match dist {
             USTATUS => self.csrs[MSTATUS] = src & self.umask(),
             SSTATUS => self.csrs[MSTATUS] = src & self.smask(),
+            SIE => self.csrs[CSRname::mie as usize] = src & SIESIPMASK,
+            SIP => self.csrs[CSRname::mip as usize] = src & SIESIPMASK,
             MISA => {
                 if *self.pc.borrow() % 4 != 0 {
                     let c_ext_bit = (self.csrs[MISA] >> 2) & 1;
@@ -149,6 +158,8 @@ impl CSRs {
         match dist {
             0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.umask()),
             0x100 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.smask()),
+            SIE => Ok(self.csrs[CSRname::mie as usize].fix2regsz(&self.isa) & SIESIPMASK),
+            SIP => Ok(self.csrs[CSRname::mip as usize].fix2regsz(&self.isa) & SIESIPMASK),
             0x341 | 0x141 => self.read_xepc(dist),
             _ => Ok(self.csrs[dist].fix2regsz(&self.isa)),
         }
@@ -318,11 +329,13 @@ pub enum CSRname {
     uepc = 0x041,
     ucause = 0x042,
     sstatus = 0x100,
+    sie = 0x104,
     stvec = 0x105,
     sscratch = 0x140,
     sepc = 0x141,
     scause = 0x142,
     stval = 0x143,
+    sip = 0x144,
     satp = 0x180,
     mstatus = 0x300,
     misa = 0x301,
