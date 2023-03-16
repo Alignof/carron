@@ -126,7 +126,8 @@ impl Cpu {
                     Isa::Rv64 => match cause_of_trap {
                         TrapCause::MachineTimerInterrupt
                         | TrapCause::MachineSoftwareInterrupt
-                        | TrapCause::SupervisorSoftwareInterrupt => {
+                        | TrapCause::SupervisorSoftwareInterrupt
+                        | TrapCause::SupervisorTimerInterrupt => {
                             (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
                         }
                         _ => cause_of_trap as u64,
