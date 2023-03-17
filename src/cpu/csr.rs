@@ -331,6 +331,7 @@ pub enum CSRname {
     sstatus = 0x100,
     sie = 0x104,
     stvec = 0x105,
+    scounteren = 0x106,
     sscratch = 0x140,
     sepc = 0x141,
     scause = 0x142,
