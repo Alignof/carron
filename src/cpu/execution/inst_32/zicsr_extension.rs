@@ -50,22 +50,29 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
     }
 
     if (0xc00..=0xc1f).contains(&dist) {
-        let ctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
-        if ctren >> (dist - 0xc00) & 0x1 == 0 {
-            match cpu.priv_lv {
-                PrivilegedLevel::Supervisor | PrivilegedLevel::User => {
+        match cpu.priv_lv {
+            PrivilegedLevel::Machine | PrivilegedLevel::Reserved => (),
+            PrivilegedLevel::Supervisor => {
+                let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
+                if mctren >> (dist - 0xc00) & 0x1 == 0 {
                     return Err((
                         invalid_instruction,
                         TrapCause::IllegalInst,
                         "mcounteren bit is cleared, but attempt reading".to_string(),
                     ));
                 }
-                _ => (),
             }
-        } else {
-            match cpu.priv_lv {
-                PrivilegedLevel::Supervisor => (),
-                _ => {
+            PrivilegedLevel::User => {
+                let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
+                if mctren >> (dist - 0xc00) & 0x1 == 0 {
+                    return Err((
+                        invalid_instruction,
+                        TrapCause::IllegalInst,
+                        "mcounteren bit is cleared, but attempt reading".to_string(),
+                    ));
+                }
+                let sctren = cpu.csrs.read(CSRname::scounteren.wrap())?;
+                if sctren >> (dist - 0xc00) & 0x1 == 0 {
                     return Err((
                         invalid_instruction,
                         TrapCause::IllegalInst,
