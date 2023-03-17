@@ -13,41 +13,6 @@ pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, 
         Err((inst, _, msg)) => return Err((inst, TrapCause::InstAccessFault, msg)),
     };
 
-    //if *crate::log::INST_COUNT.lock().unwrap() == 4082_4403 {
-    //    use crate::cpu::CSRname;
-    //    eprintln!("priv: {:?}", cpu.priv_lv);
-    //    eprintln!("pc: {:#x}", cpu.pc());
-    //    eprintln!("mtime: {:#x}", cpu.bus.load64(0x0200_BFF8)?);
-    //    eprintln!("mtimecmp: {:#x}", cpu.bus.load64(0x0200_4000)?);
-    //    eprintln!("mie: {:#x}", cpu.csrs.read(CSRname::mie.wrap())?);
-    //    eprintln!("mip: {:#x}", cpu.csrs.read(CSRname::mip.wrap())?);
-    //    eprintln!("sie: {:#x}", cpu.csrs.read(CSRname::sie.wrap())?);
-    //    eprintln!("sip: {:#x}", cpu.csrs.read(CSRname::sip.wrap())?);
-    //    eprintln!(
-    //        "mcounteren: {:#x}",
-    //        cpu.csrs.read(CSRname::mcounteren.wrap())?
-    //    );
-    //}
-
-    //if *crate::log::INST_COUNT.lock().unwrap() == 4082_4404 {
-    //    use crate::cpu::CSRname;
-    //    eprintln!("-------------------------------");
-    //    eprintln!("priv: {:?}", cpu.priv_lv);
-    //    eprintln!("pc: {:#x}", cpu.pc());
-    //    eprintln!("mtime: {:#x}", cpu.bus.load64(0x0200_BFF8)?);
-    //    eprintln!("mtimecmp: {:#x}", cpu.bus.load64(0x0200_4000)?);
-    //    eprintln!("mie: {:#x}", cpu.csrs.read(CSRname::mie.wrap())?);
-    //    eprintln!("mip: {:#x}", cpu.csrs.read(CSRname::mip.wrap())?);
-    //    eprintln!("sie: {:#x}", cpu.csrs.read(CSRname::sie.wrap())?);
-    //    eprintln!("sip: {:#x}", cpu.csrs.read(CSRname::sip.wrap())?);
-    //    eprintln!("mcause: {:#x}", cpu.csrs.read(CSRname::mcause.wrap())?);
-    //    eprintln!(
-    //        "mcounteren: {:#x}",
-    //        cpu.csrs.read(CSRname::mcounteren.wrap())?
-    //    );
-    //    panic!("for debug");
-    //}
-
     if is_cinst {
         match *cpu.isa {
             Isa::Rv32 => log::infoln!("pc: 0x{:08x}", cpu.pc()),
