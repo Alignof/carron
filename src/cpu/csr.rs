@@ -120,8 +120,8 @@ impl CSRs {
         let dist = dist.unwrap();
         let src = src.fix2regsz(&self.isa);
         match dist {
-            USTATUS => self.csrs[MSTATUS] = src & self.umask(),
-            SSTATUS => self.csrs[MSTATUS] = src & self.smask(),
+            USTATUS => self.csrs[MSTATUS] |= src & self.umask(),
+            SSTATUS => self.csrs[MSTATUS] |= src & self.smask(),
             SIE => self.csrs[CSRname::mie as usize] = src & SIESIPMASK,
             SIP => self.csrs[CSRname::mip as usize] = src & SIESIPMASK,
             MISA => {
