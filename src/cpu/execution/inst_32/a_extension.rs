@@ -42,11 +42,8 @@ fn atomic_memory_operations_64<F: Fn(u64, u64) -> u64>(
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_LR_W => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size32,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size32, cpu.regs.read(inst.rs1))?;
             let _rl = inst.imm.unwrap() & 0x1;
             let _aq = inst.imm.unwrap() >> 1 & 0x1;
             cpu.regs.write(inst.rd, cpu.bus.load32(load_addr)?);
@@ -114,11 +111,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             )?;
         }
         OpecodeKind::OP_LR_D => {
-            let load_addr = cpu.trans_addr(
-                TransFor::StoreAMO,
-                TransAlign::Size64,
-                cpu.regs.read(inst.rs1),
-            )?;
+            let load_addr =
+                cpu.trans_addr(TransFor::Load, TransAlign::Size64, cpu.regs.read(inst.rs1))?;
             let _rl = inst.imm.unwrap() & 0x1;
             let _aq = inst.imm.unwrap() >> 1 & 0x1;
             cpu.regs.write(inst.rd, cpu.bus.load64(load_addr)?);
