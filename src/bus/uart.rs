@@ -6,6 +6,7 @@ use std::collections::VecDeque;
 
 const UART_QUEUE_SIZE: usize = 64;
 const MAX_BACKOFF: u64 = 16;
+const UART_IIR_TYPE_BITS: u8 = 0xc0;
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
@@ -85,6 +86,8 @@ enum LsrMask {
 
 pub struct Uart {
     pub uart: Vec<u8>,
+    dll: u8,
+    dlm: u8,
     rx_queue: VecDeque<u8>,
     backoff_counter: u64,
     pub base_addr: u64,
@@ -108,6 +111,8 @@ impl Uart {
 
         Uart {
             uart,
+            dll: 0x0c,
+            dlm: 0,
             rx_queue: VecDeque::new(),
             backoff_counter: 0,
             base_addr: 0x1000_0000,
@@ -163,7 +168,29 @@ impl Device for Uart {
         let index = self.addr2index(addr);
 
         match index {
-            TX => self.tx_byte(char::from_u32(data as u32).unwrap()),
+            TX => {
+                if self.uart[LCR] & LcrMask::DLAB as u8 != 0 {
+                    self.dll = data as u8;
+                    return Ok(());
+                }
+
+                if self.uart[MCR] & McrMask::LOOP as u8 != 0 {
+                    if self.rx_queue.len() < UART_QUEUE_SIZE {
+                        self.rx_queue.push_back(data as u8);
+                        self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
+                    }
+                    return Ok(());
+                }
+
+                self.tx_byte(char::from_u32(data as u32).unwrap())
+            }
+            IER => {
+                if self.uart[LCR] & LcrMask::DLAB as u8 == 0 {
+                    self.uart[IER] = data as u8 & 0x0f;
+                } else {
+                    self.dlm = data as u8;
+                }
+            }
             _ => self.uart[index] = (data & 0xFF) as u8,
         }
 
@@ -202,12 +229,14 @@ impl Device for Uart {
     // load
     fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         const RX: usize = UartRegister::RX_TX as usize;
+        const IER: usize = UartRegister::IER as usize;
+        const IIR: usize = UartRegister::IIR_FCR as usize;
         let index = self.addr2index(addr);
 
         match index {
             RX => {
                 let data = if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
-                    self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8
+                    self.dll
                 } else {
                     self.rx_byte()
                 };
@@ -215,6 +244,14 @@ impl Device for Uart {
 
                 Ok(data as i8 as i64 as u64)
             }
+            IER => {
+                if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
+                    Ok(self.dlm as i8 as i64 as u64)
+                } else {
+                    Ok(self.uart[UartRegister::IER as usize] as i8 as i64 as u64)
+                }
+            }
+            IIR => Ok((self.uart[index] | UART_IIR_TYPE_BITS) as i8 as i64 as u64),
             _ => Ok(self.uart[index] as i8 as i64 as u64),
         }
     }
