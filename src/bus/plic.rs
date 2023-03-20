@@ -76,8 +76,21 @@ impl Plic {
     }
 
     fn context_update(&self) {
-        //let best_id = context_best_pending();
-        //let mask = ;
+        const MIP_MEIP: u64 = 1 << 11;
+        let best_id = self.context_best_pending();
+        let mask = MIP_MEIP;
+    }
+
+    fn context_claim(&self) {
+        let best_id = self.context_best_pending();
+        let best_id_word = (best_id / 32) as usize;
+        let best_id_mask = 1 << (best_id % 32);
+
+        if best_id != 0 {
+            self.claimed[best_id_word] |= best_id_mask;
+        }
+
+        self.context_update();
     }
 
     fn priority_read(&self, offset: usize) -> u32 {
