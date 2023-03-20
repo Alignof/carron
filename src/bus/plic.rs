@@ -125,13 +125,42 @@ impl Plic {
                 }
             }
             CONTEXT_CLAIM => {
-                let id_word = val / 32;
+                let id_word = (val / 32) as usize;
                 let id_mask = 1 << (val % 32);
-                if val < PLIC_MAX_DEVICES as u32 && self.enable[id_word as usize] & id_mask != 0 {
-                    self.claimed[id_word as usize] &= !id_mask;
+                if val < PLIC_MAX_DEVICES as u32 && self.enable[id_word] & id_mask != 0 {
+                    self.claimed[id_word] &= !id_mask;
                     self.context_update();
                 }
             }
+        }
+    }
+
+    fn set_interrupt_level(&self, id: u32, level: u32) {
+        if id <= 0 || PLIC_MAX_DEVICES as u32 <= id {
+            return;
+        }
+
+        let id = id as usize;
+        let id_word = (id / 32) as usize;
+        let id_mask = 1 << (id % 32);
+
+        if level != 0 {
+            self.level[id_word] |= id_mask;
+        } else {
+            self.level[id_word] &= !id_mask;
+        }
+
+        if self.enable[id_word] & id_mask != 0 {
+            if level != 0 {
+                self.pending[id_word] |= id_mask;
+                self.pending_priority[id] = self.priority[id];
+            } else {
+                self.pending[id_word] &= !id_mask;
+                self.pending_priority[id] = 0;
+                self.claimed[id_word] &= !id_mask;
+            }
+
+            self.context_update();
         }
     }
 
