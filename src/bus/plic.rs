@@ -241,25 +241,22 @@ impl Device for Plic {
     }
 
     fn store32(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
+        const ENABLE_BASE_MINUS_ONE: usize = ENABLE_BASE - 1;
+        const CONTEXT_BASE_MINUS_ONE: usize = CONTEXT_BASE - 1;
+        const PLIC_SIZE_MINUS_ONE: usize = PLIC_SIZE - 1;
         let addr = self.addr2index(addr);
-        self.plic[addr + 3] = ((data >> 24) & 0xFF) as u8;
-        self.plic[addr + 2] = ((data >> 16) & 0xFF) as u8;
-        self.plic[addr + 1] = ((data >> 8) & 0xFF) as u8;
-        self.plic[addr + 0] = ((data >> 0) & 0xFF) as u8;
-        Ok(())
+        match addr {
+            PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_write(addr, data as u32)),
+            ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => {
+                Ok(self.context_enable_write(addr, data as u32))
+            }
+            CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => Ok(self.context_write(addr, data as u32)),
+        }
     }
 
     fn store64(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
-        self.plic[addr + 7] = ((data >> 56) & 0xFF) as u8;
-        self.plic[addr + 6] = ((data >> 48) & 0xFF) as u8;
-        self.plic[addr + 5] = ((data >> 40) & 0xFF) as u8;
-        self.plic[addr + 4] = ((data >> 32) & 0xFF) as u8;
-        self.plic[addr + 3] = ((data >> 24) & 0xFF) as u8;
-        self.plic[addr + 2] = ((data >> 16) & 0xFF) as u8;
-        self.plic[addr + 1] = ((data >> 8) & 0xFF) as u8;
-        self.plic[addr + 0] = ((data >> 0) & 0xFF) as u8;
-        Ok(())
+        self.store32(addr, data & 0xffff)?;
+        self.store32(addr + 4, data >> 32 & 0xffff)
     }
 
     // load
