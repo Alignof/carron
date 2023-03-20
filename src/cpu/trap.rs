@@ -54,7 +54,6 @@ impl Cpu {
         let is_interrupt_enabled = |bit: u64| (enabled_interrupt_mask & (1 << bit)) != 0;
 
         if is_interrupt_enabled(MEIP) {
-            panic!("MEIP");
             self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP);
             return Err((
                 Some(0),
@@ -80,7 +79,6 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SEIP) {
-            panic!("SEIP");
             self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP);
             return Err((
                 Some(0),
@@ -149,10 +147,12 @@ impl Cpu {
                 match *self.isa {
                     Isa::Rv32 => cause_of_trap as u64,
                     Isa::Rv64 => match cause_of_trap {
-                        TrapCause::MachineTimerInterrupt
-                        | TrapCause::MachineSoftwareInterrupt
+                        TrapCause::MachineSoftwareInterrupt
+                        | TrapCause::MachineTimerInterrupt
+                        | TrapCause::MachineExternalInterrupt
                         | TrapCause::SupervisorSoftwareInterrupt
-                        | TrapCause::SupervisorTimerInterrupt => {
+                        | TrapCause::SupervisorTimerInterrupt
+                        | TrapCause::SupervisorExternalInterrupt => {
                             (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
                         }
                         _ => cause_of_trap as u64,
@@ -190,10 +190,12 @@ impl Cpu {
                 match *self.isa {
                     Isa::Rv32 => cause_of_trap as u64,
                     Isa::Rv64 => match cause_of_trap {
-                        TrapCause::MachineTimerInterrupt
-                        | TrapCause::MachineSoftwareInterrupt
+                        TrapCause::MachineSoftwareInterrupt
+                        | TrapCause::MachineTimerInterrupt
+                        | TrapCause::MachineExternalInterrupt
                         | TrapCause::SupervisorSoftwareInterrupt
-                        | TrapCause::SupervisorTimerInterrupt => {
+                        | TrapCause::SupervisorTimerInterrupt
+                        | TrapCause::SupervisorExternalInterrupt => {
                             (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
                         }
                         _ => cause_of_trap as u64,
