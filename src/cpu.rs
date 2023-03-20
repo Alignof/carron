@@ -139,7 +139,7 @@ impl Cpu {
 
         match self
             .mmu
-            .trans_addr(purpose, addr, &self.csrs, &self.bus.dram, trans_priv)
+            .trans_addr(purpose, addr, &self.csrs, &mut self.bus.dram, trans_priv)
         {
             Ok(vaddr) => {
                 if addr % align as u64 == 0 {

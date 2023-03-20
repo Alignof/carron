@@ -88,7 +88,8 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                     .read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM)
                     == 1
             {
-                cpu.trap(cpu.bus.load32(cpu.pc())?, TrapCause::IllegalInst);
+                let illegal_inst = cpu.bus.load32(cpu.pc())?;
+                cpu.trap(illegal_inst, TrapCause::IllegalInst);
             }
         }
         _ => panic!("not an privileged extension"),

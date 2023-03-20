@@ -8,7 +8,7 @@ const ENABLE_PER_HART: usize = 0x80;
 const CONTEXT_BASE: usize = 0x200000;
 const CONTEXT_PER_HART: usize = 0x1000;
 const CONTEXT_THRESHOLD: usize = 0x0;
-const CONTEXT_CLAIM: usize = 0x0;
+const CONTEXT_CLAIM: usize = 0x4;
 
 const PLIC_SIZE: usize = 0x0100_0000;
 const PLIC_MAX_DEVICES: usize = 1024;
@@ -81,7 +81,7 @@ impl Plic {
         let mask = MIP_MEIP;
     }
 
-    fn context_claim(&self) {
+    fn context_claim(&mut self) -> u32 {
         let best_id = self.context_best_pending();
         let best_id_word = (best_id / 32) as usize;
         let best_id_mask = 1 << (best_id % 32);
@@ -91,6 +91,7 @@ impl Plic {
         }
 
         self.context_update();
+        best_id
     }
 
     fn priority_read(&self, offset: usize) -> u32 {
@@ -102,7 +103,7 @@ impl Plic {
         }
     }
 
-    fn priority_write(&self, offset: usize, val: u32) {
+    fn priority_write(&mut self, offset: usize, val: u32) {
         const PLIC_PRIO_MASK: u32 = 0b1111;
         let index = (offset >> 2) as usize;
         if index > 0 && index < PLIC_SIZE {
@@ -119,7 +120,7 @@ impl Plic {
         }
     }
 
-    fn context_enable_write(&self, offset: usize, val: u32) {
+    fn context_enable_write(&mut self, offset: usize, val: u32) {
         let id_word = (offset >> 2) as usize;
         if id_word >= PLIC_MAX_DEVICES / 32 {
             return;
@@ -153,14 +154,15 @@ impl Plic {
         self.context_update();
     }
 
-    fn context_read(&self, offset: usize) -> u32 {
+    fn context_read(&mut self, offset: usize) -> u32 {
         match offset {
             CONTEXT_THRESHOLD => self.priority_thresould as u32,
             CONTEXT_CLAIM => self.context_claim(),
+            _ => unreachable!(),
         }
     }
 
-    fn context_write(&self, offset: usize, val: u32) {
+    fn context_write(&mut self, offset: usize, val: u32) {
         match offset {
             CONTEXT_THRESHOLD => {
                 const PLIC_PRIO_MASK: u32 = 0b1111;
@@ -178,10 +180,11 @@ impl Plic {
                     self.context_update();
                 }
             }
+            _ => unreachable!(),
         }
     }
 
-    fn set_interrupt_level(&self, id: u32, level: u32) {
+    fn set_interrupt_level(&mut self, id: u32, level: u32) {
         if id <= 0 || PLIC_MAX_DEVICES as u32 <= id {
             return;
         }
@@ -251,6 +254,7 @@ impl Device for Plic {
                 Ok(self.context_enable_write(addr, data as u32))
             }
             CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => Ok(self.context_write(addr, data as u32)),
+            _ => unreachable!(),
         }
     }
 
@@ -276,7 +280,7 @@ impl Device for Plic {
         ))
     }
 
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         const ENABLE_BASE_MINUS_ONE: usize = ENABLE_BASE - 1;
         const CONTEXT_BASE_MINUS_ONE: usize = CONTEXT_BASE - 1;
         const PLIC_SIZE_MINUS_ONE: usize = PLIC_SIZE - 1;
@@ -285,10 +289,11 @@ impl Device for Plic {
             PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_read(addr) as u64),
             ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => Ok(self.context_enable_read(addr) as u64),
             CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => Ok(self.context_read(addr) as u64),
+            _ => unreachable!(),
         }
     }
 
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         self.load32(addr)?;
         self.load32(addr + 4)
     }

@@ -136,7 +136,7 @@ impl Device for Dram {
         Ok(((self.dram[index + 1] as i16) << 8 | (self.dram[index + 0] as i16)) as i64 as u64)
     }
 
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         Ok(((self.dram[index + 3] as i32) << 24
             | (self.dram[index + 2] as i32) << 16
@@ -144,7 +144,7 @@ impl Device for Dram {
             | (self.dram[index + 0] as i32)) as i64 as u64)
     }
 
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         Ok((self.dram[index + 7] as u64) << 56
             | (self.dram[index + 6] as u64) << 48

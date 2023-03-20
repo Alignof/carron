@@ -154,7 +154,7 @@ impl Mmu {
         purpose: TransFor,
         addr: u64,
         csrs: &CSRs,
-        dram: &Dram,
+        dram: &mut Dram,
         priv_lv: PrivilegedLevel,
     ) -> Result<u64, TrapCause> {
         const PAGESIZE: u64 = 4096; // 2^12

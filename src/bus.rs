@@ -172,7 +172,7 @@ impl Bus {
         }
     }
 
-    pub fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    pub fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load32(addr)
         } else if self.clint.in_range(addr) {
@@ -192,7 +192,7 @@ impl Bus {
         }
     }
 
-    pub fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    pub fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load64(addr)
         } else if self.clint.in_range(addr) {
@@ -282,8 +282,8 @@ pub trait Device {
     fn store64(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)>;
     fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;

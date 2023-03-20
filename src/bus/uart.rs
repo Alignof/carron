@@ -264,7 +264,7 @@ impl Device for Uart {
         ))
     }
 
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
@@ -272,7 +272,7 @@ impl Device for Uart {
         ))
     }
 
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,

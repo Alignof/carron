@@ -101,7 +101,7 @@ impl Device for Mrom {
         Ok(((self.mrom[addr + 1] as i16) << 8 | (self.mrom[addr + 0] as i16)) as i32 as u64)
     }
 
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok(((self.mrom[addr + 3] as i32) << 24
             | (self.mrom[addr + 2] as i32) << 16
@@ -109,7 +109,7 @@ impl Device for Mrom {
             | (self.mrom[addr + 0] as i32)) as i64 as u64)
     }
 
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((self.mrom[addr + 7] as u64) << 56
             | (self.mrom[addr + 6] as u64) << 48
