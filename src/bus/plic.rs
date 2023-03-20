@@ -3,6 +3,7 @@ use crate::TrapCause;
 
 const PRIORITY_BASE: usize = 0x0;
 const ENABLE_BASE: usize = 0x2000;
+const ENABLE_PER_HART: usize = 0x80;
 const CONTEXT_BASE: usize = 0x20_0000;
 const CONTEXT_PER_HART: usize = 0x1000;
 const CONTEXT_THRESHOLD: usize = 0x0;
@@ -59,8 +60,8 @@ impl Plic {
             for off in 0..32 {
                 let id = i * 32 + off;
                 if PLIC_MAX_DEVICES <= id
-                    || self.pending[i] & 1 << off == 0
-                    || self.claimed[i] & 1 << off != 0
+                    || self.pending[i] & (1 << off) == 0
+                    || self.claimed[i] & (1 << off) != 0
                 {
                     continue;
                 }
@@ -76,9 +77,9 @@ impl Plic {
     }
 
     fn context_update(&mut self) {
-        const MIP_SEIP: u64 = 1 << 9;
+        const MIP_SEIP_MASK: u64 = 1 << 9;
         let best_id = self.context_best_pending();
-        self.mip_mask = if best_id == 0 { 0 } else { MIP_SEIP };
+        self.mip_mask = if best_id == 0 { 0 } else { MIP_SEIP_MASK };
     }
 
     fn context_claim(&mut self) -> u32 {
@@ -95,9 +96,9 @@ impl Plic {
     }
 
     fn priority_read(&self, offset: usize) -> u32 {
-        let index = (offset >> 2) as usize;
-        if index > 0 && index < PLIC_SIZE {
-            self.priority[index] as u32
+        let id = (offset >> 2) as usize;
+        if id > 0 && id < PLIC_SIZE {
+            self.priority[id] as u32
         } else {
             0
         }
@@ -105,16 +106,17 @@ impl Plic {
 
     fn priority_write(&mut self, offset: usize, val: u32) {
         const PLIC_PRIO_MASK: u32 = 0b1111;
-        let index = (offset >> 2) as usize;
-        if index > 0 && index < PLIC_SIZE {
-            self.priority[index] = (val & PLIC_PRIO_MASK) as u8;
+        let id = (offset >> 2) as usize;
+        if id > 0 && id < PLIC_SIZE {
+            self.priority[id] = (val & PLIC_PRIO_MASK) as u8;
         }
     }
 
     fn context_enable_read(&self, offset: usize) -> u32 {
+        const NUM_IDS_WORD: usize = PLIC_MAX_DEVICES / 32;
         let id_word = (offset >> 2) as usize;
-        if id_word > 0 && id_word < PLIC_SIZE {
-            self.priority[id_word] as u32
+        if id_word > 0 && id_word < NUM_IDS_WORD {
+            self.enable[id_word] as u32
         } else {
             0
         }
@@ -184,8 +186,7 @@ impl Plic {
         }
     }
 
-    #[allow(dead_code)]
-    fn set_interrupt_level(&mut self, id: u32, level: u32) {
+    pub fn set_interrupt_level(&mut self, id: u32, level: u32) {
         if id <= 0 || PLIC_MAX_DEVICES as u32 <= id {
             return;
         }
@@ -252,8 +253,8 @@ impl Device for Plic {
         match addr {
             PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_write(addr, data as u32)),
             ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => {
-                let cntx = (addr - CONTEXT_BASE) / CONTEXT_PER_HART;
-                let addr = addr - (cntx * CONTEXT_PER_HART + CONTEXT_BASE);
+                let cntx = (addr - ENABLE_BASE) / ENABLE_PER_HART;
+                let addr = addr - (cntx * ENABLE_PER_HART + ENABLE_BASE);
                 Ok(self.context_enable_write(addr, data as u32))
             }
             CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => {
@@ -295,8 +296,8 @@ impl Device for Plic {
         match addr {
             PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_read(addr) as u64),
             ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => {
-                let cntx = (addr - CONTEXT_BASE) / CONTEXT_PER_HART;
-                let addr = addr - (cntx * CONTEXT_PER_HART + CONTEXT_BASE);
+                let cntx = (addr - ENABLE_BASE) / ENABLE_PER_HART;
+                let addr = addr - (cntx * ENABLE_PER_HART + ENABLE_BASE);
                 Ok(self.context_enable_read(addr) as u64)
             }
             CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => {
