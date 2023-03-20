@@ -11,6 +11,7 @@ const CONTEXT_THRESHOLD: usize = 0x0;
 const CONTEXT_CLAIM: usize = 0x0;
 
 const PLIC_SIZE: usize = 0x0100_0000;
+const PLIC_MAX_DEVICES: usize = 1024;
 
 pub struct Plic {
     priority: Vec<u8>,
@@ -32,7 +33,6 @@ impl Default for Plic {
 impl Plic {
     #[allow(arithmetic_overflow)]
     pub fn new() -> Self {
-        const PLIC_MAX_DEVICES: usize = 1024;
         Plic {
             priority: vec![0; PLIC_MAX_DEVICES],
             level: vec![0; PLIC_MAX_DEVICES],
@@ -60,6 +60,49 @@ impl Plic {
         if index > 0 && index < PLIC_SIZE {
             self.priority[index] = (val & PLIC_PRIO_MASK) as u8;
         }
+    }
+
+    fn context_enable_read(&self, offset: u64) -> u32 {
+        let id_word = (offset >> 2) as usize;
+        if id_word > 0 && id_word < PLIC_SIZE {
+            self.priority[id_word] as u32
+        } else {
+            0
+        }
+    }
+
+    fn context_enable_write(&self, offset: u64, val: u32) {
+        let id_word = (offset >> 2) as usize;
+        if id_word >= PLIC_MAX_DEVICES / 32 {
+            return;
+        }
+
+        let old_val = self.enable[id_word];
+        let new_val = if id_word == 0 { val & 0xfffffffe } else { val };
+        let xor_val = old_val ^ new_val;
+
+        self.enable[id_word] = new_val;
+
+        for i in 0..32 {
+            let id = id_word * 32 + i;
+            let id_mask = 1 << i;
+            let id_prio = self.priority[id as usize];
+
+            if xor_val & id_mask == 0 {
+                continue;
+            }
+
+            if new_val & id_mask != 0 && self.level[id_word] & id_mask != 0 {
+                self.pending[id_word] |= id_mask;
+                self.pending_priority[id] = id_prio;
+            } else if new_val & id_mask == 0 {
+                self.pending[id_word] &= !id_mask;
+                self.pending_priority[id] = 0;
+                self.claimed[id_word] &= !id_mask;
+            }
+        }
+
+        self.context_update();
     }
 
     pub fn context_update(&self) {
