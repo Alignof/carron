@@ -90,6 +90,7 @@ pub struct Uart {
     dlm: u8,
     rx_queue: VecDeque<u8>,
     backoff_counter: u64,
+    pub interrupt_level: u32,
     pub base_addr: u64,
     size: usize,
 }
@@ -115,6 +116,7 @@ impl Uart {
             dlm: 0,
             rx_queue: VecDeque::new(),
             backoff_counter: 0,
+            interrupt_level: 0,
             base_addr: 0x1000_0000,
             size: UART_SIZE,
         }
