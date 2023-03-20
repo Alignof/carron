@@ -4,9 +4,6 @@ use crate::cpu::Cpu;
 use crate::{log, Isa};
 
 pub fn fetch(cpu: &mut Cpu) -> Result<Box<dyn Decode>, (Option<u64>, TrapCause, String)> {
-    *crate::log::INST_COUNT.lock().unwrap() += 1;
-    log::diffln!("0x{:016x}\n:", cpu.pc());
-
     let index_pc: u64 = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc())?;
     let is_cinst: bool = match cpu.bus.load_u8(index_pc) {
         Ok(inst_byte) => inst_byte & 0x3 != 0x3,
