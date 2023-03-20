@@ -280,23 +280,20 @@ impl Device for Plic {
     }
 
     fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        const ENABLE_BASE_MINUS_ONE: usize = ENABLE_BASE - 1;
+        const CONTEXT_BASE_MINUS_ONE: usize = CONTEXT_BASE - 1;
+        const PLIC_SIZE_MINUS_ONE: usize = PLIC_SIZE - 1;
         let addr = self.addr2index(addr);
-        Ok(((self.plic[addr + 3] as i32) << 24
-            | (self.plic[addr + 2] as i32) << 16
-            | (self.plic[addr + 1] as i32) << 8
-            | (self.plic[addr + 0] as i32)) as i64 as u64)
+        match addr {
+            PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_read(addr) as u64),
+            ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => Ok(self.context_enable_read(addr) as u64),
+            CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => Ok(self.context_read(addr) as u64),
+        }
     }
 
     fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
-        let addr = self.addr2index(addr);
-        Ok((self.plic[addr + 7] as u64) << 56
-            | (self.plic[addr + 6] as u64) << 48
-            | (self.plic[addr + 5] as u64) << 40
-            | (self.plic[addr + 4] as u64) << 32
-            | (self.plic[addr + 3] as u64) << 24
-            | (self.plic[addr + 2] as u64) << 16
-            | (self.plic[addr + 1] as u64) << 8
-            | (self.plic[addr + 0] as u64))
+        self.load32(addr)?;
+        self.load32(addr + 4)
     }
 
     fn load_u8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
