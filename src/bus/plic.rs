@@ -11,6 +11,9 @@ const CONTEXT_CLAIM: usize = 0x4;
 
 const PLIC_SIZE: usize = 0x100_0000;
 const PLIC_MAX_DEVICES: usize = 1024;
+const NDEV: usize = 0x1f;
+const NUM_IDS: usize = NDEV + 1;
+const NUM_IDS_WORD: usize = ((NDEV + 1) + (32 - 1)) / 32;
 
 pub struct Plic {
     priority: Vec<u8>,
@@ -49,7 +52,6 @@ impl Plic {
     }
 
     fn context_best_pending(&self) -> u32 {
-        const NUM_IDS_WORD: usize = PLIC_MAX_DEVICES / 32;
         let mut best_id_prio = 0;
         let mut best_id = 0;
         for i in 0..NUM_IDS_WORD {
@@ -59,7 +61,7 @@ impl Plic {
 
             for off in 0..32 {
                 let id = i * 32 + off;
-                if PLIC_MAX_DEVICES <= id
+                if NUM_IDS <= id
                     || self.pending[i] & (1 << off) == 0
                     || self.claimed[i] & (1 << off) != 0
                 {
@@ -97,7 +99,7 @@ impl Plic {
 
     fn priority_read(&self, offset: usize) -> u32 {
         let id = (offset >> 2) as usize;
-        if id > 0 && id < PLIC_SIZE {
+        if id > 0 && id < NUM_IDS {
             self.priority[id] as u32
         } else {
             0
@@ -107,13 +109,12 @@ impl Plic {
     fn priority_write(&mut self, offset: usize, val: u32) {
         const PLIC_PRIO_MASK: u32 = 0b1111;
         let id = (offset >> 2) as usize;
-        if id > 0 && id < PLIC_SIZE {
+        if id > 0 && id < NUM_IDS {
             self.priority[id] = (val & PLIC_PRIO_MASK) as u8;
         }
     }
 
     fn context_enable_read(&self, offset: usize) -> u32 {
-        const NUM_IDS_WORD: usize = PLIC_MAX_DEVICES / 32;
         let id_word = (offset >> 2) as usize;
         if id_word > 0 && id_word < NUM_IDS_WORD {
             self.enable[id_word] as u32
@@ -124,7 +125,7 @@ impl Plic {
 
     fn context_enable_write(&mut self, offset: usize, val: u32) {
         let id_word = (offset >> 2) as usize;
-        if id_word >= PLIC_MAX_DEVICES / 32 {
+        if id_word >= NUM_IDS_WORD {
             return;
         }
 
@@ -177,7 +178,7 @@ impl Plic {
             CONTEXT_CLAIM => {
                 let id_word = (val / 32) as usize;
                 let id_mask = 1 << (val % 32);
-                if val < PLIC_MAX_DEVICES as u32 && self.enable[id_word] & id_mask != 0 {
+                if val < NUM_IDS as u32 && self.enable[id_word] & id_mask != 0 {
                     self.claimed[id_word] &= !id_mask;
                     self.context_update();
                 }
@@ -187,7 +188,7 @@ impl Plic {
     }
 
     pub fn set_interrupt_level(&mut self, id: u32, level: u32) {
-        if id <= 0 || PLIC_MAX_DEVICES as u32 <= id {
+        if id <= 0 || NUM_IDS as u32 <= id {
             return;
         }
 
