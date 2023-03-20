@@ -19,6 +19,7 @@ pub struct Plic {
     enable: Vec<u32>,
     pending: Vec<u32>,
     pending_priority: Vec<u8>,
+    priority_thresould: u8,
     claimed: Vec<u32>,
     pub base_addr: u64,
     size: usize,
@@ -39,13 +40,14 @@ impl Plic {
             enable: vec![0; PLIC_MAX_DEVICES / 32],
             pending: vec![0; PLIC_MAX_DEVICES / 32],
             pending_priority: vec![0; PLIC_MAX_DEVICES],
+            priority_thresould: 0,
             claimed: vec![0; PLIC_MAX_DEVICES / 32],
             base_addr: 0x0c00_0000,
             size: PLIC_SIZE,
         }
     }
 
-    fn priority_read(&self, offset: u64) -> u32 {
+    fn priority_read(&self, offset: usize) -> u32 {
         let index = (offset >> 2) as usize;
         if index > 0 && index < PLIC_SIZE {
             self.priority[index] as u32
@@ -54,7 +56,7 @@ impl Plic {
         }
     }
 
-    fn priority_write(&self, offset: u64, val: u32) {
+    fn priority_write(&self, offset: usize, val: u32) {
         const PLIC_PRIO_MASK: u32 = 0b1111;
         let index = (offset >> 2) as usize;
         if index > 0 && index < PLIC_SIZE {
@@ -62,7 +64,7 @@ impl Plic {
         }
     }
 
-    fn context_enable_read(&self, offset: u64) -> u32 {
+    fn context_enable_read(&self, offset: usize) -> u32 {
         let id_word = (offset >> 2) as usize;
         if id_word > 0 && id_word < PLIC_SIZE {
             self.priority[id_word] as u32
@@ -71,7 +73,7 @@ impl Plic {
         }
     }
 
-    fn context_enable_write(&self, offset: u64, val: u32) {
+    fn context_enable_write(&self, offset: usize, val: u32) {
         let id_word = (offset >> 2) as usize;
         if id_word >= PLIC_MAX_DEVICES / 32 {
             return;
@@ -103,6 +105,34 @@ impl Plic {
         }
 
         self.context_update();
+    }
+
+    fn context_read(&self, offset: usize) -> u32 {
+        match offset {
+            CONTEXT_THRESHOLD => self.priority_thresould as u32,
+            CONTEXT_CLAIM => self.context_claim(),
+        }
+    }
+
+    fn context_write(&self, offset: usize, val: u32) {
+        match offset {
+            CONTEXT_THRESHOLD => {
+                const PLIC_PRIO_MASK: u32 = 0b1111;
+                let val = val & PLIC_PRIO_MASK;
+                if val <= PLIC_PRIO_MASK {
+                    self.priority_thresould = val as u8;
+                    self.context_update();
+                }
+            }
+            CONTEXT_CLAIM => {
+                let id_word = val / 32;
+                let id_mask = 1 << (val % 32);
+                if val < PLIC_MAX_DEVICES as u32 && self.enable[id_word as usize] & id_mask != 0 {
+                    self.claimed[id_word as usize] &= !id_mask;
+                    self.context_update();
+                }
+            }
+        }
     }
 
     pub fn context_update(&self) {
