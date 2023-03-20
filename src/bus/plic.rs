@@ -43,7 +43,7 @@ impl Device for Plic {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            "plic only allows load/store32 but try store8".to_string(),
+            "plic only allows load/store32,64 but try store8".to_string(),
         ))
     }
 
@@ -51,7 +51,7 @@ impl Device for Plic {
         Err((
             Some(addr),
             TrapCause::StoreAMOPageFault,
-            "plic only allows load/store32 but try store16".to_string(),
+            "plic only allows load/store32,64 but try store16".to_string(),
         ))
     }
 
@@ -64,12 +64,17 @@ impl Device for Plic {
         Ok(())
     }
 
-    fn store64(&mut self, addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
-        Err((
-            Some(addr),
-            TrapCause::LoadPageFault,
-            "plic only allows load/store32 but try store64".to_string(),
-        ))
+    fn store64(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
+        let addr = self.addr2index(addr);
+        self.plic[addr + 7] = ((data >> 56) & 0xFF) as u8;
+        self.plic[addr + 6] = ((data >> 48) & 0xFF) as u8;
+        self.plic[addr + 5] = ((data >> 40) & 0xFF) as u8;
+        self.plic[addr + 4] = ((data >> 32) & 0xFF) as u8;
+        self.plic[addr + 3] = ((data >> 24) & 0xFF) as u8;
+        self.plic[addr + 2] = ((data >> 16) & 0xFF) as u8;
+        self.plic[addr + 1] = ((data >> 8) & 0xFF) as u8;
+        self.plic[addr + 0] = ((data >> 0) & 0xFF) as u8;
+        Ok(())
     }
 
     // load
@@ -77,7 +82,7 @@ impl Device for Plic {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "plic only allows load/store32 but try load8".to_string(),
+            "plic only allows load/store32,64 but try load8".to_string(),
         ))
     }
 
@@ -85,7 +90,7 @@ impl Device for Plic {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "plic only allows load/store32 but try load16".to_string(),
+            "plic only allows load/store32,64 but try load16".to_string(),
         ))
     }
 
@@ -98,17 +103,22 @@ impl Device for Plic {
     }
 
     fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
-        Err((
-            Some(addr),
-            TrapCause::LoadPageFault,
-            "plic only allows load/store32 but try load64".to_string(),
-        ))
+        let addr = self.addr2index(addr);
+        Ok((self.plic[addr + 7] as u64) << 56
+            | (self.plic[addr + 6] as u64) << 48
+            | (self.plic[addr + 5] as u64) << 40
+            | (self.plic[addr + 4] as u64) << 32
+            | (self.plic[addr + 3] as u64) << 24
+            | (self.plic[addr + 2] as u64) << 16
+            | (self.plic[addr + 1] as u64) << 8
+            | (self.plic[addr + 0] as u64))
     }
+
     fn load_u8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "plic only allows load/store32 but try load_u8".to_string(),
+            "plic only allows load/store32,64 but try load_u8".to_string(),
         ))
     }
 
@@ -116,7 +126,7 @@ impl Device for Plic {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "plic only allows load/store32 but try load_u16".to_string(),
+            "plic only allows load/store32,64 but try load_u16".to_string(),
         ))
     }
 
@@ -124,7 +134,7 @@ impl Device for Plic {
         Err((
             Some(addr),
             TrapCause::LoadPageFault,
-            "plic only allows load/store32 but try load_u32".to_string(),
+            "plic only allows load/store32,64 but try load_u32".to_string(),
         ))
     }
 }
