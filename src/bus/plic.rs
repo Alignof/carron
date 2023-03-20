@@ -1,8 +1,24 @@
 use super::Device;
 use crate::TrapCause;
 
+const PRIORITY_BASE: usize = 0x0;
+const PRIORITY_PER_ID: usize = 0x4;
+const ENABLE_BASE: usize = 0x2000;
+const ENABLE_PER_HART: usize = 0x80;
+const CONTEXT_BASE: usize = 0x200000;
+const CONTEXT_PER_HART: usize = 0x1000;
+const CONTEXT_THRESHOLD: usize = 0x0;
+const CONTEXT_CLAIM: usize = 0x0;
+
+const PLIC_SIZE: usize = 0x0100_0000;
+
 pub struct Plic {
-    pub plic: Vec<u8>,
+    priority: Vec<u8>,
+    level: Vec<u32>,
+    enable: Vec<u32>,
+    pending: Vec<u32>,
+    pending_priority: Vec<u8>,
+    claimed: Vec<u32>,
     pub base_addr: u64,
     size: usize,
 }
@@ -16,13 +32,39 @@ impl Default for Plic {
 impl Plic {
     #[allow(arithmetic_overflow)]
     pub fn new() -> Self {
-        const PLIC_SIZE: usize = 0x0100_0000;
-
+        const PLIC_MAX_DEVICES: usize = 1024;
         Plic {
-            plic: vec![0; PLIC_SIZE],
+            priority: vec![0; PLIC_MAX_DEVICES],
+            level: vec![0; PLIC_MAX_DEVICES],
+            enable: vec![0; PLIC_MAX_DEVICES / 32],
+            pending: vec![0; PLIC_MAX_DEVICES / 32],
+            pending_priority: vec![0; PLIC_MAX_DEVICES],
+            claimed: vec![0; PLIC_MAX_DEVICES / 32],
             base_addr: 0x0c00_0000,
             size: PLIC_SIZE,
         }
+    }
+
+    fn priority_read(&self, offset: u64) -> u32 {
+        let index = (offset >> 2) as usize;
+        if index > 0 && index < PLIC_SIZE {
+            self.priority[index] as u32
+        } else {
+            0
+        }
+    }
+
+    fn priority_write(&self, offset: u64, val: u32) {
+        const PLIC_PRIO_MASK: u32 = 0b1111;
+        let index = (offset >> 2) as usize;
+        if index > 0 && index < PLIC_SIZE {
+            self.priority[index] = (val & PLIC_PRIO_MASK) as u8;
+        }
+    }
+
+    pub fn context_update(&self) {
+        //let best_id = context_best_pending();
+        //let mask = ;
     }
 }
 
