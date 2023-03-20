@@ -47,6 +47,39 @@ impl Plic {
         }
     }
 
+    fn context_best_pending(&self) -> u32 {
+        const NUM_IDS_WORD: usize = PLIC_MAX_DEVICES / 32;
+        let mut best_id_prio = 0;
+        let mut best_id = 0;
+        for i in 0..NUM_IDS_WORD {
+            if self.pending[i] == 0 {
+                continue;
+            }
+
+            for off in 0..32 {
+                let id = i * 32 + off;
+                if PLIC_MAX_DEVICES <= id
+                    || self.pending[i] & 1 << off == 0
+                    || self.claimed[i] & 1 << off != 0
+                {
+                    continue;
+                }
+
+                if best_id == 0 || best_id_prio < self.pending_priority[id] {
+                    best_id = id as u32;
+                    best_id_prio = self.pending_priority[id];
+                }
+            }
+        }
+
+        best_id
+    }
+
+    fn context_update(&self) {
+        //let best_id = context_best_pending();
+        //let mask = ;
+    }
+
     fn priority_read(&self, offset: usize) -> u32 {
         let index = (offset >> 2) as usize;
         if index > 0 && index < PLIC_SIZE {
@@ -162,11 +195,6 @@ impl Plic {
 
             self.context_update();
         }
-    }
-
-    pub fn context_update(&self) {
-        //let best_id = context_best_pending();
-        //let mask = ;
     }
 }
 
