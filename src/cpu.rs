@@ -29,10 +29,12 @@ pub enum TrapCause {
     InstPageFault = 12,
     LoadPageFault = 13,
     StoreAMOPageFault = 15,
-    MachineSoftwareInterrupt = (1 << 31) + 3,
-    MachineTimerInterrupt = (1 << 31) + 7,
     SupervisorSoftwareInterrupt = (1 << 31) + 1,
+    MachineSoftwareInterrupt = (1 << 31) + 3,
     SupervisorTimerInterrupt = (1 << 31) + 5,
+    MachineTimerInterrupt = (1 << 31) + 7,
+    SupervisorExternalInterrupt = (1 << 31) + 9,
+    MachineExternalInterrupt = (1 << 31) + 11,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

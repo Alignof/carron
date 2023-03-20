@@ -4,10 +4,12 @@ use crate::{log, Isa, TrapCause};
 
 impl Cpu {
     pub fn check_interrupt(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
-        const MSIP: u64 = 3;
         const SSIP: u64 = 1;
-        const MTIP: u64 = 7;
+        const MSIP: u64 = 3;
         const STIP: u64 = 5;
+        const MTIP: u64 = 7;
+        const SEIP: u64 = 9;
+        const MEIP: u64 = 11;
 
         const MTIME: u64 = 0x0200_BFF8;
         const MTIMECMP: u64 = 0x0200_4000;
@@ -51,6 +53,15 @@ impl Cpu {
         };
         let is_interrupt_enabled = |bit: u64| (enabled_interrupt_mask & (1 << bit)) != 0;
 
+        if is_interrupt_enabled(MEIP) {
+            panic!("MEIP");
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP);
+            return Err((
+                Some(0),
+                TrapCause::MachineExternalInterrupt,
+                "machine software interrupt".to_string(),
+            ));
+        }
         if is_interrupt_enabled(MSIP) {
             self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP);
             return Err((
@@ -66,6 +77,15 @@ impl Cpu {
                 Some(0),
                 TrapCause::MachineTimerInterrupt,
                 "machine timer interrupt".to_string(),
+            ));
+        }
+        if is_interrupt_enabled(SEIP) {
+            panic!("SEIP");
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP);
+            return Err((
+                Some(0),
+                TrapCause::SupervisorExternalInterrupt,
+                "machine software interrupt".to_string(),
             ));
         }
         if is_interrupt_enabled(SSIP) {
@@ -105,10 +125,12 @@ impl Cpu {
             | TrapCause::InstPageFault
             | TrapCause::LoadPageFault
             | TrapCause::StoreAMOPageFault => self.csrs.read(CSRname::medeleg.wrap()).unwrap(),
-            TrapCause::MachineTimerInterrupt
+            TrapCause::SupervisorSoftwareInterrupt
             | TrapCause::MachineSoftwareInterrupt
-            | TrapCause::SupervisorSoftwareInterrupt
-            | TrapCause::SupervisorTimerInterrupt => {
+            | TrapCause::SupervisorTimerInterrupt
+            | TrapCause::MachineTimerInterrupt
+            | TrapCause::SupervisorExternalInterrupt
+            | TrapCause::MachineExternalInterrupt => {
                 self.csrs.read(CSRname::mideleg.wrap()).unwrap()
             }
         }
