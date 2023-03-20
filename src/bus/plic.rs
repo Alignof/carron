@@ -2,15 +2,13 @@ use super::Device;
 use crate::TrapCause;
 
 const PRIORITY_BASE: usize = 0x0;
-const PRIORITY_PER_ID: usize = 0x4;
 const ENABLE_BASE: usize = 0x2000;
-const ENABLE_PER_HART: usize = 0x80;
-const CONTEXT_BASE: usize = 0x200000;
+const CONTEXT_BASE: usize = 0x20_0000;
 const CONTEXT_PER_HART: usize = 0x1000;
 const CONTEXT_THRESHOLD: usize = 0x0;
 const CONTEXT_CLAIM: usize = 0x4;
 
-const PLIC_SIZE: usize = 0x0100_0000;
+const PLIC_SIZE: usize = 0x100_0000;
 const PLIC_MAX_DEVICES: usize = 1024;
 
 pub struct Plic {
@@ -21,6 +19,7 @@ pub struct Plic {
     pending_priority: Vec<u8>,
     priority_thresould: u8,
     claimed: Vec<u32>,
+    pub mip_mask: u64,
     pub base_addr: u64,
     size: usize,
 }
@@ -42,6 +41,7 @@ impl Plic {
             pending_priority: vec![0; PLIC_MAX_DEVICES],
             priority_thresould: 0,
             claimed: vec![0; PLIC_MAX_DEVICES / 32],
+            mip_mask: 0,
             base_addr: 0x0c00_0000,
             size: PLIC_SIZE,
         }
@@ -75,10 +75,10 @@ impl Plic {
         best_id
     }
 
-    fn context_update(&self) {
-        const MIP_MEIP: u64 = 1 << 11;
+    fn context_update(&mut self) {
+        const MIP_SEIP: u64 = 1 << 9;
         let best_id = self.context_best_pending();
-        let mask = MIP_MEIP;
+        self.mip_mask = if best_id == 0 { 0 } else { MIP_SEIP };
     }
 
     fn context_claim(&mut self) -> u32 {
@@ -180,10 +180,11 @@ impl Plic {
                     self.context_update();
                 }
             }
-            _ => unreachable!(),
+            _ => unreachable!("offset: {:#x}", offset),
         }
     }
 
+    #[allow(dead_code)]
     fn set_interrupt_level(&mut self, id: u32, level: u32) {
         if id <= 0 || PLIC_MAX_DEVICES as u32 <= id {
             return;
@@ -251,9 +252,15 @@ impl Device for Plic {
         match addr {
             PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_write(addr, data as u32)),
             ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => {
+                let cntx = (addr - CONTEXT_BASE) / CONTEXT_PER_HART;
+                let addr = addr - (cntx * CONTEXT_PER_HART + CONTEXT_BASE);
                 Ok(self.context_enable_write(addr, data as u32))
             }
-            CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => Ok(self.context_write(addr, data as u32)),
+            CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => {
+                let cntx = (addr - CONTEXT_BASE) / CONTEXT_PER_HART;
+                let addr = addr - (cntx * CONTEXT_PER_HART + CONTEXT_BASE);
+                Ok(self.context_write(addr, data as u32))
+            }
             _ => unreachable!(),
         }
     }
@@ -287,8 +294,16 @@ impl Device for Plic {
         let addr = self.addr2index(addr);
         match addr {
             PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_read(addr) as u64),
-            ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => Ok(self.context_enable_read(addr) as u64),
-            CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => Ok(self.context_read(addr) as u64),
+            ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => {
+                let cntx = (addr - CONTEXT_BASE) / CONTEXT_PER_HART;
+                let addr = addr - (cntx * CONTEXT_PER_HART + CONTEXT_BASE);
+                Ok(self.context_enable_read(addr) as u64)
+            }
+            CONTEXT_BASE..=PLIC_SIZE_MINUS_ONE => {
+                let cntx = (addr - CONTEXT_BASE) / CONTEXT_PER_HART;
+                let addr = addr - (cntx * CONTEXT_PER_HART + CONTEXT_BASE);
+                Ok(self.context_read(addr) as u64)
+            }
             _ => unreachable!(),
         }
     }

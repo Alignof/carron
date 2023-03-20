@@ -17,7 +17,7 @@ pub struct Bus {
     pub clint: clint::Clint,
     pub dram: dram::Dram,
     pub uart: uart::Uart,
-    plic: plic::Plic,
+    pub plic: plic::Plic,
 }
 
 impl Bus {

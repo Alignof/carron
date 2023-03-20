@@ -19,6 +19,9 @@ impl Cpu {
             self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
         }
 
+        self.csrs
+            .bitset(CSRname::mip.wrap(), self.bus.plic.mip_mask);
+
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
 
