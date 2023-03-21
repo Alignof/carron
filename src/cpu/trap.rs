@@ -58,7 +58,7 @@ impl Cpu {
             return Err((
                 Some(0),
                 TrapCause::MachineExternalInterrupt,
-                "machine software interrupt".to_string(),
+                "machine external interrupt".to_string(),
             ));
         }
         if is_interrupt_enabled(MSIP) {
@@ -80,10 +80,11 @@ impl Cpu {
         }
         if is_interrupt_enabled(SEIP) {
             self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP);
+            self.bus.plic.mip_mask = 0;
             return Err((
                 Some(0),
                 TrapCause::SupervisorExternalInterrupt,
-                "machine software interrupt".to_string(),
+                "supervisor external interrupt".to_string(),
             ));
         }
         if is_interrupt_enabled(SSIP) {
