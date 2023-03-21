@@ -1,4 +1,5 @@
 use super::Device;
+use crate::cpu::PrivilegedLevel;
 use crate::TrapCause;
 
 const PRIORITY_BASE: usize = 0x0;
@@ -22,16 +23,18 @@ pub struct PlicContext {
     pending: Vec<u32>,
     pending_priority: Vec<u8>,
     claimed: Vec<u32>,
+    context_priv: PrivilegedLevel,
 }
 
 impl PlicContext {
-    fn new() -> Self {
+    fn new(context_priv: PrivilegedLevel) -> Self {
         PlicContext {
             priority_thresould: 0,
             enable: vec![0; PLIC_MAX_DEVICES / 32],
             pending: vec![0; PLIC_MAX_DEVICES / 32],
             pending_priority: vec![0; PLIC_MAX_DEVICES],
             claimed: vec![0; PLIC_MAX_DEVICES / 32],
+            context_priv,
         }
     }
 }
@@ -57,7 +60,10 @@ impl Plic {
         Plic {
             priority: vec![0; PLIC_MAX_DEVICES],
             level: vec![0; PLIC_MAX_DEVICES],
-            contexts: vec![PlicContext::new(), PlicContext::new()],
+            contexts: vec![
+                PlicContext::new(PrivilegedLevel::Machine),
+                PlicContext::new(PrivilegedLevel::Supervisor),
+            ],
             mip_mask: 0,
             base_addr: 0x0c00_0000,
             size: PLIC_SIZE,
@@ -92,9 +98,18 @@ impl Plic {
     }
 
     fn context_update(&mut self, context_id: usize) {
+        const MIP_MEIP_MASK: u64 = 1 << 11;
         const MIP_SEIP_MASK: u64 = 1 << 9;
         let best_id = self.context_best_pending(context_id);
-        self.mip_mask = if best_id == 0 { 0 } else { MIP_SEIP_MASK };
+        self.mip_mask = if best_id == 0 {
+            0
+        } else {
+            match self.contexts[context_id].context_priv {
+                PrivilegedLevel::Machine => MIP_MEIP_MASK,
+                PrivilegedLevel::Supervisor => MIP_SEIP_MASK,
+                _ => unreachable!(),
+            }
+        };
     }
 
     fn context_claim(&mut self, context_id: usize) -> u32 {
@@ -228,6 +243,7 @@ impl Plic {
                 }
 
                 self.context_update(c);
+                break;
             }
         }
     }
