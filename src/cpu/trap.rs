@@ -55,6 +55,7 @@ impl Cpu {
 
         if is_interrupt_enabled(MEIP) {
             self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP);
+            self.bus.plic.mip_mask = 0;
             return Err((
                 Some(0),
                 TrapCause::MachineExternalInterrupt,

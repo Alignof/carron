@@ -80,14 +80,15 @@ impl Plic {
 
             for off in 0..32 {
                 let id = i * 32 + off;
-                if NUM_IDS <= id
-                    || self.contexts[context_id].pending[i] & (1 << off) == 0
-                    || self.contexts[context_id].claimed[i] & (1 << off) != 0
+                if (NUM_IDS <= id)
+                    || ((self.contexts[context_id].pending[i] & (1 << off)) == 0)
+                    || ((self.contexts[context_id].claimed[i] & (1 << off)) != 0)
                 {
                     continue;
                 }
 
-                if best_id == 0 || best_id_prio < self.contexts[context_id].pending_priority[id] {
+                if (best_id == 0) || (best_id_prio < self.contexts[context_id].pending_priority[id])
+                {
                     best_id = id as u32;
                     best_id_prio = self.contexts[context_id].pending_priority[id];
                 }
@@ -221,7 +222,7 @@ impl Plic {
             return;
         }
 
-        let id = id as usize;
+        let id_prio = self.priority[id as usize];
         let id_word = (id / 32) as usize;
         let id_mask = 1 << (id % 32);
 
@@ -235,10 +236,10 @@ impl Plic {
             if self.contexts[c].enable[id_word] & id_mask != 0 {
                 if level != 0 {
                     self.contexts[c].pending[id_word] |= id_mask;
-                    self.contexts[c].pending_priority[id] = self.priority[id];
+                    self.contexts[c].pending_priority[id as usize] = id_prio;
                 } else {
                     self.contexts[c].pending[id_word] &= !id_mask;
-                    self.contexts[c].pending_priority[id] = 0;
+                    self.contexts[c].pending_priority[id as usize] = 0;
                     self.contexts[c].claimed[id_word] &= !id_mask;
                 }
 
