@@ -31,13 +31,22 @@ enum IerMask {
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
-enum IirFcrMask {
+enum IirMask {
     MSI = 0x00,
     NO_INT = 0x01,
     THRI = 0x02,
     RDI = 0x04,
     RLSI = 0x06,
     ID = 0x0e,
+}
+
+#[allow(dead_code)]
+#[allow(non_camel_case_types)]
+enum FcrMask {
+    ENABLE_FIFO = 0x01,
+    CLEAR_RCVR = 0x02,
+    CLEAR_XMIT = 0x04,
+    DMA_SELECT = 0x08,
 }
 
 #[allow(dead_code)]
@@ -49,15 +58,6 @@ enum LcrMask {
     EPAR = 0x10,
     PARITY = 0x08,
     STOP = 0x04,
-}
-
-#[allow(dead_code)]
-#[allow(non_camel_case_types)]
-enum FcrMask {
-    ENABLE_FIFO = 0x01,
-    CLEAR_RCVR = 0x02,
-    CLEAR_XMIT = 0x04,
-    DMA_SELECT = 0x08,
 }
 
 #[allow(dead_code)]

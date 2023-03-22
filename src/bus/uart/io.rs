@@ -1,4 +1,4 @@
-use super::{FcrMask, IerMask, IirFcrMask, LsrMask, Uart, UartRegister};
+use super::{FcrMask, IerMask, IirMask, LsrMask, Uart, UartRegister};
 
 impl Uart {
     pub fn update_interrupt(&mut self) {
@@ -17,23 +17,23 @@ impl Uart {
         if self.uart[UartRegister::IER as usize] & IerMask::RDI as u8 != 0
             && self.uart[UartRegister::LSR as usize] & LsrMask::DR as u8 != 0
         {
-            interrupts |= IirFcrMask::RDI as u8;
+            interrupts |= IirMask::RDI as u8;
         }
 
         if self.uart[UartRegister::IER as usize] & IerMask::THRI as u8 != 0
             && self.uart[UartRegister::LSR as usize] & LsrMask::TEMT as u8 != 0
         {
-            interrupts |= IirFcrMask::THRI as u8;
+            interrupts |= IirMask::THRI as u8;
         }
 
         if interrupts == 0 {
-            self.uart[UartRegister::IIR_FCR as usize] = IirFcrMask::NO_INT as u8;
-            self.interrupt_level = Some(0);
+            self.uart[UartRegister::IIR_FCR as usize] = IirMask::NO_INT as u8;
             //plic.set_interrupt_level(UART_INTERRUPT_ID, 0);
+            self.interrupt_level = Some(0);
         } else {
             self.uart[UartRegister::IIR_FCR as usize] = interrupts;
-            self.interrupt_level = Some(1);
             //plic.set_interrupt_level(UART_INTERRUPT_ID, 1);
+            self.interrupt_level = Some(1);
         }
 
         if self.uart[UartRegister::IER as usize] & IerMask::THRI as u8 == 0 {
