@@ -44,6 +44,7 @@ pub struct Plic {
     level: Vec<u32>,
     contexts: Vec<PlicContext>,
     pub mip_mask: u64,
+    pub mip_value: u64,
     pub base_addr: u64,
     size: usize,
 }
@@ -65,6 +66,7 @@ impl Plic {
                 PlicContext::new(PrivilegedLevel::Supervisor),
             ],
             mip_mask: 0,
+            mip_value: 0,
             base_addr: 0x0c00_0000,
             size: PLIC_SIZE,
         }
@@ -102,7 +104,12 @@ impl Plic {
         const MIP_MEIP_MASK: u64 = 1 << 11;
         const MIP_SEIP_MASK: u64 = 1 << 9;
         let best_id = self.context_best_pending(context_id);
-        self.mip_mask = if best_id == 0 {
+        self.mip_mask = match self.contexts[context_id].context_priv {
+            PrivilegedLevel::Machine => MIP_MEIP_MASK,
+            PrivilegedLevel::Supervisor => MIP_SEIP_MASK,
+            _ => unreachable!(),
+        };
+        self.mip_value = if best_id == 0 {
             0
         } else {
             match self.contexts[context_id].context_priv {
