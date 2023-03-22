@@ -90,7 +90,7 @@ pub struct Uart {
     dlm: u8,
     rx_queue: VecDeque<u8>,
     backoff_counter: u64,
-    pub interrupt_level: u32,
+    pub interrupt_level: Option<u32>,
     pub base_addr: u64,
     size: usize,
 }
@@ -116,7 +116,7 @@ impl Uart {
             dlm: 0,
             rx_queue: VecDeque::new(),
             backoff_counter: 0,
-            interrupt_level: 0,
+            interrupt_level: None,
             base_addr: 0x1000_0000,
             size: UART_SIZE,
         }
@@ -135,7 +135,7 @@ impl Uart {
             return;
         }
 
-        let input = '\0'; // input value here
+        let input = -1; // input value here
         if (input as i8) < 0 {
             self.backoff_counter = 1;
             return;
@@ -145,6 +145,7 @@ impl Uart {
 
         self.rx_queue.push_back(input as u8);
         self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
+        self.update_interrupt();
     }
 }
 
@@ -173,6 +174,7 @@ impl Device for Uart {
             TX => {
                 if self.uart[LCR] & LcrMask::DLAB as u8 != 0 {
                     self.dll = data as u8;
+                    self.update_interrupt();
                     return Ok(());
                 }
 
@@ -181,6 +183,7 @@ impl Device for Uart {
                         self.rx_queue.push_back(data as u8);
                         self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
                     }
+                    self.update_interrupt();
                     return Ok(());
                 }
 

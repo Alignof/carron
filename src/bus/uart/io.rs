@@ -28,11 +28,11 @@ impl Uart {
 
         if interrupts == 0 {
             self.uart[UartRegister::IIR_FCR as usize] = IirFcrMask::NO_INT as u8;
-            self.interrupt_level = 0;
+            self.interrupt_level = Some(0);
             //plic.set_interrupt_level(UART_INTERRUPT_ID, 0);
         } else {
             self.uart[UartRegister::IIR_FCR as usize] = interrupts;
-            self.interrupt_level = 1;
+            self.interrupt_level = Some(1);
             //plic.set_interrupt_level(UART_INTERRUPT_ID, 1);
         }
 
