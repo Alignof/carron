@@ -1,4 +1,6 @@
 use super::{FcrMask, IerMask, IirMask, LsrMask, Uart, UartRegister};
+use std::io;
+use std::io::Write;
 
 impl Uart {
     pub fn update_interrupt(&mut self) {
@@ -17,7 +19,7 @@ impl Uart {
         if self.uart[UartRegister::IER as usize] & IerMask::RDI as u8 != 0
             && self.uart[UartRegister::LSR as usize] & LsrMask::DR as u8 != 0
         {
-            interrupts |= IirMask::RDI as u8;
+            dbg!(interrupts |= IirMask::RDI as u8);
         }
 
         if self.uart[UartRegister::IER as usize] & IerMask::THRI as u8 != 0
@@ -57,11 +59,12 @@ impl Uart {
             self.uart[UartRegister::LSR as usize] &= !(LsrMask::DR as u8);
         }
 
-        front
+        dbg!(front)
     }
 
     pub fn tx_byte(&mut self, data: char) {
         self.uart[UartRegister::LSR as usize] |= (LsrMask::TEMT as u8) | (LsrMask::THRE as u8);
         print!("{}", char::from_u32(data as u32).unwrap());
+        io::stdout().flush().expect("stdout flush failed");
     }
 }
