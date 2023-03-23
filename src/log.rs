@@ -3,7 +3,7 @@ use std::sync::Mutex;
 
 pub static LOG_LEVEL: OnceCell<LogLv> = OnceCell::new();
 pub static INST_COUNT: Lazy<Mutex<u64>> = Lazy::new(|| Mutex::new(0));
-pub const LOG_ENABLE_INST: u64 = 1_3000_0000;
+pub const LOG_ENABLE_INST: u64 = 3_5000_0000;
 
 #[derive(PartialEq, Eq, PartialOrd)]
 pub enum LogLv {
