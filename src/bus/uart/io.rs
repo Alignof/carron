@@ -19,7 +19,7 @@ impl Uart {
         if self.uart[UartRegister::IER as usize] & IerMask::RDI as u8 != 0
             && self.uart[UartRegister::LSR as usize] & LsrMask::DR as u8 != 0
         {
-            dbg!(interrupts |= IirMask::RDI as u8);
+            interrupts |= IirMask::RDI as u8;
         }
 
         if self.uart[UartRegister::IER as usize] & IerMask::THRI as u8 != 0
@@ -59,7 +59,7 @@ impl Uart {
             self.uart[UartRegister::LSR as usize] &= !(LsrMask::DR as u8);
         }
 
-        dbg!(front)
+        front
     }
 
     pub fn tx_byte(&mut self, data: char) {
