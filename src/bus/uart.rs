@@ -3,6 +3,9 @@ mod io;
 use super::Device;
 use crate::TrapCause;
 use std::collections::VecDeque;
+use std::io::Read;
+//use std::os::fd::AsRawFd;
+use std::sync::mpsc;
 
 const UART_QUEUE_SIZE: usize = 64;
 const MAX_BACKOFF: u64 = 16;
@@ -88,11 +91,12 @@ pub struct Uart {
     pub uart: Vec<u8>,
     dll: u8,
     dlm: u8,
-    rx_queue: VecDeque<u8>,
     backoff_counter: u64,
     pub interrupt_level: Option<u32>,
     pub base_addr: u64,
     size: usize,
+    rx_queue: VecDeque<u8>,
+    stdin_channel: mpsc::Receiver<char>,
 }
 
 impl Default for Uart {
@@ -100,6 +104,35 @@ impl Default for Uart {
         Self::new()
     }
 }
+
+/*
+fn setup_raw_terminal() -> std::io::Result<()> {
+    unsafe {
+        let fd = if libc::isatty(libc::STDIN_FILENO) == 1 {
+            libc::STDIN_FILENO
+        } else {
+            let tty = std::fs::File::open("/dev/tty")?;
+            tty.as_raw_fd()
+        };
+
+        let mut ptr = core::mem::MaybeUninit::uninit();
+
+        if libc::tcgetattr(fd, ptr.as_mut_ptr()) == 0 {
+            let mut termios = ptr.assume_init();
+            let c_oflag = termios.c_oflag;
+
+            libc::cfmakeraw(&mut termios);
+            termios.c_oflag = c_oflag;
+
+            if libc::tcsetattr(fd, libc::TCSADRAIN, &termios) == 0 {
+                return Ok(());
+            }
+        }
+    }
+
+    Err(std::io::Error::last_os_error())
+}
+*/
 
 impl Uart {
     pub fn new() -> Self {
@@ -110,15 +143,25 @@ impl Uart {
         uart[UartRegister::MSR as usize] = 0xb0; // UART_MSR_DCD | UART_MSR_DSR | UART_MSR_CTS
         uart[UartRegister::MCR as usize] = 0x08; // MCR_OUT2
 
+        //setup_raw_terminal().unwrap();
+
+        let (tx, rx) = mpsc::channel::<char>();
+        std::thread::spawn(move || loop {
+            let mut buffer = [0; 1];
+            std::io::stdin().read(&mut buffer).unwrap();
+            tx.send(dbg!(buffer[0] as char)).unwrap();
+        });
+
         Uart {
             uart,
             dll: 0x0c,
             dlm: 0,
-            rx_queue: VecDeque::new(),
             backoff_counter: 0,
             interrupt_level: None,
             base_addr: 0x1000_0000,
             size: UART_SIZE,
+            rx_queue: VecDeque::new(),
+            stdin_channel: rx,
         }
     }
 
@@ -135,17 +178,18 @@ impl Uart {
             return;
         }
 
-        let input = -1; // input value here
-        if (input as i8) < 0 {
-            self.backoff_counter = 1;
-            return;
+        match self.stdin_channel.try_recv() {
+            Ok(c) => {
+                self.backoff_counter = 0;
+
+                self.rx_queue.push_back(dbg!(c) as u8);
+                self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
+                self.update_interrupt();
+            }
+            Err(_) => {
+                self.backoff_counter = 1;
+            }
         }
-
-        self.backoff_counter = 0;
-
-        self.rx_queue.push_back(input as u8);
-        self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
-        self.update_interrupt();
     }
 }
 
@@ -240,14 +284,15 @@ impl Device for Uart {
 
         match index {
             RX => {
-                let data = if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
+                let data = if dbg!(self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8) != 0
+                {
                     self.dll
                 } else {
                     self.rx_byte()
                 };
                 self.update_interrupt();
 
-                Ok(data as i8 as i64 as u64)
+                Ok(data as u8 as u64)
             }
             IER => {
                 if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
