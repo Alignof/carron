@@ -4,7 +4,6 @@ use super::Device;
 use crate::TrapCause;
 use std::collections::VecDeque;
 use std::io::Read;
-//use std::os::fd::AsRawFd;
 use std::sync::mpsc;
 
 const UART_QUEUE_SIZE: usize = 64;
@@ -105,35 +104,6 @@ impl Default for Uart {
     }
 }
 
-/*
-fn setup_raw_terminal() -> std::io::Result<()> {
-    unsafe {
-        let fd = if libc::isatty(libc::STDIN_FILENO) == 1 {
-            libc::STDIN_FILENO
-        } else {
-            let tty = std::fs::File::open("/dev/tty")?;
-            tty.as_raw_fd()
-        };
-
-        let mut ptr = core::mem::MaybeUninit::uninit();
-
-        if libc::tcgetattr(fd, ptr.as_mut_ptr()) == 0 {
-            let mut termios = ptr.assume_init();
-            let c_oflag = termios.c_oflag;
-
-            libc::cfmakeraw(&mut termios);
-            termios.c_oflag = c_oflag;
-
-            if libc::tcsetattr(fd, libc::TCSADRAIN, &termios) == 0 {
-                return Ok(());
-            }
-        }
-    }
-
-    Err(std::io::Error::last_os_error())
-}
-*/
-
 impl Uart {
     pub fn new() -> Self {
         const UART_SIZE: usize = 0x100;
@@ -150,6 +120,7 @@ impl Uart {
             let mut buffer = [0; 1];
             std::io::stdin().read(&mut buffer).unwrap();
             tx.send(dbg!(buffer[0] as char)).unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(1000));
         });
 
         Uart {
