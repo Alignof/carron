@@ -225,7 +225,7 @@ impl Plic {
     }
 
     pub fn set_interrupt_level(&mut self, id: u32, level: u32) {
-        if id <= 0 || NUM_IDS as u32 <= id {
+        if id == 0 || NUM_IDS as u32 <= id {
             return;
         }
 
@@ -295,7 +295,7 @@ impl Device for Plic {
             PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => {
                 self.priority_write(addr, data as u32);
                 Ok(())
-            },
+            }
             ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => {
                 let cntx = (addr - ENABLE_BASE) / ENABLE_PER_HART;
                 let addr = addr - (cntx * ENABLE_PER_HART + ENABLE_BASE);
