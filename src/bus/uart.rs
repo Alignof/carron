@@ -260,7 +260,7 @@ impl Device for Uart {
                 };
                 self.update_interrupt();
 
-                Ok(data as u8 as u64)
+                Ok(data as u64)
             }
             IER => {
                 if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {

@@ -134,7 +134,7 @@ impl Plic {
     }
 
     fn priority_read(&self, offset: usize) -> u32 {
-        let id = (offset >> 2) as usize;
+        let id = offset >> 2;
         if id > 0 && id < NUM_IDS {
             self.priority[id] as u32
         } else {
@@ -144,23 +144,23 @@ impl Plic {
 
     fn priority_write(&mut self, offset: usize, val: u32) {
         const PLIC_PRIO_MASK: u32 = 0b1111;
-        let id = (offset >> 2) as usize;
+        let id = offset >> 2;
         if id > 0 && id < NUM_IDS {
             self.priority[id] = (val & PLIC_PRIO_MASK) as u8;
         }
     }
 
     fn context_enable_read(&self, context_id: usize, offset: usize) -> u32 {
-        let id_word = (offset >> 2) as usize;
+        let id_word = offset >> 2;
         if id_word < NUM_IDS_WORD {
-            self.contexts[context_id].enable[id_word] as u32
+            self.contexts[context_id].enable[id_word]
         } else {
             0
         }
     }
 
     fn context_enable_write(&mut self, context_id: usize, offset: usize, val: u32) {
-        let id_word = (offset >> 2) as usize;
+        let id_word = offset >> 2;
         if id_word >= NUM_IDS_WORD {
             return;
         }
@@ -174,7 +174,7 @@ impl Plic {
         for i in 0..32 {
             let id = id_word * 32 + i;
             let id_mask = 1 << i;
-            let id_prio = self.priority[id as usize];
+            let id_prio = self.priority[id];
 
             if xor_val & id_mask == 0 {
                 continue;
@@ -292,12 +292,16 @@ impl Device for Plic {
         const PLIC_SIZE_MINUS_ONE: usize = PLIC_SIZE - 1;
         let addr = self.addr2index(addr);
         match addr {
-            PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => Ok(self.priority_write(addr, data as u32)),
+            PRIORITY_BASE..=ENABLE_BASE_MINUS_ONE => {
+                self.priority_write(addr, data as u32);
+                Ok(())
+            },
             ENABLE_BASE..=CONTEXT_BASE_MINUS_ONE => {
                 let cntx = (addr - ENABLE_BASE) / ENABLE_PER_HART;
                 let addr = addr - (cntx * ENABLE_PER_HART + ENABLE_BASE);
                 if cntx < CONTEXT_NUM {
-                    Ok(self.context_enable_write(cntx, addr, data as u32))
+                    self.context_enable_write(cntx, addr, data as u32);
+                    Ok(())
                 } else {
                     Err((
                         Some(addr as u64),
@@ -310,7 +314,8 @@ impl Device for Plic {
                 let cntx = (addr - CONTEXT_BASE) / CONTEXT_PER_HART;
                 let addr = addr - (cntx * CONTEXT_PER_HART + CONTEXT_BASE);
                 if cntx < CONTEXT_NUM {
-                    Ok(self.context_write(cntx, addr, data as u32))
+                    self.context_write(cntx, addr, data as u32);
+                    Ok(())
                 } else {
                     Err((
                         Some(addr as u64),
