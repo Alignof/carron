@@ -28,7 +28,7 @@ pub struct ProgramHeader32 {
 }
 
 impl ProgramHeader32 {
-    pub fn new(mmap: &[u8], elf_header: &ElfHeader32) -> Vec<Box<dyn ProgramHeader>> {
+    pub fn new_prog(mmap: &[u8], elf_header: &ElfHeader32) -> Vec<Box<dyn ProgramHeader>> {
         let mut new_prog: Vec<Box<dyn ProgramHeader>> = Vec::new();
 
         for segment_num in 0..elf_header.e_phnum {
