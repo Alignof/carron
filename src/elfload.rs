@@ -121,7 +121,7 @@ impl ElfLoader {
             Isa::Rv32 => {
                 let new_elf = ElfHeader32::new(&mapped_data, elf_ident);
                 let new_prog = ProgramHeader32::new(&mapped_data, &new_elf);
-                let new_sect = SectionHeader32::new(&mapped_data, &new_elf);
+                let new_sect = SectionHeader32::new_sect(&mapped_data, &new_elf);
 
                 Ok(ElfLoader {
                     elf_header: new_elf,
@@ -133,7 +133,7 @@ impl ElfLoader {
             Isa::Rv64 => {
                 let new_elf = ElfHeader64::new(&mapped_data, elf_ident);
                 let new_prog = ProgramHeader64::new(&mapped_data, &new_elf);
-                let new_sect = SectionHeader64::new(&mapped_data, &new_elf);
+                let new_sect = SectionHeader64::new_sect(&mapped_data, &new_elf);
 
                 Ok(ElfLoader {
                     elf_header: new_elf,
