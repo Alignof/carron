@@ -11,6 +11,7 @@ const UART_IIR_TYPE_BITS: u8 = 0xc0;
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 enum UartRegister {
     RX_TX,   // read: RX, write: TX
     IER,     // write: IER
@@ -23,6 +24,7 @@ enum UartRegister {
 }
 
 #[allow(dead_code)]
+#[allow(clippy::upper_case_acronyms)]
 enum IerMask {
     RDI = 0x1,
     THRI = 0x2,
@@ -32,6 +34,7 @@ enum IerMask {
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 enum IirMask {
     MSI = 0x00,
     NO_INT = 0x01,
@@ -43,6 +46,7 @@ enum IirMask {
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 enum FcrMask {
     ENABLE_FIFO = 0x01,
     CLEAR_RCVR = 0x02,
@@ -51,7 +55,7 @@ enum FcrMask {
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 enum LcrMask {
     DLAB = 0x80,
     SBC = 0x40,
@@ -62,7 +66,7 @@ enum LcrMask {
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 enum McrMask {
     LOOP = 0x10,
     OUT2 = 0x08,
@@ -73,6 +77,7 @@ enum McrMask {
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 enum LsrMask {
     FIFOE = 0x80,
     TEMT = 0x40,
