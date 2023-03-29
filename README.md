@@ -1,6 +1,6 @@
 # carron
-[![Rust](https://github.com/Alignof/carron/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rust.yml)  
-[![riscv_tests](https://github.com/Alignof/carron/actions/workflows/riscv_tests.yml/badge.svg)](https://github.com/Alignof/carron/actions/workflows/riscv_tests.yml)  
+[![Rust](https://github.com/Alignof/carron/actions/workflows/rust.yml/badge.svg)](https://github.com/Alignof/Carron/actions/workflows/rust.yml) 
+[![riscv\_tests](https://github.com/Alignof/carron/actions/workflows/riscv_tests.yml/badge.svg)](https://github.com/Alignof/carron/actions/workflows/riscv_tests.yml)  
 RV64IMAC emulator in rust
 
 ## Feature
@@ -40,7 +40,7 @@ cargo build --release
 ## Usage
 ```zsh
 $ ./carron --help
-carron 1.0.0
+carron 1.1.0
 n.takana <Alignof@outlook.com>
 RV64IMAC emulator
 
@@ -64,7 +64,9 @@ OPTIONS:
         --loglv <log_level>               Set log level
     -h, --help                            Print help information
     -V, --version                         Print version information
+```
 
+```zsh
 $ ./carron --pk $RISCV/riscv32-unknown-elf/bin/pk ./HelloWorld
 
 In file HelloWorld
@@ -72,4 +74,39 @@ elfcheck: OK
 
 bbl loader
 hello world!
+```
+
+```zsh
+$ git clone https://github.com/buildroot/buildroot
+$ cd buildroot
+$ make spike_riscv64_defconfig
+$ make menuconfig # disable F extension
+$ make -j $(nproc)
+$ ./carron --release -- --kernel /path/to/Image --initrd /path/to/rootfs.cpio /path/to/fw_jump.elf
+In file /home/takana/riscv-toolchain/buildroot/output/images/fw_jump.elf
+elfcheck: OK
+
+
+OpenSBI v1.2
+   ____                    _____ ____ _____
+  / __ \\                  / ____|  _ \\_   _|
+ | |  | |_ __   ___ _ __ | (___ | |_) || |
+ | |  | | '_ \\ / _ \\ '_ \\ \\___ \\|  _ < | |
+ | |__| | |_) |  __/ | | |____) | |_) || |_
+  \\____/| .__/ \\___|_| |_|_____/|____/_____|
+        | |
+        |_|
+
+......
+
+[    0.091080] Freeing unused kernel image (initmem) memory: 2144K
+[    0.097300] Run /init as init process
+Starting syslogd: OK
+Starting klogd: OK
+Running sysctl: OK
+Saving 256 bits of non-creditable seed for next boot
+Starting network: OK
+
+Welcome to Buildroot
+buildroot login:
 ```
