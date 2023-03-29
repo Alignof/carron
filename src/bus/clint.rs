@@ -94,7 +94,7 @@ impl Device for Clint {
         ))
     }
 
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok(((self.clint[addr + 3] as i32) << 24
             | (self.clint[addr + 2] as i32) << 16
@@ -102,7 +102,7 @@ impl Device for Clint {
             | (self.clint[addr + 0] as i32)) as i64 as u64)
     }
 
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let addr = self.addr2index(addr);
         Ok((self.clint[addr + 7] as u64) << 56
             | (self.clint[addr + 6] as u64) << 48

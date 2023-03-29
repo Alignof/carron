@@ -7,9 +7,9 @@ mod mmu;
 mod reg;
 mod trap;
 
-use crate::{bus, elfload, log, Isa};
+use crate::{bus, elfload, log, Arguments, Isa};
 use csr::{CSRname, Xstatus};
-use std::collections::HashSet;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Copy, Clone, Debug)]
@@ -29,9 +29,12 @@ pub enum TrapCause {
     InstPageFault = 12,
     LoadPageFault = 13,
     StoreAMOPageFault = 15,
-    MachineSoftwareInterrupt = (1 << 31) + 3,
-    MachineTimerInterrupt = (1 << 31) + 7,
     SupervisorSoftwareInterrupt = (1 << 31) + 1,
+    MachineSoftwareInterrupt = (1 << 31) + 3,
+    SupervisorTimerInterrupt = (1 << 31) + 5,
+    MachineTimerInterrupt = (1 << 31) + 7,
+    SupervisorExternalInterrupt = (1 << 31) + 9,
+    MachineExternalInterrupt = (1 << 31) + 11,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -58,40 +61,45 @@ pub enum TransFor {
 }
 
 pub struct Cpu {
-    pub pc: u64,
+    pc: Rc<RefCell<u64>>,
     pub bus: bus::Bus,
     pub regs: reg::Register,
     csrs: csr::CSRs,
     mmu: mmu::Mmu,
-    pub reservation_set: HashSet<usize>,
+    pub reservation_set: Option<usize>,
     isa: Rc<Isa>,
     pub priv_lv: PrivilegedLevel,
 }
 
 impl Cpu {
-    pub fn new(loader: elfload::ElfLoader, pc_from_cl: Option<u64>, isa: Isa) -> Self {
+    pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
         // initialize bus and get the entry point
-        let bus = bus::Bus::new(loader, isa);
+        let bus = bus::Bus::new(loader, args, isa);
         let isa = Rc::new(isa);
+        let pc = Rc::new(RefCell::new(args.init_pc.unwrap_or(bus.mrom.base_addr)));
 
         Cpu {
-            pc: pc_from_cl.unwrap_or(bus.mrom.base_addr),
+            pc: pc.clone(),
             bus,
             regs: reg::Register::new(isa.clone()),
-            csrs: csr::CSRs::new(isa.clone()).init(),
+            csrs: csr::CSRs::new(isa.clone(), pc).init(),
             mmu: mmu::Mmu::new(isa.clone()),
-            reservation_set: HashSet::new(),
+            reservation_set: None,
             isa,
             priv_lv: PrivilegedLevel::Machine,
         }
     }
 
+    pub fn pc(&self) -> u64 {
+        *self.pc.borrow()
+    }
+
     fn add2pc(&mut self, addval: i32) {
-        self.pc = (self.pc as i64 + addval as i64) as u64;
+        *self.pc.borrow_mut() = (self.pc() as i64 + addval as i64) as u64;
     }
 
     fn update_pc(&mut self, newpc: u64) {
-        self.pc = newpc;
+        *self.pc.borrow_mut() = newpc;
     }
 
     pub fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
@@ -133,7 +141,7 @@ impl Cpu {
 
         match self
             .mmu
-            .trans_addr(purpose, addr, &self.csrs, &self.bus.dram, trans_priv)
+            .trans_addr(purpose, addr, &self.csrs, &mut self.bus.dram, trans_priv)
         {
             Ok(vaddr) => {
                 if addr % align as u64 == 0 {
@@ -160,6 +168,16 @@ impl Cpu {
                 ))
             }
         }
+    }
+
+    pub fn timer_increment(&mut self, inc: u64) {
+        // mtime(clint: 0x0200_BFF8)
+        const MTIME: u64 = 0x0200_BFF8;
+        let mtime: u64 = self.bus.load64(MTIME).unwrap();
+        self.bus.store64(MTIME, mtime + inc).unwrap();
+
+        // time(CSRs: 0xc01)
+        self.csrs.timer_increment(inc);
     }
 }
 

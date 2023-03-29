@@ -10,17 +10,19 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.regs.write(inst.rd, inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_AUIPC => {
-            cpu.regs.write(inst.rd, cpu.pc + inst.imm.unwrap() as u64);
+            cpu.regs.write(inst.rd, cpu.pc() + inst.imm.unwrap() as u64);
         }
         OpecodeKind::OP_JAL => {
-            cpu.regs.write(inst.rd, cpu.pc + INST_SIZE);
+            cpu.regs.write(inst.rd, cpu.pc() + INST_SIZE);
             cpu.add2pc(inst.imm.unwrap());
         }
         OpecodeKind::OP_JALR => {
             // calc next_pc before updated
-            let next_pc = cpu.pc + INST_SIZE;
-            // setting the least-significant bit of the result to zero-->vvvvvv
-            cpu.update_pc((cpu.regs.read(inst.rs1) + inst.imm.unwrap() as u64) & !0x1);
+            let next_pc = cpu.pc() + INST_SIZE;
+            cpu.update_pc(
+                // setting the least-significant bit of the result to zero --------> vvvvvv
+                (cpu.regs.read(inst.rs1) as i64 + inst.imm.unwrap() as i64) as u64 & !0x1,
+            );
             cpu.regs.write(inst.rd, next_pc);
         }
         OpecodeKind::OP_BEQ => {
@@ -245,7 +247,14 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_SRA => {
             cpu.regs.write(
                 inst.rd,
-                ((cpu.regs.read(inst.rs1) as i32) >> cpu.regs.read(inst.rs2)) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => {
+                        ((cpu.regs.read(inst.rs1) as i32) >> cpu.regs.read(inst.rs2)) as u64
+                    }
+                    Isa::Rv64 => {
+                        ((cpu.regs.read(inst.rs1) as i64) >> cpu.regs.read(inst.rs2)) as u64
+                    }
+                },
             );
         }
         OpecodeKind::OP_OR => {
@@ -261,7 +270,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         }
         OpecodeKind::OP_ECALL => {
             cpu.trap(
-                cpu.pc,
+                0,
                 match cpu.priv_lv {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
                     PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
@@ -271,7 +280,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             );
         }
         OpecodeKind::OP_EBREAK => {
-            cpu.trap(cpu.pc, TrapCause::Breakpoint);
+            cpu.trap(cpu.pc(), TrapCause::Breakpoint);
         }
         OpecodeKind::OP_LWU => {
             let load_addr = cpu.trans_addr(

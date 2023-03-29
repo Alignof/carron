@@ -16,7 +16,7 @@ pub struct SectionHeader32 {
 }
 
 impl SectionHeader32 {
-    pub fn new(mmap: &[u8], elf_header: &ElfHeader32) -> Vec<Box<dyn SectionHeader>> {
+    pub fn new_sect(mmap: &[u8], elf_header: &ElfHeader32) -> Vec<Box<dyn SectionHeader>> {
         let mut new_sect: Vec<Box<dyn SectionHeader>> = Vec::new();
         let name_table =
             elf_header.e_shoff + (elf_header.e_shentsize * elf_header.e_shstrndx) as u32;

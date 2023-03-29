@@ -310,7 +310,7 @@ pub fn parse_imm(
         let imm32 = inst.slice(31, 12).set(&[
             20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 11, 19, 18, 17, 16, 15, 14, 13, 12,
         ]) as i32;
-        inst.to_signed_nbit(imm32, 20)
+        inst.to_signed_nbit(imm32, 21)
     };
     let shamt5 = || inst.slice(24, 20) as i32;
     let shamt6 = || inst.slice(25, 20) as i32;

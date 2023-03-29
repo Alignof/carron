@@ -63,7 +63,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_C_SRAI => {
             cpu.regs.write(
                 inst.rd,
-                ((cpu.regs.read(inst.rs1) as i32) >> inst.imm.unwrap()) as u64,
+                match *cpu.isa {
+                    Isa::Rv32 => ((cpu.regs.read(inst.rs1) as i32) >> inst.imm.unwrap()) as u64,
+                    Isa::Rv64 => ((cpu.regs.read(inst.rs1) as i64) >> inst.imm.unwrap()) as u64,
+                },
             );
         }
         OpecodeKind::OP_C_ADD => {
@@ -107,15 +110,15 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 .write(inst.rd, cpu.regs.read(inst.rs1) & cpu.regs.read(inst.rs2));
         }
         OpecodeKind::OP_C_J => {
-            cpu.pc += inst.imm.unwrap() as u64;
+            cpu.add2pc(inst.imm.unwrap());
         }
         OpecodeKind::OP_C_JAL => {
-            cpu.regs.write(Some(1), cpu.pc + INST_SIZE);
+            cpu.regs.write(Some(1), cpu.pc() + INST_SIZE);
             cpu.add2pc(inst.imm.unwrap());
         }
         OpecodeKind::OP_C_JALR => {
             // calc next_pc before updated
-            let next_pc = cpu.pc + INST_SIZE;
+            let next_pc = cpu.pc() + INST_SIZE;
             // setting the least-significant bit of
             // the result to zero                ->vvvvvv
             cpu.update_pc(cpu.regs.read(inst.rs1) & !0x1);
@@ -137,9 +140,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_C_MV => {
             cpu.regs.write(inst.rd, cpu.regs.read(inst.rs2));
         }
-        OpecodeKind::OP_C_EBREAK => {
-            panic!("not yet implemented: OP_C_EBREAK");
-        }
+        OpecodeKind::OP_C_EBREAK => { /* NOP */ }
         // -- rv64 --
         OpecodeKind::OP_C_LD => {
             let load_addr = cpu.trans_addr(
@@ -200,12 +201,12 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
 
 #[cfg(test)]
 mod exe_16 {
-    use crate::bus;
+    use crate::cmdline::ExeOption;
     use crate::cpu::execution::inst_16::c_extension::exec;
     use crate::cpu::instruction::{Instruction, OpecodeKind::*};
     use crate::cpu::{csr, mmu, reg, Cpu, PrivilegedLevel};
-    use crate::{elfload, Isa};
-    use std::collections::HashSet;
+    use crate::{bus, elfload, Arguments, Isa};
+    use std::cell::RefCell;
     use std::rc::Rc;
 
     #[test]
@@ -213,14 +214,26 @@ mod exe_16 {
         let dummy_elf =
             elfload::ElfLoader::try_new("./HelloWorld").expect("creating dummy_elf failed");
         let isa = Isa::Rv32;
-        let bus = bus::Bus::new(dummy_elf, isa);
+        let args = Arguments {
+            filename: "./HelloWorld".to_string(),
+            exe_option: ExeOption::OPT_DEFAULT,
+            pk_path: None,
+            kernel_path: None,
+            initrd_path: None,
+            init_pc: None,
+            break_point: None,
+            result_reg: None,
+            main_args: Vec::new(),
+        };
+        let bus = bus::Bus::new(dummy_elf, &args, isa);
+        let pc = Rc::new(RefCell::new(bus.mrom.base_addr));
         let mut cpu: Cpu = Cpu {
-            pc: bus.mrom.base_addr,
+            pc: pc.clone(),
             bus,
             regs: reg::Register::new(Rc::new(isa)),
-            csrs: csr::CSRs::new(Rc::new(isa)).init(),
+            csrs: csr::CSRs::new(Rc::new(isa), pc).init(),
             mmu: mmu::Mmu::new(Rc::new(isa)),
-            reservation_set: HashSet::new(),
+            reservation_set: None,
             isa: Rc::new(isa),
             priv_lv: PrivilegedLevel::Machine,
         };

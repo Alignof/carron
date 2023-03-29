@@ -5,7 +5,7 @@ mod mrom;
 mod plic;
 mod uart;
 
-use crate::{elfload, Isa, TrapCause};
+use crate::{elfload, Arguments, Isa, TrapCause};
 use clint::Clint;
 use dram::Dram;
 use mrom::Mrom;
@@ -16,18 +16,18 @@ pub struct Bus {
     pub mrom: mrom::Mrom,
     pub clint: clint::Clint,
     pub dram: dram::Dram,
-    uart: uart::Uart,
-    plic: plic::Plic,
+    pub uart: uart::Uart,
+    pub plic: plic::Plic,
 }
 
 impl Bus {
-    pub fn new(loader: elfload::ElfLoader, isa: Isa) -> Self {
+    pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
         // load proxy kernel before user program when it's given
-        let dram = Dram::new(loader);
+        let dram = Dram::new(loader, args, isa);
         let mut mrom = Mrom::new(dram.base_addr, isa);
 
         // create and load DTB
-        mrom.load_dtb(dram.base_addr, isa);
+        mrom.load_dtb(dram.base_addr, dram.initrd_start, dram.initrd_end, isa);
 
         Bus {
             mrom,
@@ -47,7 +47,14 @@ impl Bus {
         } else if self.dram.in_range(addr) {
             self.dram.store8(addr, data)
         } else if self.uart.in_range(addr) {
-            self.uart.store8(addr, data)
+            let result = self.uart.store8(addr, data);
+            if let Some(interrupt_level) = self.uart.interrupt_level {
+                const UART_INTERRUPT_ID: u32 = 1;
+                self.plic
+                    .set_interrupt_level(UART_INTERRUPT_ID, interrupt_level);
+                self.uart.interrupt_level = None;
+            }
+            result
         } else if self.plic.in_range(addr) {
             self.plic.store8(addr, data)
         } else {
@@ -172,7 +179,7 @@ impl Bus {
         }
     }
 
-    pub fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    pub fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load32(addr)
         } else if self.clint.in_range(addr) {
@@ -192,7 +199,7 @@ impl Bus {
         }
     }
 
-    pub fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    pub fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         if self.mrom.in_range(addr) {
             self.mrom.load64(addr)
         } else if self.clint.in_range(addr) {
@@ -282,8 +289,8 @@ pub trait Device {
     fn store64(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)>;
     fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u8(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;
     fn load_u32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)>;

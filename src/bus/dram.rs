@@ -1,15 +1,20 @@
+use memmap::Mmap;
+use std::fs::File;
+
 use super::Device;
-use crate::{elfload, TrapCause};
+use crate::{elfload, Arguments, Isa, TrapCause};
 
 pub struct Dram {
     dram: Vec<u8>,
     pub base_addr: u64,
     size: usize,
+    pub initrd_start: Option<usize>,
+    pub initrd_end: Option<usize>,
 }
 
 impl Dram {
-    pub fn new(loader: elfload::ElfLoader) -> Self {
-        const DRAM_SIZE: usize = 1024 * 1024 * 128; // 2^27
+    pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
+        const DRAM_SIZE: usize = 1024 * 1024 * 1024 * 2; // 2^27
         let virt_entry = loader.get_entry_point().expect("entry point not found.");
 
         // create new dram
@@ -31,11 +36,43 @@ impl Dram {
             }
         }
 
+        if let Some(path) = &args.kernel_path {
+            let file = File::open(path).unwrap();
+            let mapped_kernel = unsafe { Mmap::map(&file).unwrap() };
+            let kernel_offset = match isa {
+                Isa::Rv32 => 0x400000,
+                Isa::Rv64 => 0x200000,
+            };
+            new_dram.splice(
+                kernel_offset..kernel_offset + mapped_kernel.len(),
+                mapped_kernel.iter().cloned(),
+            );
+        }
+
+        let mut initrd_start: Option<usize> = None;
+        let mut initrd_end: Option<usize> = None;
+        if let Some(path) = &args.initrd_path {
+            let file = File::open(path).unwrap();
+            let mapped_initrd = unsafe { Mmap::map(&file).unwrap() };
+
+            const INITRD_END: usize = 0x8000_0000 + DRAM_SIZE - 0x1000;
+            let initrd_head = INITRD_END - mapped_initrd.len();
+            let initrd_offset = initrd_head - virt_entry as usize;
+            initrd_start = Some(INITRD_END - mapped_initrd.len());
+            initrd_end = Some(INITRD_END);
+            new_dram.splice(
+                initrd_offset..initrd_offset + mapped_initrd.len(),
+                mapped_initrd.iter().cloned(),
+            );
+        }
+
         let dram_size = new_dram.len();
         Dram {
             dram: new_dram,
             base_addr: virt_entry,
             size: dram_size,
+            initrd_start,
+            initrd_end,
         }
     }
 }
@@ -99,7 +136,7 @@ impl Device for Dram {
         Ok(((self.dram[index + 1] as i16) << 8 | (self.dram[index + 0] as i16)) as i64 as u64)
     }
 
-    fn load32(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load32(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         Ok(((self.dram[index + 3] as i32) << 24
             | (self.dram[index + 2] as i32) << 16
@@ -107,7 +144,7 @@ impl Device for Dram {
             | (self.dram[index + 0] as i32)) as i64 as u64)
     }
 
-    fn load64(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+    fn load64(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let index = self.addr2index(addr);
         Ok((self.dram[index + 7] as u64) << 56
             | (self.dram[index + 6] as u64) << 48
@@ -149,6 +186,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
@@ -174,6 +213,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_8 = |data: i32| {
@@ -197,6 +238,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_16 = |data: i32| {
@@ -221,6 +264,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_u16 = |data: i32| {
@@ -248,6 +293,8 @@ mod tests {
             dram: vec![0; DRAM_SIZE],
             base_addr: 0,
             size: DRAM_SIZE,
+            initrd_start: None,
+            initrd_end: None,
         };
         let mut addr = 0;
         let mut test_32 = |data: i32| {
