@@ -100,7 +100,7 @@ impl Emulator {
             80 => self
                 .frontend_server
                 .fstat(&mut self.cpu, sysargs[1], sysargs[2]),
-            93 => self.frontend_server.exit(&mut self.exit_code, sysargs[1]),
+            93 => self.frontend_server.exit(sysargs[1]),
             291 => panic!("sys_statx is not implemented"),
             1039 => panic!("sys_lstat is not implemented"),
             2011 => {
@@ -118,7 +118,7 @@ impl Emulator {
         self.cpu.bus.store64(tohost_addr, 0).unwrap();
 
         if tohost & 1 == 1 {
-            self.exit_code = Some(tohost as i32);
+            std::process::exit(tohost as i32);
         } else {
             let syscall_addr: u64 = tohost << 16 >> 16;
             let mut syscall_args: [u64; 8] = [
