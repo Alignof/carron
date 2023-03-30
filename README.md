@@ -4,6 +4,7 @@
 RV64IMAC emulator in rust
 
 ## Feature
+Carron can run **Linux** and **self-hosted binaries of [cc_sakura](https://github.com/Alignof/cc_sakura) my handmade C compiler**.
 This emulator parses an ELF file that supports rv32imac/rv64imac and emulate execution environment of it.    
 
 The emulator passed riscv-tests shown below.
@@ -14,22 +15,20 @@ The emulator passed riscv-tests shown below.
 - [x] rv32ui-v
 - [x] rv32um-p
 - [x] rv32um-v
-- [x] rv32uc-p
-- [x] rv32uc-v
 - [x] rv32ua-p
 - [x] rv32ua-v
+- [x] rv32uc-p
+- [x] rv32uc-v
 - [x] rv64mi-p
 - [x] rv64si-p
 - [x] rv64ui-p
 - [x] rv64ui-v
 - [x] rv64um-p
 - [x] rv64um-v
-- [x] rv64uc-p
-- [x] rv64uc-v
 - [x] rv64ua-p
 - [x] rv64ua-v
-
-This emulator can also run **Linux** and **self-hosted binaries of [cc_sakura](https://github.com/Alignof/cc_sakura) my handmade C compiler**.
+- [x] rv64uc-p
+- [x] rv64uc-v
 
 ## Install
 ```zsh
@@ -68,7 +67,7 @@ OPTIONS:
 ```
 
 
-Hello World
+### Hello World
 ```zsh
 $ ./carron --pk $RISCV/riscv32-unknown-elf/bin/pk ./HelloWorld
 
@@ -79,7 +78,7 @@ bbl loader
 hello world!
 ```
 
-boot Linux
+### boot Linux
 ```
 $ git clone https://github.com/buildroot/buildroot
 $ cd buildroot
