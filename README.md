@@ -4,7 +4,7 @@
 RV64IMAC emulator in rust
 
 ## Feature
-Carron can run **Linux** and **self-hosted binaries of [cc_sakura](https://github.com/Alignof/cc_sakura) my handmade C compiler**.
+Carron can run **Linux** and **self-hosted binaries of [cc_sakura](https://github.com/Alignof/cc_sakura) my handmade C compiler**.  
 This emulator parses an ELF file that supports rv32imac/rv64imac and emulate execution environment of it.    
 
 The emulator passed riscv-tests shown below.
