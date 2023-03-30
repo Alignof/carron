@@ -4,7 +4,8 @@
 RV64IMAC emulator in rust
 
 ## Feature
-This emulator parses an ELF file that supports rv32imac/rv64imac and emulate execution environment of it.  
+This emulator parses an ELF file that supports rv32imac/rv64imac and emulate execution environment of it.    
+
 The emulator passed riscv-tests shown below.
 
 - [x] rv32mi-p
@@ -28,7 +29,7 @@ The emulator passed riscv-tests shown below.
 - [x] rv64ua-p
 - [x] rv64ua-v
 
-This emulator can also run self-hosted binaries of [cc\_sakura](https://github.com/Alignof/cc_sakura), my handmade C compiler.
+This emulator can also run **Linux** and **self-hosted binaries of [cc_sakura](https://github.com/Alignof/cc_sakura) my handmade C compiler**.
 
 ## Install
 ```zsh
@@ -66,6 +67,8 @@ OPTIONS:
     -V, --version                         Print version information
 ```
 
+
+Hello World
 ```zsh
 $ ./carron --pk $RISCV/riscv32-unknown-elf/bin/pk ./HelloWorld
 
@@ -76,6 +79,7 @@ bbl loader
 hello world!
 ```
 
+boot Linux
 ```
 $ git clone https://github.com/buildroot/buildroot
 $ cd buildroot
