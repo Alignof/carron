@@ -68,7 +68,7 @@ pub struct Cpu {
     mmu: mmu::Mmu,
     pub reservation_set: Option<usize>,
     isa: Rc<Isa>,
-    pub priv_lv: PrivilegedLevel,
+    priv_lv: PrivilegedLevel,
 }
 
 impl Cpu {
@@ -100,6 +100,10 @@ impl Cpu {
 
     fn update_pc(&mut self, newpc: u64) {
         *self.pc.borrow_mut() = newpc;
+    }
+
+    fn priv_lv(&self) -> PrivilegedLevel {
+        self.priv_lv
     }
 
     pub fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
