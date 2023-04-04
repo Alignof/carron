@@ -89,6 +89,8 @@ impl CSRs {
     }
 
     fn check_accessible(&self, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
+        let _priv_lv = PrivilegedLevel::Reserved;
+
         if dist >= 4096 {
             return Err((
                 None,
@@ -97,7 +99,7 @@ impl CSRs {
             ));
         }
 
-        match cpu.priv_lv {
+        match _priv_lv {
             PrivilegedLevel::User => {
                 if (0x100..=0x180).contains(&dist) || (0x300..=0x344).contains(&dist) {
                     return Err((
@@ -130,7 +132,7 @@ impl CSRs {
         }
 
         if (0xc00..=0xc1f).contains(&dist) {
-            match cpu.priv_lv {
+            match _priv_lv {
                 PrivilegedLevel::Machine | PrivilegedLevel::Reserved => (),
                 PrivilegedLevel::Supervisor => {
                     let mctren = self.read(CSRname::mcounteren.wrap())?;
@@ -211,7 +213,7 @@ impl CSRs {
             match dist {
                 // == depends on privilege ==
                 // scounteren(0x106) only allow higher
-                0x106 => match cpu.priv_lv {
+                0x106 => match _priv_lv {
                     PrivilegedLevel::User => Err((
                         None,
                         TrapCause::IllegalInst,
@@ -220,7 +222,7 @@ impl CSRs {
                     _ => Ok(()),
                 },
                 // stimecmp(0x14d) only supervisor
-                0x14d => match cpu.priv_lv {
+                0x14d => match _priv_lv {
                     PrivilegedLevel::Supervisor => Ok(()),
                     _ => Err((
                         None,
