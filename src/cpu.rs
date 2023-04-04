@@ -106,6 +106,10 @@ impl Cpu {
         self.priv_lv
     }
 
+    fn set_priv_lv(&mut self, new_priv: PrivilegedLevel) {
+        self.priv_lv = new_priv
+    }
+
     pub fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
         use execution::Execution;
         use fetch::fetch;

@@ -18,17 +18,19 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 ));
             }
 
-            cpu.priv_lv = match cpu
-                .csrs
-                .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP)
-            {
-                0b00 => PrivilegedLevel::User,
-                0b01 => PrivilegedLevel::Supervisor,
-                0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
-                0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
-                _ => panic!("invalid PrivilegedLevel"),
-            };
-            log::debugln!("priv: {:?}", cpu.priv_lv);
+            cpu.set_priv_lv(
+                match cpu
+                    .csrs
+                    .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP)
+                {
+                    0b00 => PrivilegedLevel::User,
+                    0b01 => PrivilegedLevel::Supervisor,
+                    0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
+                    0b11 => panic!("invalid transition. (S-mode -> M-mode)"),
+                    _ => panic!("invalid PrivilegedLevel"),
+                },
+            );
+            log::debugln!("priv: {:?}", cpu.priv_lv());
             log::debugln!("csrs.sepc: {:x}", cpu.csrs.read(CSRname::sepc.wrap())?);
 
             cpu.csrs.write_xstatus(
@@ -53,17 +55,19 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             }
         }
         OpecodeKind::OP_MRET => {
-            cpu.priv_lv = match cpu
-                .csrs
-                .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP)
-            {
-                0b00 => PrivilegedLevel::User,
-                0b01 => PrivilegedLevel::Supervisor,
-                0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
-                0b11 => PrivilegedLevel::Machine,
-                _ => panic!("invalid PrivilegedLevel"),
-            };
-            log::debugln!("priv: {:?}", cpu.priv_lv);
+            cpu.set_priv_lv(
+                match cpu
+                    .csrs
+                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP)
+                {
+                    0b00 => PrivilegedLevel::User,
+                    0b01 => PrivilegedLevel::Supervisor,
+                    0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
+                    0b11 => PrivilegedLevel::Machine,
+                    _ => panic!("invalid PrivilegedLevel"),
+                },
+            );
+            log::debugln!("priv: {:?}", cpu.priv_lv());
 
             cpu.csrs.write_xstatus(
                 // sstatus.MIE = sstatus.MPIE
@@ -82,7 +86,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         }
         OpecodeKind::OP_WFI => { /* nop */ }
         OpecodeKind::OP_SFENCE_VMA => {
-            if cpu.priv_lv == PrivilegedLevel::Supervisor
+            if cpu.priv_lv() == PrivilegedLevel::Supervisor
                 && cpu
                     .csrs
                     .read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM)

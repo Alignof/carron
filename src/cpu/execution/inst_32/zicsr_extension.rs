@@ -14,7 +14,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         ));
     }
 
-    match cpu.priv_lv {
+    match cpu.priv_lv() {
         PrivilegedLevel::User => {
             if (0x100..=0x180).contains(&dist) || (0x300..=0x344).contains(&dist) {
                 return Err((
@@ -50,7 +50,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
     }
 
     if (0xc00..=0xc1f).contains(&dist) {
-        match cpu.priv_lv {
+        match cpu.priv_lv() {
             PrivilegedLevel::Machine | PrivilegedLevel::Reserved => (),
             PrivilegedLevel::Supervisor => {
                 let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
@@ -131,7 +131,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         match dist {
             // == depends on privilege ==
             // scounteren(0x106) only allow higher
-            0x106 => match cpu.priv_lv {
+            0x106 => match cpu.priv_lv() {
                 PrivilegedLevel::User => Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
@@ -140,7 +140,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 _ => Ok(()),
             },
             // stimecmp(0x14d) only supervisor
-            0x14d => match cpu.priv_lv {
+            0x14d => match cpu.priv_lv() {
                 PrivilegedLevel::Supervisor => Ok(()),
                 _ => Err((
                     invalid_instruction,
