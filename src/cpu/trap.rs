@@ -35,7 +35,7 @@ impl Cpu {
         let mstatus_mie = self
             .csrs
             .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE);
-        let m_enabled = match self.priv_lv {
+        let m_enabled = match self.priv_lv() {
             PrivilegedLevel::Machine => (mstatus_mie != 0) as i64,
             _ => 1,
         };
@@ -44,7 +44,7 @@ impl Cpu {
             let mstatus_sie = self
                 .csrs
                 .read_xstatus(PrivilegedLevel::Machine, Xstatus::SIE);
-            let s_enabled = match self.priv_lv {
+            let s_enabled = match self.priv_lv() {
                 PrivilegedLevel::Machine => 0,
                 PrivilegedLevel::Supervisor => (mstatus_sie != 0) as i64,
                 _ => 1,
@@ -142,7 +142,7 @@ impl Cpu {
     pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
         // check Machine Trap Delegation Registers
         let deleg = self.get_deleg(cause_of_trap);
-        let new_pc = if self.priv_lv != PrivilegedLevel::Machine
+        let new_pc = if self.priv_lv() != PrivilegedLevel::Machine
             && (deleg & 1 << cause_of_trap as u32) != 0
         {
             let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
@@ -178,9 +178,9 @@ impl Cpu {
             self.csrs.write_xstatus(
                 PrivilegedLevel::Supervisor,
                 Xstatus::SPP,
-                self.priv_lv as u64,
+                self.priv_lv() as u64,
             ); // set prev_priv to SPP
-            self.priv_lv = PrivilegedLevel::Supervisor;
+            self.set_priv_lv(PrivilegedLevel::Supervisor);
 
             let stvec = self.csrs.read(CSRname::stvec.wrap()).unwrap();
             if stvec & 0b1 == 1 {
@@ -218,9 +218,12 @@ impl Cpu {
             );
             self.csrs
                 .write_xstatus(PrivilegedLevel::Machine, Xstatus::MIE, 0b0); // msatus.MIE = 0
-            self.csrs
-                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u64); // set prev_priv to MPP
-            self.priv_lv = PrivilegedLevel::Machine;
+            self.csrs.write_xstatus(
+                PrivilegedLevel::Machine,
+                Xstatus::MPP,
+                self.priv_lv() as u64,
+            ); // set prev_priv to MPP
+            self.set_priv_lv(PrivilegedLevel::Machine);
 
             let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
             if mtvec & 0b1 == 1 {

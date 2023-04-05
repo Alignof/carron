@@ -129,7 +129,7 @@ impl Cpu {
         let addr = addr.fix2regsz(&self.isa);
         self.check_breakpoint(purpose, addr)?;
 
-        let mut trans_priv = self.priv_lv;
+        let mut trans_priv = self.priv_lv();
         if (purpose == TransFor::Load || purpose == TransFor::StoreAMO)
             && self
                 .csrs

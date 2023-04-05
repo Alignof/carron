@@ -55,9 +55,9 @@ impl Cpu {
                     let mode_s = tdata1 >> 4 & 0x1;
                     let mode_u = tdata1 >> 3 & 0x1;
 
-                    if self.priv_lv == PrivilegedLevel::Machine && mode_m == 0x0
-                        || self.priv_lv == PrivilegedLevel::Supervisor && mode_s == 0x0
-                        || self.priv_lv == PrivilegedLevel::User && mode_u == 0x0
+                    if self.priv_lv() == PrivilegedLevel::Machine && mode_m == 0x0
+                        || self.priv_lv() == PrivilegedLevel::Supervisor && mode_s == 0x0
+                        || self.priv_lv() == PrivilegedLevel::User && mode_u == 0x0
                     {
                         return Ok(());
                     }
