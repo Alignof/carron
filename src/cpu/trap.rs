@@ -32,18 +32,14 @@ impl Cpu {
 
         let pending_interrupts = mip & mie;
         let mideleg = self.csrs.read(CSRname::mideleg.wrap()).unwrap();
-        let mstatus_mie = self
-            .csrs
-            .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE);
+        let mstatus_mie = self.csrs.read_xstatus(Xstatus::MIE);
         let m_enabled = match self.priv_lv() {
             PrivilegedLevel::Machine => (mstatus_mie != 0) as i64,
             _ => 1,
         };
         let enabled_interrupt_mask = pending_interrupts & !mideleg & (-m_enabled as u64);
         let enabled_interrupt_mask = if enabled_interrupt_mask == 0 {
-            let mstatus_sie = self
-                .csrs
-                .read_xstatus(PrivilegedLevel::Machine, Xstatus::SIE);
+            let mstatus_sie = self.csrs.read_xstatus(Xstatus::SIE);
             let s_enabled = match self.priv_lv() {
                 PrivilegedLevel::Machine => 0,
                 PrivilegedLevel::Supervisor => (mstatus_sie != 0) as i64,
@@ -168,18 +164,11 @@ impl Cpu {
             self.csrs.write(CSRname::stval.wrap(), tval_addr);
             self.csrs.write_xstatus(
                 // sstatus.SPIE = sstatus.SIE
-                PrivilegedLevel::Supervisor,
                 Xstatus::SPIE,
-                self.csrs
-                    .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE),
+                self.csrs.read_xstatus(Xstatus::SIE),
             );
-            self.csrs
-                .write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE, 0b0); // Ssatus.SIE = 0
-            self.csrs.write_xstatus(
-                PrivilegedLevel::Supervisor,
-                Xstatus::SPP,
-                self.priv_lv() as u64,
-            ); // set prev_priv to SPP
+            self.csrs.write_xstatus(Xstatus::SIE, 0b0); // Ssatus.SIE = 0
+            self.csrs.write_xstatus(Xstatus::SPP, self.priv_lv() as u64); // set prev_priv to SPP
             self.set_priv_lv(PrivilegedLevel::Supervisor);
 
             let stvec = self.csrs.read(CSRname::stvec.wrap()).unwrap();
@@ -211,18 +200,11 @@ impl Cpu {
             self.csrs.write(CSRname::mtval.wrap(), tval_addr);
             self.csrs.write_xstatus(
                 // sstatus.MPIE = sstatus.MIE
-                PrivilegedLevel::Machine,
                 Xstatus::MPIE,
-                self.csrs
-                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE),
+                self.csrs.read_xstatus(Xstatus::MIE),
             );
-            self.csrs
-                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MIE, 0b0); // msatus.MIE = 0
-            self.csrs.write_xstatus(
-                PrivilegedLevel::Machine,
-                Xstatus::MPP,
-                self.priv_lv() as u64,
-            ); // set prev_priv to MPP
+            self.csrs.write_xstatus(Xstatus::MIE, 0b0); // msatus.MIE = 0
+            self.csrs.write_xstatus(Xstatus::MPP, self.priv_lv() as u64); // set prev_priv to MPP
             self.set_priv_lv(PrivilegedLevel::Machine);
 
             let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();

@@ -131,15 +131,9 @@ impl Cpu {
 
         let mut trans_priv = self.priv_lv();
         if (purpose == TransFor::Load || purpose == TransFor::StoreAMO)
-            && self
-                .csrs
-                .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPRV)
-                == 1
+            && self.csrs.read_xstatus(Xstatus::MPRV) == 1
         {
-            trans_priv = match self
-                .csrs
-                .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP)
-            {
+            trans_priv = match self.csrs.read_xstatus(Xstatus::MPP) {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),

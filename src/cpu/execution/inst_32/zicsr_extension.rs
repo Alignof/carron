@@ -33,12 +33,7 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 ));
             }
 
-            if dist == CSRname::satp as usize
-                && cpu
-                    .csrs
-                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM)
-                    == 1
-            {
+            if dist == CSRname::satp as usize && cpu.csrs.read_xstatus(Xstatus::TVM) == 1 {
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,

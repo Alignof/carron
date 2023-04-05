@@ -38,7 +38,7 @@ impl CSRs {
             priv_lv,
         }
     }
-    
+
     fn priv_lv(&self) -> PrivilegedLevel {
         *self.priv_lv.borrow()
     }
@@ -122,9 +122,7 @@ impl CSRs {
                     ));
                 }
 
-                if dist == CSRname::satp as usize
-                    && self.read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM) == 1
-                {
+                if dist == CSRname::satp as usize && self.read_xstatus(Xstatus::TVM) == 1 {
                     return Err((
                         None,
                         TrapCause::IllegalInst,
@@ -323,9 +321,9 @@ impl CSRs {
         }
     }
 
-    pub fn read_xstatus(&self, priv_lv: PrivilegedLevel, xfield: Xstatus) -> u64 {
+    pub fn read_xstatus(&self, xfield: Xstatus) -> u64 {
         let xstatus = CSRname::mstatus as usize;
-        let mask: u64 = match priv_lv {
+        let mask: u64 = match self.priv_lv() {
             PrivilegedLevel::Machine => self.mmask(),
             PrivilegedLevel::Supervisor => self.smask(),
             PrivilegedLevel::User => self.umask(),
@@ -365,10 +363,10 @@ impl CSRs {
         .fix2regsz(&self.isa)
     }
 
-    pub fn write_xstatus(&mut self, priv_lv: PrivilegedLevel, xfield: Xstatus, data: u64) {
+    pub fn write_xstatus(&mut self, xfield: Xstatus, data: u64) {
         let data = data.fix2regsz(&self.isa);
         let xstatus = CSRname::mstatus as usize;
-        let mask: u64 = match priv_lv {
+        let mask: u64 = match self.priv_lv() {
             PrivilegedLevel::Machine => self.mmask(),
             PrivilegedLevel::Supervisor => self.smask(),
             PrivilegedLevel::User => self.umask(),
@@ -476,7 +474,11 @@ impl CSRs {
 
 impl Default for CSRs {
     fn default() -> Self {
-        Self::new(Isa::Rv64.into(), Rc::new(RefCell::new(0)), Rc::new(RefCell::new(PrivilegedLevel::Machine)))
+        Self::new(
+            Isa::Rv64.into(),
+            Rc::new(RefCell::new(0)),
+            Rc::new(RefCell::new(PrivilegedLevel::Machine)),
+        )
     }
 }
 
