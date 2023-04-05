@@ -18,13 +18,14 @@ const MHPMCOUNTER3: usize = CSRname::mhpmcounter3 as usize;
 pub struct CSRs {
     csrs: [u64; 4096],
     triggers: Triggers,
-    isa: Rc<Isa>,
     pc: Rc<RefCell<u64>>,
+    isa: Rc<Isa>,
+    priv_lv: Rc<RefCell<PrivilegedLevel>>,
 }
 
 #[allow(clippy::identity_op)]
 impl CSRs {
-    pub fn new(isa: Rc<Isa>, pc: Rc<RefCell<u64>>) -> Self {
+    pub fn new(isa: Rc<Isa>, pc: Rc<RefCell<u64>>, priv_lv: Rc<RefCell<PrivilegedLevel>>) -> Self {
         CSRs {
             csrs: [0; 4096],
             triggers: Triggers {
@@ -32,8 +33,9 @@ impl CSRs {
                 tdata1: [0; 8],
                 tdata2: [0; 8],
             },
-            isa,
             pc,
+            isa,
+            priv_lv,
         }
     }
 
