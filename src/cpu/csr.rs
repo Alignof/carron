@@ -44,12 +44,14 @@ impl CSRs {
     }
 
     pub fn init(mut self) -> Self {
-        self.write(CSRname::marchid.wrap(), 0x5);
+        self.write(CSRname::marchid.wrap(), 0x5).unwrap();
         match *self.isa {
-            Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105),
+            Isa::Rv32 => self.write(CSRname::misa.wrap(), 0x40141105).unwrap(),
             Isa::Rv64 => {
-                self.write(CSRname::misa.wrap(), 0x8000000000141105);
-                self.write(CSRname::mstatus.wrap(), 0x0000000a00000000);
+                self.write(CSRname::misa.wrap(), 0x8000000000141105)
+                    .unwrap();
+                self.write(CSRname::mstatus.wrap(), 0x0000000a00000000)
+                    .unwrap();
             }
         }
         self
@@ -244,8 +246,14 @@ impl CSRs {
         }
     }
 
-    pub fn bitset(&mut self, dist: Option<usize>, src: u64) {
+    pub fn bitset(
+        &mut self,
+        dist: Option<usize>,
+        src: u64,
+    ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
+        self.check_accessible(dist)?;
+
         let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
             match dist {
@@ -256,10 +264,18 @@ impl CSRs {
                 _ => self.csrs[dist] |= mask,
             }
         }
+
+        Ok(())
     }
 
-    pub fn bitclr(&mut self, dist: Option<usize>, src: u64) {
+    pub fn bitclr(
+        &mut self,
+        dist: Option<usize>,
+        src: u64,
+    ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
+        self.check_accessible(dist)?;
+
         let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
             match dist {
@@ -270,10 +286,18 @@ impl CSRs {
                 _ => self.csrs[dist] &= !mask,
             }
         }
+
+        Ok(())
     }
 
-    pub fn write(&mut self, dist: Option<usize>, src: u64) {
+    pub fn write(
+        &mut self,
+        dist: Option<usize>,
+        src: u64,
+    ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
+        self.check_accessible(dist)?;
+
         let src = src.fix2regsz(&self.isa);
         match dist {
             USTATUS => self.csrs[MSTATUS] |= src & self.umask(),
@@ -296,6 +320,8 @@ impl CSRs {
             other => self.csrs[other] = src,
         }
         self.update_triggers(dist, src);
+
+        Ok(())
     }
 
     fn read_xepc(&self, dist: usize) -> Result<u64, (Option<u64>, TrapCause, String)> {

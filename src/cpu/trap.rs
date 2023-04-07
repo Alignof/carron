@@ -16,16 +16,22 @@ impl Cpu {
         let mtime: u64 = self.bus.load64(MTIME).unwrap();
         let mtimecmp: u64 = self.bus.load64(MTIMECMP).unwrap();
         if mtime >= mtimecmp {
-            self.csrs.bitset(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+            self.csrs
+                .bitset(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+                .ok() // ignore result
         } else {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+            self.csrs
+                .bitclr(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+                .ok()
         };
 
-        self.csrs.write(
-            CSRname::mip.wrap(),
-            self.csrs.read(CSRname::mip.wrap()).unwrap() & !(self.bus.plic.mip_mask)
-                | self.bus.plic.mip_value,
-        );
+        self.csrs
+            .write(
+                CSRname::mip.wrap(),
+                self.csrs.read(CSRname::mip.wrap()).unwrap() & !(self.bus.plic.mip_mask)
+                    | self.bus.plic.mip_value,
+            )
+            .ok();
 
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
@@ -53,7 +59,7 @@ impl Cpu {
         let is_interrupt_enabled = |bit: u64| (enabled_interrupt_mask & (1 << bit)) != 0;
 
         if is_interrupt_enabled(MEIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP)?;
             self.bus.plic.mip_value = 0;
             return Err((
                 Some(0),
@@ -62,7 +68,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(MSIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP)?;
             return Err((
                 Some(0),
                 TrapCause::MachineSoftwareInterrupt,
@@ -71,7 +77,7 @@ impl Cpu {
         }
         if is_interrupt_enabled(MTIP) {
             // TODO: bit clear when mtimecmp written
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP)?;
             return Err((
                 Some(0),
                 TrapCause::MachineTimerInterrupt,
@@ -79,7 +85,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SEIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP)?;
             self.bus.plic.mip_value = 0;
             return Err((
                 Some(0),
@@ -88,7 +94,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SSIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SSIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SSIP)?;
             return Err((
                 Some(0),
                 TrapCause::SupervisorSoftwareInterrupt,
@@ -97,7 +103,7 @@ impl Cpu {
         }
         if is_interrupt_enabled(STIP) {
             // TODO: bit clear when mtimecmp written
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << STIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << STIP)?;
             return Err((
                 Some(0),
                 TrapCause::SupervisorTimerInterrupt,
@@ -143,25 +149,27 @@ impl Cpu {
         {
             let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
             log::infoln!("delegated");
-            self.csrs.write(
-                CSRname::scause.wrap(),
-                match *self.isa {
-                    Isa::Rv32 => cause_of_trap as u64,
-                    Isa::Rv64 => match cause_of_trap {
-                        TrapCause::MachineSoftwareInterrupt
-                        | TrapCause::MachineTimerInterrupt
-                        | TrapCause::MachineExternalInterrupt
-                        | TrapCause::SupervisorSoftwareInterrupt
-                        | TrapCause::SupervisorTimerInterrupt
-                        | TrapCause::SupervisorExternalInterrupt => {
-                            (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
-                        }
-                        _ => cause_of_trap as u64,
+            self.csrs
+                .write(
+                    CSRname::scause.wrap(),
+                    match *self.isa {
+                        Isa::Rv32 => cause_of_trap as u64,
+                        Isa::Rv64 => match cause_of_trap {
+                            TrapCause::MachineSoftwareInterrupt
+                            | TrapCause::MachineTimerInterrupt
+                            | TrapCause::MachineExternalInterrupt
+                            | TrapCause::SupervisorSoftwareInterrupt
+                            | TrapCause::SupervisorTimerInterrupt
+                            | TrapCause::SupervisorExternalInterrupt => {
+                                (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
+                            }
+                            _ => cause_of_trap as u64,
+                        },
                     },
-                },
-            );
-            self.csrs.write(CSRname::sepc.wrap(), self.pc());
-            self.csrs.write(CSRname::stval.wrap(), tval_addr);
+                )
+                .unwrap();
+            self.csrs.write(CSRname::sepc.wrap(), self.pc()).unwrap();
+            self.csrs.write(CSRname::stval.wrap(), tval_addr).unwrap();
             self.csrs.write_xstatus(
                 // sstatus.SPIE = sstatus.SIE
                 Xstatus::SPIE,
@@ -179,25 +187,27 @@ impl Cpu {
             }
         } else {
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
-            self.csrs.write(
-                CSRname::mcause.wrap(),
-                match *self.isa {
-                    Isa::Rv32 => cause_of_trap as u64,
-                    Isa::Rv64 => match cause_of_trap {
-                        TrapCause::MachineSoftwareInterrupt
-                        | TrapCause::MachineTimerInterrupt
-                        | TrapCause::MachineExternalInterrupt
-                        | TrapCause::SupervisorSoftwareInterrupt
-                        | TrapCause::SupervisorTimerInterrupt
-                        | TrapCause::SupervisorExternalInterrupt => {
-                            (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
-                        }
-                        _ => cause_of_trap as u64,
+            self.csrs
+                .write(
+                    CSRname::mcause.wrap(),
+                    match *self.isa {
+                        Isa::Rv32 => cause_of_trap as u64,
+                        Isa::Rv64 => match cause_of_trap {
+                            TrapCause::MachineSoftwareInterrupt
+                            | TrapCause::MachineTimerInterrupt
+                            | TrapCause::MachineExternalInterrupt
+                            | TrapCause::SupervisorSoftwareInterrupt
+                            | TrapCause::SupervisorTimerInterrupt
+                            | TrapCause::SupervisorExternalInterrupt => {
+                                (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
+                            }
+                            _ => cause_of_trap as u64,
+                        },
                     },
-                },
-            );
-            self.csrs.write(CSRname::mepc.wrap(), self.pc());
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+                )
+                .unwrap();
+            self.csrs.write(CSRname::mepc.wrap(), self.pc()).unwrap();
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr).unwrap();
             self.csrs.write_xstatus(
                 // sstatus.MPIE = sstatus.MIE
                 Xstatus::MPIE,
