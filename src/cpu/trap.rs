@@ -147,7 +147,10 @@ impl Cpu {
         let new_pc = if self.priv_lv() != PrivilegedLevel::Machine
             && (deleg & 1 << cause_of_trap as u32) != 0
         {
+            let prev_priv = self.priv_lv();
             let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
+            self.set_priv_lv(PrivilegedLevel::Supervisor);
+
             log::infoln!("delegated");
             self.csrs
                 .write(
@@ -176,8 +179,7 @@ impl Cpu {
                 self.csrs.read_xstatus(Xstatus::SIE),
             );
             self.csrs.write_xstatus(Xstatus::SIE, 0b0); // Ssatus.SIE = 0
-            self.csrs.write_xstatus(Xstatus::SPP, self.priv_lv() as u64); // set prev_priv to SPP
-            self.set_priv_lv(PrivilegedLevel::Supervisor);
+            self.csrs.write_xstatus(Xstatus::SPP, prev_priv as u64); // set prev_priv to SPP
 
             let stvec = self.csrs.read(CSRname::stvec.wrap()).unwrap();
             if stvec & 0b1 == 1 {
@@ -186,7 +188,10 @@ impl Cpu {
                 stvec
             }
         } else {
+            let prev_priv = self.priv_lv();
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
+
+            self.set_priv_lv(PrivilegedLevel::Machine);
             self.csrs
                 .write(
                     CSRname::mcause.wrap(),
@@ -214,8 +219,7 @@ impl Cpu {
                 self.csrs.read_xstatus(Xstatus::MIE),
             );
             self.csrs.write_xstatus(Xstatus::MIE, 0b0); // msatus.MIE = 0
-            self.csrs.write_xstatus(Xstatus::MPP, self.priv_lv() as u64); // set prev_priv to MPP
-            self.set_priv_lv(PrivilegedLevel::Machine);
+            self.csrs.write_xstatus(Xstatus::MPP, prev_priv as u64); // set prev_priv to MPP
 
             let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
             if mtvec & 0b1 == 1 {
