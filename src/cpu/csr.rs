@@ -114,41 +114,8 @@ impl CSRs {
                         format!("You are in User mode but accessed {dist}"),
                     ));
                 }
-            }
-            PrivilegedLevel::Supervisor => {
-                if (0x300..=0x344).contains(&dist) {
-                    return Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("You are in Supervisor mode but accessed {dist}"),
-                    ));
-                }
 
-                if dist == CSRname::satp as usize && self.read_xstatus(Xstatus::TVM) == 1 {
-                    return Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        "mstatus.TVM == 1 but accessed satp".to_string(),
-                    ));
-                }
-            }
-            _ => (),
-        }
-
-        if (0xc00..=0xc1f).contains(&dist) {
-            match self.priv_lv() {
-                PrivilegedLevel::Machine | PrivilegedLevel::Reserved => (),
-                PrivilegedLevel::Supervisor => {
-                    let mctren = self.read(CSRname::mcounteren.wrap())?;
-                    if mctren >> (dist - 0xc00) & 0x1 == 0 {
-                        return Err((
-                            None,
-                            TrapCause::IllegalInst,
-                            "mcounteren bit is cleared, but attempt reading".to_string(),
-                        ));
-                    }
-                }
-                PrivilegedLevel::User => {
+                if (0xc00..=0xc1f).contains(&dist) {
                     let mctren = self.read(CSRname::mcounteren.wrap())?;
                     if mctren >> (dist - 0xc00) & 0x1 == 0 {
                         return Err((
@@ -162,11 +129,40 @@ impl CSRs {
                         return Err((
                             None,
                             TrapCause::IllegalInst,
-                            "mcounteren bit is cleared, but attempt reading".to_string(),
+                            "scounteren bit is cleared, but attempt reading".to_string(),
                         ));
                     }
                 }
             }
+            PrivilegedLevel::Supervisor => {
+                if (0x300..=0x344).contains(&dist) {
+                    return Err((
+                        None,
+                        TrapCause::IllegalInst,
+                        format!("You are in Supervisor mode but accessed {dist}"),
+                    ));
+                }
+
+                if (0xc00..=0xc1f).contains(&dist) {
+                    let mctren = self.read(CSRname::mcounteren.wrap())?;
+                    if mctren >> (dist - 0xc00) & 0x1 == 0 {
+                        return Err((
+                            None,
+                            TrapCause::IllegalInst,
+                            "mcounteren bit is cleared, but attempt reading".to_string(),
+                        ));
+                    }
+                }
+
+                if dist == CSRname::satp as usize && self.read_xstatus(Xstatus::TVM) == 1 {
+                    return Err((
+                        None,
+                        TrapCause::IllegalInst,
+                        "mstatus.TVM == 1 but accessed satp".to_string(),
+                    ));
+                }
+            }
+            _ => (),
         }
 
         // riscv-privileged-20190608.pdf p7
