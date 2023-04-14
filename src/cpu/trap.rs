@@ -18,11 +18,11 @@ impl Cpu {
         if mtime >= mtimecmp {
             self.csrs
                 .bitset(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
-                .ok() // ignore result
+                .unwrap() // ignore result
         } else {
             self.csrs
                 .bitclr(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
-                .ok()
+                .unwrap()
         };
 
         self.csrs
@@ -59,7 +59,7 @@ impl Cpu {
         let is_interrupt_enabled = |bit: u64| (enabled_interrupt_mask & (1 << bit)) != 0;
 
         if is_interrupt_enabled(MEIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP)?;
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP).unwrap();
             self.bus.plic.mip_value = 0;
             return Err((
                 Some(0),
@@ -68,7 +68,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(MSIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP)?;
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::MachineSoftwareInterrupt,
@@ -77,7 +77,7 @@ impl Cpu {
         }
         if is_interrupt_enabled(MTIP) {
             // TODO: bit clear when mtimecmp written
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP)?;
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::MachineTimerInterrupt,
@@ -85,7 +85,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SEIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP)?;
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP).unwrap();
             self.bus.plic.mip_value = 0;
             return Err((
                 Some(0),
@@ -94,7 +94,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SSIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SSIP)?;
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SSIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::SupervisorSoftwareInterrupt,
@@ -103,7 +103,7 @@ impl Cpu {
         }
         if is_interrupt_enabled(STIP) {
             // TODO: bit clear when mtimecmp written
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << STIP)?;
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << STIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::SupervisorTimerInterrupt,
