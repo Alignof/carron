@@ -15,6 +15,11 @@ const SIP: usize = CSRname::sip as usize;
 const SIESIPMASK: u64 = 0x0333;
 const MHPMCOUNTER3: usize = CSRname::mhpmcounter3 as usize;
 
+enum CSRsAccessType {
+    Read,
+    Write,
+}
+
 pub struct CSRs {
     csrs: [u64; 4096],
     triggers: Triggers,
@@ -96,12 +101,16 @@ impl CSRs {
         }
     }
 
-    fn check_accessible(&self, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
+    fn check_accessible(
+        &self,
+        dist: usize,
+        access_type: CSRsAccessType,
+    ) -> Result<(), (Option<u64>, TrapCause, String)> {
         if dist >= 4096 {
             return Err((
                 None,
                 TrapCause::IllegalInst,
-                format!("csr size is 4096, but you accessed {dist}"),
+                format!("csr size is 4096, but you accessed {dist:x}"),
             ));
         }
 
@@ -111,7 +120,7 @@ impl CSRs {
                     return Err((
                         None,
                         TrapCause::IllegalInst,
-                        format!("You are in User mode but accessed {dist}"),
+                        format!("You are in User mode but accessed {dist:x}"),
                     ));
                 }
 
@@ -139,7 +148,7 @@ impl CSRs {
                     return Err((
                         None,
                         TrapCause::IllegalInst,
-                        format!("You are in Supervisor mode but accessed {dist}"),
+                        format!("You are in Supervisor mode but accessed {dist:x}"),
                     ));
                 }
 
@@ -211,13 +220,22 @@ impl CSRs {
 
         if csrs_ranges.iter().any(|x| x.contains(&dist)) {
             match dist {
+                // == depends on access type ==
+                0xc00 => match access_type {
+                    CSRsAccessType::Read => Ok(()),
+                    CSRsAccessType::Write => Err((
+                        None,
+                        TrapCause::IllegalInst,
+                        format!("writing to cycle is not allowed: {dist:x}"),
+                    )),
+                },
                 // == depends on privilege ==
                 // scounteren(0x106) only allow higher
                 0x106 => match self.priv_lv() {
                     PrivilegedLevel::User => Err((
                         None,
                         TrapCause::IllegalInst,
-                        format!("unknown CSR number: {dist}"),
+                        format!("unknown CSR number: {dist:x}"),
                     )),
                     _ => Ok(()),
                 },
@@ -227,7 +245,7 @@ impl CSRs {
                     _ => Err((
                         None,
                         TrapCause::IllegalInst,
-                        format!("unknown CSR number: {dist}"),
+                        format!("unknown CSR number: {dist:x}"),
                     )),
                 },
                 _ => Ok(()),
@@ -237,7 +255,7 @@ impl CSRs {
             Err((
                 None,
                 TrapCause::IllegalInst,
-                format!("unknown CSR number: {dist}"),
+                format!("unknown CSR number: {dist:x}"),
             ))
         }
     }
@@ -248,7 +266,7 @@ impl CSRs {
         src: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
-        self.check_accessible(dist)?;
+        self.check_accessible(dist, CSRsAccessType::Write)?;
 
         let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
@@ -270,7 +288,7 @@ impl CSRs {
         src: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
-        self.check_accessible(dist)?;
+        self.check_accessible(dist, CSRsAccessType::Write)?;
 
         let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
@@ -292,7 +310,7 @@ impl CSRs {
         src: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
-        self.check_accessible(dist)?;
+        self.check_accessible(dist, CSRsAccessType::Write)?;
 
         let src = src.fix2regsz(&self.isa);
         match dist {
@@ -332,6 +350,7 @@ impl CSRs {
 
     pub fn read(&self, src: Option<usize>) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let dist = src.unwrap();
+        self.check_accessible(dist, CSRsAccessType::Read)?;
 
         match dist {
             0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.umask()),
