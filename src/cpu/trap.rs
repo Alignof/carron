@@ -142,14 +142,16 @@ impl Cpu {
     }
 
     pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
+        let prev_priv = self.priv_lv();
+        self.set_priv_lv(PrivilegedLevel::Machine);
+
         // check Machine Trap Delegation Registers
         let deleg = self.get_deleg(cause_of_trap);
         let new_pc = if self.priv_lv() != PrivilegedLevel::Machine
             && (deleg & 1 << cause_of_trap as u32) != 0
         {
-            let prev_priv = self.priv_lv();
-            let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
             self.set_priv_lv(PrivilegedLevel::Supervisor);
+            let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
 
             log::infoln!("delegated");
             self.csrs
@@ -188,10 +190,8 @@ impl Cpu {
                 stvec
             }
         } else {
-            let prev_priv = self.priv_lv();
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
 
-            self.set_priv_lv(PrivilegedLevel::Machine);
             self.csrs
                 .write(
                     CSRname::mcause.wrap(),
