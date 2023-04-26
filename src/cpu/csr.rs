@@ -26,12 +26,11 @@ pub struct CSRs {
     triggers: Triggers,
     pc: Rc<RefCell<u64>>,
     isa: Rc<Isa>,
-    priv_lv: Rc<RefCell<PrivilegedLevel>>,
 }
 
 #[allow(clippy::identity_op)]
 impl CSRs {
-    pub fn new(isa: Rc<Isa>, pc: Rc<RefCell<u64>>, priv_lv: Rc<RefCell<PrivilegedLevel>>) -> Self {
+    pub fn new(isa: Rc<Isa>, pc: Rc<RefCell<u64>>) -> Self {
         CSRs {
             csrs: [0; 4096],
             triggers: Triggers {
@@ -41,12 +40,7 @@ impl CSRs {
             },
             pc,
             isa,
-            priv_lv,
         }
-    }
-
-    fn priv_lv(&self) -> PrivilegedLevel {
-        *self.priv_lv.borrow()
     }
 
     pub fn init(mut self) -> Self {
@@ -353,11 +347,7 @@ impl CSRs {
 
 impl Default for CSRs {
     fn default() -> Self {
-        Self::new(
-            Isa::Rv64.into(),
-            Rc::new(RefCell::new(0)),
-            Rc::new(RefCell::new(PrivilegedLevel::Machine)),
-        )
+        Self::new(Isa::Rv64.into(), Rc::new(RefCell::new(0)))
     }
 }
 
