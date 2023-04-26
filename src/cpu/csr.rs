@@ -15,12 +15,6 @@ const SIP: usize = CSRname::sip as usize;
 const SIESIPMASK: u64 = 0x0333;
 const MHPMCOUNTER3: usize = CSRname::mhpmcounter3 as usize;
 
-pub enum CSRsAccessType {
-    Read,
-    Write,
-    ReadWrite,
-}
-
 pub struct CSRs {
     csrs: [u64; 4096],
     triggers: Triggers,
