@@ -221,8 +221,6 @@ mod exe_16 {
             kernel_path: None,
             initrd_path: None,
             init_pc: None,
-            break_point: None,
-            result_reg: None,
             main_args: Vec::new(),
         };
         let bus = bus::Bus::new(dummy_elf, &args, isa);
