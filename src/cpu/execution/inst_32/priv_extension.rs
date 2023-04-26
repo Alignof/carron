@@ -14,7 +14,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 ));
             }
 
-            let prev_priv = cpu.csrs.read_xstatus(Xstatus::SPP);
+            let new_priv = cpu.csrs.read_xstatus(Xstatus::SPP);
             if cpu.csrs.read(CSRname::mstatus.wrap())? >> 22 & 1 == 1 {
                 // mstatus.TSR == 1
                 let except_pc = cpu.pc();
@@ -32,7 +32,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.csrs.write_xstatus(Xstatus::SPIE, 0b1); // ssatus.SPIE = 1
             cpu.csrs.write_xstatus(Xstatus::SPP, 0b00); // ssatus.SPP = 0
 
-            cpu.set_priv_lv(match prev_priv {
+            cpu.set_priv_lv(match new_priv {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
@@ -40,10 +40,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 _ => panic!("invalid PrivilegedLevel"),
             });
             log::debugln!("priv: {:?}", cpu.priv_lv());
-            log::debugln!("csrs.sepc: {:x}", cpu.csrs.read(CSRname::sepc.wrap())?);
+            log::debugln!("csrs.sepc: {:#x}", cpu.csrs.read(CSRname::sepc.wrap())?);
         }
         OpecodeKind::OP_MRET => {
-            let prev_priv = cpu.csrs.read_xstatus(Xstatus::MPP);
+            let new_priv = cpu.csrs.read_xstatus(Xstatus::MPP);
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap())?;
             cpu.update_pc(new_pc);
 
@@ -55,7 +55,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.csrs.write_xstatus(Xstatus::MPIE, 0b1); // msatus.MPIE = 1
             cpu.csrs.write_xstatus(Xstatus::MPP, 0b00); // msatus.MPP = 0
 
-            cpu.set_priv_lv(match prev_priv {
+            cpu.set_priv_lv(match new_priv {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
