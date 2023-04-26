@@ -6,7 +6,16 @@ use crate::log;
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
     match inst.opc {
         OpecodeKind::OP_SRET => {
-            if cpu.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::TSR) == 1 {
+            let require_priv = if cpu
+                .csrs
+                .read_xstatus(PrivilegedLevel::Machine, Xstatus::TSR)
+                == 1
+            {
+                PrivilegedLevel::Machine
+            } else {
+                PrivilegedLevel::Supervisor
+            };
+            if cpu.priv_lv() < require_priv {
                 return Err((
                     Some(cpu.bus.load32(cpu.pc())?),
                     TrapCause::IllegalInst,
@@ -14,7 +23,9 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 ));
             }
 
-            let new_priv = cpu.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP);
+            let new_priv = cpu
+                .csrs
+                .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP);
             if cpu.csrs.read(CSRname::mstatus.wrap())? >> 22 & 1 == 1 {
                 // mstatus.TSR == 1
                 let except_pc = cpu.pc();
@@ -28,10 +39,13 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             cpu.csrs.write_xstatus(
                 PrivilegedLevel::Supervisor,
                 Xstatus::SIE,
-                cpu.csrs.read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPIE),
+                cpu.csrs
+                    .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPIE),
             );
-            cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPIE, 0b1); // ssatus.SPIE = 1
-            cpu.csrs.write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, 0b00); // ssatus.SPP = 0
+            cpu.csrs
+                .write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPIE, 0b1); // ssatus.SPIE = 1
+            cpu.csrs
+                .write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, 0b00); // ssatus.SPP = 0
 
             cpu.set_priv_lv(match new_priv {
                 0b00 => PrivilegedLevel::User,
@@ -44,7 +58,9 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
             log::debugln!("csrs.sepc: {:#x}", cpu.csrs.read(CSRname::sepc.wrap())?);
         }
         OpecodeKind::OP_MRET => {
-            let new_priv = cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP);
+            let new_priv = cpu
+                .csrs
+                .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP);
             let new_pc = cpu.csrs.read(CSRname::mepc.wrap())?;
             cpu.update_pc(new_pc);
 
@@ -52,10 +68,13 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
                 PrivilegedLevel::Machine,
                 // sstatus.MIE = sstatus.MPIE
                 Xstatus::MIE,
-                cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MPIE),
+                cpu.csrs
+                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPIE),
             );
-            cpu.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPIE, 0b1); // msatus.MPIE = 1
-            cpu.csrs.write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, 0b00); // msatus.MPP = 0
+            cpu.csrs
+                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MPIE, 0b1); // msatus.MPIE = 1
+            cpu.csrs
+                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, 0b00); // msatus.MPP = 0
 
             cpu.set_priv_lv(match new_priv {
                 0b00 => PrivilegedLevel::User,
@@ -69,7 +88,10 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_WFI => { /* nop */ }
         OpecodeKind::OP_SFENCE_VMA => {
             if cpu.priv_lv() == PrivilegedLevel::Supervisor
-                && cpu.csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM) == 1
+                && cpu
+                    .csrs
+                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM)
+                    == 1
             {
                 let illegal_inst = cpu.bus.load32(cpu.pc())?;
                 cpu.trap(illegal_inst, TrapCause::IllegalInst);
