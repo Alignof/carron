@@ -1,12 +1,7 @@
-use crate::cpu::csr::CSRsAccessType;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
 use crate::cpu::{CSRname, Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause, Xstatus};
 
-fn check_accessible(
-    cpu: &mut Cpu,
-    dist: usize,
-    access_type: CSRsAccessType,
-) -> Result<(), (Option<u64>, TrapCause, String)> {
+fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc())?;
     let invalid_instruction = Some(cpu.bus.load_u32(inst_addr).expect("get instruction failed"));
 
@@ -130,9 +125,9 @@ fn check_accessible(
     if csrs_ranges.iter().any(|x| x.contains(&dist)) {
         match dist {
             // == depends on access type ==
-            0xc00 => match access_type {
-                CSRsAccessType::Read => Ok(()),
-                CSRsAccessType::Write | CSRsAccessType::ReadWrite => Err((
+            0xc00 => match cpu.priv_lv() {
+                PrivilegedLevel::Machine => Ok(()),
+                _ => Err((
                     None,
                     TrapCause::IllegalInst,
                     format!("writing to cycle is not allowed: {dist:x}"),
@@ -140,14 +135,17 @@ fn check_accessible(
             },
             // == depends on privilege ==
             // scounteren(0x106) only allow higher
-            0x106 => match cpu.priv_lv() {
-                PrivilegedLevel::User => Err((
-                    None,
-                    TrapCause::IllegalInst,
-                    format!("unknown CSR number: {dist:x}"),
-                )),
-                _ => Ok(()),
-            },
+            0x106 => {
+                if cpu.priv_lv() >= PrivilegedLevel::Supervisor {
+                    Ok(())
+                } else {
+                    Err((
+                        None,
+                        TrapCause::IllegalInst,
+                        format!("unknown CSR number: {dist:x}"),
+                    ))
+                }
+            }
             // stimecmp(0x14d) only supervisor
             0x14d => match cpu.priv_lv() {
                 PrivilegedLevel::Supervisor => Ok(()),
@@ -170,7 +168,7 @@ fn check_accessible(
 }
 
 pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapCause, String)> {
-    check_accessible(cpu, inst.rs2.unwrap(), CSRsAccessType::ReadWrite)?;
+    check_accessible(cpu, inst.rs2.unwrap())?;
 
     match inst.opc {
         OpecodeKind::OP_CSRRW => {
