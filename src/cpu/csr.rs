@@ -15,9 +15,10 @@ const SIP: usize = CSRname::sip as usize;
 const SIESIPMASK: u64 = 0x0333;
 const MHPMCOUNTER3: usize = CSRname::mhpmcounter3 as usize;
 
-enum CSRsAccessType {
+pub enum CSRsAccessType {
     Read,
     Write,
+    ReadWrite,
 }
 
 pub struct CSRs {
@@ -101,172 +102,12 @@ impl CSRs {
         }
     }
 
-    fn check_accessible(
-        &self,
-        dist: usize,
-        access_type: CSRsAccessType,
-    ) -> Result<(), (Option<u64>, TrapCause, String)> {
-        if dist >= 4096 {
-            return Err((
-                None,
-                TrapCause::IllegalInst,
-                format!("csr size is 4096, but you accessed {dist:x}"),
-            ));
-        }
-
-        match self.priv_lv() {
-            PrivilegedLevel::User => {
-                if (0x100..=0x180).contains(&dist) || (0x300..=0x344).contains(&dist) {
-                    return Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("You are in User mode but accessed {dist:x}"),
-                    ));
-                }
-
-                if (0xc00..=0xc1f).contains(&dist) {
-                    let mctren = self.read(CSRname::mcounteren.wrap())?;
-                    if mctren >> (dist - 0xc00) & 0x1 == 0 {
-                        return Err((
-                            None,
-                            TrapCause::IllegalInst,
-                            "mcounteren bit is cleared, but attempt reading".to_string(),
-                        ));
-                    }
-                    let sctren = self.read(CSRname::scounteren.wrap())?;
-                    if sctren >> (dist - 0xc00) & 0x1 == 0 {
-                        return Err((
-                            None,
-                            TrapCause::IllegalInst,
-                            "scounteren bit is cleared, but attempt reading".to_string(),
-                        ));
-                    }
-                }
-            }
-            PrivilegedLevel::Supervisor => {
-                if (0x300..=0x344).contains(&dist) {
-                    return Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("You are in Supervisor mode but accessed {dist:x}"),
-                    ));
-                }
-
-                if (0xc00..=0xc1f).contains(&dist) {
-                    let mctren = self.read(CSRname::mcounteren.wrap())?;
-                    if mctren >> (dist - 0xc00) & 0x1 == 0 {
-                        return Err((
-                            None,
-                            TrapCause::IllegalInst,
-                            "mcounteren bit is cleared, but attempt reading".to_string(),
-                        ));
-                    }
-                }
-
-                if dist == CSRname::satp as usize && self.read_xstatus(Xstatus::TVM) == 1 {
-                    return Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        "mstatus.TVM == 1 but accessed satp".to_string(),
-                    ));
-                }
-            }
-            _ => (),
-        }
-
-        // riscv-privileged-20190608.pdf p7
-        let csrs_ranges = vec![
-            0x000..=0x0ff,
-            0x400..=0x4ff,
-            0x800..=0x8ff,
-            0xc00..=0xc7f,
-            0xc80..=0xcbf,
-            0xcc0..=0xcff,
-            0x100..=0x1ff,
-            0x500..=0x57f,
-            0x580..=0x5bf,
-            0x5c0..=0x5ff,
-            0x900..=0x97f,
-            0x980..=0x9bf,
-            0x9c0..=0x9ff,
-            0xd00..=0xd7f,
-            //0xd80..=0xdbf,
-            0xdc0..=0xdff,
-            0x200..=0x2ff,
-            0x600..=0x67f,
-            0x680..=0x6bf,
-            0x6c0..=0x6ff,
-            0xa00..=0xa7f,
-            0xa80..=0xabf,
-            0xac0..=0xaff,
-            0xe00..=0xe7f,
-            0xe80..=0xebf,
-            0xec0..=0xeff,
-            //0x300..=0x3ff,
-            0x300..=0x30b, // disable mstateen0(0x30c)
-            0x30d..=0x3bf, // disable pmpaddr16~
-            0x700..=0x77f,
-            0x780..=0x79f,
-            0x7a0..=0x7af,
-            0x7b0..=0x7bf,
-            0x7c0..=0x7ff,
-            0xb00..=0xb7f,
-            0xb80..=0xbbf,
-            0xbc0..=0xbff,
-            0xf00..=0xf7f,
-            //0xf80..=0xfbf,
-            0xfc0..=0xfff,
-        ];
-
-        if csrs_ranges.iter().any(|x| x.contains(&dist)) {
-            match dist {
-                // == depends on access type ==
-                0xc00 => match access_type {
-                    CSRsAccessType::Read => Ok(()),
-                    CSRsAccessType::Write => Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("writing to cycle is not allowed: {dist:x}"),
-                    )),
-                },
-                // == depends on privilege ==
-                // scounteren(0x106) only allow higher
-                0x106 => match self.priv_lv() {
-                    PrivilegedLevel::User => Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("unknown CSR number: {dist:x}"),
-                    )),
-                    _ => Ok(()),
-                },
-                // stimecmp(0x14d) only supervisor
-                0x14d => match self.priv_lv() {
-                    PrivilegedLevel::Supervisor => Ok(()),
-                    _ => Err((
-                        None,
-                        TrapCause::IllegalInst,
-                        format!("unknown CSR number: {dist:x}"),
-                    )),
-                },
-                _ => Ok(()),
-            }
-        } else {
-            // out of range
-            Err((
-                None,
-                TrapCause::IllegalInst,
-                format!("unknown CSR number: {dist:x}"),
-            ))
-        }
-    }
-
     pub fn bitset(
         &mut self,
         dist: Option<usize>,
         src: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
-        self.check_accessible(dist, CSRsAccessType::Write)?;
 
         let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
@@ -288,7 +129,6 @@ impl CSRs {
         src: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
-        self.check_accessible(dist, CSRsAccessType::Write)?;
 
         let mask = self.mask_warl(dist, src.fix2regsz(&self.isa));
         if mask != 0 {
@@ -310,7 +150,6 @@ impl CSRs {
         src: u64,
     ) -> Result<(), (Option<u64>, TrapCause, String)> {
         let dist = dist.unwrap();
-        self.check_accessible(dist, CSRsAccessType::Write)?;
 
         let src = src.fix2regsz(&self.isa);
         match dist {
@@ -350,7 +189,6 @@ impl CSRs {
 
     pub fn read(&self, src: Option<usize>) -> Result<u64, (Option<u64>, TrapCause, String)> {
         let dist = src.unwrap();
-        self.check_accessible(dist, CSRsAccessType::Read)?;
 
         match dist {
             0x000 => Ok(self.csrs[0x300].fix2regsz(&self.isa) & self.umask()),
