@@ -143,7 +143,6 @@ impl Cpu {
 
     pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
         let prev_priv = self.priv_lv();
-        self.set_priv_lv(PrivilegedLevel::Machine);
 
         // check Machine Trap Delegation Registers
         let deleg = self.get_deleg(cause_of_trap);
@@ -190,6 +189,7 @@ impl Cpu {
                 stvec
             }
         } else {
+            self.set_priv_lv(PrivilegedLevel::Machine);
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
 
             self.csrs
