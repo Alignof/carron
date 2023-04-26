@@ -37,7 +37,7 @@ pub enum TrapCause {
     MachineExternalInterrupt = (1 << 31) + 11,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd)]
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
