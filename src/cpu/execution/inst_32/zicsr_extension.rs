@@ -1,12 +1,15 @@
 use crate::cpu::csr::CSRsAccessType;
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{CSRname, Cpu, PrivilegedLevel, TrapCause, Xstatus};
+use crate::cpu::{CSRname, Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause, Xstatus};
 
 fn check_accessible(
     cpu: &mut Cpu,
     dist: usize,
     access_type: CSRsAccessType,
 ) -> Result<(), (Option<u64>, TrapCause, String)> {
+    let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc())?;
+    let invalid_instruction = Some(cpu.bus.load_u32(inst_addr).expect("get instruction failed"));
+
     if dist >= 4096 {
         return Err((
             None,
@@ -19,7 +22,7 @@ fn check_accessible(
         PrivilegedLevel::User => {
             if (0x100..=0x180).contains(&dist) || (0x300..=0x344).contains(&dist) {
                 return Err((
-                    None,
+                    invalid_instruction,
                     TrapCause::IllegalInst,
                     format!("You are in User mode but accessed {dist:x}"),
                 ));
@@ -29,7 +32,7 @@ fn check_accessible(
                 let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
                 if mctren >> (dist - 0xc00) & 0x1 == 0 {
                     return Err((
-                        None,
+                        invalid_instruction,
                         TrapCause::IllegalInst,
                         "mcounteren bit is cleared, but attempt reading".to_string(),
                     ));
@@ -37,7 +40,7 @@ fn check_accessible(
                 let sctren = cpu.csrs.read(CSRname::scounteren.wrap())?;
                 if sctren >> (dist - 0xc00) & 0x1 == 0 {
                     return Err((
-                        None,
+                        invalid_instruction,
                         TrapCause::IllegalInst,
                         "scounteren bit is cleared, but attempt reading".to_string(),
                     ));
@@ -47,7 +50,7 @@ fn check_accessible(
         PrivilegedLevel::Supervisor => {
             if (0x300..=0x344).contains(&dist) {
                 return Err((
-                    None,
+                    invalid_instruction,
                     TrapCause::IllegalInst,
                     format!("You are in Supervisor mode but accessed {dist:x}"),
                 ));
@@ -57,7 +60,7 @@ fn check_accessible(
                 let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
                 if mctren >> (dist - 0xc00) & 0x1 == 0 {
                     return Err((
-                        None,
+                        invalid_instruction,
                         TrapCause::IllegalInst,
                         "mcounteren bit is cleared, but attempt reading".to_string(),
                     ));
@@ -67,11 +70,11 @@ fn check_accessible(
             if dist == CSRname::satp as usize
                 && cpu
                     .csrs
-                    .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::TVM)
+                    .read_xstatus(PrivilegedLevel::Machine, Xstatus::TVM)
                     == 1
             {
                 return Err((
-                    None,
+                    invalid_instruction,
                     TrapCause::IllegalInst,
                     "mstatus.TVM == 1 but accessed satp".to_string(),
                 ));
