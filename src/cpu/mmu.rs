@@ -116,14 +116,14 @@ impl Mmu {
             }
             TransFor::Load => {
                 // check sum bit
-                let sum = csrs.read_xstatus(Xstatus::SUM);
+                let sum = csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::SUM);
                 if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
                     log::debugln!("[SUM] invalid pte_u: {:x}", pte);
                     return Err(self.trap_cause(purpose));
                 }
 
                 // check the X and R bit
-                let mxr = csrs.read_xstatus(Xstatus::MXR);
+                let mxr = csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::MXR);
                 if pte_r == 0 && (mxr == 0 || pte_x == 0) {
                     log::debugln!("[MXR == {}] invalid pte_r or pte_x: {:x}", mxr, pte);
                     return Err(TrapCause::LoadPageFault);
@@ -131,7 +131,7 @@ impl Mmu {
             }
             TransFor::StoreAMO => {
                 // check sum bit
-                let sum = csrs.read_xstatus(Xstatus::SUM);
+                let sum = csrs.read_xstatus(PrivilegedLevel::Machine, Xstatus::SUM);
                 if sum == 0 && pte_u == 1 && priv_lv == PrivilegedLevel::Supervisor {
                     log::debugln!("[SUM] invalid pte_u: {:x}", pte);
                     return Err(self.trap_cause(purpose));

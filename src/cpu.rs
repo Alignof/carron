@@ -37,7 +37,7 @@ pub enum TrapCause {
     MachineExternalInterrupt = (1 << 31) + 11,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd)]
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
@@ -68,7 +68,7 @@ pub struct Cpu {
     mmu: mmu::Mmu,
     pub reservation_set: Option<usize>,
     isa: Rc<Isa>,
-    priv_lv: Rc<RefCell<PrivilegedLevel>>,
+    priv_lv: PrivilegedLevel,
 }
 
 impl Cpu {
@@ -77,17 +77,16 @@ impl Cpu {
         let bus = bus::Bus::new(loader, args, isa);
         let pc = Rc::new(RefCell::new(args.init_pc.unwrap_or(bus.mrom.base_addr)));
         let isa = Rc::new(isa);
-        let priv_lv = Rc::new(RefCell::new(PrivilegedLevel::Machine));
 
         Cpu {
             pc: pc.clone(),
             bus,
             regs: reg::Register::new(isa.clone()),
-            csrs: csr::CSRs::new(isa.clone(), pc, priv_lv.clone()).init(),
+            csrs: csr::CSRs::new(isa.clone(), pc).init(),
             mmu: mmu::Mmu::new(isa.clone()),
             reservation_set: None,
             isa,
-            priv_lv,
+            priv_lv: PrivilegedLevel::Machine,
         }
     }
 
@@ -104,11 +103,11 @@ impl Cpu {
     }
 
     fn priv_lv(&self) -> PrivilegedLevel {
-        *self.priv_lv.borrow()
+        self.priv_lv
     }
 
     fn set_priv_lv(&mut self, new_priv: PrivilegedLevel) {
-        *self.priv_lv.borrow_mut() = new_priv
+        self.priv_lv = new_priv
     }
 
     pub fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
@@ -131,9 +130,15 @@ impl Cpu {
 
         let mut trans_priv = self.priv_lv();
         if (purpose == TransFor::Load || purpose == TransFor::StoreAMO)
-            && self.csrs.read_xstatus(Xstatus::MPRV) == 1
+            && self
+                .csrs
+                .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPRV)
+                == 1
         {
-            trans_priv = match self.csrs.read_xstatus(Xstatus::MPP) {
+            trans_priv = match self
+                .csrs
+                .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP)
+            {
                 0b00 => PrivilegedLevel::User,
                 0b01 => PrivilegedLevel::Supervisor,
                 0b10 => panic!("PrivilegedLevel 0x3 is Reserved."),
