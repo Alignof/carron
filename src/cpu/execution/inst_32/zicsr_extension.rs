@@ -64,7 +64,12 @@ fn check_accessible(
                 }
             }
 
-            if dist == CSRname::satp as usize && cpu.csrs.read_xstatus(Xstatus::TVM) == 1 {
+            if dist == CSRname::satp as usize
+                && cpu
+                    .csrs
+                    .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::TVM)
+                    == 1
+            {
                 return Err((
                     None,
                     TrapCause::IllegalInst,
