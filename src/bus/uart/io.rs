@@ -4,6 +4,7 @@ use std::io::Write;
 
 impl Uart {
     pub fn update_interrupt(&mut self) {
+        const UART_INTERRUPT_ID: u32 = 1;
         let mut interrupts = 0;
         if self.uart[UartRegister::LCR as usize] & FcrMask::CLEAR_RCVR as u8 != 0 {
             self.uart[UartRegister::LCR as usize] &= !(FcrMask::CLEAR_RCVR as u8);
@@ -30,12 +31,10 @@ impl Uart {
 
         if interrupts == 0 {
             self.uart[UartRegister::IIR_FCR as usize] = IirMask::NO_INT as u8;
-            //plic.set_interrupt_level(UART_INTERRUPT_ID, 0);
-            self.interrupt_level = Some(0);
+            plic.set_interrupt_level(UART_INTERRUPT_ID, 0);
         } else {
             self.uart[UartRegister::IIR_FCR as usize] = interrupts;
-            //plic.set_interrupt_level(UART_INTERRUPT_ID, 1);
-            self.interrupt_level = Some(1);
+            plic.set_interrupt_level(UART_INTERRUPT_ID, 1);
         }
 
         if self.uart[UartRegister::IER as usize] & IerMask::THRI as u8 == 0 {

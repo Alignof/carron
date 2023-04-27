@@ -47,14 +47,7 @@ impl Bus {
         } else if self.dram.in_range(addr) {
             self.dram.store8(addr, data)
         } else if self.uart.in_range(addr) {
-            let result = self.uart.store8(addr, data);
-            if let Some(interrupt_level) = self.uart.interrupt_level {
-                const UART_INTERRUPT_ID: u32 = 1;
-                self.plic
-                    .set_interrupt_level(UART_INTERRUPT_ID, interrupt_level);
-                self.uart.interrupt_level = None;
-            }
-            result
+            self.uart.store8(addr, data)
         } else if self.plic.in_range(addr) {
             self.plic.store8(addr, data)
         } else {
