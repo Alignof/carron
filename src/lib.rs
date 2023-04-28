@@ -65,15 +65,7 @@ impl Emulator {
 
             self.cpu.reservation_set = None;
             self.cpu.timer_increment(INTERLEAVE / INSNS_PER_RTC_TICK);
-            self.cpu.bus.uart.tick();
-            if let Some(interrupt_level) = self.cpu.bus.uart.interrupt_level {
-                const UART_INTERRUPT_ID: u32 = 1;
-                self.cpu
-                    .bus
-                    .plic
-                    .set_interrupt_level(UART_INTERRUPT_ID, interrupt_level);
-                self.cpu.bus.uart.interrupt_level = None;
-            }
+            self.cpu.bus.uart.tick(&mut self.cpu.bus.plic);
         }
     }
 }
