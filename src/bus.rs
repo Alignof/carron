@@ -47,7 +47,7 @@ impl Bus {
         } else if self.dram.in_range(addr) {
             self.dram.store8(addr, data)
         } else if self.uart.in_range(addr) {
-            self.uart.store8(addr, data)
+            self.uart.store8_with_plic(addr, data, &mut self.plic)
         } else if self.plic.in_range(addr) {
             self.plic.store8(addr, data)
         } else {
@@ -140,7 +140,7 @@ impl Bus {
         } else if self.dram.in_range(addr) {
             self.dram.load8(addr)
         } else if self.uart.in_range(addr) {
-            self.uart.load8(addr)
+            self.uart.load8_with_plic(addr, &mut self.plic)
         } else if self.plic.in_range(addr) {
             self.plic.load8(addr)
         } else {
