@@ -1,9 +1,10 @@
 use super::{FcrMask, IerMask, IirMask, LsrMask, Uart, UartRegister};
+use crate::bus::Plic;
 use std::io;
 use std::io::Write;
 
 impl Uart {
-    pub fn update_interrupt(&mut self) {
+    pub fn update_interrupt(&mut self, plic: &mut Plic) {
         const UART_INTERRUPT_ID: u32 = 1;
         let mut interrupts = 0;
         if self.uart[UartRegister::LCR as usize] & FcrMask::CLEAR_RCVR as u8 != 0 {
