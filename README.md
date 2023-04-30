@@ -40,7 +40,7 @@ cargo build --release
 ## Usage
 ```zsh
 $ ./carron --help
-carron 1.1.0
+carron 1.1.1
 n.takana <Alignof@outlook.com>
 RV64IMAC emulator
 
