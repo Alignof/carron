@@ -82,6 +82,7 @@ hello world!
 ```
 $ git clone https://github.com/buildroot/buildroot
 $ cd buildroot
+$ git checkout 9b911c8
 $ make spike_riscv64_defconfig
 $ make menuconfig # disable F extension
 $ make -j $(nproc)
