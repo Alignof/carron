@@ -1,6 +1,7 @@
 mod io;
 
 use super::Device;
+use crate::bus::Plic;
 use crate::TrapCause;
 use std::collections::VecDeque;
 use std::sync::mpsc;
@@ -95,7 +96,6 @@ pub struct Uart {
     dll: u8,
     dlm: u8,
     backoff_counter: u64,
-    pub interrupt_level: Option<u32>,
     pub base_addr: u64,
     size: usize,
     rx_queue: VecDeque<u8>,
@@ -129,7 +129,6 @@ impl Uart {
             dll: 0x0c,
             dlm: 0,
             backoff_counter: 0,
-            interrupt_level: None,
             base_addr: 0x1000_0000,
             size: UART_SIZE,
             rx_queue: VecDeque::new(),
@@ -137,7 +136,90 @@ impl Uart {
         }
     }
 
-    pub fn tick(&mut self) {
+    pub fn load8_with_plic(
+        &mut self,
+        addr: u64,
+        plic: &mut Plic,
+    ) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        const RX: usize = UartRegister::RX_TX as usize;
+        const IER: usize = UartRegister::IER as usize;
+        const IIR: usize = UartRegister::IIR_FCR as usize;
+        let index = self.addr2index(addr);
+
+        match index {
+            RX => {
+                let data = if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
+                    self.dll
+                } else {
+                    self.rx_byte()
+                };
+                self.update_interrupt(plic);
+
+                Ok(data as u64)
+            }
+            IER => {
+                if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
+                    Ok(self.dlm as i8 as i64 as u64)
+                } else {
+                    Ok(self.uart[UartRegister::IER as usize] as i8 as i64 as u64)
+                }
+            }
+            IIR => Ok((self.uart[index] | UART_IIR_TYPE_BITS) as i8 as i64 as u64),
+            _ => Ok(self.uart[index] as i8 as i64 as u64),
+        }
+    }
+
+    pub fn store8_with_plic(
+        &mut self,
+        addr: u64,
+        data: u64,
+        plic: &mut Plic,
+    ) -> Result<(), (Option<u64>, TrapCause, String)> {
+        const TX: usize = UartRegister::RX_TX as usize;
+        const IER: usize = UartRegister::IER as usize;
+        const FCR: usize = UartRegister::IIR_FCR as usize;
+        const LCR: usize = UartRegister::LCR as usize;
+        const MCR: usize = UartRegister::MCR as usize;
+        let index = self.addr2index(addr);
+
+        match index {
+            TX => {
+                if self.uart[LCR] & LcrMask::DLAB as u8 != 0 {
+                    self.dll = data as u8;
+                    self.update_interrupt(plic);
+                    return Ok(());
+                }
+
+                if self.uart[MCR] & McrMask::LOOP as u8 != 0 {
+                    if self.rx_queue.len() < UART_QUEUE_SIZE {
+                        self.rx_queue.push_back(data as u8);
+                        self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
+                    }
+                    self.update_interrupt(plic);
+                    return Ok(());
+                }
+
+                self.tx_byte(char::from_u32(data as u32).unwrap())
+            }
+            IER => {
+                if self.uart[LCR] & LcrMask::DLAB as u8 == 0 {
+                    self.uart[IER] = data as u8 & 0x0f;
+                } else {
+                    self.dlm = data as u8;
+                }
+            }
+            _ => self.uart[index] = (data & 0xFF) as u8,
+        }
+
+        match index {
+            IER | FCR | LCR | MCR => self.update_interrupt(plic),
+            _ => (),
+        }
+
+        Ok(())
+    }
+
+    pub fn tick(&mut self, plic: &mut Plic) {
         if (self.uart[UartRegister::IIR_FCR as usize] & FcrMask::ENABLE_FIFO as u8 == 0)
             || (self.uart[UartRegister::MCR as usize] & McrMask::LOOP as u8 != 0)
             || (UART_QUEUE_SIZE <= self.rx_queue.len())
@@ -158,7 +240,7 @@ impl Uart {
                     self.rx_queue.push_back(c as u8);
                 }
                 self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
-                self.update_interrupt();
+                self.update_interrupt(plic);
             }
             Err(_) => {
                 self.backoff_counter = 1;
@@ -180,49 +262,8 @@ impl Device for Uart {
     }
 
     // store
-    fn store8(&mut self, addr: u64, data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
-        const TX: usize = UartRegister::RX_TX as usize;
-        const IER: usize = UartRegister::IER as usize;
-        const FCR: usize = UartRegister::IIR_FCR as usize;
-        const LCR: usize = UartRegister::LCR as usize;
-        const MCR: usize = UartRegister::MCR as usize;
-        let index = self.addr2index(addr);
-
-        match index {
-            TX => {
-                if self.uart[LCR] & LcrMask::DLAB as u8 != 0 {
-                    self.dll = data as u8;
-                    self.update_interrupt();
-                    return Ok(());
-                }
-
-                if self.uart[MCR] & McrMask::LOOP as u8 != 0 {
-                    if self.rx_queue.len() < UART_QUEUE_SIZE {
-                        self.rx_queue.push_back(data as u8);
-                        self.uart[UartRegister::LSR as usize] |= LsrMask::DR as u8;
-                    }
-                    self.update_interrupt();
-                    return Ok(());
-                }
-
-                self.tx_byte(char::from_u32(data as u32).unwrap())
-            }
-            IER => {
-                if self.uart[LCR] & LcrMask::DLAB as u8 == 0 {
-                    self.uart[IER] = data as u8 & 0x0f;
-                } else {
-                    self.dlm = data as u8;
-                }
-            }
-            _ => self.uart[index] = (data & 0xFF) as u8,
-        }
-
-        match index {
-            IER | FCR | LCR | MCR => self.update_interrupt(),
-            _ => (),
-        }
-
-        Ok(())
+    fn store8(&mut self, _addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
+        unreachable!()
     }
 
     fn store16(&mut self, addr: u64, _data: u64) -> Result<(), (Option<u64>, TrapCause, String)> {
@@ -250,33 +291,8 @@ impl Device for Uart {
     }
 
     // load
-    fn load8(&mut self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
-        const RX: usize = UartRegister::RX_TX as usize;
-        const IER: usize = UartRegister::IER as usize;
-        const IIR: usize = UartRegister::IIR_FCR as usize;
-        let index = self.addr2index(addr);
-
-        match index {
-            RX => {
-                let data = if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
-                    self.dll
-                } else {
-                    self.rx_byte()
-                };
-                self.update_interrupt();
-
-                Ok(data as u64)
-            }
-            IER => {
-                if self.uart[UartRegister::LCR as usize] & LcrMask::DLAB as u8 != 0 {
-                    Ok(self.dlm as i8 as i64 as u64)
-                } else {
-                    Ok(self.uart[UartRegister::IER as usize] as i8 as i64 as u64)
-                }
-            }
-            IIR => Ok((self.uart[index] | UART_IIR_TYPE_BITS) as i8 as i64 as u64),
-            _ => Ok(self.uart[index] as i8 as i64 as u64),
-        }
+    fn load8(&mut self, _addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {
+        unreachable!()
     }
 
     fn load16(&self, addr: u64) -> Result<u64, (Option<u64>, TrapCause, String)> {

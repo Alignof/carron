@@ -240,11 +240,10 @@ impl FrontendServer {
         ret
     }
 
-    pub fn exit(&self, exit_code: &mut Option<i32>, code: u64) -> i64 {
+    pub fn exit(&self, code: u64) -> i64 {
         log::infoln!("sys_exit(93)");
-        *exit_code = Some(code as i32);
 
-        0
+        std::process::exit(code as i32)
     }
 
     pub fn getmainvars(&self, cpu: &mut Cpu, args: &Arguments, dst_addr: u64, limit: u64) -> i64 {

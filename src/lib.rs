@@ -24,7 +24,6 @@ pub struct Emulator {
     tohost_addr: Option<u64>,
     fromhost_addr: Option<u64>,
     args: Arguments,
-    exit_code: Option<i32>,
 }
 
 impl Emulator {
@@ -38,7 +37,6 @@ impl Emulator {
             tohost_addr,
             fromhost_addr,
             args,
-            exit_code: None,
         }
     }
 
@@ -63,29 +61,11 @@ impl Emulator {
                 {
                     self.handle_syscall();
                 }
-
-                if let Some(break_point) = self.args.break_point {
-                    if break_point == self.cpu.pc() {
-                        self.exit_code = Some(0);
-                    }
-                }
-
-                if let Some(exit_code) = self.exit_code {
-                    std::process::exit(exit_code);
-                }
             }
 
             self.cpu.reservation_set = None;
             self.cpu.timer_increment(INTERLEAVE / INSNS_PER_RTC_TICK);
-            self.cpu.bus.uart.tick();
-            if let Some(interrupt_level) = self.cpu.bus.uart.interrupt_level {
-                const UART_INTERRUPT_ID: u32 = 1;
-                self.cpu
-                    .bus
-                    .plic
-                    .set_interrupt_level(UART_INTERRUPT_ID, interrupt_level);
-                self.cpu.bus.uart.interrupt_level = None;
-            }
+            self.cpu.bus.uart.tick(&mut self.cpu.bus.plic);
         }
     }
 }

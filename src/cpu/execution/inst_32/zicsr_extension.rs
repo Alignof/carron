@@ -1,6 +1,5 @@
-use crate::cpu::csr::{CSRname, Xstatus};
 use crate::cpu::instruction::{Instruction, OpecodeKind};
-use crate::cpu::{Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause};
+use crate::cpu::{CSRname, Cpu, PrivilegedLevel, TransAlign, TransFor, TrapCause, Xstatus};
 
 fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, TrapCause, String)> {
     let inst_addr = cpu.trans_addr(TransFor::Fetch, TransAlign::Size8, cpu.pc())?;
@@ -8,20 +7,39 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
 
     if dist >= 4096 {
         return Err((
-            invalid_instruction,
+            None,
             TrapCause::IllegalInst,
-            format!("csr size is 4096, but you accessed {dist}"),
+            format!("csr size is 4096, but you accessed {dist:x}"),
         ));
     }
 
-    match cpu.priv_lv {
+    match cpu.priv_lv() {
         PrivilegedLevel::User => {
             if (0x100..=0x180).contains(&dist) || (0x300..=0x344).contains(&dist) {
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("You are in User mode but accessed {dist}"),
+                    format!("You are in User mode but accessed {dist:x}"),
                 ));
+            }
+
+            if (0xc00..=0xc1f).contains(&dist) {
+                let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
+                if mctren >> (dist - 0xc00) & 0x1 == 0 {
+                    return Err((
+                        invalid_instruction,
+                        TrapCause::IllegalInst,
+                        "mcounteren bit is cleared, but attempt reading".to_string(),
+                    ));
+                }
+                let sctren = cpu.csrs.read(CSRname::scounteren.wrap())?;
+                if sctren >> (dist - 0xc00) & 0x1 == 0 {
+                    return Err((
+                        invalid_instruction,
+                        TrapCause::IllegalInst,
+                        "scounteren bit is cleared, but attempt reading".to_string(),
+                    ));
+                }
             }
         }
         PrivilegedLevel::Supervisor => {
@@ -29,8 +47,19 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("You are in Supervisor mode but accessed {dist}"),
+                    format!("You are in Supervisor mode but accessed {dist:x}"),
                 ));
+            }
+
+            if (0xc00..=0xc1f).contains(&dist) {
+                let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
+                if mctren >> (dist - 0xc00) & 0x1 == 0 {
+                    return Err((
+                        invalid_instruction,
+                        TrapCause::IllegalInst,
+                        "mcounteren bit is cleared, but attempt reading".to_string(),
+                    ));
+                }
             }
 
             if dist == CSRname::satp as usize
@@ -47,40 +76,6 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
             }
         }
         _ => (),
-    }
-
-    if (0xc00..=0xc1f).contains(&dist) {
-        match cpu.priv_lv {
-            PrivilegedLevel::Machine | PrivilegedLevel::Reserved => (),
-            PrivilegedLevel::Supervisor => {
-                let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
-                if mctren >> (dist - 0xc00) & 0x1 == 0 {
-                    return Err((
-                        invalid_instruction,
-                        TrapCause::IllegalInst,
-                        "mcounteren bit is cleared, but attempt reading".to_string(),
-                    ));
-                }
-            }
-            PrivilegedLevel::User => {
-                let mctren = cpu.csrs.read(CSRname::mcounteren.wrap())?;
-                if mctren >> (dist - 0xc00) & 0x1 == 0 {
-                    return Err((
-                        invalid_instruction,
-                        TrapCause::IllegalInst,
-                        "mcounteren bit is cleared, but attempt reading".to_string(),
-                    ));
-                }
-                let sctren = cpu.csrs.read(CSRname::scounteren.wrap())?;
-                if sctren >> (dist - 0xc00) & 0x1 == 0 {
-                    return Err((
-                        invalid_instruction,
-                        TrapCause::IllegalInst,
-                        "mcounteren bit is cleared, but attempt reading".to_string(),
-                    ));
-                }
-            }
-        }
     }
 
     // riscv-privileged-20190608.pdf p7
@@ -129,23 +124,35 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
 
     if csrs_ranges.iter().any(|x| x.contains(&dist)) {
         match dist {
+            // == depends on access type ==
+            0xc00 => match cpu.priv_lv() {
+                PrivilegedLevel::Machine => Ok(()),
+                _ => Err((
+                    None,
+                    TrapCause::IllegalInst,
+                    format!("writing to cycle is not allowed: {dist:x}"),
+                )),
+            },
             // == depends on privilege ==
             // scounteren(0x106) only allow higher
-            0x106 => match cpu.priv_lv {
-                PrivilegedLevel::User => Err((
-                    invalid_instruction,
-                    TrapCause::IllegalInst,
-                    format!("unknown CSR number: {dist}"),
-                )),
-                _ => Ok(()),
-            },
+            0x106 => {
+                if cpu.priv_lv() >= PrivilegedLevel::Supervisor {
+                    Ok(())
+                } else {
+                    Err((
+                        None,
+                        TrapCause::IllegalInst,
+                        format!("unknown CSR number: {dist:x}"),
+                    ))
+                }
+            }
             // stimecmp(0x14d) only supervisor
-            0x14d => match cpu.priv_lv {
+            0x14d => match cpu.priv_lv() {
                 PrivilegedLevel::Supervisor => Ok(()),
                 _ => Err((
-                    invalid_instruction,
+                    None,
                     TrapCause::IllegalInst,
-                    format!("unknown CSR number: {dist}"),
+                    format!("unknown CSR number: {dist:x}"),
                 )),
             },
             _ => Ok(()),
@@ -153,9 +160,9 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
     } else {
         // out of range
         Err((
-            invalid_instruction,
+            None,
             TrapCause::IllegalInst,
-            format!("unknown CSR number: {dist}"),
+            format!("unknown CSR number: {dist:x}"),
         ))
     }
 }
@@ -167,29 +174,29 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_CSRRW => {
             let rs1 = cpu.regs.read(inst.rs1);
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.write(inst.rs2, rs1);
+            cpu.csrs.write(inst.rs2, rs1)?;
         }
         OpecodeKind::OP_CSRRS => {
             let rs1 = cpu.regs.read(inst.rs1);
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.bitset(inst.rs2, rs1);
+            cpu.csrs.bitset(inst.rs2, rs1)?;
         }
         OpecodeKind::OP_CSRRC => {
             let rs1 = cpu.regs.read(inst.rs1);
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.bitclr(inst.rs2, rs1);
+            cpu.csrs.bitclr(inst.rs2, rs1)?;
         }
         OpecodeKind::OP_CSRRWI => {
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.write(inst.rs2, inst.rs1.unwrap() as u64);
+            cpu.csrs.write(inst.rs2, inst.rs1.unwrap() as u64)?;
         }
         OpecodeKind::OP_CSRRSI => {
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.bitset(inst.rs2, inst.rs1.unwrap() as u64);
+            cpu.csrs.bitset(inst.rs2, inst.rs1.unwrap() as u64)?;
         }
         OpecodeKind::OP_CSRRCI => {
             cpu.regs.write(inst.rd, cpu.csrs.read(inst.rs2)?);
-            cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as u64);
+            cpu.csrs.bitclr(inst.rs2, inst.rs1.unwrap() as u64)?;
         }
         _ => panic!("not an Zicsr extension"),
     }

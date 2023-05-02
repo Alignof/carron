@@ -18,8 +18,6 @@ pub struct Arguments {
     pub kernel_path: Option<String>,
     pub initrd_path: Option<String>,
     pub init_pc: Option<u64>,
-    pub break_point: Option<u64>,
-    pub result_reg: Option<usize>,
     pub main_args: Vec<String>,
 }
 
@@ -41,8 +39,6 @@ impl Arguments {
             .arg(arg!(--kernel <kernel> "Run with kernel").required(false))
             .arg(arg!(--initrd <initrd> "Set initrd").required(false))
             .arg(arg!(--pc <init_pc> ... "Set entry address as hex").required(false))
-            .arg(arg!(--break_point <address> ... "Set break point as hex").required(false))
-            .arg(arg!(--result_reg <register_number> ... "Set result register").required(false))
             .arg(arg!(--loglv <log_level> ... "Set log level").required(false))
             .arg(Arg::new("main_args").multiple_values(true))
             .setting(AppSettings::DeriveDisplayOrder)
@@ -78,11 +74,6 @@ impl Arguments {
                 .expect("invalid pc\nplease set value as hex (e.g. --pc=0x80000000)")
         });
 
-        let break_point = app.value_of("break_point").map(|x| {
-            u64::from_str_radix(x.trim_start_matches("0x"), 16)
-                .expect("invalid break point\nplease set value as hex (e.g. --pc=0x80000000)")
-        });
-
         LOG_LEVEL.get_or_init(|| match app.value_of("loglv") {
             Some("nolog") => LogLv::NoLog,
             Some("diff") => LogLv::Diff,
@@ -91,8 +82,6 @@ impl Arguments {
             Some("trace") => LogLv::Trace,
             _ => LogLv::NoLog,
         });
-
-        let result_reg = app.value_of("result_reg").map(|x| x.parse().unwrap());
 
         let mut main_args = vec![pk_path.clone(), Some(filename.clone())]
             .iter()
@@ -113,8 +102,6 @@ impl Arguments {
             kernel_path: app.value_of("kernel").map(|s| s.to_string()),
             initrd_path: app.value_of("initrd").map(|s| s.to_string()),
             init_pc,
-            break_point,
-            result_reg,
             main_args,
         }
     }

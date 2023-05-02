@@ -37,7 +37,7 @@ pub enum TrapCause {
     MachineExternalInterrupt = (1 << 31) + 11,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd)]
 pub enum PrivilegedLevel {
     User = 0b00,
     Supervisor = 0b01,
@@ -68,15 +68,15 @@ pub struct Cpu {
     mmu: mmu::Mmu,
     pub reservation_set: Option<usize>,
     isa: Rc<Isa>,
-    pub priv_lv: PrivilegedLevel,
+    priv_lv: PrivilegedLevel,
 }
 
 impl Cpu {
     pub fn new(loader: elfload::ElfLoader, args: &Arguments, isa: Isa) -> Self {
         // initialize bus and get the entry point
         let bus = bus::Bus::new(loader, args, isa);
-        let isa = Rc::new(isa);
         let pc = Rc::new(RefCell::new(args.init_pc.unwrap_or(bus.mrom.base_addr)));
+        let isa = Rc::new(isa);
 
         Cpu {
             pc: pc.clone(),
@@ -102,6 +102,14 @@ impl Cpu {
         *self.pc.borrow_mut() = newpc;
     }
 
+    fn priv_lv(&self) -> PrivilegedLevel {
+        self.priv_lv
+    }
+
+    fn set_priv_lv(&mut self, new_priv: PrivilegedLevel) {
+        self.priv_lv = new_priv
+    }
+
     pub fn exec_one_cycle(&mut self) -> Result<(), (Option<u64>, TrapCause, String)> {
         use execution::Execution;
         use fetch::fetch;
@@ -120,7 +128,7 @@ impl Cpu {
         let addr = addr.fix2regsz(&self.isa);
         self.check_breakpoint(purpose, addr)?;
 
-        let mut trans_priv = self.priv_lv;
+        let mut trans_priv = self.priv_lv();
         if (purpose == TransFor::Load || purpose == TransFor::StoreAMO)
             && self
                 .csrs

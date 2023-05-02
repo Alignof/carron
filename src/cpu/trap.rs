@@ -16,16 +16,22 @@ impl Cpu {
         let mtime: u64 = self.bus.load64(MTIME).unwrap();
         let mtimecmp: u64 = self.bus.load64(MTIMECMP).unwrap();
         if mtime >= mtimecmp {
-            self.csrs.bitset(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+            self.csrs
+                .bitset(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+                .unwrap() // ignore result
         } else {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+            self.csrs
+                .bitclr(CSRname::mip.wrap(), 1 << MTIP | 1 << STIP)
+                .unwrap()
         };
 
-        self.csrs.write(
-            CSRname::mip.wrap(),
-            self.csrs.read(CSRname::mip.wrap()).unwrap() & !(self.bus.plic.mip_mask)
-                | self.bus.plic.mip_value,
-        );
+        self.csrs
+            .write(
+                CSRname::mip.wrap(),
+                self.csrs.read(CSRname::mip.wrap()).unwrap() & !(self.bus.plic.mip_mask)
+                    | self.bus.plic.mip_value,
+            )
+            .ok();
 
         let mip = self.csrs.read(CSRname::mip.wrap()).unwrap();
         let mie = self.csrs.read(CSRname::mie.wrap()).unwrap();
@@ -35,7 +41,7 @@ impl Cpu {
         let mstatus_mie = self
             .csrs
             .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE);
-        let m_enabled = match self.priv_lv {
+        let m_enabled = match self.priv_lv() {
             PrivilegedLevel::Machine => (mstatus_mie != 0) as i64,
             _ => 1,
         };
@@ -44,7 +50,7 @@ impl Cpu {
             let mstatus_sie = self
                 .csrs
                 .read_xstatus(PrivilegedLevel::Machine, Xstatus::SIE);
-            let s_enabled = match self.priv_lv {
+            let s_enabled = match self.priv_lv() {
                 PrivilegedLevel::Machine => 0,
                 PrivilegedLevel::Supervisor => (mstatus_sie != 0) as i64,
                 _ => 1,
@@ -57,7 +63,7 @@ impl Cpu {
         let is_interrupt_enabled = |bit: u64| (enabled_interrupt_mask & (1 << bit)) != 0;
 
         if is_interrupt_enabled(MEIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MEIP).unwrap();
             self.bus.plic.mip_value = 0;
             return Err((
                 Some(0),
@@ -66,7 +72,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(MSIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MSIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::MachineSoftwareInterrupt,
@@ -75,7 +81,7 @@ impl Cpu {
         }
         if is_interrupt_enabled(MTIP) {
             // TODO: bit clear when mtimecmp written
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << MTIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::MachineTimerInterrupt,
@@ -83,7 +89,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SEIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SEIP).unwrap();
             self.bus.plic.mip_value = 0;
             return Err((
                 Some(0),
@@ -92,7 +98,7 @@ impl Cpu {
             ));
         }
         if is_interrupt_enabled(SSIP) {
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SSIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << SSIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::SupervisorSoftwareInterrupt,
@@ -101,7 +107,7 @@ impl Cpu {
         }
         if is_interrupt_enabled(STIP) {
             // TODO: bit clear when mtimecmp written
-            self.csrs.bitclr(CSRname::mip.wrap(), 1 << STIP);
+            self.csrs.bitclr(CSRname::mip.wrap(), 1 << STIP).unwrap();
             return Err((
                 Some(0),
                 TrapCause::SupervisorTimerInterrupt,
@@ -140,47 +146,49 @@ impl Cpu {
     }
 
     pub fn trap(&mut self, tval_addr: u64, cause_of_trap: TrapCause) {
+        let prev_priv = self.priv_lv();
+
         // check Machine Trap Delegation Registers
         let deleg = self.get_deleg(cause_of_trap);
-        let new_pc = if self.priv_lv != PrivilegedLevel::Machine
+        let new_pc = if self.priv_lv() != PrivilegedLevel::Machine
             && (deleg & 1 << cause_of_trap as u32) != 0
         {
+            self.set_priv_lv(PrivilegedLevel::Supervisor);
             let scause = self.csrs.read(CSRname::scause.wrap()).unwrap();
+
             log::infoln!("delegated");
-            self.csrs.write(
-                CSRname::scause.wrap(),
-                match *self.isa {
-                    Isa::Rv32 => cause_of_trap as u64,
-                    Isa::Rv64 => match cause_of_trap {
-                        TrapCause::MachineSoftwareInterrupt
-                        | TrapCause::MachineTimerInterrupt
-                        | TrapCause::MachineExternalInterrupt
-                        | TrapCause::SupervisorSoftwareInterrupt
-                        | TrapCause::SupervisorTimerInterrupt
-                        | TrapCause::SupervisorExternalInterrupt => {
-                            (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
-                        }
-                        _ => cause_of_trap as u64,
+            self.csrs
+                .write(
+                    CSRname::scause.wrap(),
+                    match *self.isa {
+                        Isa::Rv32 => cause_of_trap as u64,
+                        Isa::Rv64 => match cause_of_trap {
+                            TrapCause::MachineSoftwareInterrupt
+                            | TrapCause::MachineTimerInterrupt
+                            | TrapCause::MachineExternalInterrupt
+                            | TrapCause::SupervisorSoftwareInterrupt
+                            | TrapCause::SupervisorTimerInterrupt
+                            | TrapCause::SupervisorExternalInterrupt => {
+                                (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
+                            }
+                            _ => cause_of_trap as u64,
+                        },
                     },
-                },
-            );
-            self.csrs.write(CSRname::sepc.wrap(), self.pc());
-            self.csrs.write(CSRname::stval.wrap(), tval_addr);
+                )
+                .unwrap();
+            self.csrs.write(CSRname::sepc.wrap(), self.pc()).unwrap();
+            self.csrs.write(CSRname::stval.wrap(), tval_addr).unwrap();
             self.csrs.write_xstatus(
-                // sstatus.SPIE = sstatus.SIE
                 PrivilegedLevel::Supervisor,
+                // sstatus.SPIE = sstatus.SIE
                 Xstatus::SPIE,
                 self.csrs
                     .read_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE),
             );
             self.csrs
                 .write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SIE, 0b0); // Ssatus.SIE = 0
-            self.csrs.write_xstatus(
-                PrivilegedLevel::Supervisor,
-                Xstatus::SPP,
-                self.priv_lv as u64,
-            ); // set prev_priv to SPP
-            self.priv_lv = PrivilegedLevel::Supervisor;
+            self.csrs
+                .write_xstatus(PrivilegedLevel::Supervisor, Xstatus::SPP, prev_priv as u64); // set prev_priv to SPP
 
             let stvec = self.csrs.read(CSRname::stvec.wrap()).unwrap();
             if stvec & 0b1 == 1 {
@@ -189,29 +197,33 @@ impl Cpu {
                 stvec
             }
         } else {
+            self.set_priv_lv(PrivilegedLevel::Machine);
             let mcause = self.csrs.read(CSRname::mcause.wrap()).unwrap();
-            self.csrs.write(
-                CSRname::mcause.wrap(),
-                match *self.isa {
-                    Isa::Rv32 => cause_of_trap as u64,
-                    Isa::Rv64 => match cause_of_trap {
-                        TrapCause::MachineSoftwareInterrupt
-                        | TrapCause::MachineTimerInterrupt
-                        | TrapCause::MachineExternalInterrupt
-                        | TrapCause::SupervisorSoftwareInterrupt
-                        | TrapCause::SupervisorTimerInterrupt
-                        | TrapCause::SupervisorExternalInterrupt => {
-                            (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
-                        }
-                        _ => cause_of_trap as u64,
+
+            self.csrs
+                .write(
+                    CSRname::mcause.wrap(),
+                    match *self.isa {
+                        Isa::Rv32 => cause_of_trap as u64,
+                        Isa::Rv64 => match cause_of_trap {
+                            TrapCause::MachineSoftwareInterrupt
+                            | TrapCause::MachineTimerInterrupt
+                            | TrapCause::MachineExternalInterrupt
+                            | TrapCause::SupervisorSoftwareInterrupt
+                            | TrapCause::SupervisorTimerInterrupt
+                            | TrapCause::SupervisorExternalInterrupt => {
+                                (1 << 63) | (cause_of_trap as u64 & 0x7fff_ffff)
+                            }
+                            _ => cause_of_trap as u64,
+                        },
                     },
-                },
-            );
-            self.csrs.write(CSRname::mepc.wrap(), self.pc());
-            self.csrs.write(CSRname::mtval.wrap(), tval_addr);
+                )
+                .unwrap();
+            self.csrs.write(CSRname::mepc.wrap(), self.pc()).unwrap();
+            self.csrs.write(CSRname::mtval.wrap(), tval_addr).unwrap();
             self.csrs.write_xstatus(
-                // sstatus.MPIE = sstatus.MIE
                 PrivilegedLevel::Machine,
+                // sstatus.MPIE = sstatus.MIE
                 Xstatus::MPIE,
                 self.csrs
                     .read_xstatus(PrivilegedLevel::Machine, Xstatus::MIE),
@@ -219,8 +231,7 @@ impl Cpu {
             self.csrs
                 .write_xstatus(PrivilegedLevel::Machine, Xstatus::MIE, 0b0); // msatus.MIE = 0
             self.csrs
-                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, self.priv_lv as u64); // set prev_priv to MPP
-            self.priv_lv = PrivilegedLevel::Machine;
+                .write_xstatus(PrivilegedLevel::Machine, Xstatus::MPP, prev_priv as u64); // set prev_priv to MPP
 
             let mtvec = self.csrs.read(CSRname::mtvec.wrap()).unwrap();
             if mtvec & 0b1 == 1 {

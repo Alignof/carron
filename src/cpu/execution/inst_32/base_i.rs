@@ -271,7 +271,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         OpecodeKind::OP_ECALL => {
             cpu.trap(
                 0,
-                match cpu.priv_lv {
+                match cpu.priv_lv() {
                     PrivilegedLevel::User => TrapCause::UmodeEcall,
                     PrivilegedLevel::Supervisor => TrapCause::SmodeEcall,
                     PrivilegedLevel::Machine => TrapCause::MmodeEcall,
