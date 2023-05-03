@@ -10,6 +10,9 @@ description = "RV64IMAC emulator"
 [profile.dev]
 overflow-checks = false
 
+[profile.release]
+debug = true
+
 [dependencies]
 libc = "0.2.132"
 memmap = "0.7.0"
