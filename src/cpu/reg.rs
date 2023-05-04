@@ -57,24 +57,26 @@ impl Register {
             self.regs[31],
         );
 
-        log::debugln!("=========================================== dump ============================================");
-        for (num, reg) in self.regs.iter().enumerate() {
-            match *self.isa {
-                Isa::Rv32 => {
-                    log::debug!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
-                    if (num + 1) % 4 == 0 {
-                        log::debugln!("");
+        if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
+            println!("=========================================== dump ============================================");
+            for (num, reg) in self.regs.iter().enumerate() {
+                match *self.isa {
+                    Isa::Rv32 => {
+                        print!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
+                        if (num + 1) % 4 == 0 {
+                            println!("");
+                        }
                     }
-                }
-                Isa::Rv64 => {
-                    log::debug!("{:>4}: 0x{:016x}\t", reg2str(num), reg);
-                    if (num + 1) % 3 == 0 {
-                        log::debugln!("");
+                    Isa::Rv64 => {
+                        print!("{:>4}: 0x{:016x}\t", reg2str(num), reg);
+                        if (num + 1) % 3 == 0 {
+                            println!("");
+                        }
                     }
                 }
             }
+            println!("\n=============================================================================================");
         }
-        log::debugln!("\n=============================================================================================");
     }
 
     pub fn read(&self, src: Option<usize>) -> u64 {
