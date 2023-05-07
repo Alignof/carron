@@ -169,10 +169,8 @@ impl Mmu {
                     let page_off = addr & 0xFFF;
                     let mut ppn = self.ppn;
                     let vpn = match *self.isa {
-                        Isa::Rv32 => vec![addr >> 12 & 0x3FF, addr >> 22 & 0x3FF],
-                        Isa::Rv64 => {
-                            vec![addr >> 12 & 0x1FF, addr >> 21 & 0x1FF, addr >> 30 & 0x1FF]
-                        }
+                        Isa::Rv32 => [addr >> 12 & 0x3FF, addr >> 22 & 0x3FF, 0],
+                        Isa::Rv64 => [addr >> 12 & 0x1FF, addr >> 21 & 0x1FF, addr >> 30 & 0x1FF],
                     };
                     let pte_size: u64 = match *self.isa {
                         Isa::Rv32 => 4,
@@ -213,10 +211,8 @@ impl Mmu {
 
                     self.check_leaf_pte(purpose, priv_lv, csrs, pte)?;
                     let ppn = match *self.isa {
-                        Isa::Rv32 => vec![pte >> 10 & 0x3FF, pte >> 20 & 0xFFF],
-                        Isa::Rv64 => {
-                            vec![pte >> 10 & 0x1FF, pte >> 19 & 0x1FF, pte >> 28 & 0x3FF_FFFF]
-                        }
+                        Isa::Rv32 => [pte >> 10 & 0x3FF, pte >> 20 & 0xFFF, 0],
+                        Isa::Rv64 => [pte >> 10 & 0x1FF, pte >> 19 & 0x1FF, pte >> 28 & 0x3FF_FFFF],
                     };
 
                     let paddr = match *self.isa {
