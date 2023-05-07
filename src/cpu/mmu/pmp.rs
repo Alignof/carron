@@ -44,67 +44,71 @@ impl Mmu {
         priv_lv: PrivilegedLevel,
         csrs: &CSRs,
     ) -> Result<u64, TrapCause> {
-        let pmpaddrs: Vec<usize> = (0x3B0..0x3BF).collect();
-        let get_pmpcfg = |pmpnum| {
-            let cfgnum = pmpnum / 4;
-            let cfgoff = pmpnum % 4;
-            csrs.read(Some(0x3A0 + cfgnum)).unwrap() >> (4 * cfgoff)
-        };
+        match priv_lv {
+            PrivilegedLevel::Machine => Ok(addr),
+            PrivilegedLevel::Reserved => panic!("PrivilegedLevel 0x3 is Reserved."),
+            PrivilegedLevel::Supervisor | PrivilegedLevel::User => {
+                let pmpaddrs: Vec<usize> = (0x3B0..0x3BF).collect();
+                let get_pmpcfg = |pmpnum| {
+                    let cfgnum = pmpnum / 4;
+                    let cfgoff = pmpnum % 4;
+                    csrs.read(Some(0x3A0 + cfgnum)).unwrap() >> (4 * cfgoff)
+                };
 
-        for index in 0..pmpaddrs.len() {
-            // pmpaddr0 ~ pmpaddr15
-            let pmpcfg = get_pmpcfg(index);
-            let pmp_r = pmpcfg & 0x1;
-            let pmp_w = pmpcfg >> 1 & 0x1;
-            let pmp_x = pmpcfg >> 2 & 0x1;
-            let pmp_a = pmpcfg >> 3 & 0x3;
-            match pmp_a {
-                0b00 => return Ok(addr),
-                0b01 => {
-                    // TOR
-                    let addr_aligned = addr >> 2; // addr[:2]
-                    if (index == 0 && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap())
-                        || (index != 0
-                            && csrs.read(Some(pmpaddrs[index - 1])).unwrap() <= addr_aligned
-                            && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap())
-                    {
-                        return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
-                    }
-                }
-                0b10 => {
-                    // NA4
-                    let addr_aligned = addr >> 2; // addr[:2]
-                    if addr_aligned == csrs.read(Some(pmpaddrs[index])).unwrap() {
-                        return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
-                    }
-                }
-                0b11 => {
-                    // NAPOT
-                    let mut addr_aligned = addr >> 2; // addr[:2]
-                    let mut pmpaddr = csrs.read(Some(pmpaddrs[index])).unwrap();
-                    while pmpaddr & 0x1 == 1 {
-                        pmpaddr >>= 1;
-                        addr_aligned >>= 1;
-                    }
-                    pmpaddr >>= 1;
-                    addr_aligned >>= 1;
+                for index in 0..pmpaddrs.len() {
+                    // pmpaddr0 ~ pmpaddr15
+                    let pmpcfg = get_pmpcfg(index);
+                    let pmp_r = pmpcfg & 0x1;
+                    let pmp_w = pmpcfg >> 1 & 0x1;
+                    let pmp_x = pmpcfg >> 2 & 0x1;
+                    let pmp_a = pmpcfg >> 3 & 0x3;
+                    match pmp_a {
+                        0b00 => return Ok(addr),
+                        0b01 => {
+                            // TOR
+                            let addr_aligned = addr >> 2; // addr[:2]
+                            if (index == 0
+                                && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap())
+                                || (index != 0
+                                    && csrs.read(Some(pmpaddrs[index - 1])).unwrap()
+                                        <= addr_aligned
+                                    && addr_aligned < csrs.read(Some(pmpaddrs[index])).unwrap())
+                            {
+                                return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
+                            }
+                        }
+                        0b10 => {
+                            // NA4
+                            let addr_aligned = addr >> 2; // addr[:2]
+                            if addr_aligned == csrs.read(Some(pmpaddrs[index])).unwrap() {
+                                return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
+                            }
+                        }
+                        0b11 => {
+                            // NAPOT
+                            let mut addr_aligned = addr >> 2; // addr[:2]
+                            let mut pmpaddr = csrs.read(Some(pmpaddrs[index])).unwrap();
+                            while pmpaddr & 0x1 == 1 {
+                                pmpaddr >>= 1;
+                                addr_aligned >>= 1;
+                            }
+                            pmpaddr >>= 1;
+                            addr_aligned >>= 1;
 
-                    if addr_aligned == pmpaddr {
-                        return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
+                            if addr_aligned == pmpaddr {
+                                return self.check_pmp(purpose, addr, pmpcfg, pmp_r, pmp_w, pmp_x);
+                            }
+                        }
+                        _ => panic!("pmp_a does not matched"),
                     }
                 }
-                _ => panic!("pmp_a does not matched"),
+
+                Err(match purpose {
+                    TransFor::Fetch | TransFor::Deleg => TrapCause::InstPageFault,
+                    TransFor::Load => TrapCause::LoadPageFault,
+                    TransFor::StoreAMO => TrapCause::StoreAMOPageFault,
+                })
             }
-        }
-
-        if priv_lv == PrivilegedLevel::Machine {
-            Ok(addr)
-        } else {
-            Err(match purpose {
-                TransFor::Fetch | TransFor::Deleg => TrapCause::InstPageFault,
-                TransFor::Load => TrapCause::LoadPageFault,
-                TransFor::StoreAMO => TrapCause::StoreAMOPageFault,
-            })
         }
     }
 }
