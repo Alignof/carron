@@ -64,13 +64,13 @@ impl Register {
                     Isa::Rv32 => {
                         print!("{:>4}: 0x{:08x}\t", reg2str(num), reg);
                         if (num + 1) % 4 == 0 {
-                            println!("");
+                            println!();
                         }
                     }
                     Isa::Rv64 => {
                         print!("{:>4}: 0x{:016x}\t", reg2str(num), reg);
                         if (num + 1) % 3 == 0 {
-                            println!("");
+                            println!();
                         }
                     }
                 }
