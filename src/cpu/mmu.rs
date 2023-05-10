@@ -29,13 +29,11 @@ impl Mmu {
     }
 
     fn update_ppn_and_mode(&mut self, csrs: &CSRs) {
-        let satp_ppn_mask = match *self.isa {
-            Isa::Rv32 => 0x3FFFFF,
-            Isa::Rv64 => 0xFFFFFFFFFFF,
-        };
-        self.ppn = csrs.read(CSRname::satp.wrap()).unwrap() & satp_ppn_mask;
-
         let satp = csrs.read(CSRname::satp.wrap()).unwrap();
+        self.ppn = match *self.isa {
+            Isa::Rv32 => satp & 0x3FFFFF,
+            Isa::Rv64 => satp & 0xFFFFFFFFFFF,
+        };
         self.trans_mode = match *self.isa {
             Isa::Rv32 => match satp >> 31 & 0x1 {
                 1 => AddrTransMode::Sv32,
