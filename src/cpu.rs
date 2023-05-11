@@ -128,14 +128,13 @@ impl Cpu {
         let addr = addr.fix2regsz(&self.isa);
         self.check_breakpoint(purpose, addr)?;
 
-        let mut trans_priv = self.priv_lv();
-        if (purpose == TransFor::Load || purpose == TransFor::StoreAMO)
+        let trans_priv = if (purpose == TransFor::Load || purpose == TransFor::StoreAMO)
             && self
                 .csrs
                 .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPRV)
                 == 1
         {
-            trans_priv = match self
+            match self
                 .csrs
                 .read_xstatus(PrivilegedLevel::Machine, Xstatus::MPP)
             {
@@ -145,7 +144,9 @@ impl Cpu {
                 0b11 => PrivilegedLevel::Machine,
                 _ => panic!("invalid PrivilegedLevel"),
             }
-        }
+        } else {
+            self.priv_lv()
+        };
 
         match self
             .mmu
@@ -155,14 +156,13 @@ impl Cpu {
                 if addr % align as u64 == 0 {
                     Ok(vaddr.fix2regsz(&self.isa))
                 } else {
-                    let cause = match purpose {
-                        TransFor::Fetch | TransFor::Deleg => TrapCause::InstAddrMisaligned,
-                        TransFor::Load => TrapCause::LoadAddrMisaligned,
-                        TransFor::StoreAMO => TrapCause::StoreAMOAddrMisaligned,
-                    };
                     Err((
                         Some(addr),
-                        cause,
+                        match purpose {
+                            TransFor::Fetch | TransFor::Deleg => TrapCause::InstAddrMisaligned,
+                            TransFor::Load => TrapCause::LoadAddrMisaligned,
+                            TransFor::StoreAMO => TrapCause::StoreAMOAddrMisaligned,
+                        },
                         format!("address transration failed: {addr:#x}"),
                     ))
                 }
