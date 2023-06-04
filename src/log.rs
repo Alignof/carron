@@ -22,6 +22,7 @@ macro_rules! debugln {
     }
 }
 
+#[allow(unused_macros)]
 macro_rules! debug {
     ($($rest:tt)*) => {
         if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {

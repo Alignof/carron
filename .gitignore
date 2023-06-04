@@ -12,3 +12,4 @@ Cargo.lock
 **/.gdb_*
 
 perf.data*
+flamegraph.svg
