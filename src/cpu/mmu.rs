@@ -153,7 +153,7 @@ impl Mmu {
     pub fn trans_addr(
         &mut self,
         purpose: TransFor,
-        addr: u64,
+        vaddr: u64,
         csrs: &CSRs,
         dram: &mut Dram,
         priv_lv: PrivilegedLevel,
@@ -165,17 +165,23 @@ impl Mmu {
 
         match priv_lv {
             PrivilegedLevel::Supervisor | PrivilegedLevel::User => match self.trans_mode {
-                AddrTransMode::Bare => Ok(addr),
+                AddrTransMode::Bare => Ok(vaddr),
                 AddrTransMode::Sv32 | AddrTransMode::Sv39 => {
-                    if let Some(vaddr) = self.tlb.lookup(addr) {
-                        return Ok(vaddr);
+                    /*
+                    if let Some(paddr) = self.tlb.lookup(vaddr) {
+                        return Ok(paddr);
                     }
+                    */
 
-                    let page_off = addr & 0xFFF;
+                    let page_off = vaddr & 0xFFF;
                     let mut ppn = self.ppn;
                     let vpn = match *self.isa {
-                        Isa::Rv32 => [addr >> 12 & 0x3FF, addr >> 22 & 0x3FF, 0],
-                        Isa::Rv64 => [addr >> 12 & 0x1FF, addr >> 21 & 0x1FF, addr >> 30 & 0x1FF],
+                        Isa::Rv32 => [vaddr >> 12 & 0x3FF, vaddr >> 22 & 0x3FF, 0],
+                        Isa::Rv64 => [
+                            vaddr >> 12 & 0x1FF,
+                            vaddr >> 21 & 0x1FF,
+                            vaddr >> 30 & 0x1FF,
+                        ],
                     };
                     let pte_size: u64 = match *self.isa {
                         Isa::Rv32 => 4,
@@ -187,14 +193,14 @@ impl Mmu {
                     };
 
                     let pte = loop {
-                        let pte_addr = ppn * PAGESIZE + vpn[level as usize] * pte_size;
-                        log::debugln!("pte_addr({}): 0x{:x}", level, pte_addr);
+                        let pte_vaddr = ppn * PAGESIZE + vpn[level as usize] * pte_size;
+                        log::debugln!("pte_vaddr({}): 0x{:x}", level, pte_vaddr);
                         let pte =
                             match *self.isa {
                                 Isa::Rv32 => self
-                                    .check_pte_validity(purpose, dram.load32(pte_addr).unwrap())?,
+                                    .check_pte_validity(purpose, dram.load32(pte_vaddr).unwrap())?,
                                 Isa::Rv64 => self
-                                    .check_pte_validity(purpose, dram.load64(pte_addr).unwrap())?,
+                                    .check_pte_validity(purpose, dram.load64(pte_vaddr).unwrap())?,
                             };
                         log::debugln!("pte({}): 0x{:x}", level, pte);
 
@@ -220,7 +226,7 @@ impl Mmu {
                         Isa::Rv64 => [pte >> 10 & 0x1FF, pte >> 19 & 0x1FF, pte >> 28 & 0x3FF_FFFF],
                     };
 
-                    let vaddr = match *self.isa {
+                    let paddr = match *self.isa {
                         Isa::Rv32 => match level {
                             0 => ppn[1] << 22 | ppn[0] << 12 | page_off,
                             1 => {
@@ -250,17 +256,17 @@ impl Mmu {
                     };
 
                     log::debugln!(
-                        "raw address:{:x}\n\t=> transrated address:{:x}",
-                        addr,
+                        "raw vaddress:{:x}\n\t=> transrated vaddress:{:x}",
                         vaddr,
+                        paddr,
                     );
 
-                    self.tlb.refill_tlb(addr, vaddr);
-                    self.pmp(purpose, vaddr, priv_lv, csrs)
+                    //self.tlb.refill_tlb(vaddr, paddr);
+                    self.pmp(purpose, paddr, priv_lv, csrs)
                 }
             },
-            // return raw address if privileged level is Machine
-            _ => self.pmp(purpose, addr, priv_lv, csrs),
+            // return raw vaddress if privileged level is Machine
+            _ => self.pmp(purpose, vaddr, priv_lv, csrs),
         }
     }
 }
