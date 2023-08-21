@@ -1,4 +1,5 @@
 mod pmp;
+mod tlb;
 
 use crate::bus::dram::Dram;
 use crate::bus::Device;
@@ -16,6 +17,7 @@ pub enum AddrTransMode {
 pub struct Mmu {
     ppn: u64,
     trans_mode: AddrTransMode,
+    tlb: tlb::Tlb,
     isa: Rc<Isa>,
 }
 
@@ -24,6 +26,7 @@ impl Mmu {
         Mmu {
             ppn: 0,
             trans_mode: AddrTransMode::Bare,
+            tlb: tlb::Tlb::new(),
             isa,
         }
     }
