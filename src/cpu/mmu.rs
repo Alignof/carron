@@ -213,7 +213,7 @@ impl Mmu {
                         Isa::Rv64 => [pte >> 10 & 0x1FF, pte >> 19 & 0x1FF, pte >> 28 & 0x3FF_FFFF],
                     };
 
-                    let paddr = match *self.isa {
+                    let vaddr = match *self.isa {
                         Isa::Rv32 => match level {
                             0 => ppn[1] << 22 | ppn[0] << 12 | page_off,
                             1 => {
@@ -245,10 +245,10 @@ impl Mmu {
                     log::debugln!(
                         "raw address:{:x}\n\t=> transrated address:{:x}",
                         addr,
-                        paddr,
+                        vaddr,
                     );
 
-                    self.pmp(purpose, paddr, priv_lv, csrs)
+                    self.pmp(purpose, vaddr, priv_lv, csrs)
                 }
             },
             // return raw address if privileged level is Machine
