@@ -22,9 +22,13 @@ impl Tlb {
 
     pub fn lookup(&self, vaddr: u64) -> Option<u64> {
         let index = ((vaddr >> PGSHIFT) % TLB_ENTRIES as u64) as usize;
-        match &self.tlb_data[index] {
-            Some(entry) => Some(entry.vaddr),
-            None => None,
+        if self.tlb_tags[vaddr as usize % TLB_ENTRIES] == vaddr {
+            match &self.tlb_data[index] {
+                Some(entry) => Some(entry.paddr),
+                None => None,
+            }
+        } else {
+            None
         }
     }
 
