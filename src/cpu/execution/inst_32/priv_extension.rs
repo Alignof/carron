@@ -87,6 +87,7 @@ pub fn exec(inst: &Instruction, cpu: &mut Cpu) -> Result<(), (Option<u64>, TrapC
         }
         OpecodeKind::OP_WFI => { /* nop */ }
         OpecodeKind::OP_SFENCE_VMA => {
+            cpu.mmu.flush_tlb();
             if cpu.priv_lv() == PrivilegedLevel::Supervisor
                 && cpu
                     .csrs

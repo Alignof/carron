@@ -31,6 +31,10 @@ impl Mmu {
         }
     }
 
+    pub fn flush_tlb(&mut self) {
+        self.tlb.flush();
+    }
+
     fn update_ppn_and_mode(&mut self, csrs: &CSRs) {
         let satp = csrs.read(CSRname::satp.wrap()).unwrap();
         self.ppn = match *self.isa {
