@@ -20,7 +20,7 @@ impl Tlb {
         }
     }
 
-    fn lookup(&self, vaddr: u64) -> Option<u64> {
+    pub fn lookup(&self, vaddr: u64) -> Option<u64> {
         let index = ((vaddr >> PGSHIFT) % TLB_ENTRIES as u64) as usize;
         match &self.tlb_data[index] {
             Some(entry) => Some(entry.vaddr),
@@ -28,7 +28,7 @@ impl Tlb {
         }
     }
 
-    fn refill_tlb(&mut self, vaddr: u64, paddr: u64) {
+    pub fn refill_tlb(&mut self, vaddr: u64, paddr: u64) {
         let index = ((vaddr >> PGSHIFT) % TLB_ENTRIES as u64) as usize;
         let expected_tag = vaddr >> PGSHIFT;
         let new_entry = TlbEntry { vaddr, paddr };
