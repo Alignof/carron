@@ -3,7 +3,7 @@ const PGSHIFT: usize = 12;
 
 #[derive(Clone)]
 struct TlbEntry {
-    vaddr: u64,
+    _vaddr: u64,
     paddr: u64,
 }
 
@@ -23,10 +23,7 @@ impl Tlb {
     pub fn lookup(&self, vaddr: u64) -> Option<u64> {
         let index = ((vaddr >> PGSHIFT) % TLB_ENTRIES as u64) as usize;
         if self.tlb_tags[vaddr as usize % TLB_ENTRIES] == vaddr {
-            match &self.tlb_data[index] {
-                Some(entry) => Some(entry.paddr),
-                None => None,
-            }
+            self.tlb_data[index].as_ref().map(|entry| entry.paddr)
         } else {
             None
         }
@@ -42,7 +39,10 @@ impl Tlb {
     pub fn refill_tlb(&mut self, vaddr: u64, paddr: u64) {
         let index = ((vaddr >> PGSHIFT) % TLB_ENTRIES as u64) as usize;
         let expected_tag = vaddr >> PGSHIFT;
-        let new_entry = TlbEntry { vaddr, paddr };
+        let new_entry = TlbEntry {
+            _vaddr: vaddr,
+            paddr,
+        };
 
         self.tlb_tags[index] = expected_tag;
         self.tlb_data[index] = Some(new_entry);
