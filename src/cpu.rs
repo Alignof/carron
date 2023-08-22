@@ -124,6 +124,7 @@ impl Cpu {
         fetch(self)?.decode(*self.isa)?.execution(self)
     }
 
+    #[inline(always)]
     fn trans_addr(
         &mut self,
         purpose: TransFor,

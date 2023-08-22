@@ -15,7 +15,6 @@ overflow-checks = false
 lto = true
 panic = 'abort'
 codegen-units = 1
-rustflags = ["-Ctarget-cpu=native"]
 
 [dependencies]
 libc = "0.2.132"
