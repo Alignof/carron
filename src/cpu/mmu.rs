@@ -172,6 +172,7 @@ impl Mmu {
                 AddrTransMode::Bare => Ok(vaddr),
                 AddrTransMode::Sv32 | AddrTransMode::Sv39 => {
                     if let Some(paddr) = self.tlb.lookup(vaddr) {
+                        printf("{:#x} -> {:#x}", vaddr, paddr);
                         return Ok(paddr);
                     }
 

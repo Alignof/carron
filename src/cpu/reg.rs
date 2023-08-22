@@ -14,48 +14,48 @@ impl Register {
     }
 
     pub fn show(&self) {
-        log::diffln!(
-            "zero: {:#018x}  ra: {:#018x}  sp: {:#018x}  gp: {:#018x}\n  \
-               tp: {:#018x}  t0: {:#018x}  t1: {:#018x}  t2: {:#018x}\n  \
-               s0: {:#018x}  s1: {:#018x}  a0: {:#018x}  a1: {:#018x}\n  \
-               a2: {:#018x}  a3: {:#018x}  a4: {:#018x}  a5: {:#018x}\n  \
-               a6: {:#018x}  a7: {:#018x}  s2: {:#018x}  s3: {:#018x}\n  \
-               s4: {:#018x}  s5: {:#018x}  s6: {:#018x}  s7: {:#018x}\n  \
-               s8: {:#018x}  s9: {:#018x} s10: {:#018x} s11: {:#018x}\n  \
-               t3: {:#018x}  t4: {:#018x}  t5: {:#018x}  t6: {:#018x}",
-            self.regs[0],
-            self.regs[1],
-            self.regs[2],
-            self.regs[3],
-            self.regs[4],
-            self.regs[5],
-            self.regs[6],
-            self.regs[7],
-            self.regs[8],
-            self.regs[9],
-            self.regs[10],
-            self.regs[11],
-            self.regs[12],
-            self.regs[13],
-            self.regs[14],
-            self.regs[15],
-            self.regs[16],
-            self.regs[17],
-            self.regs[18],
-            self.regs[19],
-            self.regs[20],
-            self.regs[21],
-            self.regs[22],
-            self.regs[23],
-            self.regs[24],
-            self.regs[25],
-            self.regs[26],
-            self.regs[27],
-            self.regs[28],
-            self.regs[29],
-            self.regs[30],
-            self.regs[31],
-        );
+        //log::diffln!(
+        //    "zero: {:#018x}  ra: {:#018x}  sp: {:#018x}  gp: {:#018x}\n  \
+        //       tp: {:#018x}  t0: {:#018x}  t1: {:#018x}  t2: {:#018x}\n  \
+        //       s0: {:#018x}  s1: {:#018x}  a0: {:#018x}  a1: {:#018x}\n  \
+        //       a2: {:#018x}  a3: {:#018x}  a4: {:#018x}  a5: {:#018x}\n  \
+        //       a6: {:#018x}  a7: {:#018x}  s2: {:#018x}  s3: {:#018x}\n  \
+        //       s4: {:#018x}  s5: {:#018x}  s6: {:#018x}  s7: {:#018x}\n  \
+        //       s8: {:#018x}  s9: {:#018x} s10: {:#018x} s11: {:#018x}\n  \
+        //       t3: {:#018x}  t4: {:#018x}  t5: {:#018x}  t6: {:#018x}",
+        //    self.regs[0],
+        //    self.regs[1],
+        //    self.regs[2],
+        //    self.regs[3],
+        //    self.regs[4],
+        //    self.regs[5],
+        //    self.regs[6],
+        //    self.regs[7],
+        //    self.regs[8],
+        //    self.regs[9],
+        //    self.regs[10],
+        //    self.regs[11],
+        //    self.regs[12],
+        //    self.regs[13],
+        //    self.regs[14],
+        //    self.regs[15],
+        //    self.regs[16],
+        //    self.regs[17],
+        //    self.regs[18],
+        //    self.regs[19],
+        //    self.regs[20],
+        //    self.regs[21],
+        //    self.regs[22],
+        //    self.regs[23],
+        //    self.regs[24],
+        //    self.regs[25],
+        //    self.regs[26],
+        //    self.regs[27],
+        //    self.regs[28],
+        //    self.regs[29],
+        //    self.regs[30],
+        //    self.regs[31],
+        //);
 
         if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
             println!("=========================================== dump ============================================");
