@@ -21,8 +21,9 @@ impl Tlb {
     }
 
     pub fn lookup(&self, vaddr: u64) -> Option<u64> {
-        let index = ((vaddr >> PGSHIFT) % TLB_ENTRIES as u64) as usize;
-        if self.tlb_tags[vaddr as usize % TLB_ENTRIES] == vaddr {
+        let vpn = vaddr >> PGSHIFT;
+        let index = (vpn % TLB_ENTRIES as u64) as usize;
+        if self.tlb_tags[vpn as usize % TLB_ENTRIES] == vpn {
             self.tlb_data[index].as_ref().map(|entry| entry.paddr)
         } else {
             None
@@ -30,10 +31,27 @@ impl Tlb {
     }
 
     pub fn flush(&mut self) {
-        self.tlb_tags.clear();
-        self.tlb_data.clear();
-        self.tlb_tags = vec![0; TLB_ENTRIES];
-        self.tlb_data = vec![None; TLB_ENTRIES];
+        //self.tlb_tags.clear();
+        //self.tlb_data.clear();
+        //self.tlb_tags = vec![0; TLB_ENTRIES];
+        //self.tlb_data = vec![None; TLB_ENTRIES];
+        println!(
+            "before: {}",
+            self.tlb_data.iter().filter(|x| x.is_some()).count()
+        );
+        crate::log::infoln!("tlb flushed");
+
+        for t in &mut self.tlb_tags {
+            *t = 0;
+        }
+        for d in &mut self.tlb_data {
+            *d = None;
+        }
+
+        println!(
+            "after: {}",
+            self.tlb_data.iter().filter(|x| x.is_some()).count()
+        )
     }
 
     pub fn refill_tlb(&mut self, vaddr: u64, paddr: u64) {
