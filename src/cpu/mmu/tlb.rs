@@ -48,9 +48,21 @@ impl Tlb {
         };
 
         match purpose {
-            TransFor::Fetch | TransFor::Deleg => self.tlb_fetch_tags[index] = Some(expected_tag),
-            TransFor::Load => self.tlb_load_tags[index] = Some(expected_tag),
-            TransFor::StoreAMO => self.tlb_store_tags[index] = Some(expected_tag),
+            TransFor::Fetch | TransFor::Deleg => {
+                self.tlb_fetch_tags[index] = Some(expected_tag);
+                self.tlb_load_tags[index] = None;
+                self.tlb_store_tags[index] = None;
+            }
+            TransFor::Load => {
+                self.tlb_fetch_tags[index] = None;
+                self.tlb_load_tags[index] = Some(expected_tag);
+                self.tlb_store_tags[index] = None;
+            }
+            TransFor::StoreAMO => {
+                self.tlb_fetch_tags[index] = None;
+                self.tlb_load_tags[index] = None;
+                self.tlb_store_tags[index] = Some(expected_tag);
+            }
         };
         self.tlb_data[index] = Some(new_entry);
     }
