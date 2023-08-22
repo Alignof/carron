@@ -54,7 +54,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOAccessFault,
-                format!("addr out of range at store8: {addr:#x}"),
+                //format!("addr out of range at store8: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -78,7 +79,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOAccessFault,
-                format!("addr out of range at store16: {addr:#x}"),
+                //format!("addr out of range at store16: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -102,7 +104,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOAccessFault,
-                format!("addr out of range at store32: {addr:#x}"),
+                //format!("addr out of range at store32: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -126,7 +129,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::StoreAMOAccessFault,
-                format!("addr out of range at store64: {addr:#x}"),
+                //format!("addr out of range at store64: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -147,7 +151,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadAccessFault,
-                format!("addr out of range at load8: {addr:#x}"),
+                //format!("addr out of range at load8: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -167,7 +172,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadAccessFault,
-                format!("addr out of range at load16: {addr:#x}"),
+                //format!("addr out of range at load16: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -187,7 +193,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadAccessFault,
-                format!("addr out of range at load32: {addr:#x}"),
+                //format!("addr out of range at load32: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -207,7 +214,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadAccessFault,
-                format!("addr out of range at load64: {addr:#x}"),
+                //format!("addr out of range at load64: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -227,7 +235,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadAccessFault,
-                format!("addr out of range at load_u8: {addr:#x}"),
+                //format!("addr out of range at load_u8: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -247,7 +256,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadAccessFault,
-                format!("addr out of range at load_u16: {addr:#x}"),
+                //format!("addr out of range at load_u16: {addr:#x}"),
+                String::new(),
             ))
         }
     }
@@ -267,7 +277,8 @@ impl Bus {
             Err((
                 Some(addr),
                 TrapCause::LoadAccessFault,
-                format!("addr out of range at load_u32: {addr:#x}"),
+                //format!("addr out of range at load_u32: {addr:#x}"),
+                String::new(),
             ))
         }
     }

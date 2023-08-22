@@ -9,7 +9,8 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         return Err((
             None,
             TrapCause::IllegalInst,
-            format!("csr size is 4096, but you accessed {dist:x}"),
+            //format!("csr size is 4096, but you accessed {dist:x}"),
+            String::new(),
         ));
     }
 
@@ -19,7 +20,8 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("You are in User mode but accessed {dist:x}"),
+                    //format!("You are in User mode but accessed {dist:x}"),
+                    String::new(),
                 ));
             }
 
@@ -47,7 +49,8 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 return Err((
                     invalid_instruction,
                     TrapCause::IllegalInst,
-                    format!("You are in Supervisor mode but accessed {dist:x}"),
+                    //format!("You are in Supervisor mode but accessed {dist:x}"),
+                    String::new(),
                 ));
             }
 
@@ -130,7 +133,8 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 _ => Err((
                     None,
                     TrapCause::IllegalInst,
-                    format!("writing to cycle is not allowed: {dist:x}"),
+                    //format!("writing to cycle is not allowed: {dist:x}"),
+                    String::new(),
                 )),
             },
             // == depends on privilege ==
@@ -142,7 +146,8 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                     Err((
                         None,
                         TrapCause::IllegalInst,
-                        format!("unknown CSR number: {dist:x}"),
+                        //format!("unknown CSR number: {dist:x}"),
+                        String::new(),
                     ))
                 }
             }
@@ -152,7 +157,8 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
                 _ => Err((
                     None,
                     TrapCause::IllegalInst,
-                    format!("unknown CSR number: {dist:x}"),
+                    //format!("unknown CSR number: {dist:x}"),
+                    String::new(),
                 )),
             },
             _ => Ok(()),
@@ -162,7 +168,8 @@ fn check_accessible(cpu: &mut Cpu, dist: usize) -> Result<(), (Option<u64>, Trap
         Err((
             None,
             TrapCause::IllegalInst,
-            format!("unknown CSR number: {dist:x}"),
+            //format!("unknown CSR number: {dist:x}"),
+            String::new(),
         ))
     }
 }

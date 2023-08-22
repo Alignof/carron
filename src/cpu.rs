@@ -168,7 +168,8 @@ impl Cpu {
                             TransFor::Load => TrapCause::LoadAddrMisaligned,
                             TransFor::StoreAMO => TrapCause::StoreAMOAddrMisaligned,
                         },
-                        format!("address transration failed: {addr:#x}"),
+                        //format!("address transration failed: {addr:#x}"),
+                        String::new(),
                     ))
                 }
             }
@@ -177,7 +178,8 @@ impl Cpu {
                 Err((
                     Some(addr),
                     cause,
-                    format!("address transration failed: {addr:#x}"),
+                    //format!("address transration failed: {addr:#x}"),
+                    String::new(),
                 ))
             }
         }
