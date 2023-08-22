@@ -11,7 +11,11 @@ description = "RV64IMAC emulator"
 overflow-checks = false
 
 [profile.release]
-debug = true
+#debug = true
+lto = true
+panic = 'abort'
+codegen-units = 1
+rustflags = ["-Ctarget-cpu=native"]
 
 [dependencies]
 libc = "0.2.132"
