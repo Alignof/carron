@@ -171,8 +171,10 @@ impl Mmu {
             PrivilegedLevel::Supervisor | PrivilegedLevel::User => match self.trans_mode {
                 AddrTransMode::Bare => Ok(vaddr),
                 AddrTransMode::Sv32 | AddrTransMode::Sv39 => {
-                    if let Some(paddr) = self.tlb.lookup(vaddr) {
-                        printf("{:#x} -> {:#x}", vaddr, paddr);
+                    if let Some(page_addr) = self.tlb.lookup(vaddr, purpose) {
+                        let page_off = vaddr & 0xFFF;
+                        let paddr = page_addr << 12 | page_off;
+                        //println!("{:#x} -> {:#x}", vaddr, paddr);
                         return Ok(paddr);
                     }
 
@@ -264,7 +266,7 @@ impl Mmu {
                         paddr,
                     );
 
-                    self.tlb.refill_tlb(vaddr, paddr);
+                    self.tlb.refill_tlb(vaddr, paddr, purpose);
                     self.pmp(purpose, paddr, priv_lv, csrs)
                 }
             },
