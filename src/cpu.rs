@@ -107,6 +107,7 @@ impl Cpu {
     }
 
     fn set_priv_lv(&mut self, new_priv: PrivilegedLevel) {
+        self.mmu.flush_tlb();
         self.priv_lv = new_priv
     }
 
