@@ -43,8 +43,8 @@ impl Emulator {
     pub fn emulation(&mut self) {
         loop {
             for _ in 0..INTERLEAVE {
-                *crate::log::INST_COUNT.lock().unwrap() += 1;
-                log::diffln!("0x{:016x}", self.cpu.pc());
+                //*crate::log::INST_COUNT.lock().unwrap() += 1;
+                //log::diffln!("0x{:016x}", self.cpu.pc());
 
                 match self.cpu.exec_one_cycle() {
                     Ok(()) => (),
@@ -54,12 +54,12 @@ impl Emulator {
                     }
                 }
 
-                self.cpu.regs.show();
+                //self.cpu.regs.show();
 
-                if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost()
-                {
-                    self.handle_syscall();
-                }
+                //if self.tohost_addr.is_some() && self.fromhost_addr.is_some() && self.check_tohost()
+                //{
+                //    self.handle_syscall();
+                //}
             }
 
             self.cpu.reservation_set = None;

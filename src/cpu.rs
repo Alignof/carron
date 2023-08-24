@@ -115,9 +115,9 @@ impl Cpu {
         use execution::Execution;
         use fetch::fetch;
 
-        if *crate::log::INST_COUNT.lock().unwrap() >= crate::log::LOG_ENABLE_INST {
-            std::process::exit(1);
-        }
+        //if *crate::log::INST_COUNT.lock().unwrap() >= crate::log::LOG_ENABLE_INST {
+        //    std::process::exit(1);
+        //}
 
         self.check_interrupt()?;
 
