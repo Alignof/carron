@@ -16,55 +16,61 @@ pub enum LogLv {
 
 macro_rules! debugln {
     ($($rest:tt)*) => {
-        if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
-            std::println!($($rest)*);
-        }
-    }
+        //if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
+        //    std::println!($($rest)*);
+        //}
+        ()
+    };
 }
 
 #[allow(unused_macros)]
 macro_rules! debug {
     ($($rest:tt)*) => {
-        if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
-            std::print!($($rest)*);
-        }
-    }
+        //if &crate::log::LogLv::Debug <= crate::log::LOG_LEVEL.get().unwrap() {
+        //    std::print!($($rest)*);
+        //}
+        ()
+    };
 }
 
 macro_rules! infoln {
     ($($rest:tt)*) => {
-        if &crate::log::LogLv::Info <= crate::log::LOG_LEVEL.get().unwrap() {
-            std::println!($($rest)*);
-        }
-    }
+        //if &crate::log::LogLv::Info <= crate::log::LOG_LEVEL.get().unwrap() {
+        //    std::println!($($rest)*);
+        //}
+        ()
+    };
 }
 
 #[allow(unused_macros)]
 macro_rules! info {
     ($($rest:tt)*) => {
-        if &crate::log::LogLv::Info <= crate::log::LOG_LEVEL.get().unwrap() {
-            std::print!($($rest)*);
-        }
-    }
+        //if &crate::log::LogLv::Info <= crate::log::LOG_LEVEL.get().unwrap() {
+        //    std::print!($($rest)*);
+        //}
+        ()
+    };
 }
 
 macro_rules! diffln {
     ($($rest:tt)*) => {
-        if &crate::log::LogLv::Diff == crate::log::LOG_LEVEL.get().unwrap() &&
-        *crate::log::INST_COUNT.lock().unwrap() > crate::log::LOG_ENABLE_INST {
-            std::println!($($rest)*);
-        }
-    }
+        //if &crate::log::LogLv::Diff == crate::log::LOG_LEVEL.get().unwrap() &&
+        //*crate::log::INST_COUNT.lock().unwrap() > crate::log::LOG_ENABLE_INST {
+        //    std::println!($($rest)*);
+        //}
+        ()
+    };
 }
 
 #[allow(unused_macros)]
 macro_rules! diff {
     ($($rest:tt)*) => {
-        if &crate::log::LogLv::Diff == crate::log::LOG_LEVEL.get().unwrap() &&
-        crate::log::INST_COUNT.lock().unwrap() > crate::log::LOG_ENABLE_INST {
-            std::print!($($rest)*);
-        }
-    }
+        //if &crate::log::LogLv::Diff == crate::log::LOG_LEVEL.get().unwrap() &&
+        //crate::log::INST_COUNT.lock().unwrap() > crate::log::LOG_ENABLE_INST {
+        //    std::print!($($rest)*);
+        //}
+        ()
+    };
 }
 
 #[allow(unused_imports)]
